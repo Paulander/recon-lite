@@ -3,6 +3,14 @@ from .graph import Graph, NodeType, NodeState
 
 
 class ReConEngine:
+    """
+    Minimal, discrete-time executor:
+    - Parent REQUESTS children via SUB if not inhibited by POR predecessors.
+    - POR gating: a node is requestable only if all its POR predecessors are TRUE/CONFIRMED.
+    - Parent becomes TRUE when the last node of each POR chain under it is CONFIRMED.
+    - TERMINAL nodes use predicate(env) -> (done, success) to progress.
+    """
+
     def __init__(self, graph: Graph):
         self.g = graph
         self.tick = 0
