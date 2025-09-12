@@ -53,12 +53,21 @@ def main():
     eng = ReConEngine(g)
     log = RunLogger()
 
+    env = {}  # chess will put FEN here later
+
     g.nodes["ROOT"].state = NodeState.REQUESTED
-    log.snapshot(eng, note="start")
+    log.snapshot(eng, note="start", env=env, thoughts="Initiate ROOT")
 
     for _ in range(20):
-        newly_req = eng.step()
-        log.snapshot(eng, note=f"tick {eng.tick}, new={list(newly_req.keys())}")
+        newly_req = eng.step(env=env)
+        thought = f"tick {eng.tick}: requested {list(newly_req.keys())}"
+        log.snapshot(
+            eng,
+            note=f"tick {eng.tick}",
+            env=env,
+            thoughts=thought,
+            new_requests=list(newly_req.keys())
+        )
         if all(n.state == NodeState.CONFIRMED for nid, n in g.nodes.items() if n.ntype == NodeType.SCRIPT):
             break
 
