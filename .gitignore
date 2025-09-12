@@ -7,3 +7,6 @@ __pycache__/
 .idea/
 # logs / artifacts
 demos/sequence_log.json
+
+#useless windows files
+*.Zone.Identifier
