@@ -1,0 +1,9 @@
+# venv / caches
+.venv/
+__pycache__/
+*.pyc
+# editor
+.vscode/
+.idea/
+# logs / artifacts
+demos/sequence_log.json
