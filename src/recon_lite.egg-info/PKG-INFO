@@ -4,6 +4,7 @@ Version: 0.1.0
 Summary: Minimal Request–Confirmation Network (ReCoN) executor with logging
 Requires-Python: >=3.9
 Description-Content-Type: text/markdown
+Requires-Dist: python-chess>=1.999
 
 # ReCoN-lite (Request–Confirmation Network) — Minimal Scaffold
 

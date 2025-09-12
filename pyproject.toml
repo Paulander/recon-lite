@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "Minimal Request–Confirmation Network (ReCoN) executor with logging"
 readme = "README.md"
 requires-python = ">=3.9"
-dependencies = []
+dependencies = [
+    "python-chess>=1.999",
+]
 
 [build-system]
 requires = ["setuptools>=61.0"]
