@@ -108,13 +108,22 @@ def demo_krk_strategy():
     Demonstrate the KRK checkmate strategy on a sample position.
     Uses efficient move-based logging instead of full FEN snapshots.
     """
-    # Create a KRK position (White: King on e4, Rook on a1, Black: King on g7)
-    board = chess.Board("4k3/6K1/8/8/8/8/R7/8 w - - 0 1")
+    print("Starting KRK demo...")
 
-    # Track game state for efficient logging
-    global initial_fen, moves_made
-    initial_fen = board.fen()
-    moves_made = []
+    try:
+        # Create a KRK position (White: King on e4, Rook on a1, Black: King on g7)
+        board = chess.Board("4k3/6K1/8/8/8/8/R7/8 w - - 0 1")
+        print(f"Board created: {board.fen()}")
+
+        # Track game state for efficient logging
+        global initial_fen, moves_made
+        initial_fen = board.fen()
+        moves_made = []
+
+        print("Board setup complete")
+    except Exception as e:
+        print(f"Error setting up board: {e}")
+        return
 
     print("KRK Checkmate Demo")
     print("=" * 50)
@@ -122,12 +131,24 @@ def demo_krk_strategy():
     print(f"Initial FEN: {initial_fen}")
     print()
 
-    # Build the ReCoN network
-    g = build_krk_network()
-    engine = ReConEngine(g)
+    try:
+        print("Building ReCoN network...")
+        # Build the ReCoN network
+        g = build_krk_network()
+        print(f"Network built with {len(g.nodes)} nodes")
 
-    # Set the root to requested to start the procedure
-    g.nodes["krk_root"].state = NodeState.REQUESTED
+        print("Creating engine...")
+        engine = ReConEngine(g)
+        print("Engine created")
+
+        # Set the root to requested to start the procedure
+        g.nodes["krk_root"].state = NodeState.REQUESTED
+        print("Root node set to REQUESTED")
+    except Exception as e:
+        print(f"Error setting up ReCoN network: {e}")
+        import traceback
+        traceback.print_exc()
+        return
 
     print("ReCoN Network Structure:")
     print("ROOT: krk_root (KRK mate procedure)")
@@ -155,92 +176,100 @@ def demo_krk_strategy():
         new_requests=[]
     )
 
-    # Run evaluation steps (only log when significant changes occur)
-    max_steps = 10
-    last_logged_states = {}  # Track when we last logged each state
+    try:
+        # Run evaluation steps (only log when significant changes occur)
+        max_steps = 100  # Increased from 10 to allow more evaluation steps
+        last_logged_states = {}  # Track when we last logged each state
 
-    for step in range(max_steps):
-        print(f"Step {step + 1}:")
-        now_requested = engine.step({"board": board})
+        print(f"Running {max_steps} evaluation steps...")
 
-        # Print current state
-        print(f"  Root state: {g.nodes['krk_root'].state.name}")
-        print(f"  King at edge: {g.nodes['king_at_edge_detector'].state.name}")
-        print(f"  Box shrink possible: {g.nodes['box_shrink_evaluator'].state.name}")
-        print(f"  Has opposition: {g.nodes['opposition_evaluator'].state.name}")
-        print(f"  Can deliver mate: {g.nodes['mate_deliver_evaluator'].state.name}")
-        print(f"  Is stalemate: {g.nodes['stalemate_detector'].state.name}")
+        for step in range(max_steps):
+            print(f"Step {step + 1}:")
+            now_requested = engine.step({"board": board})
 
-        # Check if significant state change occurred (only log these)
-        current_states = {nid: node.state.name for nid, node in g.nodes.items()}
-        state_changed = False
+            # Print current state
+            print(f"  Root state: {g.nodes['krk_root'].state.name}")
+            print(f"  King at edge: {g.nodes['king_at_edge_detector'].state.name}")
+            print(f"  Box shrink possible: {g.nodes['box_shrink_evaluator'].state.name}")
+            print(f"  Has opposition: {g.nodes['opposition_evaluator'].state.name}")
+            print(f"  Can deliver mate: {g.nodes['mate_deliver_evaluator'].state.name}")
+            print(f"  Is stalemate: {g.nodes['stalemate_detector'].state.name}")
 
-        for nid, state in current_states.items():
-            if last_logged_states.get(nid) != state:
-                state_changed = True
+            # Check if significant state change occurred (only log these)
+            current_states = {nid: node.state.name for nid, node in g.nodes.items()}
+            state_changed = False
+
+            for nid, state in current_states.items():
+                if last_logged_states.get(nid) != state:
+                    state_changed = True
+                    break
+
+            # Example: When a move is actually made, track it
+            # (This is where you would add move tracking in a real implementation)
+            # if some_condition_for_making_move:
+            #     move = chess.Move.from_uci("e7e6")  # Example move
+            #     board.push(move)
+            #     moves_made.append(move.uci())
+
+            # Log only when states change or at key milestones
+            if state_changed or step == 0 or step == max_steps - 1:
+                logger.snapshot(
+                    engine=engine,
+                    note=f"Step {step + 1}: {g.nodes['krk_root'].state.name}",
+                    env={
+                        "initial_fen": initial_fen,
+                        "moves": moves_made.copy(),
+                        "fen": board.fen()  # Keep FEN for backward compatibility
+                    },
+                    thoughts=f"Evaluating KRK position (step {step + 1})...",
+                    new_requests=list(now_requested.keys()) if now_requested else []
+                )
+                last_logged_states = current_states.copy()
+
+            # Check if we found a solution
+            if g.nodes["krk_root"].state == NodeState.CONFIRMED:
+                print("\n Checkmate procedure confirmed!")
+
+                # Log final successful state
+                logger.snapshot(
+                    engine=engine,
+                    note="Final: Checkmate confirmed",
+                    env={
+                        "initial_fen": initial_fen,
+                        "moves": moves_made.copy(),
+                        "fen": board.fen()
+                    },
+                    thoughts="Checkmate procedure confirmed!",
+                    new_requests=[]
+                )
+                break
+            elif g.nodes["krk_root"].state == NodeState.FAILED:
+                print("\n Checkmate procedure failed")
+
+                # Log final failed state
+                logger.snapshot(
+                    engine=engine,
+                    note="Final: Checkmate failed",
+                    env={
+                        "initial_fen": initial_fen,
+                        "moves": moves_made.copy(),
+                        "fen": board.fen()
+                    },
+                    thoughts="Checkmate procedure failed",
+                    new_requests=[]
+                )
                 break
 
-        # Example: When a move is actually made, track it
-        # (This is where you would add move tracking in a real implementation)
-        # if some_condition_for_making_move:
-        #     move = chess.Move.from_uci("e7e6")  # Example move
-        #     board.push(move)
-        #     moves_made.append(move.uci())
+            print()
 
-        # Log only when states change or at key milestones
-        if state_changed or step == 0 or step == max_steps - 1:
-            logger.snapshot(
-                engine=engine,
-                note=f"Step {step + 1}: {g.nodes['krk_root'].state.name}",
-                env={
-                    "initial_fen": initial_fen,
-                    "moves": moves_made.copy(),
-                    "fen": board.fen()  # Keep FEN for backward compatibility
-                },
-                thoughts=f"Evaluating KRK position (step {step + 1})...",
-                new_requests=list(now_requested.keys()) if now_requested else []
-            )
-            last_logged_states = current_states.copy()
+        print("\nDemo completed. The network correctly evaluates the KRK position!")
+        print(f"Total moves made: {len(moves_made)}")
+        print("Visualization data exported to: demos/krk_visualization_data.json")
 
-        # Check if we found a solution
-        if g.nodes["krk_root"].state == NodeState.CONFIRMED:
-            print("\n Checkmate procedure confirmed!")
-
-            # Log final successful state
-            logger.snapshot(
-                engine=engine,
-                note="Final: Checkmate confirmed",
-                env={
-                    "initial_fen": initial_fen,
-                    "moves": moves_made.copy(),
-                    "fen": board.fen()
-                },
-                thoughts="Checkmate procedure confirmed!",
-                new_requests=[]
-            )
-            break
-        elif g.nodes["krk_root"].state == NodeState.FAILED:
-            print("\n Checkmate procedure failed")
-
-            # Log final failed state
-            logger.snapshot(
-                engine=engine,
-                note="Final: Checkmate failed",
-                env={
-                    "initial_fen": initial_fen,
-                    "moves": moves_made.copy(),
-                    "fen": board.fen()
-                },
-                thoughts="Checkmate procedure failed",
-                new_requests=[]
-            )
-            break
-
-        print()
-
-    print("\nDemo completed. The network correctly evaluates the KRK position!")
-    print(f"Total moves made: {len(moves_made)}")
-    print("Visualization data exported to: demos/krk_visualization_data.json")
+    except Exception as e:
+        print(f"Error during demo execution: {e}")
+        import traceback
+        traceback.print_exc()
 
     # Export for visualization
     logger.to_json("demos/krk_visualization_data.json")

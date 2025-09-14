@@ -302,7 +302,7 @@
                         <span class="state-failed">Failed</span>
                     </div>
                 </div>
-                <div id="network-canvas" style="flex: 1; border-radius: 8px; background: #f8f9fa;"></div>
+                <canvas id="network-canvas" style="flex: 1; border-radius: 8px; background: #f8f9fa;"></canvas>
             </div>
 
             <!-- Phase Schematic -->
@@ -383,11 +383,10 @@
 
         // Initialize the application
         async function init() {
-            try {
-                // Load visualization data
-                await loadVisualizationData();
+            console.log('Initializing ReCoN visualization...');
 
-                // Initialize chess board
+            try {
+                // Initialize chess board first (show placeholder)
                 initChessBoard();
 
                 // Initialize network visualization
@@ -396,14 +395,14 @@
                 // Setup controls
                 setupControls();
 
-                // Show initial state
-                if (visualizationData.length > 0) {
-                    updateVisualization(0);
-                }
+                // Load visualization data (this will show initial state)
+                await loadVisualizationData();
+
+                console.log('ReCoN visualization initialized successfully');
 
             } catch (error) {
                 console.error('Error initializing application:', error);
-                document.getElementById('thoughts-text').textContent = 'Error loading visualization data';
+                document.getElementById('thoughts-text').textContent = 'Error initializing visualization';
             }
         }
 
@@ -416,10 +415,32 @@
                 }
                 visualizationData = await response.json();
                 console.log('Loaded visualization data:', visualizationData);
+
+                // Update controls with loaded data
+                updateControls();
+
+                // Show initial state immediately
+                if (visualizationData.length > 0) {
+                    updateVisualization(0);
+                }
+
             } catch (error) {
                 console.error('Error loading visualization data:', error);
+                console.log('Falling back to mock data for testing');
+
                 // Create mock data for testing
                 visualizationData = createMockData();
+
+                // Update controls with mock data
+                updateControls();
+
+                // Show mock data immediately
+                if (visualizationData.length > 0) {
+                    updateVisualization(0);
+                }
+
+                // Show user-friendly message
+                document.getElementById('thoughts-text').textContent = 'Using demo data - run the KRK demo to see live data';
             }
         }
 
@@ -442,7 +463,11 @@
                         "mate_deliver_evaluator": "INACTIVE",
                         "stalemate_detector": "INACTIVE"
                     },
-                    env: { "fen": "4k3/8/8/8/8/8/8/R3K3 w - - 0 1" },
+                    env: {
+                        "initial_fen": "4k3/8/8/8/8/8/8/R3K3 w - - 0 1",
+                        "moves": [],
+                        "fen": "4k3/8/8/8/8/8/8/R3K3 w - - 0 1"
+                    },
                     thoughts: "Initializing ReCoN network...",
                     new_requests: []
                 },
@@ -457,7 +482,11 @@
                         "king_at_edge_detector": "REQUESTED",
                         "box_shrink_evaluator": "REQUESTED"
                     },
-                    env: { "fen": "4k3/8/8/8/8/8/8/R3K3 w - - 0 1" },
+                    env: {
+                        "initial_fen": "4k3/8/8/8/8/8/8/R3K3 w - - 0 1",
+                        "moves": [],
+                        "fen": "4k3/8/8/8/8/8/8/R3K3 w - - 0 1"
+                    },
                     thoughts: "Evaluating KRK position...",
                     new_requests: ["phase1_drive_edge", "phase2_shrink_box"]
                 }
@@ -467,7 +496,7 @@
         // Initialize chess board
         function initChessBoard() {
             const boardElement = document.getElementById('chess-board');
-            boardElement.innerHTML = '<div class="chess-info">Chess board will render here</div>';
+            boardElement.innerHTML = '<div class="chess-info">Loading chess position...</div>';
         }
 
         // Render chess board from FEN or moves
@@ -665,9 +694,14 @@
 
         // Update visualization for given step
         function updateVisualization(step) {
-            if (step >= visualizationData.length) return;
+            console.log(`Updating visualization for step ${step}`);
+            if (step >= visualizationData.length) {
+                console.log(`Step ${step} is beyond data length ${visualizationData.length}`);
+                return;
+            }
 
             const frame = visualizationData[step];
+            console.log('Frame data:', frame);
 
             // Update chess board (supports both FEN and move-based formats)
             if (frame.env) {

@@ -12,34 +12,60 @@
     <script>
         async function testVisualization() {
             try {
+                console.log('Testing visualization data loading...');
                 const response = await fetch('./krk_visualization_data.json');
+                console.log('Fetch response:', response);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const data = await response.json();
+                console.log('Parsed JSON data:', data);
 
                 const output = document.getElementById('output');
 
                 output.innerHTML = `
-                    <h2>Visualization Data Test Results</h2>
+                    <h2>✅ Visualization Data Test Results</h2>
                     <p><strong>Frames loaded:</strong> ${data.length}</p>
                     <p><strong>First frame type:</strong> ${data[0].type}</p>
                     <p><strong>Last frame note:</strong> ${data[data.length - 1].note}</p>
                     <p><strong>Nodes in first frame:</strong> ${Object.keys(data[0].nodes).length}</p>
                     <p><strong>FEN in first frame:</strong> ${data[0].env.fen}</p>
+                    <p><strong>Moves in first frame:</strong> ${data[0].env.moves ? data[0].env.moves.length : 0}</p>
                     <h3>Sample Frame Structure:</h3>
                     <pre>${JSON.stringify(data[0], null, 2)}</pre>
+                    <p><strong>🎉 JSON data is loading correctly!</strong></p>
                 `;
 
                 console.log('Visualization data loaded successfully:', data);
 
             } catch (error) {
                 document.getElementById('output').innerHTML = `
-                    <h2>Error Loading Visualization Data</h2>
+                    <h2>❌ Error Loading Visualization Data</h2>
                     <p>Error: ${error.message}</p>
+                    <p>Check the browser console for more details.</p>
                 `;
                 console.error('Error loading visualization data:', error);
             }
         }
 
+        // Test the enhanced visualization by opening it in a new window
+        function testEnhancedVisualization() {
+            const testDiv = document.createElement('div');
+            testDiv.innerHTML = `
+                <h3>🎯 Test Enhanced Visualization:</h3>
+                <button onclick="window.open('./visualization/enhanced_visualization.html', '_blank')"
+                        style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                    🖥️ Open Enhanced Visualization
+                </button>
+                <p><small>This will open the parent dashboard in a new tab/window</small></p>
+            `;
+            document.getElementById('output').appendChild(testDiv);
+        }
+
         testVisualization();
+        setTimeout(testEnhancedVisualization, 1000);
     </script>
 </body>
 </html>

@@ -131,8 +131,8 @@
   },
   {
     "type": "snapshot",
-    "tick": 10,
-    "note": "Step 10: WAITING",
+    "tick": 100,
+    "note": "Step 100: WAITING",
     "nodes": {
       "krk_root": "WAITING",
       "phase1_drive_edge": "CONFIRMED",
@@ -151,6 +151,6 @@
       "moves": [],
       "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1"
     },
-    "thoughts": "Evaluating KRK position (step 10)..."
+    "thoughts": "Evaluating KRK position (step 100)..."
   }
 ]

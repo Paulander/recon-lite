@@ -1,102 +1,136 @@
-# ReCoN Enhanced Visualization
+# ReCoN Visualization Suite
 
-This directory contains the enhanced visualization system that implements the VIS_SPEC.md layout for ReCoN KRK checkmate demonstrations.
+This directory contains multiple visualization approaches for ReCoN networks:
 
-## Features
+## 📊 Visualization Types
 
-### Layout (per VIS_SPEC.md)
-- **Left (main)**: Interactive chess board rendered from FEN positions
-- **Bottom-left**: AI "portrait" with dynamic thoughts/comments
-- **Right-top**: 2D ReCoN network graph with colored nodes by state
-- **Right-bottom**: Phase schematic showing KRK strategy phases
+### 1. **Parent Dashboard View** (`enhanced_visualization.html`)
+**Purpose**: Comprehensive dashboard with multiple sub-views per VIS_SPEC.md
+- **Chess Board**: Interactive board from FEN/move data
+- **AI Portrait**: Dynamic thoughts and commentary
+- **2D Network Graph**: Node states with color coding
+- **Phase Schematic**: KRK strategy phase visualization
+- **Standalone**: Works without server, double-click to run
+- **Controls**: Play/Pause/Step through execution
 
-### Interactive Controls
-- Play/Pause/Step through the ReCoN execution
-- Scrub through execution steps
-- Real-time state visualization
-- Phase progression tracking
+### 2. **3D Network Visualization** (`index.html`)
+**Purpose**: Focused 3D visualization of network structure and state changes
+- **3D Network**: Interactive 3D graph with Three.js
+- **State Colors**: Real-time node state visualization
+- **Modular**: Separate JS/CSS files
+- **Server Required**: HTTP server needed for ES6 modules
 
-## Files
+### 3. **Standalone 3D Demo** (`standalone_html_example.html`)
+**Purpose**: Self-contained 3D network demo
+- **All-in-one**: CSS/JS inline, no external dependencies
+- **Same 3D features**: As modular version but standalone
+- **Perfect for sharing**: Single file, works without server
 
-- `enhanced_visualization.html` - Main visualization application
-- `test_visualization.html` - Simple test page to verify JSON data loading
 
-## Usage
+## 🚀 Quick Start Guide
 
-### 1. Generate Visualization Data
-First, run the KRK demo to generate the JSON data:
-
+### Option 1: Parent Dashboard (Recommended for KRK Demo)
+**Best for seeing the complete chess + network visualization**
 ```bash
-cd /path/to/recon-lite
-uv run python demos/krk_checkmate_demo.py
+# Just double-click this file:
+enhanced_visualization.html
+
+# It will:
+# ✅ Load immediately (no server needed)
+# ✅ Show chess board + network + phases
+# ✅ Fall back to demo data if JSON not found
+# ✅ Work with live KRK data when available
 ```
 
-This creates `demos/krk_visualization_data.json` with all the ReCoN execution frames.
-
-### 2. View the Visualization
-Open `enhanced_visualization.html` in a web browser. For best results, serve it via HTTP:
-
+### Option 2: 3D Network Visualization (Requires Server)
+**Best for detailed network structure exploration**
 ```bash
-cd demos/visualization
-python3 -m http.server 8000
-# Then open http://localhost:8000/enhanced_visualization.html
+# Start server in this directory:
+uv run python -m http.server 8000
+
+# Open in browser:
+http://localhost:8000/index.html
 ```
 
-Or simply double-click the HTML file if your browser supports ES6 modules locally.
+### Option 3: Standalone 3D Demo (No Server)
+**Best for quick sharing/demos**
+```bash
+# Just double-click:
+standalone_html_example.html
+```
 
-### 3. Test Data Loading
-Open `test_visualization.html` to verify the JSON data is properly formatted and loadable.
+## 📋 Prerequisites
 
-## JSON Schema (VIS_SPEC.md Compliant)
+- **uv**: Fast Python package manager
+  ```bash
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+  ```
+- **Internet**: For loading Three.js/chess.js from CDN
+- **Browser**: Modern browser with ES6 support
 
-Each frame in the visualization data follows this structure:
 
+## 📄 Data Formats
+
+### JSON Schema (VIS_SPEC.md Compliant)
+The parent dashboard uses JSON with this structure:
 ```json
 {
   "type": "snapshot",
   "tick": 1,
   "note": "Step 1",
-  "nodes": {
-    "node_id": "STATE_NAME"
-  },
-  "new_requests": ["node_id1", "node_id2"],
+  "nodes": { "node_id": "STATE_NAME", ... },
   "env": {
-    "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1"
+    "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+    "moves": ["a1a2", "g7f6"],
+    "fen": "4k3/5K2/R7/5k2/8/8/8/8 w - - 0 3"
   },
-  "thoughts": "AI commentary text"
+  "thoughts": "AI commentary",
+  "new_requests": ["node_id1", "node_id2"]
 }
 ```
 
-## Node States & Colors
+### Generating Data
+```bash
+# Run the KRK demo to generate visualization data:
+uv run python demos/krk_checkmate_demo.py
+```
 
-- **INACTIVE** (gray) - Node not yet activated
-- **REQUESTED** (blue) - Node requested for evaluation
-- **WAITING** (orange) - Node waiting for children to complete
-- **TRUE** (lime) - Terminal node evaluation succeeded
-- **CONFIRMED** (green) - Script node confirmed all requirements met
-- **FAILED** (red) - Node evaluation failed
+This creates `demos/krk_visualization_data.json` with the ReCoN execution frames.
 
-## KRK Phases
+## 🎯 Key Differences
 
-The visualization tracks these phases:
-1. **ROOT**: KRK Checkmate (overall strategy)
-2. **PHASE1**: Drive to Edge (force king to board edge)
-3. **PHASE2**: Shrink Box (reduce king's mobility)
-4. **PHASE3**: Take Opposition (proper king alignment)
-5. **PHASE4**: Deliver Mate (final checkmate execution)
+| Feature | Parent Dashboard | 3D Network | Standalone 3D |
+|---------|------------------|------------|---------------|
+| **Chess Board** | ✅ Yes | ❌ No | ❌ No |
+| **AI Thoughts** | ✅ Yes | ❌ No | ❌ No |
+| **Phase Schematic** | ✅ Yes | ❌ No | ❌ No |
+| **3D Network** | ❌ No (2D) | ✅ Yes | ✅ Yes |
+| **Server Required** | ❌ No | ✅ Yes | ❌ No |
+| **Modular Code** | ❌ Inline | ✅ Yes | ❌ Inline |
+| **Data Source** | JSON file | JS array | JS array |
 
-## Technical Notes
+## 🛠️ Development
 
-- Uses chess.js library for board rendering
-- Three.js ready for future 3D enhancements
-- Responsive design works on different screen sizes
-- ES6 modules for clean code organization
-- CORS-friendly for local file access
+### File Structure
+- **Parent Dashboard**: `enhanced_visualization.html` (all-in-one file)
+- **3D Network**: Modular files:
+  - `index.html` - Main HTML structure
+  - `main.js` - Three.js setup and controls
+  - `visualization.js` - Scene rendering and updates
+  - `network-data.js` - Node data, positions, edges
+  - `utils.js` - Helper functions
+  - `styles.css` - UI styling
+- **Standalone 3D**: `standalone_html_example.html` (all-in-one)
+- **Testing**: `test_visualization.html` (JSON loading verification)
 
-## Future Enhancements
+### Data Sources
+- **Parent Dashboard**: Loads `../krk_visualization_data.json`
+- **3D Visualizations**: Use hardcoded data in `network-data.js`
 
-- Dynamic thought generation using LLM API
-- 3D network visualization with Three.js
-- Move animations on chess board
-- Multiple visualization layouts
-- Export capabilities (GIF, video)
+## 🔮 Future Enhancements
+
+- **Dynamic Layout**: Support for arbitrary ReCoN graphs
+- **Live Updates**: Real-time visualization during ReCoN execution
+- **Multiple Data Sources**: Support for different JSON formats
+- **Export Features**: GIF/video export of visualization sequences
+- **Advanced Interactions**: Node selection, detail panels, filtering
