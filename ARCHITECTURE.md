@@ -55,16 +55,101 @@ This implementation provides a complete, minimal ReCoN (Request Confirmation Net
 - **Neural Ready**: Can add threshold elements without breaking existing code
 - **Domain Agnostic**: Core ReCoN engine works for any hierarchical planning task
 
-## File Organization
+## Detailed File Organization
+
+### Core ReCoN Library (`src/recon_lite/`)
+
+#### Core Components
+```
+├── __init__.py       # Clean API exports (core components only)
+├── graph.py          # Core ReCoN data structures and graph management
+├── engine.py         # Execution engine with state machine logic
+├── logger.py         # Structured logging for visualization
+└── plugins.py        # Plugin interfaces for extensibility
+```
+
+#### File Details
+
+**`graph.py`** - Core ReCoN Foundation
+- `Node`, `NodeType`, `NodeState`, `LinkType` classes
+- `Edge` class with weight support
+- `Graph` class with relationship management
+- Factory functions for node creation
+- Validation logic for graph structure
+
+**`engine.py`** - Execution Engine
+- `ReConEngine` class with discrete-time execution
+- State transition logic for all node types
+- Request/confirmation cycle implementation
+- Terminal node evaluation system
+- Sequence and hierarchy handling
+
+**`logger.py`** - Visualization Support
+- `RunLogger` class for structured logging
+- Frame schema for replay and debugging
+- JSON export functionality
+- Timeline tracking
+
+**`plugins.py`** - Extensibility Framework
+- `TerminalPlugin` protocol for custom terminal nodes
+- Example implementations
+- Plugin registration system
+
+### Domain Modules (`src/`)
+
+#### Chess Module (`src/recon_lite_chess/`)
+```
+├── __init__.py       # Chess module exports
+├── krk_nodes.py      # KRK-specific node implementations
+└── vision.py         # Future: Computer vision integration
+```
+
+**`krk_nodes.py`** - Chess-Specific Nodes
+- Terminal evaluators (KingAtEdgeDetector, BoxShrinkEvaluator, etc.)
+- Script phase nodes (Phase1DriveToEdge, Phase2ShrinkBox, etc.)
+- Factory functions for easy node creation
+- Chess-specific logic and heuristics
+
+### Demo Applications (`demos/`)
+
+#### Core Demo
+```
+├── sequence_demo.py  # Basic ReCoN functionality demo
+└── sequence_log.json # Demo output data
+```
+
+#### Chess Demo
+```
+├── krk_checkmate_demo.py  # KRK checkmate solver
+└── chess/                 # Future: Chess package (if needed)
+```
+
+#### Visualization
+```
+└── visualization/
+    ├── index.html         # Main visualization interface
+    ├── standalone_html_example.html  # Self-contained version
+    ├── styles.css         # Styling
+    ├── utils.js           # Utility functions
+    ├── visualization.js   # Core visualization logic
+    └── README.md          # Visualization documentation
+```
+
+### Configuration & Documentation
 
 ```
-src/recon_lite/
-├── graph.py          # Core ReCoN data structures
-├── engine.py         # Execution engine
-├── logger.py         # Structured logging
-├── plugins.py        # Plugin interfaces
-├── chess_nodes.py    # Chess-specific node implementations
-└── __init__.py       # Clean API exports
+├── pyproject.toml         # Package configuration
+├── README.md              # High-level overview
+├── ARCHITECTURE.md        # Detailed design decisions
+├── VIS_SPEC.md           # Visualization specifications
+└── Article.md            # Original ReCoN paper
+```
+
+### Test Suite
+
+```
+└── tests/
+    └── test_engine.py     # Core engine tests
 ```
 
 ## Usage Example
