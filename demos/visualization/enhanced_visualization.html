@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReCoN KRK Checkmate Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.12.0/chess.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #333;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 1.5em;
+            font-weight: 300;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        /* Left side - Chess board */
+        .left-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .chess-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chess-board {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .chess-info {
+            margin-top: 15px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        /* Bottom left - AI Portrait & Thoughts */
+        .ai-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            height: 200px;
+        }
+
+        .ai-portrait {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2em;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .thoughts-container {
+            flex: 1;
+        }
+
+        .thoughts-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .thoughts-text {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            font-style: italic;
+            color: #333;
+        }
+
+        /* Right side - ReCoN Network */
+        .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .network-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .network-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .network-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .phase-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            height: 250px;
+        }
+
+        .phase-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .phases-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .phase-item {
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.85em;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        /* Controls */
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            padding: 15px 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .control-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .control-btn:active {
+            transform: translateY(0);
+        }
+
+        .step-counter {
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* Node states */
+        .state-inactive { background: #e9ecef; color: #6c757d; }
+        .state-requested { background: #cce5ff; color: #0066cc; }
+        .state-waiting { background: #fff3cd; color: #856404; }
+        .state-true { background: #d4edda; color: #155724; }
+        .state-confirmed { background: #d1ecf1; color: #0c5460; }
+        .state-failed { background: #f8d7da; color: #721c24; }
+
+        /* Chess board styling */
+        .square {
+            width: 12.5%;
+            height: 50px;
+            display: inline-block;
+            position: relative;
+        }
+
+        .square.white { background: #f0d9b5; }
+        .square.black { background: #b58863; }
+
+        .piece {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .square.white .piece.black { color: #333; }
+        .square.black .piece.white { color: #f0f0f0; }
+
+        /* Hide Three.js canvas initially */
+        canvas { display: none; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-chess-rook"></i> ReCoN KRK Checkmate Visualization</h1>
+    </div>
+
+    <div class="main-content">
+        <!-- Left Panel -->
+        <div class="left-panel">
+            <!-- Chess Board -->
+            <div class="chess-container">
+                <div class="chess-board" id="chess-board"></div>
+                <div class="chess-info" id="chess-info">Loading position...</div>
+            </div>
+
+            <!-- AI Portrait & Thoughts -->
+            <div class="ai-panel">
+                <div class="ai-portrait">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <div class="thoughts-container">
+                    <div class="thoughts-label">AI Thoughts:</div>
+                    <div class="thoughts-text" id="thoughts-text">Initializing ReCoN network...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel -->
+        <div class="right-panel">
+            <!-- ReCoN Network -->
+            <div class="network-container">
+                <div class="network-header">
+                    <div class="network-title"><i class="fas fa-project-diagram"></i> ReCoN Network</div>
+                    <div class="network-legend">
+                        <span class="state-inactive">Inactive</span>
+                        <span class="state-requested">Requested</span>
+                        <span class="state-waiting">Waiting</span>
+                        <span class="state-true">True</span>
+                        <span class="state-confirmed">Confirmed</span>
+                        <span class="state-failed">Failed</span>
+                    </div>
+                </div>
+                <div id="network-canvas" style="flex: 1; border-radius: 8px; background: #f8f9fa;"></div>
+            </div>
+
+            <!-- Phase Schematic -->
+            <div class="phase-container">
+                <div class="phase-title"><i class="fas fa-layer-group"></i> KRK Checkmate Phases</div>
+                <div class="phases-grid" id="phases-grid">
+                    <div class="phase-item state-inactive" data-phase="krk_root">ROOT: KRK Checkmate</div>
+                    <div class="phase-item state-inactive" data-phase="phase1_drive_edge">PHASE1: Drive to Edge</div>
+                    <div class="phase-item state-inactive" data-phase="phase2_shrink_box">PHASE2: Shrink Box</div>
+                    <div class="phase-item state-inactive" data-phase="phase3_take_opposition">PHASE3: Take Opposition</div>
+                    <div class="phase-item state-inactive" data-phase="phase4_deliver_mate">PHASE4: Deliver Mate</div>
+                    <div class="phase-item state-inactive" data-phase="king_at_edge_detector">King at Edge?</div>
+                    <div class="phase-item state-inactive" data-phase="box_shrink_evaluator">Box Shrink Possible?</div>
+                    <div class="phase-item state-inactive" data-phase="opposition_evaluator">Has Opposition?</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+        <button class="control-btn" id="prev-btn" disabled>
+            <i class="fas fa-step-backward"></i> Previous
+        </button>
+        <button class="control-btn" id="play-pause-btn">
+            <i class="fas fa-play"></i> Play
+        </button>
+        <button class="control-btn" id="next-btn" disabled>
+            Next <i class="fas fa-step-forward"></i>
+        </button>
+        <div class="step-counter" id="step-counter">Step 0 / 0</div>
+    </div>
+
+    <script>
+        // Global variables
+        let visualizationData = [];
+        let currentStep = 0;
+        let isPlaying = false;
+        let playInterval = null;
+        let chessBoard = null;
+
+        // Node positions for network visualization (simplified)
+        const nodePositions = {
+            'krk_root': { x: 400, y: 100 },
+            'phase1_drive_edge': { x: 200, y: 200 },
+            'phase2_shrink_box': { x: 600, y: 200 },
+            'phase3_take_opposition': { x: 300, y: 300 },
+            'phase4_deliver_mate': { x: 500, y: 300 },
+            'king_at_edge_detector': { x: 150, y: 400 },
+            'box_shrink_evaluator': { x: 350, y: 400 },
+            'opposition_evaluator': { x: 250, y: 500 },
+            'mate_deliver_evaluator': { x: 450, y: 500 },
+            'stalemate_detector': { x: 550, y: 500 }
+        };
+
+        // Edges between nodes
+        const edges = [
+            ['krk_root', 'phase1_drive_edge'],
+            ['krk_root', 'phase2_shrink_box'],
+            ['krk_root', 'phase3_take_opposition'],
+            ['krk_root', 'phase4_deliver_mate'],
+            ['phase1_drive_edge', 'king_at_edge_detector'],
+            ['phase2_shrink_box', 'box_shrink_evaluator'],
+            ['phase3_take_opposition', 'opposition_evaluator'],
+            ['phase4_deliver_mate', 'mate_deliver_evaluator'],
+            ['phase4_deliver_mate', 'stalemate_detector']
+        ];
+
+        // State colors
+        const stateColors = {
+            'INACTIVE': '#6c757d',
+            'REQUESTED': '#0066cc',
+            'WAITING': '#856404',
+            'TRUE': '#155724',
+            'CONFIRMED': '#0c5460',
+            'FAILED': '#721c24'
+        };
+
+        // Initialize the application
+        async function init() {
+            try {
+                // Load visualization data
+                await loadVisualizationData();
+
+                // Initialize chess board
+                initChessBoard();
+
+                // Initialize network visualization
+                initNetwork();
+
+                // Setup controls
+                setupControls();
+
+                // Show initial state
+                if (visualizationData.length > 0) {
+                    updateVisualization(0);
+                }
+
+            } catch (error) {
+                console.error('Error initializing application:', error);
+                document.getElementById('thoughts-text').textContent = 'Error loading visualization data';
+            }
+        }
+
+        // Load visualization data from JSON
+        async function loadVisualizationData() {
+            try {
+                const response = await fetch('../krk_visualization_data.json');
+                if (!response.ok) {
+                    throw new Error('Failed to load visualization data');
+                }
+                visualizationData = await response.json();
+                console.log('Loaded visualization data:', visualizationData);
+            } catch (error) {
+                console.error('Error loading visualization data:', error);
+                // Create mock data for testing
+                visualizationData = createMockData();
+            }
+        }
+
+        // Create mock data for testing
+        function createMockData() {
+            return [
+                {
+                    type: "snapshot",
+                    tick: 0,
+                    note: "Initial state",
+                    nodes: {
+                        "krk_root": "INACTIVE",
+                        "phase1_drive_edge": "INACTIVE",
+                        "phase2_shrink_box": "INACTIVE",
+                        "phase3_take_opposition": "INACTIVE",
+                        "phase4_deliver_mate": "INACTIVE",
+                        "king_at_edge_detector": "INACTIVE",
+                        "box_shrink_evaluator": "INACTIVE",
+                        "opposition_evaluator": "INACTIVE",
+                        "mate_deliver_evaluator": "INACTIVE",
+                        "stalemate_detector": "INACTIVE"
+                    },
+                    env: { "fen": "4k3/8/8/8/8/8/8/R3K3 w - - 0 1" },
+                    thoughts: "Initializing ReCoN network...",
+                    new_requests: []
+                },
+                {
+                    type: "snapshot",
+                    tick: 1,
+                    note: "Step 1",
+                    nodes: {
+                        "krk_root": "REQUESTED",
+                        "phase1_drive_edge": "REQUESTED",
+                        "phase2_shrink_box": "REQUESTED",
+                        "king_at_edge_detector": "REQUESTED",
+                        "box_shrink_evaluator": "REQUESTED"
+                    },
+                    env: { "fen": "4k3/8/8/8/8/8/8/R3K3 w - - 0 1" },
+                    thoughts: "Evaluating KRK position...",
+                    new_requests: ["phase1_drive_edge", "phase2_shrink_box"]
+                }
+            ];
+        }
+
+        // Initialize chess board
+        function initChessBoard() {
+            const boardElement = document.getElementById('chess-board');
+            boardElement.innerHTML = '<div class="chess-info">Chess board will render here</div>';
+        }
+
+        // Render chess board from FEN or moves
+        function renderChessBoard(env) {
+            const boardElement = document.getElementById('chess-board');
+
+            // Create chess instance
+            let chess;
+
+            if (env.moves && env.moves.length > 0) {
+                // Use move-based format for efficiency
+                chess = new Chess(env.initial_fen);
+                // Apply all moves to get current position
+                env.moves.forEach(moveUci => {
+                    const move = chess.move(moveUci, { sloppy: true });
+                    if (!move) {
+                        console.warn(`Invalid move: ${moveUci}`);
+                    }
+                });
+            } else if (env.fen) {
+                // Fallback to FEN format
+                chess = new Chess(env.fen);
+            } else {
+                // No position data available
+                boardElement.innerHTML = '<div class="chess-info">No position data available</div>';
+                return;
+            }
+
+            let boardHtml = '';
+            const board = chess.board();
+
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const square = board[row][col];
+                    const isLight = (row + col) % 2 === 0;
+                    const squareClass = isLight ? 'white' : 'black';
+
+                    boardHtml += `<div class="square ${squareClass}">`;
+
+                    if (square) {
+                        const piece = square.type;
+                        const color = square.color === 'w' ? 'white' : 'black';
+                        const pieceSymbol = getPieceSymbol(piece, color);
+                        boardHtml += `<div class="piece ${color}">${pieceSymbol}</div>`;
+                    }
+
+                    boardHtml += '</div>';
+                }
+            }
+
+            boardElement.innerHTML = boardHtml;
+        }
+
+        // Get chess piece symbol
+        function getPieceSymbol(piece, color) {
+            const symbols = {
+                'p': '♟', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚',
+                'P': '♙', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔'
+            };
+            return symbols[color === 'white' ? piece.toUpperCase() : piece.toLowerCase()] || '';
+        }
+
+        // Initialize network visualization
+        function initNetwork() {
+            const canvas = document.getElementById('network-canvas');
+            const ctx = canvas.getContext('2d');
+
+            function resizeCanvas() {
+                canvas.width = canvas.offsetWidth;
+                canvas.height = canvas.offsetHeight;
+            }
+
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            // Draw initial network
+            drawNetwork(ctx);
+        }
+
+        // Draw network visualization
+        function drawNetwork(ctx) {
+            const canvas = ctx.canvas;
+
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw edges
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 2;
+            edges.forEach(([from, to]) => {
+                const fromPos = nodePositions[from];
+                const toPos = nodePositions[to];
+                if (fromPos && toPos) {
+                    ctx.beginPath();
+                    ctx.moveTo(fromPos.x, fromPos.y);
+                    ctx.lineTo(toPos.x, toPos.y);
+                    ctx.stroke();
+                }
+            });
+
+            // Draw nodes
+            Object.entries(nodePositions).forEach(([nodeId, pos]) => {
+                const state = getNodeState(nodeId);
+                const color = stateColors[state] || '#6c757d';
+
+                // Draw node circle
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, 20, 0, 2 * Math.PI);
+                ctx.fill();
+
+                // Draw node label
+                ctx.fillStyle = '#fff';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(nodeId.replace(/_/g, ' ').toUpperCase(), pos.x, pos.y + 25);
+            });
+        }
+
+        // Get node state for current step
+        function getNodeState(nodeId) {
+            if (currentStep >= visualizationData.length) return 'INACTIVE';
+            const frame = visualizationData[currentStep];
+            return frame.nodes[nodeId] || 'INACTIVE';
+        }
+
+        // Setup controls
+        function setupControls() {
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const playPauseBtn = document.getElementById('play-pause-btn');
+
+            prevBtn.addEventListener('click', () => {
+                if (currentStep > 0) {
+                    currentStep--;
+                    updateVisualization(currentStep);
+                }
+            });
+
+            nextBtn.addEventListener('click', () => {
+                if (currentStep < visualizationData.length - 1) {
+                    currentStep++;
+                    updateVisualization(currentStep);
+                }
+            });
+
+            playPauseBtn.addEventListener('click', () => {
+                if (isPlaying) {
+                    pausePlayback();
+                } else {
+                    startPlayback();
+                }
+            });
+
+            updateControls();
+        }
+
+        // Start playback
+        function startPlayback() {
+            isPlaying = true;
+            document.getElementById('play-pause-btn').innerHTML = '<i class="fas fa-pause"></i> Pause';
+
+            playInterval = setInterval(() => {
+                if (currentStep >= visualizationData.length - 1) {
+                    pausePlayback();
+                    return;
+                }
+                currentStep++;
+                updateVisualization(currentStep);
+            }, 1000);
+        }
+
+        // Pause playback
+        function pausePlayback() {
+            isPlaying = false;
+            document.getElementById('play-pause-btn').innerHTML = '<i class="fas fa-play"></i> Play';
+            if (playInterval) {
+                clearInterval(playInterval);
+                playInterval = null;
+            }
+        }
+
+        // Update controls state
+        function updateControls() {
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const stepCounter = document.getElementById('step-counter');
+
+            prevBtn.disabled = currentStep <= 0;
+            nextBtn.disabled = currentStep >= visualizationData.length - 1;
+
+            const total = visualizationData.length;
+            stepCounter.textContent = `Step ${currentStep + 1} / ${total}`;
+        }
+
+        // Update visualization for given step
+        function updateVisualization(step) {
+            if (step >= visualizationData.length) return;
+
+            const frame = visualizationData[step];
+
+            // Update chess board (supports both FEN and move-based formats)
+            if (frame.env) {
+                renderChessBoard(frame.env);
+
+                // Show position info
+                let positionInfo = "";
+                if (frame.env.moves && frame.env.moves.length > 0) {
+                    positionInfo = `Moves: ${frame.env.moves.length} | FEN: ${frame.env.fen}`;
+                } else if (frame.env.fen) {
+                    positionInfo = `Position: ${frame.env.fen}`;
+                }
+                document.getElementById('chess-info').textContent = positionInfo;
+            }
+
+            // Update thoughts
+            if (frame.thoughts) {
+                document.getElementById('thoughts-text').textContent = frame.thoughts;
+            }
+
+            // Update phase states
+            updatePhaseStates(frame.nodes);
+
+            // Update network visualization
+            const canvas = document.getElementById('network-canvas');
+            const ctx = canvas.getContext('2d');
+            drawNetwork(ctx);
+
+            // Update controls
+            updateControls();
+        }
+
+        // Update phase states in the UI
+        function updatePhaseStates(nodes) {
+            const phaseElements = document.querySelectorAll('.phase-item');
+
+            phaseElements.forEach(element => {
+                const phaseId = element.getAttribute('data-phase');
+                const state = nodes[phaseId] || 'INACTIVE';
+                const stateClass = `state-${state.toLowerCase()}`;
+
+                // Remove all state classes
+                element.className = 'phase-item';
+
+                // Add current state class
+                element.classList.add(stateClass);
+            });
+        }
+
+        // Start the application
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

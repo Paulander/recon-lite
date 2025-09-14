@@ -1,0 +1,156 @@
+[
+  {
+    "type": "snapshot",
+    "tick": 0,
+    "note": "Initial position",
+    "nodes": {
+      "krk_root": "REQUESTED",
+      "phase1_drive_edge": "INACTIVE",
+      "phase2_shrink_box": "INACTIVE",
+      "phase3_opposition": "INACTIVE",
+      "phase4_deliver_mate": "INACTIVE",
+      "king_at_edge_detector": "INACTIVE",
+      "box_shrink_evaluator": "INACTIVE",
+      "opposition_evaluator": "INACTIVE",
+      "mate_deliver_evaluator": "INACTIVE",
+      "stalemate_detector": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1"
+    },
+    "thoughts": "Starting KRK checkmate evaluation..."
+  },
+  {
+    "type": "snapshot",
+    "tick": 1,
+    "note": "Step 1: WAITING",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "REQUESTED",
+      "box_shrink_evaluator": "REQUESTED",
+      "opposition_evaluator": "REQUESTED",
+      "mate_deliver_evaluator": "REQUESTED",
+      "stalemate_detector": "REQUESTED"
+    },
+    "new_requests": [
+      "phase1_drive_edge",
+      "phase2_shrink_box",
+      "phase3_opposition",
+      "phase4_deliver_mate",
+      "king_at_edge_detector",
+      "box_shrink_evaluator",
+      "opposition_evaluator",
+      "mate_deliver_evaluator",
+      "stalemate_detector"
+    ],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1"
+    },
+    "thoughts": "Evaluating KRK position (step 1)..."
+  },
+  {
+    "type": "snapshot",
+    "tick": 2,
+    "note": "Step 2: WAITING",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "WAITING",
+      "box_shrink_evaluator": "WAITING",
+      "opposition_evaluator": "WAITING",
+      "mate_deliver_evaluator": "WAITING",
+      "stalemate_detector": "WAITING"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1"
+    },
+    "thoughts": "Evaluating KRK position (step 2)..."
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Step 3: WAITING",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "opposition_evaluator": "FAILED",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1"
+    },
+    "thoughts": "Evaluating KRK position (step 3)..."
+  },
+  {
+    "type": "snapshot",
+    "tick": 4,
+    "note": "Step 4: WAITING",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "CONFIRMED",
+      "phase2_shrink_box": "WAITING",
+      "phase3_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "CONFIRMED",
+      "box_shrink_evaluator": "FAILED",
+      "opposition_evaluator": "FAILED",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1"
+    },
+    "thoughts": "Evaluating KRK position (step 4)..."
+  },
+  {
+    "type": "snapshot",
+    "tick": 10,
+    "note": "Step 10: WAITING",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "CONFIRMED",
+      "phase2_shrink_box": "WAITING",
+      "phase3_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "CONFIRMED",
+      "box_shrink_evaluator": "FAILED",
+      "opposition_evaluator": "FAILED",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1"
+    },
+    "thoughts": "Evaluating KRK position (step 10)..."
+  }
+]

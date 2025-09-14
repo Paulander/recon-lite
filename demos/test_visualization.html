@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test ReCoN Visualization</title>
+</head>
+<body>
+    <h1>Testing ReCoN Visualization Data</h1>
+    <div id="output"></div>
+
+    <script>
+        async function testVisualization() {
+            try {
+                const response = await fetch('./krk_visualization_data.json');
+                const data = await response.json();
+
+                const output = document.getElementById('output');
+
+                output.innerHTML = `
+                    <h2>Visualization Data Test Results</h2>
+                    <p><strong>Frames loaded:</strong> ${data.length}</p>
+                    <p><strong>First frame type:</strong> ${data[0].type}</p>
+                    <p><strong>Last frame note:</strong> ${data[data.length - 1].note}</p>
+                    <p><strong>Nodes in first frame:</strong> ${Object.keys(data[0].nodes).length}</p>
+                    <p><strong>FEN in first frame:</strong> ${data[0].env.fen}</p>
+                    <h3>Sample Frame Structure:</h3>
+                    <pre>${JSON.stringify(data[0], null, 2)}</pre>
+                `;
+
+                console.log('Visualization data loaded successfully:', data);
+
+            } catch (error) {
+                document.getElementById('output').innerHTML = `
+                    <h2>Error Loading Visualization Data</h2>
+                    <p>Error: ${error.message}</p>
+                `;
+                console.error('Error loading visualization data:', error);
+            }
+        }
+
+        testVisualization();
+    </script>
+</body>
+</html>
