@@ -1,16 +1,57 @@
-# Implementation Plan (ReCoN-lite → KRK Demo)
+Here’s an updated **IMPLEMENTATION\_PLAN.md** that reflects your current state (static evaluator works), my last review, and the next milestones toward an interactive chess-playing ReCoN.
 
-## Phase 0 — Repo + Run
-- Install: `uv venv .venv && source .venv/bin/activate && uv pip install -e .`
-- Run demo: `uv run python -m demos.sequence_demo`
+---
 
-## Phase 1 — Engine + Logging (done)
-- `Graph`: nodes (SCRIPT/TERMINAL), links (SUB/POR).
-- `Engine.step(env)`: terminals advance; scripts request children when POR-predecessors TRUE; scripts confirm when last nodes of POR-chains confirm.
-- `RunLogger.snapshot(...)`: per-tick frame with `tick, nodes, new_requests, env, thoughts, latents` → JSON.
+## 🎯 CURRENT STATUS SUMMARY
+
+| Phase | Status | Description |
+|-------|--------|-------------|
+| **0-2** | ✅ Complete | Core ReCoN engine + logging + visualization schema |
+| **3-4** | ✅ Complete | Domain separation + chess substrate ready |
+| **5** | 🔄 Partial | KRK evaluators work, missing move generators |
+| **6** | ❌ Missing | No interactive gameplay demo yet |
+| **7** | ✅ Advanced | Enhanced dashboard beyond basic visualization |
+| **8** | ❌ Future | Extras not implemented |
+
+**🎮 WORKING NOW**: Static KRK position evaluator with advanced visualization
+**🚀 NEXT**: Implement move generators + interactive gameplay loop
+
+---
+
+# Implementation Plan (ReCoN-lite → KRK Interactive Demo)
+
+## Phase 0 — Repo + Run (✅ done)
+
+* Install:
+
+  ```bash
+  uv venv .venv
+  source .venv/bin/activate
+  uv pip install -e .
+  ```
+* Run toy demo:
+
+  ```bash
+  uv run python -m demos.sequence_demo
+  ```
+* Confirms that SUB/POR execution, confirmation logic, and logging work.
+
+## Phase 1 — Engine + Logging (✅ done)
+
+* `Graph`: nodes (SCRIPT/TERMINAL), links (SUB/POR).
+* `Engine.step(env)`:
+
+  * Terminals advance via `predicate(node, env)`.
+  * Scripts request children when POR-predecessors TRUE.
+  * Scripts confirm when last nodes of POR chains confirm.
+* `RunLogger.snapshot(...)`: per-tick frame with
+  `tick, nodes, new_requests, env, thoughts, latents` → JSON.
 
 ## Phase 2 — Visualization JSON schema
-- Each frame example:
+
+* Each frame example:
+
+```json
 {
   "type": "snapshot",
   "tick": 7,
@@ -21,35 +62,97 @@
   "thoughts": "Driving BK north; chosen move: Rh8+; box=4x3; opposition=false",
   "latents": { "PHASE2": [0.12, -0.7, 0.1] }
 }
+```
 
-## Phase 3 — Plugins API
-- Add `src/recon_lite/plugins.py`:
-  - `TerminalPlugin` Protocol with `.reset()` and `.step(node, env) -> (done, success)`.
-  - Examples: `MatePlugin`, `OnEdgePlugin`, `ChooseMovePhase1`.
-- Terminals accept `predicate=lambda n, env: plugin.step(n, env)`.
+## Phase 3 — Domain Separation & Plugins
+
+* Keep `src/recon_lite/` domain-agnostic (engine only).
+* Add `src/recon_lite_chess/` for chess logic.
+
+  * `predicates.py`: sensors (is\_mate, on\_edge, rook\_safe…).
+  * `actuators.py`: choose\_move\_\* terminals writing `env["chosen_move"]`.
+  * `krk_graph.py`: builds PHASE1→PHASE4 ReCoN graph.
+* Plugins API (optional):
+
+  * `TerminalPlugin` Protocol with `.step(node, env) -> (done, success)`.
+  * Wraps rule-based checks and actuators.
 
 ## Phase 4 — Chess substrate
-- Add dependency: `uv add python-chess` (updates `pyproject.toml` and lockfile).
-- `env` holds a `chess.Board`, plus helper values (`chosen_move`, features, etc.).
-- After each `engine.step`, if `env["chosen_move"]` exists, push it and log `fen`.
 
-## Phase 5 — KRK ReCoN graph
-- Scripts: `PHASE1 → PHASE2 → PHASE3 → PHASE4` via POR.
-- Terminals per phase:
-  - P1: `on_edge(BK)`, `rook_safe`, `choose_move_p1`
-  - P2: `box_size <= target`, `rook_safe`, `choose_move_p2`
-  - P3: `has_opposition`, `rook_safe`, `choose_move_p3`
-  - P4: `is_mate` (or `choose_mate`)
-- Rule-based plugins first; ML later if time permits.
+* Dependency already added: `python-chess`.
+* `env` holds:
 
-## Phase 6 — Visualization (two-pane + board)
-- Use the JSON to build a UI:
-  - **Board**: render FEN per tick.
-  - **Selfie + thoughts**: static image + `thoughts` string.
-  - **Node map**: color by state.
-  - **Schematic phases**: layered boxes with their terminals, colored by state.
+  * `board: chess.Board`
+  * `chosen_move: str` (set by actuators)
+* After each `engine.step`:
 
-## Phase 7 — Extras (optional)
-- `RET` links; explicit alternative-groups (OR).
-- Latent view: record small feature vectors per node and embed later.
-- Export `run.json` for the viz.
+  * If `chosen_move` exists → push move on board → clear field.
+  * Log `fen` for visualization.
+
+## Phase 5 — KRK ReCoN graph (🔄 Partially Complete)
+
+* Scripts: `PHASE1 → PHASE2 → PHASE3 → PHASE4` via POR. ✅ DONE
+* Terminals per phase (evaluators working, move generators missing):
+
+  * **Phase 1**: `on_edge(BK)`, `rook_safe` ✅ | `choose_move_p1` ❌
+  * **Phase 2**: `box_size <= target`, `rook_safe` ✅ | `choose_move_p2` ❌
+  * **Phase 3**: `has_opposition`, `rook_safe` ✅ | `choose_move_p3` ❌
+  * **Phase 4**: `is_mate` ✅ | `choose_mate` ❌
+* **Current State**: Static position evaluator - analyzes but doesn't generate moves
+* **Next**: Add move selection actuators (`choose_move_*`) for interactive play
+
+## Phase 6 — Interactive Gameplay Demo (❌ Not Started)
+
+* **Missing**: No `demos/krk_play_demo.py` exists yet
+* **Planned**: Interactive game loop with alternating turns:
+  * Initialize KRK position
+  * Loop: ReCoN evaluates → makes move → opponent responds
+  * Log FEN + node states each tick
+  * Stop when `board.is_game_over()`
+* **Prerequisites**: Phase 5 move generators + actuators
+* **Milestone**: ReCoN plays full KRK games interactively
+
+## Phase 7 — Visualization (✅ Advanced Implementation)
+
+* **BEYOND described**: Full interactive dashboard at `demos/visualization/enhanced_visualization.html`
+* **Features implemented**:
+  * **Chess Board**: Renders FEN with move replay support
+  * **AI Selfie + Thoughts**: Dynamic commentary system
+  * **2D Network Graph**: Node states with color coding + edges
+  * **Phase Schematic**: Interactive KRK phase visualization
+  * **Controls**: Play/pause/step through execution timeline
+* **JSON Support**: Reads `krk_visualization_data.json` with move-based format
+* **Fallback**: Works with demo data when live data unavailable
+
+## Phase 8 — Extras (optional)
+
+* `RET` links; explicit OR-groups.
+* Latent view: record per-node feature vectors.
+* “Super-ReCoN”: orchestrator that dispatches to subgraphs (KRK, K+P, etc.).
+* Export `run.json` + HTML viz for sharing.
+
+---
+
+Would you like me to also **draft the Phase 6 demo file (`krk_play_demo.py`)** now, so you can run a first end-to-end interactive game loop with random opponent right away?
+
+---
+
+## 📁 FILES READY
+
+**Core ReCoN Implementation:**
+- `src/recon_lite/graph.py` - Node/Edge definitions, core logic
+- `src/recon_lite/engine.py` - ReCoN execution engine
+- `src/recon_lite/logger.py` - Structured logging for visualization
+- `VIS_SPEC.md` - Visualization JSON schema specification
+
+**Chess Domain Implementation:**
+- `src/recon_lite_chess/krk_nodes.py` - Current KRK evaluators
+- `demos/krk_checkmate_demo.py` - Working static evaluator demo
+
+**Visualization:**
+- `demos/visualization/enhanced_visualization.html` - Advanced interactive dashboard
+- `demos/krk_visualization_data.json` - Sample logged execution data
+
+**Documentation:**
+- `ARCHITECTURE.md` - Design decisions and rationale
+- `IMPLEMENTATION_PLAN.md` - Current status and next steps
