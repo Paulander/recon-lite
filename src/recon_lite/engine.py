@@ -11,11 +11,13 @@ class ReConEngine:
     - TERMINAL nodes use predicate(env) -> (done, success) to progress.
     """
 
+    # Initialize the engine with a graph and set initial tick and log storage
     def __init__(self, graph: Graph):
         self.g = graph
         self.tick = 0
         self.logs: list[Dict[str, Any]] = []
 
+    # Capture the current state of the network for logging. Should obviously be optional. 
     def snapshot(self, note: str = "") -> Dict[str, Any]:
         snap = {
             "tick": self.tick,
@@ -76,6 +78,7 @@ class ReConEngine:
                 elif node.state == NodeState.TRUE:
                     node.state = NodeState.CONFIRMED
 
+# Process script nodes to request their children when in a requestable state
     def _process_script_requests(self, now_requested: Dict[str, bool]):
         """Request children for script nodes based on readiness."""
         for nid, node in self.g.nodes.items():
@@ -99,6 +102,7 @@ class ReConEngine:
             if node.ntype == NodeType.SCRIPT and node.state == NodeState.TRUE:
                 node.state = NodeState.CONFIRMED
 
+# Core function.Execute one discrete time step, orchestrating terminal updates, script requests, and confirmations
     def step(self, env: Optional[Dict[str, Any]] = None) -> Dict[str, bool]:
         """Execute one discrete time step of the ReCon network."""
         self.tick += 1
@@ -109,5 +113,6 @@ class ReConEngine:
         self._process_script_requests(now_requested)
         self._confirm_script_completions()
 
-        self.snapshot()
+        self.snapshot() # make optional through either global config or parameter. Maybe possible to set resolution/trigger for log? e.g. "every 10 ticks" or "on request". 
+                        # not prioritized for now. Just comment out if performance is an issue. 
         return now_requested
