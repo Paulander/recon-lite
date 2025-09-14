@@ -4,6 +4,9 @@ from typing import Dict, List, Tuple, Optional, Callable, Any
 
 
 # This file defines the graph data structure and the node and edge types.
+# The nodes are very powerfully abstracted; as long as they adhere to the interface, they can be anything; 
+# therefore I will include more sophisticated node types in separate classes. 
+# TODO/Consider: define abstract base class for plugins to inherit from..
 
 class NodeType(Enum):
     SCRIPT = auto()
@@ -13,6 +16,8 @@ class NodeType(Enum):
 class NodeState(Enum):
     INACTIVE = auto()
     REQUESTED = auto()
+    ACTIVE =                # Post-request, sending wait
+    SUPPRESSED = auto()     # Por-inhibited
     WAITING = auto()
     TRUE = auto()
     CONFIRMED = auto()
@@ -26,11 +31,11 @@ class NodeState(Enum):
 # So, the graph is a tree with SUB/SUR and a DAG with POR/RET.
 
 class LinkType(Enum):
-    SUB = "sub" # subgraph - points at children ↓ 
-    SUR = "sur" # parent - points at parent ↑
+    SUB = "sub" # subgraph - points at children ↓  (top down request)
+    SUR = "sur" # parent - points at parent ↑      (bottom up confirmation)
 
-    POR = "por" # predecessor - points at successor →
-    RET = "ret" # successor - points at predecessor ←
+    POR = "por" # predecessor - points at successor → (temporal/causal/real time order)
+    RET = "ret" # successor - points at predecessor ← (temporal/causal/real time order)
 
 
 @dataclass
@@ -38,6 +43,7 @@ class Node:
     nid: str
     ntype: NodeType
     state: NodeState = NodeState.INACTIVE
+    activation: np.ndarray = field(default_factory=lambda: np.array([0.0]))  # a ∈ R^n - activation function. Can implement boolean AND/OR or continuous functions.
     predicate: Optional[Callable[['Node', Any], Tuple[bool, bool]]] = None
     tick_entered: int = 0
     meta: Dict[str, Any] = field(default_factory=dict)
@@ -48,7 +54,7 @@ class Edge:
     src: str
     dst: str
     ltype: LinkType
-
+    w: np.ndarray = field(default_factory=lambda: np.array([1.0]))  # Weights \in R^n; default scalar 1.0. 
 
 class Graph:
     def __init__(self):
