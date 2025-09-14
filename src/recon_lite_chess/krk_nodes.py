@@ -1,20 +1,20 @@
-# src/recon_lite/chess_nodes.py
+# src/recon_lite_chess/krk_nodes.py
 """
-Chess-specific node implementations for ReCoN networks.
+KRK (King+Rook vs King) chess-specific node implementations for ReCoN networks.
 
-These nodes implement the hierarchical KRK (King+Rook vs King) checkmate strategy:
+These nodes implement the hierarchical KRK checkmate strategy:
 ROOT: "KRK mate procedure"
   ├─ PHASE1: drive black king to edge
   ├─ PHASE2: shrink the box (keep rook safe)
   ├─ PHASE3: take opposition (king alignment)
   └─ PHASE4: deliver mate
 
-Extensible for future scenarios like pawn promotion.
+Extensible for future scenarios like pawn promotion and computer vision.
 """
 
 from typing import Tuple, Any, Dict, List
 from dataclasses import dataclass
-from .graph import Node, NodeType, NodeState
+from recon_lite.graph import Node, NodeType, NodeState
 import chess
 
 
