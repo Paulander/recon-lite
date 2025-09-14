@@ -3,9 +3,11 @@ from enum import Enum, auto
 from typing import Dict, List, Tuple, Optional, Callable, Any
 
 
+# This file defines the graph data structure and the node and edge types.
+
 class NodeType(Enum):
     SCRIPT = auto()
-    TERMINAL = auto()
+    TERMINAL = auto() #"Sensors", Leaf nodes. Could be anything from physical photo detector/thermometer to or a sophisticated AI model connected to a virtual world. 
 
 
 class NodeState(Enum):
@@ -16,10 +18,19 @@ class NodeState(Enum):
     CONFIRMED = auto()
     FAILED = auto()
 
+# Sub/Sur - Hierarchy links. Sub points at children, Sur points at parent. Top down hierarchy, with corresponding back links. "Logical order"
+# POR/RET - Sequence links.(successor→predecessor) encode temporal/sequential constraints.                      "Temporal/causal/real time order"
+
+# Memory "trick" -- "Start with SUB( nodes == children), SU belongs with SU so sub/sur, sur = "on" the parent is "on top of" children. 
+# Then POR (Predecessor→Successor). successor RETurns when it's done (temporal. )
+# So, the graph is a tree with SUB/SUR and a DAG with POR/RET.
 
 class LinkType(Enum):
-    SUB = "sub"
-    POR = "por"
+    SUB = "sub" # subgraph - points at children ↓ 
+    SUR = "sur" # parent - points at parent ↑
+
+    POR = "por" # predecessor - points at successor →
+    RET = "ret" # successor - points at predecessor ←
 
 
 @dataclass
