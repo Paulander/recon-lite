@@ -1,6 +1,6 @@
-from typing import Dict, Any, List, Optional
+# recon_lite/engine.py
+from typing import Dict, Any, Optional
 from .graph import Graph, NodeType, NodeState
-
 
 class ReConEngine:
     """
@@ -14,7 +14,7 @@ class ReConEngine:
     def __init__(self, graph: Graph):
         self.g = graph
         self.tick = 0
-        self.logs: List[Dict[str, Any]] = []
+        self.logs: list[Dict[str, Any]] = []
 
     def snapshot(self, note: str = "") -> Dict[str, Any]:
         snap = {
@@ -59,12 +59,8 @@ class ReConEngine:
                 return False
         return True
 
-    def step(self, env: Optional[Dict[str, Any]] = None) -> Dict[str, bool]:
-        self.tick += 1
-        env = env or {}
-        now_requested: Dict[str, bool] = {}
-
-        # Terminals
+    def _update_terminals(self, env: Dict[str, Any], now_requested: Dict[str, bool]):
+        """Handle state transitions for terminal nodes."""
         for nid, node in self.g.nodes.items():
             if node.ntype == NodeType.TERMINAL:
                 if node.state == NodeState.REQUESTED:
@@ -80,7 +76,8 @@ class ReConEngine:
                 elif node.state == NodeState.TRUE:
                     node.state = NodeState.CONFIRMED
 
-        # Scripts
+    def _process_script_requests(self, now_requested: Dict[str, bool]):
+        """Request children for script nodes based on readiness."""
         for nid, node in self.g.nodes.items():
             if node.ntype == NodeType.SCRIPT:
                 if node.state == NodeState.REQUESTED:
@@ -91,13 +88,26 @@ class ReConEngine:
                     for child_id in self.g.children(nid):
                         self._request_child_if_ready(child_id, now_requested)
 
-                if node.state in (NodeState.REQUESTED, NodeState.WAITING, NodeState.TRUE):
-                    if self._children_confirmed_sequence_done(nid):
-                        node.state = NodeState.TRUE
+    def _confirm_script_completions(self):
+        """Confirm script nodes when all children sequences are done."""
+        for nid, node in self.g.nodes.items():
+            if node.ntype == NodeType.SCRIPT and node.state in (NodeState.REQUESTED, NodeState.WAITING, NodeState.TRUE):
+                if self._children_confirmed_sequence_done(nid):
+                    node.state = NodeState.TRUE
 
-        # Confirm scripts
         for nid, node in self.g.nodes.items():
             if node.ntype == NodeType.SCRIPT and node.state == NodeState.TRUE:
                 node.state = NodeState.CONFIRMED
 
+    def step(self, env: Optional[Dict[str, Any]] = None) -> Dict[str, bool]:
+        """Execute one discrete time step of the ReCon network."""
+        self.tick += 1
+        env = env or {}
+        now_requested: Dict[str, bool] = {}
+
+        self._update_terminals(env, now_requested)
+        self._process_script_requests(now_requested)
+        self._confirm_script_completions()
+
+        self.snapshot()
         return now_requested

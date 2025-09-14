@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Dict, List, Tuple, Optional, Callable, Any
+import numpy as np  # For activations
 
 
 # This file defines the graph data structure and the node and edge types.
@@ -16,7 +17,7 @@ class NodeType(Enum):
 class NodeState(Enum):
     INACTIVE = auto()
     REQUESTED = auto()
-    ACTIVE =                # Post-request, sending wait
+    ACTIVE = auto()         # Post-request, sending wait
     SUPPRESSED = auto()     # Por-inhibited
     WAITING = auto()
     TRUE = auto()
