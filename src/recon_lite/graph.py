@@ -4,10 +4,9 @@ from typing import Dict, List, Tuple, Optional, Callable, Any
 import numpy as np  # For activations
 
 
-# This file defines the graph data structure and the node and edge types.
-# The nodes are very powerfully abstracted; as long as they adhere to the interface, they can be anything; 
-# therefore I will include more sophisticated node types in separate classes. 
-# TODO/Consider: define abstract base class for plugins to inherit from..
+# This file defines the graph data structure and the core node and edge types.
+# Chess-specific node types are defined in chess_nodes.py for domain separation.
+# The Node class is designed to be extensible - chess nodes inherit from it.
 
 class NodeType(Enum):
     SCRIPT = auto()
