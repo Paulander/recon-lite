@@ -79,6 +79,10 @@ def rook_safe_after(board: chess.Board, move: chess.Move) -> bool:
     enemy_k = b.king(enemy)
     our_k   = b.king(color)
 
+    # If enemy king doesn't exist, rook is safe
+    if enemy_k is None:
+        return True
+
     # Fast adjacency test (cheap reject)
     if chebyshev(enemy_k, rook_sq) > 1:
         return True

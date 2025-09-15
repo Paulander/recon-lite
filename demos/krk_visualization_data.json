@@ -1,582 +1,1521 @@
 [
   {
     "type": "snapshot",
-    "note": "Eval tick 10 (move 1)",
-    "tick": 10,
-    "nodes": {
-      "king_at_edge": "INACTIVE",
-      "box_can_shrink": "INACTIVE",
-      "can_take_opposition": "INACTIVE",
-      "can_deliver_mate": "FAILED",
-      "is_stalemate": "INACTIVE",
-      "phase1_drive_to_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "krk_root": "WAITING",
-      "king_drive_moves": "WAITING",
-      "box_shrink_moves": "WAITING",
-      "opposition_moves": "WAITING",
-      "mate_moves": "WAITING",
-      "random_legal_moves": "INACTIVE"
-    },
+    "note": "ReCoN ply 1: a2e2",
     "new_requests": [],
     "env": {
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 10
+      "fen": "4k3/6K1/8/8/8/8/4R3/8 b - - 1 1",
+      "ply": 1,
+      "chosen_move": "a2e2",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 9,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": 8
     },
-    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+    "thoughts": "Chose a2e2 | \u0394box=8 | king_progress=0.0 | safe_check=True | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "note": "Eval tick 20 (move 1)",
-    "tick": 20,
-    "nodes": {
-      "king_at_edge": "INACTIVE",
-      "box_can_shrink": "INACTIVE",
-      "can_take_opposition": "INACTIVE",
-      "can_deliver_mate": "FAILED",
-      "is_stalemate": "INACTIVE",
-      "phase1_drive_to_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "krk_root": "WAITING",
-      "king_drive_moves": "WAITING",
-      "box_shrink_moves": "WAITING",
-      "opposition_moves": "WAITING",
-      "mate_moves": "WAITING",
-      "random_legal_moves": "INACTIVE"
-    },
+    "note": "Opponent ply 1: e8d8",
     "new_requests": [],
     "env": {
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 20
+      "fen": "3k4/6K1/8/8/8/8/4R3/8 w - - 2 2",
+      "ply": 1,
+      "opponent_move": "e8d8"
     },
-    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+    "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "note": "Eval tick 30 (move 1)",
-    "tick": 30,
-    "nodes": {
-      "king_at_edge": "INACTIVE",
-      "box_can_shrink": "INACTIVE",
-      "can_take_opposition": "INACTIVE",
-      "can_deliver_mate": "FAILED",
-      "is_stalemate": "INACTIVE",
-      "phase1_drive_to_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "krk_root": "WAITING",
-      "king_drive_moves": "WAITING",
-      "box_shrink_moves": "WAITING",
-      "opposition_moves": "WAITING",
-      "mate_moves": "WAITING",
-      "random_legal_moves": "INACTIVE"
-    },
+    "note": "ReCoN ply 2: g7f7",
     "new_requests": [],
     "env": {
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 30
+      "fen": "3k4/5K2/8/8/8/8/4R3/8 b - - 3 2",
+      "ply": 2,
+      "chosen_move": "g7f7",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 9,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 8
     },
-    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+    "thoughts": "Chose g7f7 | \u0394box=8 | king_progress=1.0 | safe_check=False | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "note": "Eval tick 40 (move 1)",
-    "tick": 40,
-    "nodes": {
-      "king_at_edge": "INACTIVE",
-      "box_can_shrink": "INACTIVE",
-      "can_take_opposition": "INACTIVE",
-      "can_deliver_mate": "FAILED",
-      "is_stalemate": "INACTIVE",
-      "phase1_drive_to_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "krk_root": "WAITING",
-      "king_drive_moves": "WAITING",
-      "box_shrink_moves": "WAITING",
-      "opposition_moves": "WAITING",
-      "mate_moves": "WAITING",
-      "random_legal_moves": "INACTIVE"
-    },
+    "note": "Opponent ply 2: d8d7",
     "new_requests": [],
     "env": {
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 40
+      "fen": "8/3k1K2/8/8/8/8/4R3/8 w - - 4 3",
+      "ply": 2,
+      "opponent_move": "d8d7"
     },
-    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+    "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "note": "Eval tick 50 (move 1)",
-    "tick": 50,
-    "nodes": {
-      "king_at_edge": "INACTIVE",
-      "box_can_shrink": "INACTIVE",
-      "can_take_opposition": "INACTIVE",
-      "can_deliver_mate": "FAILED",
-      "is_stalemate": "INACTIVE",
-      "phase1_drive_to_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "krk_root": "WAITING",
-      "king_drive_moves": "WAITING",
-      "box_shrink_moves": "WAITING",
-      "opposition_moves": "WAITING",
-      "mate_moves": "WAITING",
-      "random_legal_moves": "INACTIVE"
-    },
+    "note": "ReCoN ply 3: f7f8",
     "new_requests": [],
     "env": {
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 50
+      "fen": "5K2/3k4/8/8/8/8/4R3/8 b - - 5 3",
+      "ply": 3,
+      "chosen_move": "f7f8",
+      "features": {
+        "box_area_before": 9,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": -8
     },
-    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+    "thoughts": "Chose f7f8 | \u0394box=-8 | king_progress=0.0 | safe_check=False | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "note": "Eval tick 60 (move 1)",
-    "tick": 60,
-    "nodes": {
-      "king_at_edge": "INACTIVE",
-      "box_can_shrink": "INACTIVE",
-      "can_take_opposition": "INACTIVE",
-      "can_deliver_mate": "FAILED",
-      "is_stalemate": "INACTIVE",
-      "phase1_drive_to_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "krk_root": "WAITING",
-      "king_drive_moves": "WAITING",
-      "box_shrink_moves": "WAITING",
-      "opposition_moves": "WAITING",
-      "mate_moves": "WAITING",
-      "random_legal_moves": "INACTIVE"
-    },
+    "note": "Opponent ply 3: d7c8",
     "new_requests": [],
     "env": {
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 60
+      "fen": "2k2K2/8/8/8/8/8/4R3/8 w - - 6 4",
+      "ply": 3,
+      "opponent_move": "d7c8"
     },
-    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+    "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "note": "Eval tick 70 (move 1)",
-    "tick": 70,
-    "nodes": {
-      "king_at_edge": "INACTIVE",
-      "box_can_shrink": "INACTIVE",
-      "can_take_opposition": "INACTIVE",
-      "can_deliver_mate": "FAILED",
-      "is_stalemate": "INACTIVE",
-      "phase1_drive_to_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "krk_root": "WAITING",
-      "king_drive_moves": "WAITING",
-      "box_shrink_moves": "WAITING",
-      "opposition_moves": "WAITING",
-      "mate_moves": "WAITING",
-      "random_legal_moves": "INACTIVE"
-    },
+    "note": "ReCoN ply 4: f8e8",
     "new_requests": [],
     "env": {
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 70
+      "fen": "2k1K3/8/8/8/8/8/4R3/8 b - - 7 4",
+      "ply": 4,
+      "chosen_move": "f8e8",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 1,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 0
     },
-    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+    "thoughts": "Chose f8e8 | \u0394box=0 | king_progress=1.0 | safe_check=False | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "note": "Eval tick 80 (move 1)",
-    "tick": 80,
-    "nodes": {
-      "king_at_edge": "INACTIVE",
-      "box_can_shrink": "INACTIVE",
-      "can_take_opposition": "INACTIVE",
-      "can_deliver_mate": "FAILED",
-      "is_stalemate": "INACTIVE",
-      "phase1_drive_to_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "krk_root": "WAITING",
-      "king_drive_moves": "WAITING",
-      "box_shrink_moves": "WAITING",
-      "opposition_moves": "WAITING",
-      "mate_moves": "WAITING",
-      "random_legal_moves": "INACTIVE"
-    },
+    "note": "Opponent ply 4: c8b8",
     "new_requests": [],
     "env": {
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 80
+      "fen": "1k2K3/8/8/8/8/8/4R3/8 w - - 8 5",
+      "ply": 4,
+      "opponent_move": "c8b8"
     },
-    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+    "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "note": "Eval tick 90 (move 1)",
-    "tick": 90,
-    "nodes": {
-      "king_at_edge": "INACTIVE",
-      "box_can_shrink": "INACTIVE",
-      "can_take_opposition": "INACTIVE",
-      "can_deliver_mate": "FAILED",
-      "is_stalemate": "INACTIVE",
-      "phase1_drive_to_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "krk_root": "WAITING",
-      "king_drive_moves": "WAITING",
-      "box_shrink_moves": "WAITING",
-      "opposition_moves": "WAITING",
-      "mate_moves": "WAITING",
-      "random_legal_moves": "INACTIVE"
-    },
+    "note": "ReCoN ply 5: e8d8",
     "new_requests": [],
     "env": {
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 90
+      "fen": "1k1K4/8/8/8/8/8/4R3/8 b - - 9 5",
+      "ply": 5,
+      "chosen_move": "e8d8",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 1,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 0
     },
-    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+    "thoughts": "Chose e8d8 | \u0394box=0 | king_progress=1.0 | safe_check=False | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "note": "Eval tick 100 (move 1)",
-    "tick": 100,
-    "nodes": {
-      "king_at_edge": "INACTIVE",
-      "box_can_shrink": "INACTIVE",
-      "can_take_opposition": "INACTIVE",
-      "can_deliver_mate": "FAILED",
-      "is_stalemate": "INACTIVE",
-      "phase1_drive_to_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "krk_root": "WAITING",
-      "king_drive_moves": "WAITING",
-      "box_shrink_moves": "WAITING",
-      "opposition_moves": "WAITING",
-      "mate_moves": "WAITING",
-      "random_legal_moves": "INACTIVE"
-    },
+    "note": "Opponent ply 5: b8a8",
     "new_requests": [],
     "env": {
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 100
+      "fen": "k2K4/8/8/8/8/8/4R3/8 w - - 10 6",
+      "ply": 5,
+      "opponent_move": "b8a8"
     },
-    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+    "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "note": "Eval tick 110 (move 1)",
-    "tick": 110,
-    "nodes": {
-      "king_at_edge": "INACTIVE",
-      "box_can_shrink": "INACTIVE",
-      "can_take_opposition": "INACTIVE",
-      "can_deliver_mate": "FAILED",
-      "is_stalemate": "INACTIVE",
-      "phase1_drive_to_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "krk_root": "WAITING",
-      "king_drive_moves": "WAITING",
-      "box_shrink_moves": "WAITING",
-      "opposition_moves": "WAITING",
-      "mate_moves": "WAITING",
-      "random_legal_moves": "INACTIVE"
-    },
+    "note": "ReCoN ply 6: d8c8",
     "new_requests": [],
     "env": {
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 110
+      "fen": "k1K5/8/8/8/8/8/4R3/8 b - - 11 6",
+      "ply": 6,
+      "chosen_move": "d8c8",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 1,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 0
     },
-    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+    "thoughts": "Chose d8c8 | \u0394box=0 | king_progress=1.0 | safe_check=False | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "note": "Eval tick 120 (move 1)",
-    "tick": 120,
-    "nodes": {
-      "king_at_edge": "INACTIVE",
-      "box_can_shrink": "INACTIVE",
-      "can_take_opposition": "INACTIVE",
-      "can_deliver_mate": "FAILED",
-      "is_stalemate": "INACTIVE",
-      "phase1_drive_to_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "krk_root": "WAITING",
-      "king_drive_moves": "WAITING",
-      "box_shrink_moves": "WAITING",
-      "opposition_moves": "WAITING",
-      "mate_moves": "WAITING",
-      "random_legal_moves": "INACTIVE"
-    },
+    "note": "Opponent ply 6: a8a7",
     "new_requests": [],
     "env": {
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 120
+      "fen": "2K5/k7/8/8/8/8/4R3/8 w - - 12 7",
+      "ply": 6,
+      "opponent_move": "a8a7"
     },
-    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+    "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "note": "Eval tick 130 (move 1)",
-    "tick": 130,
-    "nodes": {
-      "king_at_edge": "INACTIVE",
-      "box_can_shrink": "INACTIVE",
-      "can_take_opposition": "INACTIVE",
-      "can_deliver_mate": "FAILED",
-      "is_stalemate": "INACTIVE",
-      "phase1_drive_to_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "krk_root": "WAITING",
-      "king_drive_moves": "WAITING",
-      "box_shrink_moves": "WAITING",
-      "opposition_moves": "WAITING",
-      "mate_moves": "WAITING",
-      "random_legal_moves": "INACTIVE"
-    },
+    "note": "ReCoN ply 7: e2a2",
     "new_requests": [],
     "env": {
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 130
+      "fen": "2K5/k7/8/8/8/8/R7/8 b - - 13 7",
+      "ply": 7,
+      "chosen_move": "e2a2",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": 0
     },
-    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+    "thoughts": "Chose e2a2 | \u0394box=0 | king_progress=0.0 | safe_check=True | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "note": "Eval tick 140 (move 1)",
-    "tick": 140,
-    "nodes": {
-      "king_at_edge": "INACTIVE",
-      "box_can_shrink": "INACTIVE",
-      "can_take_opposition": "INACTIVE",
-      "can_deliver_mate": "FAILED",
-      "is_stalemate": "INACTIVE",
-      "phase1_drive_to_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "krk_root": "WAITING",
-      "king_drive_moves": "WAITING",
-      "box_shrink_moves": "WAITING",
-      "opposition_moves": "WAITING",
-      "mate_moves": "WAITING",
-      "random_legal_moves": "INACTIVE"
-    },
+    "note": "Opponent ply 7: a7b6",
     "new_requests": [],
     "env": {
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 140
+      "fen": "2K5/8/1k6/8/8/8/R7/8 w - - 14 8",
+      "ply": 7,
+      "opponent_move": "a7b6"
     },
-    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+    "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "note": "Eval tick 150 (move 1)",
-    "tick": 150,
-    "nodes": {
-      "king_at_edge": "INACTIVE",
-      "box_can_shrink": "INACTIVE",
-      "can_take_opposition": "INACTIVE",
-      "can_deliver_mate": "FAILED",
-      "is_stalemate": "INACTIVE",
-      "phase1_drive_to_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "krk_root": "WAITING",
-      "king_drive_moves": "WAITING",
-      "box_shrink_moves": "WAITING",
-      "opposition_moves": "WAITING",
-      "mate_moves": "WAITING",
-      "random_legal_moves": "INACTIVE"
-    },
+    "note": "ReCoN ply 8: a2b2",
     "new_requests": [],
     "env": {
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 150
+      "fen": "2K5/8/1k6/8/8/8/1R6/8 b - - 15 8",
+      "ply": 8,
+      "chosen_move": "a2b2",
+      "features": {
+        "box_area_before": 9,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -8
     },
-    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+    "thoughts": "Chose a2b2 | \u0394box=-8 | king_progress=0.0 | safe_check=True | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "note": "Eval tick 160 (move 1)",
-    "tick": 160,
-    "nodes": {
-      "king_at_edge": "INACTIVE",
-      "box_can_shrink": "INACTIVE",
-      "can_take_opposition": "INACTIVE",
-      "can_deliver_mate": "FAILED",
-      "is_stalemate": "INACTIVE",
-      "phase1_drive_to_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "krk_root": "WAITING",
-      "king_drive_moves": "WAITING",
-      "box_shrink_moves": "WAITING",
-      "opposition_moves": "WAITING",
-      "mate_moves": "WAITING",
-      "random_legal_moves": "INACTIVE"
-    },
+    "note": "Opponent ply 8: b6a5",
     "new_requests": [],
     "env": {
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 160
+      "fen": "2K5/8/8/k7/8/8/1R6/8 w - - 16 9",
+      "ply": 8,
+      "opponent_move": "b6a5"
     },
-    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+    "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "note": "Eval tick 170 (move 1)",
-    "tick": 170,
-    "nodes": {
-      "king_at_edge": "INACTIVE",
-      "box_can_shrink": "INACTIVE",
-      "can_take_opposition": "INACTIVE",
-      "can_deliver_mate": "FAILED",
-      "is_stalemate": "INACTIVE",
-      "phase1_drive_to_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "krk_root": "WAITING",
-      "king_drive_moves": "WAITING",
-      "box_shrink_moves": "WAITING",
-      "opposition_moves": "WAITING",
-      "mate_moves": "WAITING",
-      "random_legal_moves": "INACTIVE"
-    },
+    "note": "ReCoN ply 9: c8c7",
     "new_requests": [],
     "env": {
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 170
+      "fen": "8/2K5/8/k7/8/8/1R6/8 b - - 17 9",
+      "ply": 9,
+      "chosen_move": "c8c7",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 9,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 8
     },
-    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+    "thoughts": "Chose c8c7 | \u0394box=8 | king_progress=1.0 | safe_check=False | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "note": "Eval tick 180 (move 1)",
-    "tick": 180,
-    "nodes": {
-      "king_at_edge": "INACTIVE",
-      "box_can_shrink": "INACTIVE",
-      "can_take_opposition": "INACTIVE",
-      "can_deliver_mate": "FAILED",
-      "is_stalemate": "INACTIVE",
-      "phase1_drive_to_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "krk_root": "WAITING",
-      "king_drive_moves": "WAITING",
-      "box_shrink_moves": "WAITING",
-      "opposition_moves": "WAITING",
-      "mate_moves": "WAITING",
-      "random_legal_moves": "INACTIVE"
-    },
+    "note": "Opponent ply 9: a5a6",
     "new_requests": [],
     "env": {
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 180
+      "fen": "8/2K5/k7/8/8/8/1R6/8 w - - 18 10",
+      "ply": 9,
+      "opponent_move": "a5a6"
     },
-    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+    "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "note": "Eval tick 190 (move 1)",
-    "tick": 190,
-    "nodes": {
-      "king_at_edge": "INACTIVE",
-      "box_can_shrink": "INACTIVE",
-      "can_take_opposition": "INACTIVE",
-      "can_deliver_mate": "FAILED",
-      "is_stalemate": "INACTIVE",
-      "phase1_drive_to_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "krk_root": "WAITING",
-      "king_drive_moves": "WAITING",
-      "box_shrink_moves": "WAITING",
-      "opposition_moves": "WAITING",
-      "mate_moves": "WAITING",
-      "random_legal_moves": "INACTIVE"
-    },
+    "note": "ReCoN ply 10: b2a2",
     "new_requests": [],
     "env": {
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 190
+      "fen": "8/2K5/k7/8/8/8/R7/8 b - - 19 10",
+      "ply": 10,
+      "chosen_move": "b2a2",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 9,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": 8
     },
-    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+    "thoughts": "Chose b2a2 | \u0394box=8 | king_progress=0.0 | safe_check=True | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "note": "Eval tick 200 (move 1)",
-    "tick": 200,
-    "nodes": {
-      "king_at_edge": "INACTIVE",
-      "box_can_shrink": "INACTIVE",
-      "can_take_opposition": "INACTIVE",
-      "can_deliver_mate": "FAILED",
-      "is_stalemate": "INACTIVE",
-      "phase1_drive_to_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "krk_root": "WAITING",
-      "king_drive_moves": "WAITING",
-      "box_shrink_moves": "WAITING",
-      "opposition_moves": "WAITING",
-      "mate_moves": "WAITING",
-      "random_legal_moves": "INACTIVE"
-    },
+    "note": "Opponent ply 10: a6b5",
     "new_requests": [],
     "env": {
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 200
+      "fen": "8/2K5/8/1k6/8/8/R7/8 w - - 20 11",
+      "ply": 10,
+      "opponent_move": "a6b5"
     },
-    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 11: c7c8",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/8/1k6/8/8/R7/8 b - - 21 11",
+      "ply": 11,
+      "chosen_move": "c7c8",
+      "features": {
+        "box_area_before": 9,
+        "box_area_after": 1,
+        "king_progress": -1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": -8
+    },
+    "thoughts": "Chose c7c8 | \u0394box=-8 | king_progress=-1.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 11: b5c6",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/2k5/8/8/8/R7/8 w - - 22 12",
+      "ply": 11,
+      "opponent_move": "b5c6"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 12: a2c2",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/2k5/8/8/8/2R5/8 b - - 23 12",
+      "ply": 12,
+      "chosen_move": "a2c2",
+      "features": {
+        "box_area_before": 25,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -24
+    },
+    "thoughts": "Chose a2c2 | \u0394box=-24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 12: c6d5",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/8/3k4/8/8/2R5/8 w - - 24 13",
+      "ply": 12,
+      "opponent_move": "c6d5"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 13: c2d2",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/8/3k4/8/8/3R4/8 b - - 25 13",
+      "ply": 13,
+      "chosen_move": "c2d2",
+      "features": {
+        "box_area_before": 49,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -48
+    },
+    "thoughts": "Chose c2d2 | \u0394box=-48 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 13: d5e5",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/8/4k3/8/8/3R4/8 w - - 26 14",
+      "ply": 13,
+      "opponent_move": "d5e5"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 14: d2e2",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/8/4k3/8/8/4R3/8 b - - 27 14",
+      "ply": 14,
+      "chosen_move": "d2e2",
+      "features": {
+        "box_area_before": 49,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -48
+    },
+    "thoughts": "Chose d2e2 | \u0394box=-48 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 14: e5d5",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/8/3k4/8/8/4R3/8 w - - 28 15",
+      "ply": 14,
+      "opponent_move": "e5d5"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 15: e2d2",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/8/3k4/8/8/3R4/8 b - - 29 15",
+      "ply": 15,
+      "chosen_move": "e2d2",
+      "features": {
+        "box_area_before": 49,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -48
+    },
+    "thoughts": "Chose e2d2 | \u0394box=-48 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 15: d5e5",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/8/4k3/8/8/3R4/8 w - - 30 16",
+      "ply": 15,
+      "opponent_move": "d5e5"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 16: d2e2",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/8/4k3/8/8/4R3/8 b - - 31 16",
+      "ply": 16,
+      "chosen_move": "d2e2",
+      "features": {
+        "box_area_before": 49,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -48
+    },
+    "thoughts": "Chose d2e2 | \u0394box=-48 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 16: e5d5",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/8/3k4/8/8/4R3/8 w - - 32 17",
+      "ply": 16,
+      "opponent_move": "e5d5"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 17: e2d2",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/8/3k4/8/8/3R4/8 b - - 33 17",
+      "ply": 17,
+      "chosen_move": "e2d2",
+      "features": {
+        "box_area_before": 49,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -48
+    },
+    "thoughts": "Chose e2d2 | \u0394box=-48 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 17: d5c4",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/8/8/2k5/8/3R4/8 w - - 34 18",
+      "ply": 17,
+      "opponent_move": "d5c4"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 18: d2c2",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/8/8/2k5/8/2R5/8 b - - 35 18",
+      "ply": 18,
+      "chosen_move": "d2c2",
+      "features": {
+        "box_area_before": 25,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -24
+    },
+    "thoughts": "Chose d2c2 | \u0394box=-24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 18: c4d5",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/8/3k4/8/8/2R5/8 w - - 36 19",
+      "ply": 18,
+      "opponent_move": "c4d5"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 19: c2d2",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/8/3k4/8/8/3R4/8 b - - 37 19",
+      "ply": 19,
+      "chosen_move": "c2d2",
+      "features": {
+        "box_area_before": 49,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -48
+    },
+    "thoughts": "Chose c2d2 | \u0394box=-48 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 19: d5c5",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/8/2k5/8/8/3R4/8 w - - 38 20",
+      "ply": 19,
+      "opponent_move": "d5c5"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 20: d2c2",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/8/2k5/8/8/2R5/8 b - - 39 20",
+      "ply": 20,
+      "chosen_move": "d2c2",
+      "features": {
+        "box_area_before": 25,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -24
+    },
+    "thoughts": "Chose d2c2 | \u0394box=-24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 20: c5d6",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/3k4/8/8/8/2R5/8 w - - 40 21",
+      "ply": 20,
+      "opponent_move": "c5d6"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 21: c2d2",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/3k4/8/8/8/3R4/8 b - - 41 21",
+      "ply": 21,
+      "chosen_move": "c2d2",
+      "features": {
+        "box_area_before": 25,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -24
+    },
+    "thoughts": "Chose c2d2 | \u0394box=-24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 21: d6e6",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/4k3/8/8/8/3R4/8 w - - 42 22",
+      "ply": 21,
+      "opponent_move": "d6e6"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 22: d2e2",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/4k3/8/8/8/4R3/8 b - - 43 22",
+      "ply": 22,
+      "chosen_move": "d2e2",
+      "features": {
+        "box_area_before": 25,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -24
+    },
+    "thoughts": "Chose d2e2 | \u0394box=-24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 22: e6f5",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/8/5k2/8/8/4R3/8 w - - 44 23",
+      "ply": 22,
+      "opponent_move": "e6f5"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 23: e2f2",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/8/5k2/8/8/5R2/8 b - - 45 23",
+      "ply": 23,
+      "chosen_move": "e2f2",
+      "features": {
+        "box_area_before": 25,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -24
+    },
+    "thoughts": "Chose e2f2 | \u0394box=-24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 23: f5e4",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/8/8/4k3/8/5R2/8 w - - 46 24",
+      "ply": 23,
+      "opponent_move": "f5e4"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 24: f2e2",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/8/8/4k3/8/4R3/8 b - - 47 24",
+      "ply": 24,
+      "chosen_move": "f2e2",
+      "features": {
+        "box_area_before": 49,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -48
+    },
+    "thoughts": "Chose f2e2 | \u0394box=-48 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 24: e4f4",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/8/8/5k2/8/4R3/8 w - - 48 25",
+      "ply": 24,
+      "opponent_move": "e4f4"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 25: e2f2",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/8/8/5k2/8/5R2/8 b - - 49 25",
+      "ply": 25,
+      "chosen_move": "e2f2",
+      "features": {
+        "box_area_before": 25,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -24
+    },
+    "thoughts": "Chose e2f2 | \u0394box=-24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 25: f4g5",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/8/6k1/8/8/5R2/8 w - - 50 26",
+      "ply": 25,
+      "opponent_move": "f4g5"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 26: c8d8",
+    "new_requests": [],
+    "env": {
+      "fen": "3K4/8/8/6k1/8/8/5R2/8 b - - 51 26",
+      "ply": 26,
+      "chosen_move": "c8d8",
+      "features": {
+        "box_area_before": 9,
+        "box_area_after": 1,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": -8
+    },
+    "thoughts": "Chose c8d8 | \u0394box=-8 | king_progress=1.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 26: g5g4",
+    "new_requests": [],
+    "env": {
+      "fen": "3K4/8/8/8/6k1/8/5R2/8 w - - 52 27",
+      "ply": 26,
+      "opponent_move": "g5g4"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 27: f2g2",
+    "new_requests": [],
+    "env": {
+      "fen": "3K4/8/8/8/6k1/8/6R1/8 b - - 53 27",
+      "ply": 27,
+      "chosen_move": "f2g2",
+      "features": {
+        "box_area_before": 9,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -8
+    },
+    "thoughts": "Chose f2g2 | \u0394box=-8 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 27: g4f5",
+    "new_requests": [],
+    "env": {
+      "fen": "3K4/8/8/5k2/8/8/6R1/8 w - - 54 28",
+      "ply": 27,
+      "opponent_move": "g4f5"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 28: g2f2",
+    "new_requests": [],
+    "env": {
+      "fen": "3K4/8/8/5k2/8/8/5R2/8 b - - 55 28",
+      "ply": 28,
+      "chosen_move": "g2f2",
+      "features": {
+        "box_area_before": 25,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -24
+    },
+    "thoughts": "Chose g2f2 | \u0394box=-24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 28: f5e6",
+    "new_requests": [],
+    "env": {
+      "fen": "3K4/8/4k3/8/8/8/5R2/8 w - - 56 29",
+      "ply": 28,
+      "opponent_move": "f5e6"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 29: f2e2",
+    "new_requests": [],
+    "env": {
+      "fen": "3K4/8/4k3/8/8/8/4R3/8 b - - 57 29",
+      "ply": 29,
+      "chosen_move": "f2e2",
+      "features": {
+        "box_area_before": 25,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -24
+    },
+    "thoughts": "Chose f2e2 | \u0394box=-24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 29: e6d6",
+    "new_requests": [],
+    "env": {
+      "fen": "3K4/8/3k4/8/8/8/4R3/8 w - - 58 30",
+      "ply": 29,
+      "opponent_move": "e6d6"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 30: e2d2",
+    "new_requests": [],
+    "env": {
+      "fen": "3K4/8/3k4/8/8/8/3R4/8 b - - 59 30",
+      "ply": 30,
+      "chosen_move": "e2d2",
+      "features": {
+        "box_area_before": 25,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -24
+    },
+    "thoughts": "Chose e2d2 | \u0394box=-24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 30: d6e5",
+    "new_requests": [],
+    "env": {
+      "fen": "3K4/8/8/4k3/8/8/3R4/8 w - - 60 31",
+      "ply": 30,
+      "opponent_move": "d6e5"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 31: d2e2",
+    "new_requests": [],
+    "env": {
+      "fen": "3K4/8/8/4k3/8/8/4R3/8 b - - 61 31",
+      "ply": 31,
+      "chosen_move": "d2e2",
+      "features": {
+        "box_area_before": 49,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -48
+    },
+    "thoughts": "Chose d2e2 | \u0394box=-48 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 31: e5d4",
+    "new_requests": [],
+    "env": {
+      "fen": "3K4/8/8/8/3k4/8/4R3/8 w - - 62 32",
+      "ply": 31,
+      "opponent_move": "e5d4"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 32: e2d2",
+    "new_requests": [],
+    "env": {
+      "fen": "3K4/8/8/8/3k4/8/3R4/8 b - - 63 32",
+      "ply": 32,
+      "chosen_move": "e2d2",
+      "features": {
+        "box_area_before": 49,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -48
+    },
+    "thoughts": "Chose e2d2 | \u0394box=-48 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 32: d4c5",
+    "new_requests": [],
+    "env": {
+      "fen": "3K4/8/8/2k5/8/8/3R4/8 w - - 64 33",
+      "ply": 32,
+      "opponent_move": "d4c5"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 33: d2c2",
+    "new_requests": [],
+    "env": {
+      "fen": "3K4/8/8/2k5/8/8/2R5/8 b - - 65 33",
+      "ply": 33,
+      "chosen_move": "d2c2",
+      "features": {
+        "box_area_before": 25,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -24
+    },
+    "thoughts": "Chose d2c2 | \u0394box=-24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 33: c5d6",
+    "new_requests": [],
+    "env": {
+      "fen": "3K4/8/3k4/8/8/8/2R5/8 w - - 66 34",
+      "ply": 33,
+      "opponent_move": "c5d6"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 34: c2d2",
+    "new_requests": [],
+    "env": {
+      "fen": "3K4/8/3k4/8/8/8/3R4/8 b - - 67 34",
+      "ply": 34,
+      "chosen_move": "c2d2",
+      "features": {
+        "box_area_before": 25,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -24
+    },
+    "thoughts": "Chose c2d2 | \u0394box=-24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 34: d6c6",
+    "new_requests": [],
+    "env": {
+      "fen": "3K4/8/2k5/8/8/8/3R4/8 w - - 68 35",
+      "ply": 34,
+      "opponent_move": "d6c6"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 35: d2c2",
+    "new_requests": [],
+    "env": {
+      "fen": "3K4/8/2k5/8/8/8/2R5/8 b - - 69 35",
+      "ply": 35,
+      "chosen_move": "d2c2",
+      "features": {
+        "box_area_before": 25,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -24
+    },
+    "thoughts": "Chose d2c2 | \u0394box=-24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 35: c6b7",
+    "new_requests": [],
+    "env": {
+      "fen": "3K4/1k6/8/8/8/8/2R5/8 w - - 70 36",
+      "ply": 35,
+      "opponent_move": "c6b7"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 36: c2b2",
+    "new_requests": [],
+    "env": {
+      "fen": "3K4/1k6/8/8/8/8/1R6/8 b - - 71 36",
+      "ply": 36,
+      "chosen_move": "c2b2",
+      "features": {
+        "box_area_before": 9,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -8
+    },
+    "thoughts": "Chose c2b2 | \u0394box=-8 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 36: b7a8",
+    "new_requests": [],
+    "env": {
+      "fen": "k2K4/8/8/8/8/8/1R6/8 w - - 72 37",
+      "ply": 36,
+      "opponent_move": "b7a8"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 37: d8c8",
+    "new_requests": [],
+    "env": {
+      "fen": "k1K5/8/8/8/8/8/1R6/8 b - - 73 37",
+      "ply": 37,
+      "chosen_move": "d8c8",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 1,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 0
+    },
+    "thoughts": "Chose d8c8 | \u0394box=0 | king_progress=1.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 37: a8a7",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/k7/8/8/8/8/1R6/8 w - - 74 38",
+      "ply": 37,
+      "opponent_move": "a8a7"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 38: b2a2",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/k7/8/8/8/8/R7/8 b - - 75 38",
+      "ply": 38,
+      "chosen_move": "b2a2",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": 0
+    },
+    "thoughts": "Chose b2a2 | \u0394box=0 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 38: a7b6",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/1k6/8/8/8/R7/8 w - - 76 39",
+      "ply": 38,
+      "opponent_move": "a7b6"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 39: a2b2",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/1k6/8/8/8/1R6/8 b - - 77 39",
+      "ply": 39,
+      "chosen_move": "a2b2",
+      "features": {
+        "box_area_before": 9,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -8
+    },
+    "thoughts": "Chose a2b2 | \u0394box=-8 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 39: b6a6",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/k7/8/8/8/1R6/8 w - - 78 40",
+      "ply": 39,
+      "opponent_move": "b6a6"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 40: b2a2",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/k7/8/8/8/R7/8 b - - 79 40",
+      "ply": 40,
+      "chosen_move": "b2a2",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": 0
+    },
+    "thoughts": "Chose b2a2 | \u0394box=0 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 40: a6b5",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/8/1k6/8/8/R7/8 w - - 80 41",
+      "ply": 40,
+      "opponent_move": "a6b5"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 41: a2b2",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/8/1k6/8/8/1R6/8 b - - 81 41",
+      "ply": 41,
+      "chosen_move": "a2b2",
+      "features": {
+        "box_area_before": 9,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -8
+    },
+    "thoughts": "Chose a2b2 | \u0394box=-8 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 41: b5c6",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/2k5/8/8/8/1R6/8 w - - 82 42",
+      "ply": 41,
+      "opponent_move": "b5c6"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 42: b2c2",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/2k5/8/8/8/2R5/8 b - - 83 42",
+      "ply": 42,
+      "chosen_move": "b2c2",
+      "features": {
+        "box_area_before": 25,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -24
+    },
+    "thoughts": "Chose b2c2 | \u0394box=-24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 42: c6b5",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/8/1k6/8/8/2R5/8 w - - 84 43",
+      "ply": 42,
+      "opponent_move": "c6b5"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 43: c2b2",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/8/1k6/8/8/1R6/8 b - - 85 43",
+      "ply": 43,
+      "chosen_move": "c2b2",
+      "features": {
+        "box_area_before": 9,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -8
+    },
+    "thoughts": "Chose c2b2 | \u0394box=-8 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 43: b5a5",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/8/k7/8/8/1R6/8 w - - 86 44",
+      "ply": 43,
+      "opponent_move": "b5a5"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 44: c8c7",
+    "new_requests": [],
+    "env": {
+      "fen": "8/2K5/8/k7/8/8/1R6/8 b - - 87 44",
+      "ply": 44,
+      "chosen_move": "c8c7",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 9,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 8
+    },
+    "thoughts": "Chose c8c7 | \u0394box=8 | king_progress=1.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 44: a5a4",
+    "new_requests": [],
+    "env": {
+      "fen": "8/2K5/8/8/k7/8/1R6/8 w - - 88 45",
+      "ply": 44,
+      "opponent_move": "a5a4"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 45: c7c6",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/2K5/8/k7/8/1R6/8 b - - 89 45",
+      "ply": 45,
+      "chosen_move": "c7c6",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 25,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 24
+    },
+    "thoughts": "Chose c7c6 | \u0394box=24 | king_progress=1.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 45: a4a3",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/2K5/8/8/k7/1R6/8 w - - 90 46",
+      "ply": 45,
+      "opponent_move": "a4a3"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 46: b2c2",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/2K5/8/8/k7/2R5/8 b - - 91 46",
+      "ply": 46,
+      "chosen_move": "b2c2",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 25,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 24
+    },
+    "thoughts": "Chose b2c2 | \u0394box=24 | king_progress=0.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 46: a3a4",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/2K5/8/k7/8/2R5/8 w - - 92 47",
+      "ply": 46,
+      "opponent_move": "a3a4"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 47: c2c4",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/2K5/8/k1R5/8/8/8 b - - 93 47",
+      "ply": 47,
+      "chosen_move": "c2c4",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 25,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": 24
+    },
+    "thoughts": "Chose c2c4 | \u0394box=24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 47: a4b3",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/2K5/8/2R5/1k6/8/8 w - - 94 48",
+      "ply": 47,
+      "opponent_move": "a4b3"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 48: c6c5",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/2K5/2R5/1k6/8/8 b - - 95 48",
+      "ply": 48,
+      "chosen_move": "c6c5",
+      "features": {
+        "box_area_before": 9,
+        "box_area_after": 25,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 16
+    },
+    "thoughts": "Chose c6c5 | \u0394box=16 | king_progress=1.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 48: b3a2",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/2K5/2R5/8/k7/8 w - - 96 49",
+      "ply": 48,
+      "opponent_move": "b3a2"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 49: c5b4",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/8/1KR5/8/k7/8 b - - 97 49",
+      "ply": 49,
+      "chosen_move": "c5b4",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 9,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 8
+    },
+    "thoughts": "Chose c5b4 | \u0394box=8 | king_progress=1.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 49: a2b1",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/8/1KR5/8/8/1k6 w - - 98 50",
+      "ply": 49,
+      "opponent_move": "a2b1"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 50: b4b3",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/8/2R5/1K6/8/1k6 b - - 99 50",
+      "ply": 50,
+      "chosen_move": "b4b3",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 9,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 8
+    },
+    "thoughts": "Chose b4b3 | \u0394box=8 | king_progress=1.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 50: b1a1",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/8/2R5/1K6/8/k7 w - - 100 51",
+      "ply": 50,
+      "opponent_move": "b1a1"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 51: c4c1",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/8/8/1K6/8/k1R5 b - - 101 51",
+      "ply": 51,
+      "chosen_move": "c4c1",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 9,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": 8
+    },
+    "thoughts": "Chose c4c1 | \u0394box=8 | king_progress=0.0 | safe_check=True | rook_safe=True"
   }
 ]

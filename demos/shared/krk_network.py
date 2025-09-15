@@ -24,6 +24,7 @@ from recon_lite_chess import (
     create_king_drive_moves, create_box_shrink_moves, create_opposition_moves,
     create_mate_moves, create_random_legal_moves
 )
+from recon_lite_chess.actuators import choose_any_safe_move
 
 
 def build_krk_network() -> Graph:
@@ -101,6 +102,11 @@ def build_krk_network() -> Graph:
     g.add_edge("phase2_shrink_box", "box_shrink_moves", LinkType.SUB)
     g.add_edge("phase3_take_opposition", "opposition_moves", LinkType.SUB)
     g.add_edge("phase4_deliver_mate", "mate_moves", LinkType.SUB)
+
+    # Note: Stall prevention is handled by:
+    # 1. Fallback mechanisms in each phase chooser (choose_any_safe_move)
+    # 2. Watchdog timer in gameplay demo (50 ticks)
+    # No separate last resort terminal needed
 
     return g
 

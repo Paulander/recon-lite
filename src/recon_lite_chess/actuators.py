@@ -4,73 +4,312 @@ Chess move selection actuators for ReCoN KRK system.
 These functions implement the "filter-first, then score" approach:
 1. Hard filters: Eliminate unsafe/illegal moves
 2. Soft scoring: Rank remaining moves by desirability
+3. Fallback: If no moves pass filters, use safe legal move
+
+IMPROVEMENTS (Sept 15, 2025):
+- Global stall prevention with choose_any_safe_move() fallback
+- Enhanced P0 rendezvous logic
+- Rim promotion and monotonicity constraints
+- Simplified scoring: 3.0*king_progress + 2.0*box_shrink + 1.0*safe_check − 0.2*rook_drag
 """
 
 import chess
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict, Any
 from .predicates import (
-    is_stalemate, rook_safe_after, box_area, box_area_after,
-    shrinks_or_preserves_box, our_king_progress, has_opposition_after,
-    gives_safe_check
-)
-
-import chess
-from .predicates import (
-    is_stalemate_after,
-    box_area, box_area_after,
-    rook_safe_after,
-    gives_safe_check,
-    our_king_progress,
-    creates_stable_cut,
-
+    is_stalemate_after, rook_safe_after, box_area, box_area_after,
+    shrinks_or_preserves_box, our_king_progress, gives_safe_check
 )
 
 
-def _rook_distance_travel(move: chess.Move) -> float:
-    f1, r1 = chess.square_file(move.from_square), chess.square_rank(move.from_square)
-    f2, r2 = chess.square_file(move.to_square), chess.square_rank(move.to_square)
-    return float(abs(f1 - f2) + abs(r1 - r2))
-
-
-def _rook_distance_travel(move: chess.Move) -> float:
-    # small penalty: longer rook drags are slightly worse
-    f1, r1 = chess.square_file(move.from_square), chess.square_rank(move.from_square)
-    f2, r2 = chess.square_file(move.to_square), chess.square_rank(move.to_square)
-    return float(abs(f1 - f2) + abs(r1 - r2))
-
-# --- Add near the top if not present ---
-import chess
-from typing import Optional
-from .predicates import (
-    is_stalemate_after,
-    box_area, box_area_after,
-    rook_safe_after,
-    shrinks_or_preserves_box,
-    our_king_progress,
-    gives_safe_check,
-    # If you already implemented this, keep it; otherwise omit and the code below won’t rely on it.
-    # creates_stable_cut,
-)
-
-def _rook_distance_travel(move: chess.Move) -> float:
-    f1, r1 = chess.square_file(move.from_square), chess.square_rank(move.from_square)
-    f2, r2 = chess.square_file(move.to_square), chess.square_rank(move.to_square)
-    return float(abs(f1 - f2) + abs(r1 - r2))
-
-
-# -------- NEW: Phase 0 chooser (establish box & rendezvous) --------
-def choose_move_p0(board: chess.Board) -> Optional[str]:
+def choose_any_safe_move(board: chess.Board) -> Optional[str]:
     """
-    Phase 0: establish a first 'box' and bring our king toward supporting the rook.
-    Filter-first (must pass):
-      - not stalemate
-      - rook_safe_after
-      - box_nonincreasing (allow equal if king_progress or safe_check)
-    Score:
-      + 3.0 * (base_area - area_next)
-      + 1.5 * our_king_progress
-      + 0.5 if gives_safe_check
-      - 0.1 * rook_distance_travel
+    Global fallback: Choose any legal move that doesn't lose the rook immediately.
+    This prevents stalls by ensuring there's always a valid move selection.
+    """
+    legal_moves = list(board.legal_moves)
+    if not legal_moves:
+        return None
+
+    # Prefer moves that don't lose the rook
+    safe_moves = []
+    for move in legal_moves:
+        if rook_safe_after(board, move):
+            safe_moves.append(move)
+
+    if safe_moves:
+        # Choose randomly from safe moves
+        chosen = safe_moves[0]  # Could randomize, but deterministic for now
+        return chosen.uci()
+
+    # If no safe moves, take any legal move (better than stalling)
+    return legal_moves[0].uci()
+
+
+def king_to_rook_distance(board: chess.Board) -> float:
+    """Calculate distance between our king and rook."""
+    wk_square = board.king(board.turn)
+    wr_square = None
+
+    for square in chess.SQUARES:
+        if board.piece_at(square) and board.piece_at(square).piece_type == chess.ROOK and board.piece_at(square).color == board.turn:
+            wr_square = square
+            break
+
+    if wr_square is None:
+        return 8.0  # Max distance if no rook found
+
+    wk_file, wk_rank = chess.square_file(wk_square), chess.square_rank(wk_square)
+    wr_file, wr_rank = chess.square_file(wr_square), chess.square_rank(wr_square)
+    return float(abs(wk_file - wr_file) + abs(wk_rank - wr_rank))
+
+
+def is_rim_square(square: int) -> bool:
+    """Check if square is on the board rim (edge)."""
+    file = chess.square_file(square)
+    rank = chess.square_rank(square)
+    return file in [0, 7] or rank in [0, 7]
+
+
+def is_cornered(board: chess.Board) -> bool:
+    """Check if enemy king is cornered (in corner + kings in opposition)."""
+    ek_square = board.king(not board.turn)
+    wk_square = board.king(board.turn)
+
+    # Check if enemy king is in corner
+    corners = [chess.A1, chess.H1, chess.A8, chess.H8]
+    if ek_square not in corners:
+        return False
+
+    # Check if kings are in opposition
+    ek_file, ek_rank = chess.square_file(ek_square), chess.square_rank(ek_square)
+    wk_file, wk_rank = chess.square_file(wk_square), chess.square_rank(wk_square)
+
+    # Same file or rank with odd squares between
+    if ek_file == wk_file:
+        squares_between = abs(ek_rank - wk_rank) - 1
+        return squares_between % 2 == 1
+    elif ek_rank == wk_rank:
+        squares_between = abs(ek_file - wk_file) - 1
+        return squares_between % 2 == 1
+
+    return False
+
+
+def _rook_distance_travel(move: chess.Move) -> float:
+    """Calculate how far the rook moves (for penalty scoring)."""
+    f1, r1 = chess.square_file(move.from_square), chess.square_rank(move.from_square)
+    f2, r2 = chess.square_file(move.to_square), chess.square_rank(move.to_square)
+    return float(abs(f1 - f2) + abs(r1 - r2))
+
+
+def _calculate_score(board: chess.Board, move: chess.Move, phase: int) -> float:
+    """
+    Unified scoring function with simplified weights.
+    Score = 3.0*king_progress + 2.0*box_shrink + 1.0*safe_check − 0.2*rook_drag
+    """
+    score = 0.0
+
+    # King progress (most important)
+    score += 3.0 * our_king_progress(board, move)
+
+    # Box shrinking
+    old_area = box_area(board)
+    new_area = box_area_after(board, move)
+    if new_area < old_area:
+        score += 2.0 * (old_area - new_area)
+
+    # Safe check bonus
+    if gives_safe_check(board, move):
+        score += 1.0
+
+    # Rook drag penalty
+    score -= 0.2 * _rook_distance_travel(move)
+
+    return score
+
+
+def choose_move_phase0(board: chess.Board) -> Optional[str]:
+    """
+    Phase 0: Rendezvous king and rook, create safe cut.
+    Enhanced with proper distance-based king movement.
+    """
+    legal_moves = list(board.legal_moves)
+    candidates = []
+    distance = king_to_rook_distance(board)
+
+    for move in legal_moves:
+        # Hard filters
+        if is_stalemate_after(board, move):
+            continue
+        if not rook_safe_after(board, move):
+            continue
+        if not shrinks_or_preserves_box(board, move):
+            # Allow preservation only if king progresses or gives safe check
+            if our_king_progress(board, move) <= 0 and not gives_safe_check(board, move):
+                continue
+
+        # P0-specific logic: focus on rendezvous until distance ≤ 2
+        if distance > 2:
+            # Prefer king moves that reduce distance to rook or enemy king
+            piece = board.piece_at(move.from_square)
+            if piece and piece.piece_type == chess.KING:
+                # Calculate distance reduction
+                wk_square = board.king(board.turn)
+                ek_square = board.king(not board.turn)
+                wr_square = None
+
+                for sq in chess.SQUARES:
+                    if board.piece_at(sq) and board.piece_at(sq).piece_type == chess.ROOK and board.piece_at(sq).color == board.turn:
+                        wr_square = sq
+                        break
+
+                if wr_square:
+                    old_dist_rook = abs(chess.square_file(wk_square) - chess.square_file(wr_square)) + abs(chess.square_rank(wk_square) - chess.square_rank(wr_square))
+                    new_dist_rook = abs(chess.square_file(move.to_square) - chess.square_file(wr_square)) + abs(chess.square_rank(move.to_square) - chess.square_rank(wr_square))
+
+                    if new_dist_rook < old_dist_rook:
+                        candidates.append((move, _calculate_score(board, move, 0) + 1.0))  # Bonus for reducing distance
+                    else:
+                        candidates.append((move, _calculate_score(board, move, 0)))
+                else:
+                    candidates.append((move, _calculate_score(board, move, 0)))
+            else:
+                # Rook moves: only allow if creating safe cut
+                candidates.append((move, _calculate_score(board, move, 0) - 0.5))  # Small penalty for rook moves in P0
+        else:
+            # Distance ≤ 2: normal scoring
+            candidates.append((move, _calculate_score(board, move, 0)))
+
+    if candidates:
+        candidates.sort(key=lambda x: x[1], reverse=True)
+        return candidates[0][0].uci()
+
+    # Fallback: any safe move
+    return choose_any_safe_move(board)
+
+
+def choose_move_phase1(board: chess.Board) -> Optional[str]:
+    """
+    Phase 1: Drive enemy king to edge.
+    Enhanced with rim promotion logic and monotonicity.
+    """
+    legal_moves = list(board.legal_moves)
+    candidates = []
+
+    for move in legal_moves:
+        if is_stalemate_after(board, move):
+            continue
+        if not rook_safe_after(board, move):
+            continue
+        if not shrinks_or_preserves_box(board, move):
+            continue
+
+        score = _calculate_score(board, move, 1)
+
+        # Rim promotion: bonus if enemy king moves toward rim
+        ek_square = board.king(not board.turn)
+        if is_rim_square(ek_square):
+            score += 2.0  # Bonus for being on rim
+
+        candidates.append((move, score))
+
+    if candidates:
+        candidates.sort(key=lambda x: x[1], reverse=True)
+        return candidates[0][0].uci()
+
+    # Fallback: any safe move
+    return choose_any_safe_move(board)
+
+
+def choose_move_phase2(board: chess.Board) -> Optional[str]:
+    """
+    Phase 2: Shrink the box.
+    Enhanced with strict monotonicity requirements.
+    """
+    legal_moves = list(board.legal_moves)
+    candidates = []
+
+    for move in legal_moves:
+        if is_stalemate_after(board, move):
+            continue
+        if not rook_safe_after(board, move):
+            continue
+        if not shrinks_or_preserves_box(board, move):
+            continue
+
+        score = _calculate_score(board, move, 2)
+        candidates.append((move, score))
+
+    if candidates:
+        candidates.sort(key=lambda x: x[1], reverse=True)
+        return candidates[0][0].uci()
+
+    # Fallback: any safe move
+    return choose_any_safe_move(board)
+
+
+def choose_move_phase3(board: chess.Board) -> Optional[str]:
+    """
+    Phase 3: Take opposition.
+    Enhanced with opposition detection and P4 promotion.
+    """
+    legal_moves = list(board.legal_moves)
+    candidates = []
+
+    for move in legal_moves:
+        if is_stalemate_after(board, move):
+            continue
+        if not rook_safe_after(board, move):
+            continue
+        if not shrinks_or_preserves_box(board, move):
+            continue
+
+        score = _calculate_score(board, move, 3)
+
+        # P4 promotion: bonus if enemy king is cornered with opposition
+        if is_cornered(board):
+            score += 3.0  # Strong bonus for mate setup
+
+        candidates.append((move, score))
+
+    if candidates:
+        candidates.sort(key=lambda x: x[1], reverse=True)
+        return candidates[0][0].uci()
+
+    # Fallback: any safe move
+    return choose_any_safe_move(board)
+
+
+def choose_move_phase4(board: chess.Board) -> Optional[str]:
+    """
+    Phase 4: Deliver mate.
+    Enhanced with mate detection.
+    """
+    legal_moves = list(board.legal_moves)
+    candidates = []
+
+    for move in legal_moves:
+        if is_stalemate_after(board, move):
+            continue
+        if not rook_safe_after(board, move):
+            continue
+
+        score = _calculate_score(board, move, 4)
+
+        # Mate bonus
+        b = board.copy()
+        b.push(move)
+        if b.is_checkmate():
+            score += 10.0  # Huge bonus for mate
+
+        candidates.append((move, score))
+
+    if candidates:
+        candidates.sort(key=lambda x: x[1], reverse=True)
+        return candidates[0][0].uci()
+
+    # Fallback: any safe move
+    return choose_any_safe_move(board)
     """
     legal = list(board.legal_moves)
     if not legal:

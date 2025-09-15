@@ -70,17 +70,38 @@ def choose_move_with_graph(board: chess.Board, logger: RunLogger, move_no: int,
     g.nodes["krk_root"].state = NodeState.REQUESTED
 
     ticks = 0
+    watchdog_triggered = False
+
     while ticks < max_ticks and env.get("chosen_move") is None:
         ticks += 1
         now_req = eng.step(env)
 
+        # WATCHDOG: Force a move after 50 ticks to prevent infinite stalls
+        if ticks == 50 and env.get("chosen_move") is None:
+            from demos.shared.krk_network import choose_any_safe_move
+            fallback_move = choose_any_safe_move(board)
+            if fallback_move:
+                env["chosen_move"] = fallback_move
+                watchdog_triggered = True
+                logger.snapshot(
+                    engine=eng,
+                    note=f"WATCHDOG: Forced move {fallback_move} after {ticks} ticks",
+                    env={"fen": board.fen(), "move_number": move_no, "evaluation_tick": ticks, "watchdog": True},
+                    thoughts=f"Watchdog activated: No move chosen after {ticks} ticks, using fallback",
+                    new_requests=[]
+                )
+                break
+
         # snapshot periodically to inspect why the graph might be idle
         if ticks % 10 == 0:
+            thoughts_msg = f"Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+            if watchdog_triggered:
+                thoughts_msg += " WATCHDOG ACTIVATED!"
             logger.snapshot(
                 engine=eng,
                 note=f"Eval tick {ticks} (move {move_no})",
                 env={"fen": board.fen(), "move_number": move_no, "evaluation_tick": ticks},
-                thoughts=f"Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move'].",
+                thoughts=thoughts_msg,
                 new_requests=list(now_req.keys()) if now_req else []
             )
 
