@@ -79,10 +79,6 @@ def rook_safe_after(board: chess.Board, move: chess.Move) -> bool:
     enemy_k = b.king(enemy)
     our_k   = b.king(color)
 
-    # If enemy king doesn't exist, rook is safe
-    if enemy_k is None:
-        return True
-
     # Fast adjacency test (cheap reject)
     if chebyshev(enemy_k, rook_sq) > 1:
         return True
@@ -164,13 +160,12 @@ def creates_stable_cut(board: chess.Board, move: chess.Move) -> bool:
 def shrinks_or_preserves_box(board, move, *, allow_equal_if_progress=True):
     """
     Return True if the 'box' around the enemy king strictly shrinks after 'move'.
-    If it stays equal, allow it only when our king meaningfully progresses or we give a safe check.
+    If it stays equal, allow it only when our king meaningfully progresses.
 
     Relies on existing helpers in this module:
       - box_area(board)              -> numeric proxy for box size
       - box_area_after(board, move)  -> same, after move
       - our_king_progress(board, move) -> positive if our K gets closer to the key region/enemy K
-      - gives_safe_check(board, move)  -> True if we safely check the enemy K
     """
     before = box_area(board)
     after  = box_area_after(board, move)
@@ -181,18 +176,13 @@ def shrinks_or_preserves_box(board, move, *, allow_equal_if_progress=True):
     if not allow_equal_if_progress:
         return False
 
-    # Equal box is acceptable iff we make progress (king steps) or a safe check that corrals.
+    # Equal box is acceptable iff we make progress (king steps)
     try:
         kp = our_king_progress(board, move)
     except Exception:
         kp = 0
 
-    try:
-        sc = gives_safe_check(board, move)
-    except Exception:
-        sc = False
-
-    return (after == before) and (kp > 0 or sc)
+    return (after == before) and (kp > 0)
 
 
 # --- Feature logger used by the demo -----------------------------------------

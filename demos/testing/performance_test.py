@@ -114,8 +114,8 @@ def print_performance_report(stats: Dict[str, Any]):
     print("=" * 50)
 
     print("🎯 OVERALL PERFORMANCE:")
-    print(".1f")
-    print(".1f")
+    print(f"   Mate rate: {stats['mate_rate_percent']:.1f}%")
+    print(f"   Avg game length (plies): {stats['avg_game_length']:.1f}")
 
     print("\n📈 DETAILED BREAKDOWN:")
     print(f"   ✅ Checkmates: {stats['mate_games']} ({stats['mate_games']/stats['total_runs']*100:.1f}%)")
@@ -125,8 +125,8 @@ def print_performance_report(stats: Dict[str, Any]):
     print(f"   🚫 Stall Games: {stats['stall_games']} ({stats['stall_games']/stats['total_runs']*100:.1f}%)")
 
     print("\n⏱️  TIMING:")
-    print(".2f")
-    print(".3f")
+    print(f"   Total time: {stats['total_time_seconds']:.2f}s")
+    print(f"   Avg time/game: {stats['avg_time_per_game']:.3f}s")
 
     print("\n🔍 ANALYSIS:")
     if stats['mate_rate_percent'] >= 80:

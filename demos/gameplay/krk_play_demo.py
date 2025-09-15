@@ -4,7 +4,7 @@ KRK Chess Demo (ReCoN-driven)
 
 What this does
 --------------
-- Builds a fresh KRK ReCoN graph each white move.
+- Builds a fresh KRK ReCoN graph each white move. (a bit stupid but for now)
 - Uses Phase-0 (establish cut + king/rook rendezvous), then Phase-1..4.
 - The engine runs until a terminal sets env["chosen_move"].
 - Logs per-move features to help diagnose stalls/oscillation.
@@ -160,7 +160,7 @@ def play_single_game(initial_fen: str | None = None, max_plies: int = 200) -> di
         logger.snapshot(
             engine=None,  # not strictly needed here
             note=f"ReCoN ply {ply}: {chosen_uci}",
-            env={"fen": board.fen(), "ply": ply, "chosen_move": chosen_uci,
+            env={"fen": board.fen(), "ply": ply, "chosen_move": chosen_uci, "recons_move": chosen_uci,
                  "features": feats, "box_area_delta": feats["box_area_after"] - prev_area},
             thoughts=f"Chose {chosen_uci} | Δbox={feats['box_area_after']-prev_area} | king_progress={feats['king_progress']} | safe_check={feats['gives_safe_check']} | rook_safe={feats['rook_safe_after']}",
             new_requests=[]
@@ -182,7 +182,7 @@ def play_single_game(initial_fen: str | None = None, max_plies: int = 200) -> di
         logger.snapshot(
             engine=None,
             note=f"Opponent ply {ply}: {opp_uci}",
-            env={"fen": board.fen(), "ply": ply, "opponent_move": opp_uci},
+            env={"fen": board.fen(), "ply": ply, "opponent_move": opp_uci, "opponents_move": opp_uci},
             thoughts="Random defense.",
             new_requests=[]
         )

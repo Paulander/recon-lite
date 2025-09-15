@@ -155,11 +155,11 @@ class Phase0ChooseMoves(Node):
         super().__init__(nid=nid, ntype=NodeType.TERMINAL, predicate=self._choose)
 
     def _choose(self, node: Node, env: Dict[str, Any]) -> Tuple[bool, List[str]]:
-        from .actuators import choose_move_p0, choose_any_safe_move
+        from .actuators import choose_move_phase0, choose_any_safe_move
         board = env.get("board")
         if not board:
             return False, []
-        mv = choose_move_p0(board)
+        mv = choose_move_phase0(board)
         if mv is None:
             mv = choose_any_safe_move(board)
         if mv:

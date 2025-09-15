@@ -17,7 +17,8 @@ import chess
 from typing import List, Tuple, Optional, Dict, Any
 from .predicates import (
     is_stalemate_after, rook_safe_after, box_area, box_area_after,
-    shrinks_or_preserves_box, our_king_progress, gives_safe_check
+    shrinks_or_preserves_box, our_king_progress, gives_safe_check,
+    has_opposition_after, creates_stable_cut
 )
 
 
@@ -348,6 +349,7 @@ def choose_move_phase4(board: chess.Board) -> Optional[str]:
                 best_score, best_mv = score, mv
 
     return best_mv.uci() if best_mv else None
+    """
 
 
 
@@ -361,11 +363,7 @@ def choose_move_phase1(board: chess.Board) -> Optional[str]:
 
 
 def choose_move_phase2(board: chess.Board) -> Optional[str]:
-    """
-    Choose best move for Phase 2: Shrink enemy king's box.
-
-    Focus: Maximum box shrinking while maintaining safety.
-    """
+    "Choose best move for Phase 2: Shrink enemy king's box."
     return choose_move_with_filters(board, phase="phase2")
 
 
@@ -432,19 +430,19 @@ def choose_move_with_filters(board: chess.Board, phase: str = "general") -> Opti
 
         # Base box shrinking score (always positive factor)
         area_reduction = base_area - area_next
-        score += area_reduction * 3.0
+        score += area_reduction * 4.0
 
         # King progress score
         king_score = our_king_progress(board, move)
-        score += king_score
+        score += king_score * 1.5
 
         # Phase-specific bonuses
         if phase == "phase1":
             # Phase 1: Prioritize edge-driving
-            score += edge_driving_bonus(board, move) * 2.0
+            score += edge_driving_bonus(board, move) * 3.0
         elif phase == "phase2":
             # Phase 2: Maximize box shrinking
-            score += area_reduction * 5.0  # Extra weight for shrinking
+            score += area_reduction * 6.0  # Extra weight for shrinking
         elif phase == "phase3":
             # Phase 3: Opposition and positioning
             if has_opposition_after(board, move):
@@ -453,7 +451,11 @@ def choose_move_with_filters(board: chess.Board, phase: str = "general") -> Opti
         elif phase == "phase4":
             # Phase 4: Checkmate focus
             if gives_safe_check(board, move):
-                score += 2.0
+                score += 0.5
+
+        # Global: bonus for forming a stable rook cut
+        if creates_stable_cut(board, move):
+            score += 2.0
 
         scored_moves.append((score, move))
 
@@ -475,11 +477,7 @@ def is_stalemate_after(board: chess.Board, move: chess.Move) -> bool:
 
 
 def edge_driving_bonus(board: chess.Board, move: chess.Move) -> float:
-    """
-    Calculate bonus for moves that drive enemy king toward edge.
-
-    Higher bonus for moves that reduce king's distance to edge.
-    """
+    "Calculate bonus for moves that drive enemy king toward edge."
     enemy_king = board.king(not board.turn)
     if enemy_king is None:
         return 0.0
@@ -513,10 +511,7 @@ def choose_move_phase(board: chess.Board) -> Optional[str]:
 
 #If we can't find a good move for the strategy. 
 def choose_any_safe_move(board: chess.Board) -> str | None:
-    """
-    Fallback: try any non-stalemate, rook-safe move; else any legal move.
-    Ensures we *always* act, so the engine never stalls.
-    """
+    "Fallback: try any non-stalemate, rook-safe move; else any legal move."
     for mv in board.legal_moves:
         if not is_stalemate_after(board, mv) and rook_safe_after(board, mv):
             return mv.uci()

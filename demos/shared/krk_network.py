@@ -16,12 +16,12 @@ from recon_lite_chess import (
     create_stalemate_detector,
 
     # Script phase nodes
-    create_phase1_drive_to_edge, create_phase2_shrink_box,
+    create_phase0_establish_cut, create_phase1_drive_to_edge, create_phase2_shrink_box,
     create_phase3_take_opposition, create_phase4_deliver_mate,
     create_krk_root,
 
     # Move generators (actuators)
-    create_king_drive_moves, create_box_shrink_moves, create_opposition_moves,
+    create_phase0_choose_moves, create_king_drive_moves, create_box_shrink_moves, create_opposition_moves,
     create_mate_moves, create_random_legal_moves
 )
 from recon_lite_chess.actuators import choose_any_safe_move
@@ -51,6 +51,8 @@ def build_krk_network() -> Graph:
     g.add_node(create_stalemate_detector("is_stalemate"))
 
     # ===== SCRIPT NODES (Phase Orchestrators) =====
+    # Phase 0: Establish cut / rendezvous
+    g.add_node(create_phase0_establish_cut("phase0_establish_cut"))
     # Phase 1: Drive to edge
     g.add_node(create_phase1_drive_to_edge("phase1_drive_to_edge"))
 
@@ -67,6 +69,7 @@ def build_krk_network() -> Graph:
     g.add_node(create_krk_root("krk_root"))
 
     # ===== MOVE GENERATOR NODES (Actuators) =====
+    g.add_node(create_phase0_choose_moves("choose_phase0"))
     g.add_node(create_king_drive_moves("king_drive_moves"))
     g.add_node(create_box_shrink_moves("box_shrink_moves"))
     g.add_node(create_opposition_moves("opposition_moves"))
@@ -76,17 +79,27 @@ def build_krk_network() -> Graph:
     # ===== CONNECTIONS =====
 
     # Root connections (hierarchical - SUB)
+    g.add_edge("krk_root", "phase0_establish_cut", LinkType.SUB)
     g.add_edge("krk_root", "phase1_drive_to_edge", LinkType.SUB)
     g.add_edge("krk_root", "phase2_shrink_box", LinkType.SUB)
     g.add_edge("krk_root", "phase3_take_opposition", LinkType.SUB)
     g.add_edge("krk_root", "phase4_deliver_mate", LinkType.SUB)
+
+    # Phase 0 connections
+    g.add_edge("phase0_establish_cut", "choose_phase0", LinkType.SUB)
+
+    # POR chain between phases
+    g.add_edge("phase0_establish_cut", "phase1_drive_to_edge", LinkType.POR)
+    g.add_edge("phase1_drive_to_edge", "phase2_shrink_box", LinkType.POR)
+    g.add_edge("phase2_shrink_box", "phase3_take_opposition", LinkType.POR)
+    g.add_edge("phase3_take_opposition", "phase4_deliver_mate", LinkType.POR)
 
     # Phase 1 connections
     g.add_edge("phase1_drive_to_edge", "king_at_edge", LinkType.SUB)
 
     # Phase 2 connections
     g.add_edge("phase2_shrink_box", "box_can_shrink", LinkType.SUB)
-    g.add_edge("phase2_shrink_box", "king_at_edge", LinkType.POR)  # Precondition
+    # removed POR to king_at_edge to allow early shrinking
 
     # Phase 3 connections
     g.add_edge("phase3_take_opposition", "can_take_opposition", LinkType.SUB)
@@ -95,13 +108,15 @@ def build_krk_network() -> Graph:
     # Phase 4 connections
     g.add_edge("phase4_deliver_mate", "can_deliver_mate", LinkType.SUB)
     g.add_edge("phase4_deliver_mate", "can_take_opposition", LinkType.POR)  # Precondition
-    g.add_edge("phase4_deliver_mate", "is_stalemate", LinkType.POR)  # Avoid stalemate
+    # removed POR to is_stalemate; stalemate is enforced in move filters
 
     # Move generator connections to phases
     g.add_edge("phase1_drive_to_edge", "king_drive_moves", LinkType.SUB)
     g.add_edge("phase2_shrink_box", "box_shrink_moves", LinkType.SUB)
     g.add_edge("phase3_take_opposition", "opposition_moves", LinkType.SUB)
     g.add_edge("phase4_deliver_mate", "mate_moves", LinkType.SUB)
+
+    # Root-level fallback removed to encourage strategic actions
 
     # Note: Stall prevention is handled by:
     # 1. Fallback mechanisms in each phase chooser (choose_any_safe_move)
