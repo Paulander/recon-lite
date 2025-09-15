@@ -775,10 +775,12 @@
                 let positionInfo = "";
                 if (frame.env.move_number !== undefined) {
                     positionInfo = `Move ${frame.env.move_number}`;
-                    if (frame.env.recons_move) {
-                        positionInfo += ` - ReCoN: ${frame.env.recons_move}`;
-                    } else if (frame.env.opponents_move) {
-                        positionInfo += ` - Opponent: ${frame.env.opponents_move}`;
+                    const reconMove = frame.env.recons_move || frame.env.chosen_move;
+                    const oppMove = frame.env.opponents_move || frame.env.opponent_move;
+                    if (reconMove) {
+                        positionInfo += ` - ReCoN: ${reconMove}`;
+                    } else if (oppMove) {
+                        positionInfo += ` - Opponent: ${oppMove}`;
                     } else if (frame.env.evaluation_tick) {
                         positionInfo += ` - Evaluation tick ${frame.env.evaluation_tick}`;
                     }
@@ -796,7 +798,7 @@
             }
 
             // Update phase states
-            updatePhaseStates(frame.nodes);
+            updatePhaseStates(frame.nodes || {});
 
             // Update network visualization
             const canvas = document.getElementById('network-canvas');
