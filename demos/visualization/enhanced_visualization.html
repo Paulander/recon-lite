@@ -259,6 +259,8 @@
 
         /* Hide Three.js canvas initially */
         canvas { display: none; }
+        /* Ensure our 2D network canvas remains visible */
+        #network-canvas { display: block !important; }
     </style>
 </head>
 <body>
@@ -572,12 +574,20 @@
 
             if (env.moves && env.moves.length > 0) {
                 // Use move-based format for efficiency
-                chess = new Chess(env.initial_fen);
-                // Apply all moves to get current position
+                chess = new Chess(env.initial_fen || env.fen || undefined);
+                // Apply all moves to get current position (UCI parsing)
                 env.moves.forEach(moveUci => {
-                    const move = chess.move(moveUci, { sloppy: true });
-                    if (!move) {
-                        console.warn(`Invalid move: ${moveUci}`);
+                    if (typeof moveUci !== 'string' || moveUci.length < 4) {
+                        console.warn(`Invalid move string:`, moveUci);
+                        return;
+                    }
+                    const from = moveUci.slice(0, 2);
+                    const to = moveUci.slice(2, 4);
+                    const promotion = moveUci.length >= 5 ? moveUci.slice(4, 5) : undefined;
+                    const spec = promotion ? { from, to, promotion } : { from, to };
+                    const m = chess.move(spec);
+                    if (!m) {
+                        console.warn(`Invalid UCI move for chess.js: ${moveUci}`);
                     }
                 });
             } else if (env.fen) {
@@ -684,7 +694,8 @@
         function getNodeState(nodeId) {
             if (currentStep >= visualizationData.length) return 'INACTIVE';
             const frame = visualizationData[currentStep];
-            return frame.nodes[nodeId] || 'INACTIVE';
+            const nodes = (frame && frame.nodes) ? frame.nodes : {};
+            return nodes[nodeId] || 'INACTIVE';
         }
 
         // Setup controls

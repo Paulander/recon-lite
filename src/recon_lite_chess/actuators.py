@@ -18,7 +18,7 @@ from typing import List, Tuple, Optional, Dict, Any
 from .predicates import (
     is_stalemate_after, rook_safe_after, box_area, box_area_after,
     shrinks_or_preserves_box, our_king_progress, gives_safe_check,
-    has_opposition_after, creates_stable_cut
+    has_opposition_after, creates_stable_cut, enemy_king_mobility_after
 )
 
 
@@ -353,38 +353,6 @@ def choose_move_phase4(board: chess.Board) -> Optional[str]:
 
 
 
-def choose_move_phase1(board: chess.Board) -> Optional[str]:
-    """
-    Choose best move for Phase 1: Drive enemy king toward edge.
-
-    Focus: King safety, box shrinking, edge proximity.
-    """
-    return choose_move_with_filters(board, phase="phase1")
-
-
-def choose_move_phase2(board: chess.Board) -> Optional[str]:
-    "Choose best move for Phase 2: Shrink enemy king's box."
-    return choose_move_with_filters(board, phase="phase2")
-
-
-def choose_move_phase3(board: chess.Board) -> Optional[str]:
-    """
-    Choose best move for Phase 3: Take opposition.
-
-    Focus: King positioning for opposition and mate setup.
-    """
-    return choose_move_with_filters(board, phase="phase3")
-
-
-def choose_move_phase4(board: chess.Board) -> Optional[str]:
-    """
-    Choose best move for Phase 4: Deliver mate.
-
-    Focus: Checkmate moves, safe checks.
-    """
-    return choose_move_with_filters(board, phase="phase4")
-
-
 def choose_move_with_filters(board: chess.Board, phase: str = "general") -> Optional[str]:
     """
     Core move selection with filter-first, then score approach.
@@ -455,7 +423,17 @@ def choose_move_with_filters(board: chess.Board, phase: str = "general") -> Opti
 
         # Global: bonus for forming a stable rook cut
         if creates_stable_cut(board, move):
-            score += 2.0
+            score += 3.0
+
+        # Global: punish enemy king mobility (prefer confinement)
+        try:
+            mobility = enemy_king_mobility_after(board, move)
+        except Exception:
+            mobility = 8
+        score += (4 - mobility) * 0.5  # positive if mobility <= 4
+
+        # Penalize rook drag to avoid shuffling
+        score -= 0.3 * _rook_distance_travel(move)
 
         scored_moves.append((score, move))
 

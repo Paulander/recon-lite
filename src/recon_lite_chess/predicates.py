@@ -279,3 +279,21 @@ def has_opposition_after(board: chess.Board, move: chess.Move) -> bool:
     ek = b.king(not color)
     # After our move, it's opponent's turn (b.turn != color), and kings must be in opposition.
     return kings_in_opposition(ok, ek) and (b.turn != color)
+
+def enemy_king_mobility_after(board: chess.Board, move: chess.Move) -> int:
+    """
+    Number of legal king moves available to the enemy after we play 'move'.
+    Lower is better (tighter confinement).
+    """
+    b = board.copy(stack=False)
+    b.push(move)
+    enemy = b.turn  # after our move, it's enemy to move
+    king_sq = b.king(enemy)
+    if king_sq is None:
+        return 0
+    cnt = 0
+    for mv in b.legal_moves:
+        piece = b.piece_at(mv.from_square)
+        if piece and piece.piece_type == chess.KING and piece.color == enemy:
+            cnt += 1
+    return cnt

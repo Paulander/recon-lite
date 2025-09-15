@@ -76,6 +76,15 @@ def choose_move_with_graph(board: chess.Board, logger: RunLogger, move_no: int,
         ticks += 1
         now_req = eng.step(env)
 
+        # Per-tick snapshot for visualization (network states + fen)
+        logger.snapshot(
+            engine=eng,
+            note=f"Eval tick {ticks} (move {move_no})",
+            env={"fen": board.fen(), "move_number": move_no, "evaluation_tick": ticks},
+            thoughts="Evaluating KRK position...",
+            new_requests=list(now_req.keys()) if now_req else []
+        )
+
         # WATCHDOG: Force a move after 50 ticks to prevent infinite stalls
         if ticks == 50 and env.get("chosen_move") is None:
             from demos.shared.krk_network import choose_any_safe_move
@@ -92,19 +101,6 @@ def choose_move_with_graph(board: chess.Board, logger: RunLogger, move_no: int,
                 )
                 break
 
-        # snapshot periodically to inspect why the graph might be idle
-        if ticks % 10 == 0:
-            thoughts_msg = f"Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
-            if watchdog_triggered:
-                thoughts_msg += " WATCHDOG ACTIVATED!"
-            logger.snapshot(
-                engine=eng,
-                note=f"Eval tick {ticks} (move {move_no})",
-                env={"fen": board.fen(), "move_number": move_no, "evaluation_tick": ticks},
-                thoughts=thoughts_msg,
-                new_requests=list(now_req.keys()) if now_req else []
-            )
-
     return env.get("chosen_move")
 
 
@@ -117,6 +113,8 @@ def play_single_game(initial_fen: str | None = None, max_plies: int = 200) -> di
     """
     logger = RunLogger()
     board = chess.Board(initial_fen) if initial_fen else random_krk_board(white_to_move=True)
+    initial_fen_str = board.fen()
+    moves_log: list[str] = []
 
     stalls = 0
     rook_lost = False
@@ -149,6 +147,9 @@ def play_single_game(initial_fen: str | None = None, max_plies: int = 200) -> di
             stalls += 1
             break
 
+        # Append White move to cumulative log now that it is applied
+        moves_log.append(chosen_uci)
+
         # rook loss check
         if not any(p.piece_type == chess.ROOK and p.color == chess.WHITE for p in board.piece_map().values()):
             rook_lost = True
@@ -160,8 +161,16 @@ def play_single_game(initial_fen: str | None = None, max_plies: int = 200) -> di
         logger.snapshot(
             engine=None,  # not strictly needed here
             note=f"ReCoN ply {ply}: {chosen_uci}",
-            env={"fen": board.fen(), "ply": ply, "chosen_move": chosen_uci, "recons_move": chosen_uci,
-                 "features": feats, "box_area_delta": feats["box_area_after"] - prev_area},
+            env={
+                "initial_fen": initial_fen_str,
+                "moves": list(moves_log),
+                "fen": board.fen(),
+                "ply": ply,
+                "chosen_move": chosen_uci,
+                "recons_move": chosen_uci,
+                "features": feats,
+                "box_area_delta": feats["box_area_after"] - prev_area
+            },
             thoughts=f"Chose {chosen_uci} | Δbox={feats['box_area_after']-prev_area} | king_progress={feats['king_progress']} | safe_check={feats['gives_safe_check']} | rook_safe={feats['rook_safe_after']}",
             new_requests=[]
         )
@@ -174,7 +183,10 @@ def play_single_game(initial_fen: str | None = None, max_plies: int = 200) -> di
         if not opp_uci:
             break
 
+        # Update cumulative moves then apply
         board.push_uci(opp_uci)
+        moves_log.append(opp_uci)
+
         print(f"♚ Black (Random) plays: {opp_uci}")
         print(board)
         print()
@@ -182,7 +194,14 @@ def play_single_game(initial_fen: str | None = None, max_plies: int = 200) -> di
         logger.snapshot(
             engine=None,
             note=f"Opponent ply {ply}: {opp_uci}",
-            env={"fen": board.fen(), "ply": ply, "opponent_move": opp_uci, "opponents_move": opp_uci},
+            env={
+                "initial_fen": initial_fen_str,
+                "moves": list(moves_log),
+                "fen": board.fen(),
+                "ply": ply,
+                "opponent_move": opp_uci,
+                "opponents_move": opp_uci
+            },
             thoughts="Random defense.",
             new_requests=[]
         )
