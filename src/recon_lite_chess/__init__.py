@@ -11,6 +11,9 @@ from .krk_nodes import (
     KingAtEdgeDetector, BoxShrinkEvaluator, OppositionEvaluator,
     MateDeliverEvaluator, StalemateDetector,
 
+    # Move generators (actuators)
+    KingDriveMoves, RandomLegalMoves,
+
     # Script phase nodes
     Phase1DriveToEdge, Phase2ShrinkBox, Phase3TakeOpposition,
     Phase4DeliverMate, KRKCheckmateRoot,
@@ -19,6 +22,9 @@ from .krk_nodes import (
     create_king_edge_detector, create_box_shrink_evaluator,
     create_opposition_evaluator, create_mate_deliver_evaluator,
     create_stalemate_detector,
+
+    # Factory functions for move generators
+    create_king_drive_moves, create_random_legal_moves,
 
     # Factory functions for script nodes
     create_phase1_drive_to_edge, create_phase2_shrink_box,
@@ -31,6 +37,9 @@ __all__ = [
     "KingAtEdgeDetector", "BoxShrinkEvaluator", "OppositionEvaluator",
     "MateDeliverEvaluator", "StalemateDetector",
 
+    # Move generators (actuators)
+    "KingDriveMoves", "RandomLegalMoves",
+
     # Script phase nodes
     "Phase1DriveToEdge", "Phase2ShrinkBox", "Phase3TakeOpposition",
     "Phase4DeliverMate", "KRKCheckmateRoot",
@@ -39,6 +48,7 @@ __all__ = [
     "create_king_edge_detector", "create_box_shrink_evaluator",
     "create_opposition_evaluator", "create_mate_deliver_evaluator",
     "create_stalemate_detector",
+    "create_king_drive_moves", "create_random_legal_moves",
     "create_phase1_drive_to_edge", "create_phase2_shrink_box",
     "create_phase3_take_opposition", "create_phase4_deliver_mate",
     "create_krk_root"

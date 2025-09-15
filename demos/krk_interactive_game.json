@@ -1,0 +1,2702 @@
+[
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 1: a2h2",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "4k3/6K1/8/8/8/8/7R/8 b - - 1 1",
+      "move_number": 1,
+      "recons_move": "a2h2"
+    },
+    "thoughts": "Chose a2h2 on move 1"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 1: e8e7",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "8/4k1K1/8/8/8/8/7R/8 w - - 2 2",
+      "move_number": 1,
+      "opponents_move": "e8e7"
+    },
+    "thoughts": "Opponent chose e8e7"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 2: g7h8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "7K/4k3/8/8/8/8/7R/8 b - - 3 2",
+      "move_number": 2,
+      "recons_move": "g7h8"
+    },
+    "thoughts": "Chose g7h8 on move 2"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 2: e7d8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "3k3K/8/8/8/8/8/7R/8 w - - 4 3",
+      "move_number": 2,
+      "opponents_move": "e7d8"
+    },
+    "thoughts": "Opponent chose e7d8"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 3: h2h5",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "TRUE",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "3k3K/8/8/7R/8/8/8/8 b - - 5 3",
+      "move_number": 3,
+      "recons_move": "h2h5"
+    },
+    "thoughts": "Chose h2h5 on move 3"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 3: d8d7",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "TRUE",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "7K/3k4/8/7R/8/8/8/8 w - - 6 4",
+      "move_number": 3,
+      "opponents_move": "d8d7"
+    },
+    "thoughts": "Opponent chose d8d7"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 4: h8g8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "6K1/3k4/8/7R/8/8/8/8 b - - 7 4",
+      "move_number": 4,
+      "recons_move": "h8g8"
+    },
+    "thoughts": "Chose h8g8 on move 4"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 4: d7c8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "2k3K1/8/8/7R/8/8/8/8 w - - 8 5",
+      "move_number": 4,
+      "opponents_move": "d7c8"
+    },
+    "thoughts": "Opponent chose d7c8"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 5: h5h4",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "TRUE",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "2k3K1/8/8/8/7R/8/8/8 b - - 9 5",
+      "move_number": 5,
+      "recons_move": "h5h4"
+    },
+    "thoughts": "Chose h5h4 on move 5"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 5: c8b8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "TRUE",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "1k4K1/8/8/8/7R/8/8/8 w - - 10 6",
+      "move_number": 5,
+      "opponents_move": "c8b8"
+    },
+    "thoughts": "Opponent chose c8b8"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 6: h4h2",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "TRUE",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "1k4K1/8/8/8/8/8/7R/8 b - - 11 6",
+      "move_number": 6,
+      "recons_move": "h4h2"
+    },
+    "thoughts": "Chose h4h2 on move 6"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 6: b8b7",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "TRUE",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "6K1/1k6/8/8/8/8/7R/8 w - - 12 7",
+      "move_number": 6,
+      "opponents_move": "b8b7"
+    },
+    "thoughts": "Opponent chose b8b7"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 7: g8h8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "7K/1k6/8/8/8/8/7R/8 b - - 13 7",
+      "move_number": 7,
+      "recons_move": "g8h8"
+    },
+    "thoughts": "Chose g8h8 on move 7"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 7: b7a7",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "7K/k7/8/8/8/8/7R/8 w - - 14 8",
+      "move_number": 7,
+      "opponents_move": "b7a7"
+    },
+    "thoughts": "Opponent chose b7a7"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 8: h2g2",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "7K/k7/8/8/8/8/6R1/8 b - - 15 8",
+      "move_number": 8,
+      "recons_move": "h2g2"
+    },
+    "thoughts": "Chose h2g2 on move 8"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 8: a7b7",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "7K/1k6/8/8/8/8/6R1/8 w - - 16 9",
+      "move_number": 8,
+      "opponents_move": "a7b7"
+    },
+    "thoughts": "Opponent chose a7b7"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 9: h8g8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "6K1/1k6/8/8/8/8/6R1/8 b - - 17 9",
+      "move_number": 9,
+      "recons_move": "h8g8"
+    },
+    "thoughts": "Chose h8g8 on move 9"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 9: b7a6",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "6K1/8/k7/8/8/8/6R1/8 w - - 18 10",
+      "move_number": 9,
+      "opponents_move": "b7a6"
+    },
+    "thoughts": "Opponent chose b7a6"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 10: g2e2",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "6K1/8/k7/8/8/8/4R3/8 b - - 19 10",
+      "move_number": 10,
+      "recons_move": "g2e2"
+    },
+    "thoughts": "Chose g2e2 on move 10"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 10: a6b6",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "6K1/8/1k6/8/8/8/4R3/8 w - - 20 11",
+      "move_number": 10,
+      "opponents_move": "a6b6"
+    },
+    "thoughts": "Opponent chose a6b6"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 11: g8h8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "7K/8/1k6/8/8/8/4R3/8 b - - 21 11",
+      "move_number": 11,
+      "recons_move": "g8h8"
+    },
+    "thoughts": "Chose g8h8 on move 11"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 11: b6b5",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "7K/8/8/1k6/8/8/4R3/8 w - - 22 12",
+      "move_number": 11,
+      "opponents_move": "b6b5"
+    },
+    "thoughts": "Opponent chose b6b5"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 12: h8g8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "TRUE",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "6K1/8/8/1k6/8/8/4R3/8 b - - 23 12",
+      "move_number": 12,
+      "recons_move": "h8g8"
+    },
+    "thoughts": "Chose h8g8 on move 12"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 12: b5b4",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "TRUE",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "6K1/8/8/8/1k6/8/4R3/8 w - - 24 13",
+      "move_number": 12,
+      "opponents_move": "b5b4"
+    },
+    "thoughts": "Opponent chose b5b4"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 13: g8h8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "TRUE",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "7K/8/8/8/1k6/8/4R3/8 b - - 25 13",
+      "move_number": 13,
+      "recons_move": "g8h8"
+    },
+    "thoughts": "Chose g8h8 on move 13"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 13: b4a4",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "TRUE",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "7K/8/8/8/k7/8/4R3/8 w - - 26 14",
+      "move_number": 13,
+      "opponents_move": "b4a4"
+    },
+    "thoughts": "Opponent chose b4a4"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 14: h8h7",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "8/7K/8/8/k7/8/4R3/8 b - - 27 14",
+      "move_number": 14,
+      "recons_move": "h8h7"
+    },
+    "thoughts": "Chose h8h7 on move 14"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 14: a4a5",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "8/7K/8/k7/8/8/4R3/8 w - - 28 15",
+      "move_number": 14,
+      "opponents_move": "a4a5"
+    },
+    "thoughts": "Opponent chose a4a5"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 15: e2e4",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "8/7K/8/k7/4R3/8/8/8 b - - 29 15",
+      "move_number": 15,
+      "recons_move": "e2e4"
+    },
+    "thoughts": "Chose e2e4 on move 15"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 15: a5a6",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "8/7K/k7/8/4R3/8/8/8 w - - 30 16",
+      "move_number": 15,
+      "opponents_move": "a5a6"
+    },
+    "thoughts": "Opponent chose a5a6"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 16: e4e8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "4R3/7K/k7/8/8/8/8/8 b - - 31 16",
+      "move_number": 16,
+      "recons_move": "e4e8"
+    },
+    "thoughts": "Chose e4e8 on move 16"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 16: a6b5",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "4R3/7K/8/1k6/8/8/8/8 w - - 32 17",
+      "move_number": 16,
+      "opponents_move": "a6b5"
+    },
+    "thoughts": "Opponent chose a6b5"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 17: e8h8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "TRUE",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "7R/7K/8/1k6/8/8/8/8 b - - 33 17",
+      "move_number": 17,
+      "recons_move": "e8h8"
+    },
+    "thoughts": "Chose e8h8 on move 17"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 17: b5c4",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "TRUE",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "7R/7K/8/8/2k5/8/8/8 w - - 34 18",
+      "move_number": 17,
+      "opponents_move": "b5c4"
+    },
+    "thoughts": "Opponent chose b5c4"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 18: h8g8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "6R1/7K/8/8/2k5/8/8/8 b - - 35 18",
+      "move_number": 18,
+      "recons_move": "h8g8"
+    },
+    "thoughts": "Chose h8g8 on move 18"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 18: c4c5",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "6R1/7K/8/2k5/8/8/8/8 w - - 36 19",
+      "move_number": 18,
+      "opponents_move": "c4c5"
+    },
+    "thoughts": "Opponent chose c4c5"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 19: g8h8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "7R/7K/8/2k5/8/8/8/8 b - - 37 19",
+      "move_number": 19,
+      "recons_move": "g8h8"
+    },
+    "thoughts": "Chose g8h8 on move 19"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 19: c5b5",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "7R/7K/8/1k6/8/8/8/8 w - - 38 20",
+      "move_number": 19,
+      "opponents_move": "c5b5"
+    },
+    "thoughts": "Opponent chose c5b5"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 20: h8g8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "6R1/7K/8/1k6/8/8/8/8 b - - 39 20",
+      "move_number": 20,
+      "recons_move": "h8g8"
+    },
+    "thoughts": "Chose h8g8 on move 20"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 20: b5c4",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "6R1/7K/8/8/2k5/8/8/8 w - - 40 21",
+      "move_number": 20,
+      "opponents_move": "b5c4"
+    },
+    "thoughts": "Opponent chose b5c4"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 21: g8h8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "7R/7K/8/8/2k5/8/8/8 b - - 41 21",
+      "move_number": 21,
+      "recons_move": "g8h8"
+    },
+    "thoughts": "Chose g8h8 on move 21"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 21: c4b3",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "7R/7K/8/8/8/1k6/8/8 w - - 42 22",
+      "move_number": 21,
+      "opponents_move": "c4b3"
+    },
+    "thoughts": "Opponent chose c4b3"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 22: h8g8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "6R1/7K/8/8/8/1k6/8/8 b - - 43 22",
+      "move_number": 22,
+      "recons_move": "h8g8"
+    },
+    "thoughts": "Chose h8g8 on move 22"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 22: b3b2",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "6R1/7K/8/8/8/8/1k6/8 w - - 44 23",
+      "move_number": 22,
+      "opponents_move": "b3b2"
+    },
+    "thoughts": "Opponent chose b3b2"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 23: g8h8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "7R/7K/8/8/8/8/1k6/8 b - - 45 23",
+      "move_number": 23,
+      "recons_move": "g8h8"
+    },
+    "thoughts": "Chose g8h8 on move 23"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 23: b2a1",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "7R/7K/8/8/8/8/8/k7 w - - 46 24",
+      "move_number": 23,
+      "opponents_move": "b2a1"
+    },
+    "thoughts": "Opponent chose b2a1"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 24: h8a8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "R7/7K/8/8/8/8/8/k7 b - - 47 24",
+      "move_number": 24,
+      "recons_move": "h8a8"
+    },
+    "thoughts": "Chose h8a8 on move 24"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 24: a1b1",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "R7/7K/8/8/8/8/8/1k6 w - - 48 25",
+      "move_number": 24,
+      "opponents_move": "a1b1"
+    },
+    "thoughts": "Opponent chose a1b1"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 25: h7h6",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "R7/8/7K/8/8/8/8/1k6 b - - 49 25",
+      "move_number": 25,
+      "recons_move": "h7h6"
+    },
+    "thoughts": "Chose h7h6 on move 25"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 25: b1b2",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "R7/8/7K/8/8/8/1k6/8 w - - 50 26",
+      "move_number": 25,
+      "opponents_move": "b1b2"
+    },
+    "thoughts": "Opponent chose b1b2"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 26: a8h8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "7R/8/7K/8/8/8/1k6/8 b - - 51 26",
+      "move_number": 26,
+      "recons_move": "a8h8"
+    },
+    "thoughts": "Chose a8h8 on move 26"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 26: b2a2",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "7R/8/7K/8/8/8/k7/8 w - - 52 27",
+      "move_number": 26,
+      "opponents_move": "b2a2"
+    },
+    "thoughts": "Opponent chose b2a2"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 27: h8g8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "6R1/8/7K/8/8/8/k7/8 b - - 53 27",
+      "move_number": 27,
+      "recons_move": "h8g8"
+    },
+    "thoughts": "Chose h8g8 on move 27"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 27: a2b2",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "6R1/8/7K/8/8/8/1k6/8 w - - 54 28",
+      "move_number": 27,
+      "opponents_move": "a2b2"
+    },
+    "thoughts": "Opponent chose a2b2"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 28: g8h8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "7R/8/7K/8/8/8/1k6/8 b - - 55 28",
+      "move_number": 28,
+      "recons_move": "g8h8"
+    },
+    "thoughts": "Chose g8h8 on move 28"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 28: b2c3",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "7R/8/7K/8/8/2k5/8/8 w - - 56 29",
+      "move_number": 28,
+      "opponents_move": "b2c3"
+    },
+    "thoughts": "Opponent chose b2c3"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 29: h8g8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "6R1/8/7K/8/8/2k5/8/8 b - - 57 29",
+      "move_number": 29,
+      "recons_move": "h8g8"
+    },
+    "thoughts": "Chose h8g8 on move 29"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 29: c3d4",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "6R1/8/7K/8/3k4/8/8/8 w - - 58 30",
+      "move_number": 29,
+      "opponents_move": "c3d4"
+    },
+    "thoughts": "Opponent chose c3d4"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 30: g8h8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "7R/8/7K/8/3k4/8/8/8 b - - 59 30",
+      "move_number": 30,
+      "recons_move": "g8h8"
+    },
+    "thoughts": "Chose g8h8 on move 30"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 30: d4e4",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "7R/8/7K/8/4k3/8/8/8 w - - 60 31",
+      "move_number": 30,
+      "opponents_move": "d4e4"
+    },
+    "thoughts": "Opponent chose d4e4"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 31: h8g8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "6R1/8/7K/8/4k3/8/8/8 b - - 61 31",
+      "move_number": 31,
+      "recons_move": "h8g8"
+    },
+    "thoughts": "Chose h8g8 on move 31"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 31: e4e5",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "6R1/8/7K/4k3/8/8/8/8 w - - 62 32",
+      "move_number": 31,
+      "opponents_move": "e4e5"
+    },
+    "thoughts": "Opponent chose e4e5"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 32: g8h8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "TRUE",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "7R/8/7K/4k3/8/8/8/8 b - - 63 32",
+      "move_number": 32,
+      "recons_move": "g8h8"
+    },
+    "thoughts": "Chose g8h8 on move 32"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 32: e5d4",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "TRUE",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "7R/8/7K/8/3k4/8/8/8 w - - 64 33",
+      "move_number": 32,
+      "opponents_move": "e5d4"
+    },
+    "thoughts": "Opponent chose e5d4"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 33: h8g8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "6R1/8/7K/8/3k4/8/8/8 b - - 65 33",
+      "move_number": 33,
+      "recons_move": "h8g8"
+    },
+    "thoughts": "Chose h8g8 on move 33"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 33: d4c3",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "6R1/8/7K/8/8/2k5/8/8 w - - 66 34",
+      "move_number": 33,
+      "opponents_move": "d4c3"
+    },
+    "thoughts": "Opponent chose d4c3"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 34: g8h8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "7R/8/7K/8/8/2k5/8/8 b - - 67 34",
+      "move_number": 34,
+      "recons_move": "g8h8"
+    },
+    "thoughts": "Chose g8h8 on move 34"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 34: c3b3",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "7R/8/7K/8/8/1k6/8/8 w - - 68 35",
+      "move_number": 34,
+      "opponents_move": "c3b3"
+    },
+    "thoughts": "Opponent chose c3b3"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 35: h8g8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "6R1/8/7K/8/8/1k6/8/8 b - - 69 35",
+      "move_number": 35,
+      "recons_move": "h8g8"
+    },
+    "thoughts": "Chose h8g8 on move 35"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 35: b3a4",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "6R1/8/7K/8/k7/8/8/8 w - - 70 36",
+      "move_number": 35,
+      "opponents_move": "b3a4"
+    },
+    "thoughts": "Opponent chose b3a4"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 36: g8a8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "R7/8/7K/8/k7/8/8/8 b - - 71 36",
+      "move_number": 36,
+      "recons_move": "g8a8"
+    },
+    "thoughts": "Chose g8a8 on move 36"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 36: a4b5",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "R7/8/7K/1k6/8/8/8/8 w - - 72 37",
+      "move_number": 36,
+      "opponents_move": "a4b5"
+    },
+    "thoughts": "Opponent chose a4b5"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 37: a8h8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "TRUE",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "7R/8/7K/1k6/8/8/8/8 b - - 73 37",
+      "move_number": 37,
+      "recons_move": "a8h8"
+    },
+    "thoughts": "Chose a8h8 on move 37"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 37: b5b4",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "TRUE",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "7R/8/7K/8/1k6/8/8/8 w - - 74 38",
+      "move_number": 37,
+      "opponents_move": "b5b4"
+    },
+    "thoughts": "Opponent chose b5b4"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 38: h8g8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "6R1/8/7K/8/1k6/8/8/8 b - - 75 38",
+      "move_number": 38,
+      "recons_move": "h8g8"
+    },
+    "thoughts": "Chose h8g8 on move 38"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 38: b4a5",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "6R1/8/7K/k7/8/8/8/8 w - - 76 39",
+      "move_number": 38,
+      "opponents_move": "b4a5"
+    },
+    "thoughts": "Opponent chose b4a5"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 39: g8c8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "2R5/8/7K/k7/8/8/8/8 b - - 77 39",
+      "move_number": 39,
+      "recons_move": "g8c8"
+    },
+    "thoughts": "Chose g8c8 on move 39"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 39: a5a4",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "2R5/8/7K/8/k7/8/8/8 w - - 78 40",
+      "move_number": 39,
+      "opponents_move": "a5a4"
+    },
+    "thoughts": "Opponent chose a5a4"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 40: h6g7",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "2R5/6K1/8/8/k7/8/8/8 b - - 79 40",
+      "move_number": 40,
+      "recons_move": "h6g7"
+    },
+    "thoughts": "Chose h6g7 on move 40"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 40: a4b5",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "FAILED",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "2R5/6K1/8/1k6/8/8/8/8 w - - 80 41",
+      "move_number": 40,
+      "opponents_move": "a4b5"
+    },
+    "thoughts": "Opponent chose a4b5"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 41: g7h8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "TRUE",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "2R4K/8/8/1k6/8/8/8/8 b - - 81 41",
+      "move_number": 41,
+      "recons_move": "g7h8"
+    },
+    "thoughts": "Chose g7h8 on move 41"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 41: b5b6",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "TRUE",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "2R4K/8/1k6/8/8/8/8/8 w - - 82 42",
+      "move_number": 41,
+      "opponents_move": "b5b6"
+    },
+    "thoughts": "Opponent chose b5b6"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 42: h8g8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "TRUE",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "2R3K1/8/1k6/8/8/8/8/8 b - - 83 42",
+      "move_number": 42,
+      "recons_move": "h8g8"
+    },
+    "thoughts": "Chose h8g8 on move 42"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 42: b6a7",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "TRUE",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "2R3K1/k7/8/8/8/8/8/8 w - - 84 43",
+      "move_number": 42,
+      "opponents_move": "b6a7"
+    },
+    "thoughts": "Opponent chose b6a7"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 43: g8f8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "TRUE",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "2R2K2/k7/8/8/8/8/8/8 b - - 85 43",
+      "move_number": 43,
+      "recons_move": "g8f8"
+    },
+    "thoughts": "Chose g8f8 on move 43"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 43: a7b6",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "TRUE",
+      "king_drive_moves": "WAITING",
+      "box_shrink_evaluator": "TRUE",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "2R2K2/8/1k6/8/8/8/8/8 w - - 86 44",
+      "move_number": 43,
+      "opponents_move": "a7b6"
+    },
+    "thoughts": "Opponent chose a7b6"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 44: f8g8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "TRUE",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "2R3K1/8/1k6/8/8/8/8/8 b - - 87 44",
+      "move_number": 44,
+      "recons_move": "f8g8"
+    },
+    "thoughts": "Chose f8g8 on move 44"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 44: b6b7",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "TRUE",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "2R3K1/1k6/8/8/8/8/8/8 w - - 88 45",
+      "move_number": 44,
+      "opponents_move": "b6b7"
+    },
+    "thoughts": "Opponent chose b6b7"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "ReCoN move 45: g8h8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "TRUE",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "2R4K/1k6/8/8/8/8/8/8 b - - 89 45",
+      "move_number": 45,
+      "recons_move": "g8h8"
+    },
+    "thoughts": "Chose g8h8 on move 45"
+  },
+  {
+    "type": "snapshot",
+    "tick": 3,
+    "note": "Opponent move 45: b7c8",
+    "nodes": {
+      "krk_root": "WAITING",
+      "phase1_drive_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "king_at_edge_detector": "FAILED",
+      "king_drive_moves": "TRUE",
+      "box_shrink_evaluator": "TRUE",
+      "box_random_moves": "TRUE",
+      "opposition_evaluator": "FAILED",
+      "opp_random_moves": "TRUE",
+      "mate_deliver_evaluator": "FAILED",
+      "stalemate_detector": "FAILED",
+      "mate_random_moves": "TRUE"
+    },
+    "new_requests": [],
+    "env": {
+      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "moves": [],
+      "fen": "2k4K/8/8/8/8/8/8/8 w - - 0 46",
+      "move_number": 45,
+      "opponents_move": "b7c8"
+    },
+    "thoughts": "Opponent chose b7c8"
+  }
+]

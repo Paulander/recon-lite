@@ -245,6 +245,101 @@ class KRKCheckmateRoot(Node):
         )
 
 
+# ===== MOVE GENERATING TERMINALS (ACTUATORS) =====
+
+@dataclass
+class KingDriveMoves(Node):
+    """Terminal that generates moves to drive enemy king toward edge."""
+
+    def __init__(self, nid: str):
+        super().__init__(
+            nid=nid,
+            ntype=NodeType.TERMINAL,
+            predicate=self._generate_king_drive_moves
+        )
+
+    def _generate_king_drive_moves(self, node: Node, env: Dict[str, Any]) -> Tuple[bool, List[str]]:
+        """Generate moves that drive enemy king toward board edge."""
+        board = env.get("board")
+        if not board:
+            return False, []
+
+        legal_moves = list(board.legal_moves)
+        if not legal_moves:
+            return False, []
+
+        # Simple heuristic: prefer moves that reduce distance to enemy king edge
+        enemy_king = board.king(not board.turn)
+        enemy_file = chess.square_file(enemy_king)
+        enemy_rank = chess.square_rank(enemy_king)
+
+        # Distance from edge (smaller is better for driving to edge)
+        current_edge_distance = min(
+            enemy_file, 7 - enemy_file,  # file distance to edge
+            enemy_rank, 7 - enemy_rank   # rank distance to edge
+        )
+
+        driving_moves = []
+
+        for move in legal_moves:
+            # Simulate move
+            board_copy = board.copy()
+            board_copy.push(move)
+
+            # Check new enemy king position
+            new_enemy_king = board_copy.king(not board_copy.turn)
+            new_file = chess.square_file(new_enemy_king)
+            new_rank = chess.square_rank(new_enemy_king)
+
+            new_edge_distance = min(
+                new_file, 7 - new_file,
+                new_rank, 7 - new_rank
+            )
+
+            # If this move reduces edge distance, it's a driving move
+            if new_edge_distance < current_edge_distance:
+                driving_moves.append(move.uci())
+
+        # If we found driving moves, pick the first one and set it as chosen_move
+        if driving_moves:
+            env["chosen_move"] = driving_moves[0]  # Pick first (could be improved)
+            # Store all suggestions in node metadata for debugging
+            node.meta["suggested_moves"] = driving_moves
+
+        return bool(driving_moves), driving_moves
+
+
+@dataclass
+class RandomLegalMoves(Node):
+    """Terminal that generates all legal moves (fallback when no strategic moves)."""
+
+    def __init__(self, nid: str):
+        super().__init__(
+            nid=nid,
+            ntype=NodeType.TERMINAL,
+            predicate=self._generate_legal_moves
+        )
+
+    def _generate_legal_moves(self, node: Node, env: Dict[str, Any]) -> Tuple[bool, List[str]]:
+        """Generate all legal moves as fallback."""
+        board = env.get("board")
+        if not board:
+            return False, []
+
+        legal_moves = list(board.legal_moves)
+        move_ucis = [move.uci() for move in legal_moves]
+
+        # If we have legal moves and no chosen_move yet, pick a random one
+        if move_ucis and env.get("chosen_move") is None:
+            import random
+            chosen = random.choice(move_ucis)
+            env["chosen_move"] = chosen
+            # Store all suggestions in node metadata for debugging
+            node.meta["suggested_moves"] = move_ucis
+
+        return bool(move_ucis), move_ucis
+
+
 # ===== FACTORY FUNCTIONS =====
 
 def create_king_edge_detector(nid: str) -> KingAtEdgeDetector:
@@ -283,6 +378,14 @@ def create_phase3_take_opposition(nid: str) -> Phase3TakeOpposition:
 def create_phase4_deliver_mate(nid: str) -> Phase4DeliverMate:
     """Factory for phase 4 (deliver mate) nodes."""
     return Phase4DeliverMate(nid)
+
+def create_king_drive_moves(nid: str) -> KingDriveMoves:
+    """Factory for king drive move generator nodes."""
+    return KingDriveMoves(nid)
+
+def create_random_legal_moves(nid: str) -> RandomLegalMoves:
+    """Factory for random legal move generator nodes."""
+    return RandomLegalMoves(nid)
 
 def create_krk_root(nid: str) -> KRKCheckmateRoot:
     """Factory for KRK checkmate root nodes."""

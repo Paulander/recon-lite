@@ -8,13 +8,13 @@ Here’s an updated **IMPLEMENTATION\_PLAN.md** that reflects your current state
 |-------|--------|-------------|
 | **0-2** | ✅ Complete | Core ReCoN engine + logging + visualization schema |
 | **3-4** | ✅ Complete | Domain separation + chess substrate ready |
-| **5** | 🔄 Partial | KRK evaluators work, missing move generators |
-| **6** | ❌ Missing | No interactive gameplay demo yet |
-| **7** | ✅ Advanced | Enhanced dashboard beyond basic visualization |
-| **8** | ❌ Future | Extras not implemented |
+| **5** | ✅ Complete | KRK evaluators + move generators implemented |
+| **6** | ✅ Complete | Interactive gameplay demo with "dumb" moves |
+| **7** | ✅ Advanced | Enhanced dashboard with move replay |
+| **8** | ❌ Future | Persistent super-ReCoN + learning |
 
-**🎮 WORKING NOW**: Static KRK position evaluator with advanced visualization
-**🚀 NEXT**: Implement move generators + interactive gameplay loop
+**🎮 WORKING NOW**: Complete KRK chess player (static eval + interactive games)
+**🚀 NEXT**: Persistent super-ReCoN with internal state + learning
 
 ---
 
@@ -101,16 +101,37 @@ Here’s an updated **IMPLEMENTATION\_PLAN.md** that reflects your current state
 * **Current State**: Static position evaluator - analyzes but doesn't generate moves
 * **Next**: Add move selection actuators (`choose_move_*`) for interactive play
 
-## Phase 6 — Interactive Gameplay Demo (❌ Not Started)
+## Phase 6 — Interactive Gameplay Demo (🚀 Ready to Implement)
 
-* **Missing**: No `demos/krk_play_demo.py` exists yet
-* **Planned**: Interactive game loop with alternating turns:
-  * Initialize KRK position
-  * Loop: ReCoN evaluates → makes move → opponent responds
-  * Log FEN + node states each tick
-  * Stop when `board.is_game_over()`
-* **Prerequisites**: Phase 5 move generators + actuators
-* **Milestone**: ReCoN plays full KRK games interactively
+### **Two Implementation Approaches:**
+
+#### **Option A: Per-Move "Dumb" Loop (Recommended First)**
+* **Strategy**: Rebuild KRK graph from scratch each move (stateless)
+* **Pros**: Simple, fast to implement, clean logging per move
+* **Implementation**:
+  * Outer loop: `env = {"board": chess.Board(...), "chosen_move": None}`
+  * Build fresh KRK ReCoN graph each turn
+  * Tick engine until actuator sets `env["chosen_move"]`
+  * Apply move, opponent plays random legal move
+  * Repeat with fresh graph
+* **File**: `demos/krk_play_demo.py`
+* **Milestone**: Working player vs random opponent
+
+#### **Option B: Persistent "Super-ReCoN" (Advanced)**
+* **Strategy**: Keep internal state between moves
+* **Structure**:
+  * Root: `WIN_GAME` (persistent across moves)
+  * Children: `SELECT_STRATEGY`, `EXECUTE_STRATEGY`, `MONITOR_SAFETY`
+  * KRK sub-ReCoN as subgraph under `EXECUTE_STRATEGY`
+  * `WAIT_FOR_BOARD_CHANGE` sensor detects opponent moves
+* **Pros**: More sophisticated, maintains reasoning state
+* **File**: `demos/krk_super_play_demo.py`
+* **Prerequisites**: Working Option A first
+
+### **Prerequisites for Both:**
+* Phase 5 move generators: `choose_move_p1`, `choose_move_p2`, etc.
+* Actuator pattern: Terminals that write `env["chosen_move"]`
+* Random opponent: Simple legal move selector
 
 ## Phase 7 — Visualization (✅ Advanced Implementation)
 
