@@ -25,8 +25,9 @@ from recon_lite_chess import (
     create_opposition_evaluator, create_mate_deliver_evaluator,
     create_stalemate_detector,
 
-    # Move generators (actuators)
-    create_king_drive_moves, create_random_legal_moves,
+    # Move generators (actuators) - NEW IMPROVED SYSTEM
+    create_king_drive_moves, create_box_shrink_moves, create_opposition_moves,
+    create_mate_moves, create_random_legal_moves,
 
     # Script phases
     create_phase1_drive_to_edge, create_phase2_shrink_box,
@@ -65,23 +66,23 @@ def build_krk_play_graph() -> Graph:
     # Phase 1: Drive to edge
     phase1 = create_phase1_drive_to_edge("phase1_drive_edge")
     king_detector = create_king_edge_detector("king_at_edge_detector")
-    king_moves = create_king_drive_moves("king_drive_moves")
+    king_moves = create_king_drive_moves("king_drive_moves")  # IMPROVED: Uses filtering & scoring
 
     # Phase 2: Shrink box
     phase2 = create_phase2_shrink_box("phase2_shrink_box")
     box_evaluator = create_box_shrink_evaluator("box_shrink_evaluator")
-    box_moves = create_random_legal_moves("box_random_moves")
+    box_moves = create_box_shrink_moves("box_shrink_moves")  # IMPROVED: Box-focused scoring
 
     # Phase 3: Take opposition
     phase3 = create_phase3_take_opposition("phase3_take_opposition")
     opp_evaluator = create_opposition_evaluator("opposition_evaluator")
-    opp_moves = create_random_legal_moves("opp_random_moves")
+    opp_moves = create_opposition_moves("opposition_moves")  # IMPROVED: Opposition scoring
 
     # Phase 4: Deliver mate
     phase4 = create_phase4_deliver_mate("phase4_deliver_mate")
     mate_evaluator = create_mate_deliver_evaluator("mate_deliver_evaluator")
     stalemate_detector = create_stalemate_detector("stalemate_detector")
-    mate_moves = create_random_legal_moves("mate_random_moves")
+    mate_moves = create_mate_moves("mate_moves")  # IMPROVED: Mate-focused scoring
 
     # Add all nodes to graph
     for node in [root, phase1, phase2, phase3, phase4,
@@ -101,16 +102,16 @@ def build_krk_play_graph() -> Graph:
 
     # Phase 2 connections
     g.add_edge("phase2_shrink_box", "box_shrink_evaluator", LinkType.SUB)
-    g.add_edge("phase2_shrink_box", "box_random_moves", LinkType.SUB)
+    g.add_edge("phase2_shrink_box", "box_shrink_moves", LinkType.SUB)
 
     # Phase 3 connections
     g.add_edge("phase3_take_opposition", "opposition_evaluator", LinkType.SUB)
-    g.add_edge("phase3_take_opposition", "opp_random_moves", LinkType.SUB)
+    g.add_edge("phase3_take_opposition", "opposition_moves", LinkType.SUB)
 
     # Phase 4 connections
     g.add_edge("phase4_deliver_mate", "mate_deliver_evaluator", LinkType.SUB)
     g.add_edge("phase4_deliver_mate", "stalemate_detector", LinkType.SUB)
-    g.add_edge("phase4_deliver_mate", "mate_random_moves", LinkType.SUB)
+    g.add_edge("phase4_deliver_mate", "mate_moves", LinkType.SUB)
 
     return g
 
@@ -177,6 +178,22 @@ def play_interactive_krk():
         while ticks < max_ticks and env.get("chosen_move") is None:
             ticks += 1
             now_requested = engine.step(env)
+
+            # Log ReCoN network state periodically for visualization
+            if ticks % 5 == 0:
+                logger.snapshot(
+                    engine=engine,
+                    note=f"Evaluation tick {ticks} - Move {move_count}",
+                    env={
+                        "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+                        "moves": [],  # Current game moves
+                        "fen": board.fen(),
+                        "move_number": move_count,
+                        "evaluation_tick": ticks
+                    },
+                    thoughts=f"Evaluating position (tick {ticks})...",
+                    new_requests=list(now_requested.keys()) if now_requested else []
+                )
 
             if ticks % 10 == 0:
                 print(f"  Tick {ticks}: evaluating...")
@@ -260,9 +277,9 @@ def play_interactive_krk():
     print(f"\nFinal position:\n{board}")
     print(f"Total moves: {move_count}")
 
-    # Save game log
-    logger.to_json("demos/krk_interactive_game.json")
-    print("\n💾 Game log saved to: demos/krk_interactive_game.json")
+    # Save game log (compatible with visualization)
+    logger.to_json("demos/krk_visualization_data.json")
+    print("\n💾 Game log saved to: demos/krk_visualization_data.json")
 
 
 if __name__ == "__main__":

@@ -264,6 +264,9 @@
 <body>
     <div class="header">
         <h1><i class="fas fa-chess-rook"></i> ReCoN KRK Checkmate Visualization</h1>
+        <div id="game-info" style="font-size: 0.8em; color: rgba(255,255,255,0.8); margin-top: 5px;">
+            Loading visualization data...
+        </div>
     </div>
 
     <div class="main-content">
@@ -416,6 +419,9 @@
                 visualizationData = await response.json();
                 console.log('Loaded visualization data:', visualizationData);
 
+                // Detect data type and update header
+                detectDataType(visualizationData);
+
                 // Update controls with loaded data
                 updateControls();
 
@@ -442,6 +448,43 @@
                 // Show user-friendly message
                 document.getElementById('thoughts-text').textContent = 'Using demo data - run the KRK demo to see live data';
             }
+        }
+
+        // Detect data type and update header
+        function detectDataType(data) {
+            if (!data || data.length === 0) {
+                document.getElementById('game-info').textContent = 'No data loaded';
+                return;
+            }
+
+            const firstFrame = data[0];
+            let infoText = '';
+
+            // Check if it's an interactive game (has move_number)
+            const hasGameMoves = data.some(frame =>
+                frame.env && (frame.env.move_number !== undefined ||
+                             frame.env.recons_move ||
+                             frame.env.opponents_move)
+            );
+
+            // Check if it's evaluation data (has ReCoN node states)
+            const hasReconNodes = data.some(frame =>
+                frame.nodes && (frame.nodes.krk_root || frame.nodes.phase1_drive_edge)
+            );
+
+            if (hasGameMoves && hasReconNodes) {
+                infoText = '🎮 Interactive Game + ReCoN Evaluation - Full Experience!';
+            } else if (hasGameMoves) {
+                infoText = '🎮 Interactive Chess Game - Move by move';
+            } else if (hasReconNodes) {
+                infoText = '🧠 ReCoN Network Evaluation - Thinking process';
+            } else {
+                infoText = '📊 Static Data Visualization';
+            }
+
+            infoText += ` | ${data.length} frames loaded`;
+
+            document.getElementById('game-info').textContent = infoText;
         }
 
         // Create mock data for testing
@@ -485,10 +528,31 @@
                     env: {
                         "initial_fen": "4k3/8/8/8/8/8/8/R3K3 w - - 0 1",
                         "moves": [],
-                        "fen": "4k3/8/8/8/8/8/8/R3K3 w - - 0 1"
+                        "fen": "4k3/8/8/8/8/8/8/R3K3 w - - 0 1",
+                        "move_number": 1,
+                        "evaluation_tick": 5
                     },
                     thoughts: "Evaluating KRK position...",
                     new_requests: ["phase1_drive_edge", "phase2_shrink_box"]
+                },
+                {
+                    type: "snapshot",
+                    tick: 2,
+                    note: "ReCoN move 1: a1a2",
+                    nodes: {
+                        "krk_root": "CONFIRMED",
+                        "phase1_drive_edge": "CONFIRMED",
+                        "king_drive_moves": "TRUE"
+                    },
+                    env: {
+                        "initial_fen": "4k3/8/8/8/8/8/8/R3K3 w - - 0 1",
+                        "moves": ["a1a2"],
+                        "fen": "4k3/8/8/8/8/8/R7/3K3 b - - 0 1",
+                        "move_number": 1,
+                        "recons_move": "a1a2"
+                    },
+                    thoughts: "Chose a1a2 on move 1",
+                    new_requests: []
                 }
             ];
         }
@@ -707,12 +771,21 @@
             if (frame.env) {
                 renderChessBoard(frame.env);
 
-                // Show position info
+                // Show position info (enhanced for interactive games)
                 let positionInfo = "";
-                if (frame.env.moves && frame.env.moves.length > 0) {
-                    positionInfo = `Moves: ${frame.env.moves.length} | FEN: ${frame.env.fen}`;
+                if (frame.env.move_number !== undefined) {
+                    positionInfo = `Move ${frame.env.move_number}`;
+                    if (frame.env.recons_move) {
+                        positionInfo += ` - ReCoN: ${frame.env.recons_move}`;
+                    } else if (frame.env.opponents_move) {
+                        positionInfo += ` - Opponent: ${frame.env.opponents_move}`;
+                    } else if (frame.env.evaluation_tick) {
+                        positionInfo += ` - Evaluation tick ${frame.env.evaluation_tick}`;
+                    }
+                } else if (frame.env.moves && frame.env.moves.length > 0) {
+                    positionInfo = `Moves: ${frame.env.moves.length}`;
                 } else if (frame.env.fen) {
-                    positionInfo = `Position: ${frame.env.fen}`;
+                    positionInfo = `Position: ${frame.env.fen.substring(0, 20)}...`;
                 }
                 document.getElementById('chess-info').textContent = positionInfo;
             }

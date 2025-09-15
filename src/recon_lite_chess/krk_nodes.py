@@ -249,7 +249,7 @@ class KRKCheckmateRoot(Node):
 
 @dataclass
 class KingDriveMoves(Node):
-    """Terminal that generates moves to drive enemy king toward edge."""
+    """Terminal that generates moves to drive enemy king toward edge using improved filtering."""
 
     def __init__(self, nid: str):
         super().__init__(
@@ -259,54 +259,113 @@ class KingDriveMoves(Node):
         )
 
     def _generate_king_drive_moves(self, node: Node, env: Dict[str, Any]) -> Tuple[bool, List[str]]:
-        """Generate moves that drive enemy king toward board edge."""
+        """Generate moves using improved actuator logic."""
+        from .actuators import choose_move_phase1
+
         board = env.get("board")
         if not board:
             return False, []
 
-        legal_moves = list(board.legal_moves)
-        if not legal_moves:
-            return False, []
+        # Use improved actuator for Phase 1 moves
+        best_move = choose_move_phase1(board)
 
-        # Simple heuristic: prefer moves that reduce distance to enemy king edge
-        enemy_king = board.king(not board.turn)
-        enemy_file = chess.square_file(enemy_king)
-        enemy_rank = chess.square_rank(enemy_king)
+        if best_move:
+            env["chosen_move"] = best_move
+            node.meta["suggested_moves"] = [best_move]
+            node.meta["phase"] = "phase1"
+            return True, [best_move]
 
-        # Distance from edge (smaller is better for driving to edge)
-        current_edge_distance = min(
-            enemy_file, 7 - enemy_file,  # file distance to edge
-            enemy_rank, 7 - enemy_rank   # rank distance to edge
+        return False, []
+
+
+@dataclass
+class BoxShrinkMoves(Node):
+    """Terminal that generates moves to shrink enemy king's box."""
+
+    def __init__(self, nid: str):
+        super().__init__(
+            nid=nid,
+            ntype=NodeType.TERMINAL,
+            predicate=self._generate_box_shrink_moves
         )
 
-        driving_moves = []
+    def _generate_box_shrink_moves(self, node: Node, env: Dict[str, Any]) -> Tuple[bool, List[str]]:
+        """Generate moves using improved actuator logic for Phase 2."""
+        from .actuators import choose_move_phase2
 
-        for move in legal_moves:
-            # Simulate move
-            board_copy = board.copy()
-            board_copy.push(move)
+        board = env.get("board")
+        if not board:
+            return False, []
 
-            # Check new enemy king position
-            new_enemy_king = board_copy.king(not board_copy.turn)
-            new_file = chess.square_file(new_enemy_king)
-            new_rank = chess.square_rank(new_enemy_king)
+        best_move = choose_move_phase2(board)
 
-            new_edge_distance = min(
-                new_file, 7 - new_file,
-                new_rank, 7 - new_rank
-            )
+        if best_move:
+            env["chosen_move"] = best_move
+            node.meta["suggested_moves"] = [best_move]
+            node.meta["phase"] = "phase2"
+            return True, [best_move]
 
-            # If this move reduces edge distance, it's a driving move
-            if new_edge_distance < current_edge_distance:
-                driving_moves.append(move.uci())
+        return False, []
 
-        # If we found driving moves, pick the first one and set it as chosen_move
-        if driving_moves:
-            env["chosen_move"] = driving_moves[0]  # Pick first (could be improved)
-            # Store all suggestions in node metadata for debugging
-            node.meta["suggested_moves"] = driving_moves
 
-        return bool(driving_moves), driving_moves
+@dataclass
+class OppositionMoves(Node):
+    """Terminal that generates moves to achieve opposition."""
+
+    def __init__(self, nid: str):
+        super().__init__(
+            nid=nid,
+            ntype=NodeType.TERMINAL,
+            predicate=self._generate_opposition_moves
+        )
+
+    def _generate_opposition_moves(self, node: Node, env: Dict[str, Any]) -> Tuple[bool, List[str]]:
+        """Generate moves using improved actuator logic for Phase 3."""
+        from .actuators import choose_move_phase3
+
+        board = env.get("board")
+        if not board:
+            return False, []
+
+        best_move = choose_move_phase3(board)
+
+        if best_move:
+            env["chosen_move"] = best_move
+            node.meta["suggested_moves"] = [best_move]
+            node.meta["phase"] = "phase3"
+            return True, [best_move]
+
+        return False, []
+
+
+@dataclass
+class MateMoves(Node):
+    """Terminal that generates checkmate moves."""
+
+    def __init__(self, nid: str):
+        super().__init__(
+            nid=nid,
+            ntype=NodeType.TERMINAL,
+            predicate=self._generate_mate_moves
+        )
+
+    def _generate_mate_moves(self, node: Node, env: Dict[str, Any]) -> Tuple[bool, List[str]]:
+        """Generate moves using improved actuator logic for Phase 4."""
+        from .actuators import choose_move_phase4
+
+        board = env.get("board")
+        if not board:
+            return False, []
+
+        best_move = choose_move_phase4(board)
+
+        if best_move:
+            env["chosen_move"] = best_move
+            node.meta["suggested_moves"] = [best_move]
+            node.meta["phase"] = "phase4"
+            return True, [best_move]
+
+        return False, []
 
 
 @dataclass
@@ -382,6 +441,18 @@ def create_phase4_deliver_mate(nid: str) -> Phase4DeliverMate:
 def create_king_drive_moves(nid: str) -> KingDriveMoves:
     """Factory for king drive move generator nodes."""
     return KingDriveMoves(nid)
+
+def create_box_shrink_moves(nid: str) -> BoxShrinkMoves:
+    """Factory for box shrink move generator nodes."""
+    return BoxShrinkMoves(nid)
+
+def create_opposition_moves(nid: str) -> OppositionMoves:
+    """Factory for opposition move generator nodes."""
+    return OppositionMoves(nid)
+
+def create_mate_moves(nid: str) -> MateMoves:
+    """Factory for mate move generator nodes."""
+    return MateMoves(nid)
 
 def create_random_legal_moves(nid: str) -> RandomLegalMoves:
     """Factory for random legal move generator nodes."""
