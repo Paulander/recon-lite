@@ -1,286 +1,287 @@
-"""
-Chess position evaluation predicates (sensors) for ReCoN KRK system.
-
-These functions analyze chess positions and provide boolean/quantitative
-assessments used by the ReCoN network to make decisions.
-"""
-
 import chess
 
+# ---------- basic helpers ----------
+
+def chebyshev(a: chess.Square, b: chess.Square) -> int:
+    return max(abs(chess.square_file(a) - chess.square_file(b)),
+               abs(chess.square_rank(a) - chess.square_rank(b)))
+
+def dist_to_edge(sq: chess.Square) -> int:
+    f = chess.square_file(sq)
+    r = chess.square_rank(sq)
+    return min(f, 7 - f, r, 7 - r)
+
+# ---------- state predicates ----------
 
 def is_mate(board: chess.Board) -> bool:
-    """Check if current position is checkmate."""
     return board.is_checkmate()
 
-
 def is_stalemate(board: chess.Board) -> bool:
-    """Check if current position is stalemate."""
     return board.is_stalemate()
 
+def is_stalemate_after(board: chess.Board, move: chess.Move) -> bool:
+    b = board.copy(stack=False)
+    b.push(move)
+    return b.is_stalemate()
 
-def rook_safe_after(board: chess.Board, move: chess.Move) -> bool:
-    """
-    Check if rook will be safe after making the given move.
+# ---------- “box” proxy ----------
+# We use a simple, robust proxy: area shrinks as the enemy king approaches any edge.
+# area(d) = (2d+1)^2, where d = dist_to_edge(enemy king). This is monotone for “drive to edge.”
 
-    Rook is safe if:
-    - Enemy king cannot capture rook on next move, OR
-    - Our king defends the rook square (Chebyshev distance <= 1)
-    """
-    # Create a copy to simulate the move
-    board_copy = board.copy()
-    board_copy.push(move)
-
-    # Find rook square after move
-    rook_square = None
-    for square in chess.SQUARES:
-        if board_copy.piece_at(square) and board_copy.piece_at(square).piece_type == chess.ROOK:
-            rook_square = square
-            break
-
-    if rook_square is None:
-        return False  # No rook found
-
-    # Check if enemy king can capture rook
-    enemy_king_square = board_copy.king(not board_copy.turn)
-    if enemy_king_square is None:
-        return True  # No enemy king
-
-    # Chebyshev distance between enemy king and rook
-    king_file = chess.square_file(enemy_king_square)
-    king_rank = chess.square_rank(enemy_king_square)
-    rook_file = chess.square_file(rook_square)
-    rook_rank = chess.square_rank(rook_square)
-
-    distance = max(abs(king_file - rook_file), abs(king_rank - rook_rank))
-
-    # Rook is safe if king can't reach it in one move
-    if distance > 1:
-        return True
-
-    # Check if our king defends the rook square
-    our_king_square = board_copy.king(board_copy.turn)
-    if our_king_square is None:
-        return False
-
-    our_file = chess.square_file(our_king_square)
-    our_rank = chess.square_rank(our_king_square)
-    our_distance = max(abs(our_file - rook_file), abs(our_rank - rook_rank))
-
-    # Our king defends if it's close enough to the rook
-    return our_distance <= 1
+def _enemy_king_square(board: chess.Board) -> chess.Square:
+    # Always “the other side” relative to side-to-move.
+    return board.king(not board.turn)
 
 
 def box_area(board: chess.Board) -> int:
-    """
-    Compute the area of the "box" constraining the enemy king.
-
-    The box is defined by the minimum rectangle that contains:
-    - The enemy king
-    - Limited by rook's lines of attack (rank/file)
-
-    Returns the area of this constraining rectangle.
-    """
-    enemy_king = board.king(not board.turn)
-    if enemy_king is None:
-        return 64  # Maximum possible area
-
-    king_file = chess.square_file(enemy_king)
-    king_rank = chess.square_rank(enemy_king)
-
-    # Find rook to determine box constraints
-    rook_file = None
-    rook_rank = None
-
-    for square in chess.SQUARES:
-        piece = board.piece_at(square)
-        if piece and piece.piece_type == chess.ROOK and piece.color == board.turn:
-            rook_file = chess.square_file(square)
-            rook_rank = chess.square_rank(square)
-            break
-
-    if rook_file is None:
-        # No rook found, use full board constraints
-        min_file, max_file = 0, 7
-        min_rank, max_rank = 0, 7
-    else:
-        # Box is constrained by rook's rank/file lines
-        if rook_file == king_file:
-            # Rook on same file - box spans all ranks
-            min_file, max_file = max(0, king_file - 1), min(7, king_file + 1)
-            min_rank, max_rank = 0, 7
-        elif rook_rank == king_rank:
-            # Rook on same rank - box spans all files
-            min_file, max_file = 0, 7
-            min_rank, max_rank = max(0, king_rank - 1), min(7, king_rank + 1)
-        else:
-            # Rook on different rank/file - box is 3x3 around king
-            min_file = max(0, king_file - 1)
-            max_file = min(7, king_file + 1)
-            min_rank = max(0, king_rank - 1)
-            max_rank = min(7, king_rank + 1)
-
-    # Ensure king is within the box
-    min_file = min(min_file, king_file)
-    max_file = max(max_file, king_file)
-    min_rank = min(min_rank, king_rank)
-    max_rank = max(max_rank, king_rank)
-
-    # Calculate area
-    file_span = max_file - min_file + 1
-    rank_span = max_rank - min_rank + 1
-
-    return file_span * rank_span
-
+    ek = _enemy_king_square(board)
+    d = dist_to_edge(ek)
+    return (2 * d + 1) ** 2
 
 def box_area_after(board: chess.Board, move: chess.Move) -> int:
-    """Compute box area after making the given move."""
-    board_copy = board.copy()
-    board_copy.push(move)
-    return box_area(board_copy)
+    b = board.copy(stack=False)
+    b.push(move)
+    return box_area(b)
+
+# ---------- checks & safety ----------
+
+def gives_safe_check(board: chess.Board, move: chess.Move) -> bool:
+    b = board.copy(stack=False)
+    b.push(move)
+    if not b.is_check():
+        return False
+    if b.is_stalemate():
+        return False
+    return rook_safe_after(board, move)
 
 
-def shrinks_or_preserves_box(board: chess.Board, move: chess.Move) -> bool:
+def _find_our_rook_square_after(b: chess.Board, our_color: bool) -> chess.Square | None:
+    for sq in chess.SQUARES:
+        p = b.piece_at(sq)
+        if p and p.color == our_color and p.piece_type == chess.ROOK:
+            return sq
+    return None
+
+def rook_safe_after(board: chess.Board, move: chess.Move) -> bool:
     """
-    Check if move shrinks or preserves the enemy king's box.
-
-    Allows equal area only if it improves king position or safety.
+    Rook is safe right after our move if the enemy king cannot *legally* capture it in one move,
+    unless our king can immediately recapture.
     """
-    current_area = box_area(board)
-    next_area = box_area_after(board, move)
+    color = board.turn
+    b = board.copy(stack=False)
+    b.push(move)
 
-    if next_area < current_area:
-        return True  # Strictly shrinks - always good
+    rook_sq = _find_our_rook_square_after(b, color)
+    if rook_sq is None:
+        return False  # we lost the rook in our own move…
 
-    if next_area == current_area:
-        # Allow equal area if it improves king support or opposition
-        return improves_king_position(board, move)
+    enemy = not color
+    enemy_k = b.king(enemy)
+    our_k   = b.king(color)
 
-    return False  # Expands box - bad
+    # Fast adjacency test (cheap reject)
+    if chebyshev(enemy_k, rook_sq) > 1:
+        return True
 
-
-def improves_king_position(board: chess.Board, move: chess.Move) -> bool:
+    # Construct the capture and test if it is legal in the new position
+    cap = chess.Move(enemy_k, rook_sq)
+    if cap in b.legal_moves:
+        # If our king is adjacent too, we will recapture and remain winning -> allow
+        return chebyshev(our_k, rook_sq) <= 1
+    return True
     """
-    Check if move improves our king's position relative to enemy king.
-
-    Considers distance, opposition, and support opportunities.
+    After our move, the enemy king must not be able to capture our rook on the next move
+    *unless* our king can immediately recapture (i.e., rook square is defended by our king).
+    This captures the common 'don't hang the rook' rule in KRK.
     """
-    # Simple heuristic: prefer moves that reduce distance to enemy king
-    enemy_king = board.king(not board.turn)
-    our_king = board.king(board.turn)
-
-    if enemy_king is None or our_king is None:
+    color = board.turn
+    b = board.copy(stack=False)
+    b.push(move)
+    rook_sq = _find_our_rook_square_after(b, color)
+    if rook_sq is None:
+        # Rook should exist; treat as unsafe
         return False
 
-    # Current distance
-    current_dist = chess.square_distance(our_king, enemy_king)
+    enemy_k = b.king(not color)
+    our_k = b.king(color)
 
-    # Distance after move
-    board_copy = board.copy()
-    board_copy.push(move)
-    new_our_king = board_copy.king(board_copy.turn)
-
-    if new_our_king is None:
+    # if enemy king adjacent to rook (could capture)
+    if chebyshev(enemy_k, rook_sq) <= 1:
+        # if our king also adjacent → defended, allowed
+        if chebyshev(our_k, rook_sq) <= 1:
+            return True
         return False
+    return True
 
-    new_dist = chess.square_distance(new_our_king, enemy_king)
-
-    # Move is good if it reduces distance (better support) or maintains opposition
-    return new_dist < current_dist or (new_dist == current_dist and has_opposition_after(board, move))
-
-
-def has_opposition(board: chess.Board) -> bool:
-    """Check if kings are in opposition (same file/rank, odd squares apart)."""
-    enemy_king = board.king(not board.turn)
-    our_king = board.king(board.turn)
-
-    if enemy_king is None or our_king is None:
-        return False
-
-    enemy_file = chess.square_file(enemy_king)
-    enemy_rank = chess.square_rank(enemy_king)
-    our_file = chess.square_file(our_king)
-    our_rank = chess.square_rank(our_king)
-
-    # Same file or rank
-    if enemy_file == our_file:
-        rank_diff = abs(enemy_rank - our_rank)
-        return rank_diff > 1 and rank_diff % 2 == 1  # Odd number of squares apart
-    elif enemy_rank == our_rank:
-        file_diff = abs(enemy_file - our_file)
-        return file_diff > 1 and file_diff % 2 == 1  # Odd number of squares apart
-
-    return False
-
-
-def has_opposition_after(board: chess.Board, move: chess.Move) -> bool:
-    """Check opposition after making the given move."""
-    board_copy = board.copy()
-    board_copy.push(move)
-    return has_opposition(board_copy)
-
+# ---------- king progress & stable cut ----------
 
 def our_king_progress(board: chess.Board, move: chess.Move) -> float:
     """
-    Score how much the move improves our king's position.
-
-    Considers distance to enemy king, opposition, and rook support.
+    Heuristic: progress if our king reduces Chebyshev distance to the enemy king.
+    (Good enough for Phase 0 rendezvous.)
     """
-    score = 0.0
+    color = board.turn
+    ek = _enemy_king_square(board)
+    ok_before = board.king(color)
 
-    # Distance improvement
-    enemy_king = board.king(not board.turn)
-    our_king = board.king(board.turn)
+    b = board.copy(stack=False)
+    b.push(move)
+    ok_after = b.king(color)
 
-    if enemy_king and our_king:
-        current_dist = chess.square_distance(our_king, enemy_king)
+    before = chebyshev(ok_before, ek)
+    after = chebyshev(ok_after, ek)
+    return float(before - after)  # positive = closer
 
-        board_copy = board.copy()
-        board_copy.push(move)
-        new_our_king = board_copy.king(board_copy.turn)
-
-        if new_our_king:
-            new_dist = chess.square_distance(new_our_king, enemy_king)
-            score += (current_dist - new_dist) * 0.5  # Reward closer distance
-
-    # Opposition bonus
-    if has_opposition_after(board, move):
-        score += 0.3
-
-    # Rook support bonus (king close to rook)
-    rook_square = None
-    for square in chess.SQUARES:
-        piece = board.piece_at(square)
-        if piece and piece.piece_type == chess.ROOK and piece.color == board.turn:
-            rook_square = square
-            break
-
-    if rook_square and our_king:
-        board_copy = board.copy()
-        board_copy.push(move)
-        new_our_king = board_copy.king(board_copy.turn)
-
-        if new_our_king:
-            current_rook_dist = chess.square_distance(our_king, rook_square)
-            new_rook_dist = chess.square_distance(new_our_king, rook_square)
-            score += (current_rook_dist - new_rook_dist) * 0.2
-
-    return score
-
-
-def gives_safe_check(board: chess.Board, move: chess.Move) -> bool:
+def creates_stable_cut(board: chess.Board, move: chess.Move) -> bool:
     """
-    Check if move gives check and the checking piece is safe.
-
-    Used for move scoring bonus.
+    Approximate 'cut' condition after the move:
+    - Our rook is on same file or rank as enemy king, at distance >= 2
+    - Rook is safe (per rook_safe_after)
+    This loosely encodes 'you shall not pass' with a rook line, supported later by the king.
     """
-    board_copy = board.copy()
-    board_copy.push(move)
+    color = board.turn
+    b = board.copy(stack=False)
+    b.push(move)
 
-    # Must give check
-    if not board_copy.is_check():
+    ek = b.king(not color)
+    rook_sq = _find_our_rook_square_after(b, color)
+    if rook_sq is None:
         return False
 
-    # Check if the checking piece is safe
-    # For now, simple heuristic: piece is safe if not attacked by enemy
-    # This is a simplified version - could be more sophisticated
-    return True
+    same_file = chess.square_file(rook_sq) == chess.square_file(ek)
+    same_rank = chess.square_rank(rook_sq) == chess.square_rank(ek)
+    aligned = same_file or same_rank
+    far_enough = chebyshev(rook_sq, ek) >= 2
+
+    return aligned and far_enough and rook_safe_after(board, move)
+
+# --- KRK Phase-1/2 monotonicity helper ---------------------------------------
+
+def shrinks_or_preserves_box(board, move, *, allow_equal_if_progress=True):
+    """
+    Return True if the 'box' around the enemy king strictly shrinks after 'move'.
+    If it stays equal, allow it only when our king meaningfully progresses or we give a safe check.
+
+    Relies on existing helpers in this module:
+      - box_area(board)              -> numeric proxy for box size
+      - box_area_after(board, move)  -> same, after move
+      - our_king_progress(board, move) -> positive if our K gets closer to the key region/enemy K
+      - gives_safe_check(board, move)  -> True if we safely check the enemy K
+    """
+    before = box_area(board)
+    after  = box_area_after(board, move)
+
+    if after < before:
+        return True
+
+    if not allow_equal_if_progress:
+        return False
+
+    # Equal box is acceptable iff we make progress (king steps) or a safe check that corrals.
+    try:
+        kp = our_king_progress(board, move)
+    except Exception:
+        kp = 0
+
+    try:
+        sc = gives_safe_check(board, move)
+    except Exception:
+        sc = False
+
+    return (after == before) and (kp > 0 or sc)
+
+
+# --- Feature logger used by the demo -----------------------------------------
+
+def move_features(board, move):
+    """
+    Compact feature bundle for logging/diagnostics.
+    Safe to call on any legal move. Uses the same predicates used by actuators.
+    """
+    b_before = box_area(board)
+    try:
+        b_after = box_area_after(board, move)
+    except Exception:
+        # If your box_area_after expects legality and something went wrong, fall back.
+        b_after = b_before
+
+    try:
+        kp = our_king_progress(board, move)
+    except Exception:
+        kp = 0
+
+    try:
+        rs = rook_safe_after(board, move)
+    except Exception:
+        rs = False
+
+    try:
+        sc = gives_safe_check(board, move)
+    except Exception:
+        sc = False
+
+    return {
+        "box_area_before": b_before,
+        "box_area_after":  b_after,
+        "king_progress":   kp,
+        "rook_safe_after": rs,
+        "gives_safe_check": sc,
+    }
+
+def on_rim(sq: chess.Square) -> bool:
+    f = chess.square_file(sq)
+    r = chess.square_rank(sq)
+    return f in (0, 7) or r in (0, 7)
+
+def is_cornered(sq: chess.Square) -> bool:
+    return sq in (chess.A1, chess.A8, chess.H1, chess.H8)
+
+def king_to_rook_distance(board: chess.Board) -> int:
+    """Chebyshev distance between our king and our rook (after *current* board)."""
+    color = board.turn
+    ok = board.king(color)
+    rsq = _find_our_rook_square_after(board, color)
+    if rsq is None:
+        return 8  # “far” / missing
+    return chebyshev(ok, rsq)
+
+# ---------- opposition helpers ----------
+
+def kings_in_opposition(a: chess.Square, b: chess.Square) -> bool:
+    """
+    Geometric opposition: kings on same file or rank with exactly one square between.
+    (Adjacent-diagonal is NOT 'opposition' in this simple KRK sense.)
+    """
+    fa, ra = chess.square_file(a), chess.square_rank(a)
+    fb, rb = chess.square_file(b), chess.square_rank(b)
+    same_file = fa == fb
+    same_rank = ra == rb
+    dx = abs(fa - fb)
+    dy = abs(ra - rb)
+    return (same_file and dy == 2) or (same_rank and dx == 2)
+
+
+def has_opposition(board: chess.Board) -> bool:
+    """
+    Returns True iff the SIDE-NOT-TO-MOVE currently has opposition.
+    In endgames, 'having the opposition' means: kings in opposition AND it's your opponent's turn.
+    """
+    color = board.turn                  # side to move now
+    ok = board.king(color)
+    ek = board.king(not color)
+    # If kings are in opposition and it's *opponent* to move, then WE (not color) have it.
+    return kings_in_opposition(ok, ek) and (board.turn == color)
+
+
+def has_opposition_after(board: chess.Board, move: chess.Move) -> bool:
+    """
+    After we play 'move' (color = board.turn), return True iff WE (the mover) will have opposition.
+    That means: after the move, kings are in opposition and it's now opponent's turn.
+    """
+    color = board.turn
+    b = board.copy(stack=False)
+    b.push(move)
+    ok = b.king(color)
+    ek = b.king(not color)
+    # After our move, it's opponent's turn (b.turn != color), and kings must be in opposition.
+    return kings_in_opposition(ok, ek) and (b.turn != color)

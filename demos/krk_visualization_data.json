@@ -1,602 +1,291 @@
 [
   {
     "type": "snapshot",
-    "tick": 5,
-    "note": "Evaluation tick 5 - Move 1",
-    "nodes": {
-      "krk_root": "WAITING",
-      "phase1_drive_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "king_at_edge_detector": "CONFIRMED",
-      "king_drive_moves": "WAITING",
-      "box_shrink_evaluator": "FAILED",
-      "box_shrink_moves": "WAITING",
-      "opposition_evaluator": "FAILED",
-      "opposition_moves": "WAITING",
-      "mate_deliver_evaluator": "FAILED",
-      "stalemate_detector": "FAILED",
-      "mate_moves": "WAITING"
-    },
+    "note": "ReCoN ply 1: g7h8",
     "new_requests": [],
     "env": {
-      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "moves": [],
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 5
+      "fen": "4k2K/8/8/8/8/8/R7/8 b - - 1 1",
+      "ply": 1,
+      "chosen_move": "g7h8",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 1,
+        "king_progress": -1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 0
     },
-    "thoughts": "Evaluating position (tick 5)..."
+    "thoughts": "Chose g7h8 | \u0394box=0 | king_progress=-1.0 | safe_check=False | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "tick": 10,
-    "note": "Evaluation tick 10 - Move 1",
-    "nodes": {
-      "krk_root": "WAITING",
-      "phase1_drive_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "king_at_edge_detector": "CONFIRMED",
-      "king_drive_moves": "WAITING",
-      "box_shrink_evaluator": "FAILED",
-      "box_shrink_moves": "WAITING",
-      "opposition_evaluator": "FAILED",
-      "opposition_moves": "WAITING",
-      "mate_deliver_evaluator": "FAILED",
-      "stalemate_detector": "FAILED",
-      "mate_moves": "WAITING"
-    },
+    "note": "Opponent ply 1: e8f8",
     "new_requests": [],
     "env": {
-      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "moves": [],
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 10
+      "fen": "5k1K/8/8/8/8/8/R7/8 w - - 2 2",
+      "ply": 1,
+      "opponent_move": "e8f8"
     },
-    "thoughts": "Evaluating position (tick 10)..."
+    "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "tick": 15,
-    "note": "Evaluation tick 15 - Move 1",
-    "nodes": {
-      "krk_root": "WAITING",
-      "phase1_drive_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "king_at_edge_detector": "CONFIRMED",
-      "king_drive_moves": "WAITING",
-      "box_shrink_evaluator": "FAILED",
-      "box_shrink_moves": "WAITING",
-      "opposition_evaluator": "FAILED",
-      "opposition_moves": "WAITING",
-      "mate_deliver_evaluator": "FAILED",
-      "stalemate_detector": "FAILED",
-      "mate_moves": "WAITING"
-    },
+    "note": "ReCoN ply 2: a2f2",
     "new_requests": [],
     "env": {
-      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "moves": [],
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 15
+      "fen": "5k1K/8/8/8/8/8/5R2/8 b - - 3 2",
+      "ply": 2,
+      "chosen_move": "a2f2",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": 0
     },
-    "thoughts": "Evaluating position (tick 15)..."
+    "thoughts": "Chose a2f2 | \u0394box=0 | king_progress=0.0 | safe_check=True | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "tick": 20,
-    "note": "Evaluation tick 20 - Move 1",
-    "nodes": {
-      "krk_root": "WAITING",
-      "phase1_drive_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "king_at_edge_detector": "CONFIRMED",
-      "king_drive_moves": "WAITING",
-      "box_shrink_evaluator": "FAILED",
-      "box_shrink_moves": "WAITING",
-      "opposition_evaluator": "FAILED",
-      "opposition_moves": "WAITING",
-      "mate_deliver_evaluator": "FAILED",
-      "stalemate_detector": "FAILED",
-      "mate_moves": "WAITING"
-    },
+    "note": "Opponent ply 2: f8e8",
     "new_requests": [],
     "env": {
-      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "moves": [],
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 20
+      "fen": "4k2K/8/8/8/8/8/5R2/8 w - - 4 3",
+      "ply": 2,
+      "opponent_move": "f8e8"
     },
-    "thoughts": "Evaluating position (tick 20)..."
+    "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "tick": 25,
-    "note": "Evaluation tick 25 - Move 1",
-    "nodes": {
-      "krk_root": "WAITING",
-      "phase1_drive_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "king_at_edge_detector": "CONFIRMED",
-      "king_drive_moves": "WAITING",
-      "box_shrink_evaluator": "FAILED",
-      "box_shrink_moves": "WAITING",
-      "opposition_evaluator": "FAILED",
-      "opposition_moves": "WAITING",
-      "mate_deliver_evaluator": "FAILED",
-      "stalemate_detector": "FAILED",
-      "mate_moves": "WAITING"
-    },
+    "note": "ReCoN ply 3: h8g8",
     "new_requests": [],
     "env": {
-      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "moves": [],
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 25
+      "fen": "4k1K1/8/8/8/8/8/5R2/8 b - - 5 3",
+      "ply": 3,
+      "chosen_move": "h8g8",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 1,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 0
     },
-    "thoughts": "Evaluating position (tick 25)..."
+    "thoughts": "Chose h8g8 | \u0394box=0 | king_progress=1.0 | safe_check=False | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "tick": 30,
-    "note": "Evaluation tick 30 - Move 1",
-    "nodes": {
-      "krk_root": "WAITING",
-      "phase1_drive_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "king_at_edge_detector": "CONFIRMED",
-      "king_drive_moves": "WAITING",
-      "box_shrink_evaluator": "FAILED",
-      "box_shrink_moves": "WAITING",
-      "opposition_evaluator": "FAILED",
-      "opposition_moves": "WAITING",
-      "mate_deliver_evaluator": "FAILED",
-      "stalemate_detector": "FAILED",
-      "mate_moves": "WAITING"
-    },
+    "note": "Opponent ply 3: e8e7",
     "new_requests": [],
     "env": {
-      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "moves": [],
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 30
+      "fen": "6K1/4k3/8/8/8/8/5R2/8 w - - 6 4",
+      "ply": 3,
+      "opponent_move": "e8e7"
     },
-    "thoughts": "Evaluating position (tick 30)..."
+    "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "tick": 35,
-    "note": "Evaluation tick 35 - Move 1",
-    "nodes": {
-      "krk_root": "WAITING",
-      "phase1_drive_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "king_at_edge_detector": "CONFIRMED",
-      "king_drive_moves": "WAITING",
-      "box_shrink_evaluator": "FAILED",
-      "box_shrink_moves": "WAITING",
-      "opposition_evaluator": "FAILED",
-      "opposition_moves": "WAITING",
-      "mate_deliver_evaluator": "FAILED",
-      "stalemate_detector": "FAILED",
-      "mate_moves": "WAITING"
-    },
+    "note": "ReCoN ply 4: f2e2",
     "new_requests": [],
     "env": {
-      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "moves": [],
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 35
+      "fen": "6K1/4k3/8/8/8/8/4R3/8 b - - 7 4",
+      "ply": 4,
+      "chosen_move": "f2e2",
+      "features": {
+        "box_area_before": 9,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -8
     },
-    "thoughts": "Evaluating position (tick 35)..."
+    "thoughts": "Chose f2e2 | \u0394box=-8 | king_progress=0.0 | safe_check=True | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "tick": 40,
-    "note": "Evaluation tick 40 - Move 1",
-    "nodes": {
-      "krk_root": "WAITING",
-      "phase1_drive_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "king_at_edge_detector": "CONFIRMED",
-      "king_drive_moves": "WAITING",
-      "box_shrink_evaluator": "FAILED",
-      "box_shrink_moves": "WAITING",
-      "opposition_evaluator": "FAILED",
-      "opposition_moves": "WAITING",
-      "mate_deliver_evaluator": "FAILED",
-      "stalemate_detector": "FAILED",
-      "mate_moves": "WAITING"
-    },
+    "note": "Opponent ply 4: e7d7",
     "new_requests": [],
     "env": {
-      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "moves": [],
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 40
+      "fen": "6K1/3k4/8/8/8/8/4R3/8 w - - 8 5",
+      "ply": 4,
+      "opponent_move": "e7d7"
     },
-    "thoughts": "Evaluating position (tick 40)..."
+    "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "tick": 45,
-    "note": "Evaluation tick 45 - Move 1",
-    "nodes": {
-      "krk_root": "WAITING",
-      "phase1_drive_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "king_at_edge_detector": "CONFIRMED",
-      "king_drive_moves": "WAITING",
-      "box_shrink_evaluator": "FAILED",
-      "box_shrink_moves": "WAITING",
-      "opposition_evaluator": "FAILED",
-      "opposition_moves": "WAITING",
-      "mate_deliver_evaluator": "FAILED",
-      "stalemate_detector": "FAILED",
-      "mate_moves": "WAITING"
-    },
+    "note": "ReCoN ply 5: g8f8",
     "new_requests": [],
     "env": {
-      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "moves": [],
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 45
+      "fen": "5K2/3k4/8/8/8/8/4R3/8 b - - 9 5",
+      "ply": 5,
+      "chosen_move": "g8f8",
+      "features": {
+        "box_area_before": 9,
+        "box_area_after": 1,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": -8
     },
-    "thoughts": "Evaluating position (tick 45)..."
+    "thoughts": "Chose g8f8 | \u0394box=-8 | king_progress=1.0 | safe_check=False | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "tick": 50,
-    "note": "Evaluation tick 50 - Move 1",
-    "nodes": {
-      "krk_root": "WAITING",
-      "phase1_drive_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "king_at_edge_detector": "CONFIRMED",
-      "king_drive_moves": "WAITING",
-      "box_shrink_evaluator": "FAILED",
-      "box_shrink_moves": "WAITING",
-      "opposition_evaluator": "FAILED",
-      "opposition_moves": "WAITING",
-      "mate_deliver_evaluator": "FAILED",
-      "stalemate_detector": "FAILED",
-      "mate_moves": "WAITING"
-    },
+    "note": "Opponent ply 5: d7c8",
     "new_requests": [],
     "env": {
-      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "moves": [],
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 50
+      "fen": "2k2K2/8/8/8/8/8/4R3/8 w - - 10 6",
+      "ply": 5,
+      "opponent_move": "d7c8"
     },
-    "thoughts": "Evaluating position (tick 50)..."
+    "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "tick": 55,
-    "note": "Evaluation tick 55 - Move 1",
-    "nodes": {
-      "krk_root": "WAITING",
-      "phase1_drive_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "king_at_edge_detector": "CONFIRMED",
-      "king_drive_moves": "WAITING",
-      "box_shrink_evaluator": "FAILED",
-      "box_shrink_moves": "WAITING",
-      "opposition_evaluator": "FAILED",
-      "opposition_moves": "WAITING",
-      "mate_deliver_evaluator": "FAILED",
-      "stalemate_detector": "FAILED",
-      "mate_moves": "WAITING"
-    },
+    "note": "ReCoN ply 6: f8e8",
     "new_requests": [],
     "env": {
-      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "moves": [],
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 55
+      "fen": "2k1K3/8/8/8/8/8/4R3/8 b - - 11 6",
+      "ply": 6,
+      "chosen_move": "f8e8",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 1,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 0
     },
-    "thoughts": "Evaluating position (tick 55)..."
+    "thoughts": "Chose f8e8 | \u0394box=0 | king_progress=1.0 | safe_check=False | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "tick": 60,
-    "note": "Evaluation tick 60 - Move 1",
-    "nodes": {
-      "krk_root": "WAITING",
-      "phase1_drive_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "king_at_edge_detector": "CONFIRMED",
-      "king_drive_moves": "WAITING",
-      "box_shrink_evaluator": "FAILED",
-      "box_shrink_moves": "WAITING",
-      "opposition_evaluator": "FAILED",
-      "opposition_moves": "WAITING",
-      "mate_deliver_evaluator": "FAILED",
-      "stalemate_detector": "FAILED",
-      "mate_moves": "WAITING"
-    },
+    "note": "Opponent ply 6: c8b8",
     "new_requests": [],
     "env": {
-      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "moves": [],
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 60
+      "fen": "1k2K3/8/8/8/8/8/4R3/8 w - - 12 7",
+      "ply": 6,
+      "opponent_move": "c8b8"
     },
-    "thoughts": "Evaluating position (tick 60)..."
+    "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "tick": 65,
-    "note": "Evaluation tick 65 - Move 1",
-    "nodes": {
-      "krk_root": "WAITING",
-      "phase1_drive_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "king_at_edge_detector": "CONFIRMED",
-      "king_drive_moves": "WAITING",
-      "box_shrink_evaluator": "FAILED",
-      "box_shrink_moves": "WAITING",
-      "opposition_evaluator": "FAILED",
-      "opposition_moves": "WAITING",
-      "mate_deliver_evaluator": "FAILED",
-      "stalemate_detector": "FAILED",
-      "mate_moves": "WAITING"
-    },
+    "note": "ReCoN ply 7: e8d8",
     "new_requests": [],
     "env": {
-      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "moves": [],
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 65
+      "fen": "1k1K4/8/8/8/8/8/4R3/8 b - - 13 7",
+      "ply": 7,
+      "chosen_move": "e8d8",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 1,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 0
     },
-    "thoughts": "Evaluating position (tick 65)..."
+    "thoughts": "Chose e8d8 | \u0394box=0 | king_progress=1.0 | safe_check=False | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "tick": 70,
-    "note": "Evaluation tick 70 - Move 1",
-    "nodes": {
-      "krk_root": "WAITING",
-      "phase1_drive_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "king_at_edge_detector": "CONFIRMED",
-      "king_drive_moves": "WAITING",
-      "box_shrink_evaluator": "FAILED",
-      "box_shrink_moves": "WAITING",
-      "opposition_evaluator": "FAILED",
-      "opposition_moves": "WAITING",
-      "mate_deliver_evaluator": "FAILED",
-      "stalemate_detector": "FAILED",
-      "mate_moves": "WAITING"
-    },
+    "note": "Opponent ply 7: b8b7",
     "new_requests": [],
     "env": {
-      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "moves": [],
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 70
+      "fen": "3K4/1k6/8/8/8/8/4R3/8 w - - 14 8",
+      "ply": 7,
+      "opponent_move": "b8b7"
     },
-    "thoughts": "Evaluating position (tick 70)..."
+    "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "tick": 75,
-    "note": "Evaluation tick 75 - Move 1",
-    "nodes": {
-      "krk_root": "WAITING",
-      "phase1_drive_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "king_at_edge_detector": "CONFIRMED",
-      "king_drive_moves": "WAITING",
-      "box_shrink_evaluator": "FAILED",
-      "box_shrink_moves": "WAITING",
-      "opposition_evaluator": "FAILED",
-      "opposition_moves": "WAITING",
-      "mate_deliver_evaluator": "FAILED",
-      "stalemate_detector": "FAILED",
-      "mate_moves": "WAITING"
-    },
+    "note": "ReCoN ply 8: e2b2",
     "new_requests": [],
     "env": {
-      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "moves": [],
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 75
+      "fen": "3K4/1k6/8/8/8/8/1R6/8 b - - 15 8",
+      "ply": 8,
+      "chosen_move": "e2b2",
+      "features": {
+        "box_area_before": 9,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -8
     },
-    "thoughts": "Evaluating position (tick 75)..."
+    "thoughts": "Chose e2b2 | \u0394box=-8 | king_progress=0.0 | safe_check=True | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "tick": 80,
-    "note": "Evaluation tick 80 - Move 1",
-    "nodes": {
-      "krk_root": "WAITING",
-      "phase1_drive_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "king_at_edge_detector": "CONFIRMED",
-      "king_drive_moves": "WAITING",
-      "box_shrink_evaluator": "FAILED",
-      "box_shrink_moves": "WAITING",
-      "opposition_evaluator": "FAILED",
-      "opposition_moves": "WAITING",
-      "mate_deliver_evaluator": "FAILED",
-      "stalemate_detector": "FAILED",
-      "mate_moves": "WAITING"
-    },
+    "note": "Opponent ply 8: b7a7",
     "new_requests": [],
     "env": {
-      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "moves": [],
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 80
+      "fen": "3K4/k7/8/8/8/8/1R6/8 w - - 16 9",
+      "ply": 8,
+      "opponent_move": "b7a7"
     },
-    "thoughts": "Evaluating position (tick 80)..."
+    "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "tick": 85,
-    "note": "Evaluation tick 85 - Move 1",
-    "nodes": {
-      "krk_root": "WAITING",
-      "phase1_drive_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "king_at_edge_detector": "CONFIRMED",
-      "king_drive_moves": "WAITING",
-      "box_shrink_evaluator": "FAILED",
-      "box_shrink_moves": "WAITING",
-      "opposition_evaluator": "FAILED",
-      "opposition_moves": "WAITING",
-      "mate_deliver_evaluator": "FAILED",
-      "stalemate_detector": "FAILED",
-      "mate_moves": "WAITING"
-    },
+    "note": "ReCoN ply 9: d8c8",
     "new_requests": [],
     "env": {
-      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "moves": [],
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 85
+      "fen": "2K5/k7/8/8/8/8/1R6/8 b - - 17 9",
+      "ply": 9,
+      "chosen_move": "d8c8",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 1,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 0
     },
-    "thoughts": "Evaluating position (tick 85)..."
+    "thoughts": "Chose d8c8 | \u0394box=0 | king_progress=1.0 | safe_check=False | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "tick": 90,
-    "note": "Evaluation tick 90 - Move 1",
-    "nodes": {
-      "krk_root": "WAITING",
-      "phase1_drive_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "king_at_edge_detector": "CONFIRMED",
-      "king_drive_moves": "WAITING",
-      "box_shrink_evaluator": "FAILED",
-      "box_shrink_moves": "WAITING",
-      "opposition_evaluator": "FAILED",
-      "opposition_moves": "WAITING",
-      "mate_deliver_evaluator": "FAILED",
-      "stalemate_detector": "FAILED",
-      "mate_moves": "WAITING"
-    },
+    "note": "Opponent ply 9: a7a8",
     "new_requests": [],
     "env": {
-      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "moves": [],
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 90
+      "fen": "k1K5/8/8/8/8/8/1R6/8 w - - 18 10",
+      "ply": 9,
+      "opponent_move": "a7a8"
     },
-    "thoughts": "Evaluating position (tick 90)..."
+    "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "tick": 95,
-    "note": "Evaluation tick 95 - Move 1",
-    "nodes": {
-      "krk_root": "WAITING",
-      "phase1_drive_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "king_at_edge_detector": "CONFIRMED",
-      "king_drive_moves": "WAITING",
-      "box_shrink_evaluator": "FAILED",
-      "box_shrink_moves": "WAITING",
-      "opposition_evaluator": "FAILED",
-      "opposition_moves": "WAITING",
-      "mate_deliver_evaluator": "FAILED",
-      "stalemate_detector": "FAILED",
-      "mate_moves": "WAITING"
-    },
+    "note": "ReCoN ply 10: b2a2",
     "new_requests": [],
     "env": {
-      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "moves": [],
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 95
+      "fen": "k1K5/8/8/8/8/8/R7/8 b - - 19 10",
+      "ply": 10,
+      "chosen_move": "b2a2",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": 0
     },
-    "thoughts": "Evaluating position (tick 95)..."
-  },
-  {
-    "type": "snapshot",
-    "tick": 100,
-    "note": "Evaluation tick 100 - Move 1",
-    "nodes": {
-      "krk_root": "WAITING",
-      "phase1_drive_edge": "WAITING",
-      "phase2_shrink_box": "WAITING",
-      "phase3_take_opposition": "WAITING",
-      "phase4_deliver_mate": "WAITING",
-      "king_at_edge_detector": "CONFIRMED",
-      "king_drive_moves": "WAITING",
-      "box_shrink_evaluator": "FAILED",
-      "box_shrink_moves": "WAITING",
-      "opposition_evaluator": "FAILED",
-      "opposition_moves": "WAITING",
-      "mate_deliver_evaluator": "FAILED",
-      "stalemate_detector": "FAILED",
-      "mate_moves": "WAITING"
-    },
-    "new_requests": [],
-    "env": {
-      "initial_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "moves": [],
-      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
-      "move_number": 1,
-      "evaluation_tick": 100
-    },
-    "thoughts": "Evaluating position (tick 100)..."
+    "thoughts": "Chose b2a2 | \u0394box=0 | king_progress=0.0 | safe_check=True | rook_safe=True"
   }
 ]

@@ -33,10 +33,14 @@ class RunLogger:
     ):
         frame: Dict[str, Any] = {
             "type": "snapshot",
-            "tick": engine.tick,
             "note": note,
-            "nodes": {nid: n.state.name for nid, n in engine.g.nodes.items()},
         }
+
+        # Only include engine-dependent fields if engine is provided
+        if engine is not None:
+            frame["tick"] = engine.tick
+            frame["nodes"] = {nid: n.state.name for nid, n in engine.g.nodes.items()}
+
         if new_requests is not None:
             frame["new_requests"] = list(new_requests)
         if env is not None:
@@ -46,7 +50,7 @@ class RunLogger:
         if latents is not None:
             frame["latents"] = latents
         self.events.append(frame)
-
+        
     def to_json(self, path: str):
         with open(path, "w", encoding="utf-8") as f:
             json.dump(self.events, f, indent=2)

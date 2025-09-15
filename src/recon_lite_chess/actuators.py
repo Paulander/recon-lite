@@ -14,6 +14,103 @@ from .predicates import (
     gives_safe_check
 )
 
+import chess
+from .predicates import (
+    is_stalemate_after,
+    box_area, box_area_after,
+    rook_safe_after,
+    gives_safe_check,
+    our_king_progress,
+    creates_stable_cut,
+
+)
+
+
+def _rook_distance_travel(move: chess.Move) -> float:
+    f1, r1 = chess.square_file(move.from_square), chess.square_rank(move.from_square)
+    f2, r2 = chess.square_file(move.to_square), chess.square_rank(move.to_square)
+    return float(abs(f1 - f2) + abs(r1 - r2))
+
+
+def _rook_distance_travel(move: chess.Move) -> float:
+    # small penalty: longer rook drags are slightly worse
+    f1, r1 = chess.square_file(move.from_square), chess.square_rank(move.from_square)
+    f2, r2 = chess.square_file(move.to_square), chess.square_rank(move.to_square)
+    return float(abs(f1 - f2) + abs(r1 - r2))
+
+# --- Add near the top if not present ---
+import chess
+from typing import Optional
+from .predicates import (
+    is_stalemate_after,
+    box_area, box_area_after,
+    rook_safe_after,
+    shrinks_or_preserves_box,
+    our_king_progress,
+    gives_safe_check,
+    # If you already implemented this, keep it; otherwise omit and the code below won’t rely on it.
+    # creates_stable_cut,
+)
+
+def _rook_distance_travel(move: chess.Move) -> float:
+    f1, r1 = chess.square_file(move.from_square), chess.square_rank(move.from_square)
+    f2, r2 = chess.square_file(move.to_square), chess.square_rank(move.to_square)
+    return float(abs(f1 - f2) + abs(r1 - r2))
+
+
+# -------- NEW: Phase 0 chooser (establish box & rendezvous) --------
+def choose_move_p0(board: chess.Board) -> Optional[str]:
+    """
+    Phase 0: establish a first 'box' and bring our king toward supporting the rook.
+    Filter-first (must pass):
+      - not stalemate
+      - rook_safe_after
+      - box_nonincreasing (allow equal if king_progress or safe_check)
+    Score:
+      + 3.0 * (base_area - area_next)
+      + 1.5 * our_king_progress
+      + 0.5 if gives_safe_check
+      - 0.1 * rook_distance_travel
+    """
+    legal = list(board.legal_moves)
+    if not legal:
+        return None
+
+    base = box_area(board)
+    best_mv, best_score = None, float("-inf")
+
+    for mv in legal:
+        if is_stalemate_after(board, mv):
+            continue
+        if not rook_safe_after(board, mv):
+            continue
+
+        area_next = box_area_after(board, mv)
+
+        # Phase-0 rule: allow equal area if we get king progress OR a safe check
+        preserves = (area_next == base)
+        if area_next > base:
+            # expanding the box is only OK in Phase 0 if you implement a stricter 'creates_stable_cut'
+            # which we skip here to stay compatible with your current predicates.
+            continue
+
+        kprog = our_king_progress(board, mv)
+        safe_chk = gives_safe_check(board, mv)
+
+        if (area_next < base) or (preserves and (kprog > 0 or safe_chk)):
+            score = 0.0
+            score += 3.0 * (base - area_next)     # prefer shrinking
+            score += 1.5 * kprog                  # bring king closer
+            if safe_chk:
+                score += 0.5
+            score -= 0.1 * _rook_distance_travel(mv)
+
+            if score > best_score:
+                best_score, best_mv = score, mv
+
+    return best_mv.uci() if best_mv else None
+
+
 
 def choose_move_phase1(board: chess.Board) -> Optional[str]:
     """
@@ -174,3 +271,16 @@ def edge_driving_bonus(board: chess.Board, move: chess.Move) -> float:
 def choose_move_phase(board: chess.Board) -> Optional[str]:
     """Legacy function - use phase-specific functions instead."""
     return choose_move_with_filters(board)
+
+#If we can't find a good move for the strategy. 
+def choose_any_safe_move(board: chess.Board) -> str | None:
+    """
+    Fallback: try any non-stalemate, rook-safe move; else any legal move.
+    Ensures we *always* act, so the engine never stalls.
+    """
+    for mv in board.legal_moves:
+        if not is_stalemate_after(board, mv) and rook_safe_after(board, mv):
+            return mv.uci()
+    # desperate: literally any legal move
+    any_mv = next(iter(board.legal_moves), None)
+    return any_mv.uci() if any_mv else None
