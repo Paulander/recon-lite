@@ -1,291 +1,582 @@
 [
   {
     "type": "snapshot",
-    "note": "ReCoN ply 1: g7h8",
+    "note": "Eval tick 10 (move 1)",
+    "tick": 10,
+    "nodes": {
+      "king_at_edge": "INACTIVE",
+      "box_can_shrink": "INACTIVE",
+      "can_take_opposition": "INACTIVE",
+      "can_deliver_mate": "FAILED",
+      "is_stalemate": "INACTIVE",
+      "phase1_drive_to_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "krk_root": "WAITING",
+      "king_drive_moves": "WAITING",
+      "box_shrink_moves": "WAITING",
+      "opposition_moves": "WAITING",
+      "mate_moves": "WAITING",
+      "random_legal_moves": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "4k2K/8/8/8/8/8/R7/8 b - - 1 1",
-      "ply": 1,
-      "chosen_move": "g7h8",
-      "features": {
-        "box_area_before": 1,
-        "box_area_after": 1,
-        "king_progress": -1.0,
-        "rook_safe_after": true,
-        "gives_safe_check": false
-      },
-      "box_area_delta": 0
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "move_number": 1,
+      "evaluation_tick": 10
     },
-    "thoughts": "Chose g7h8 | \u0394box=0 | king_progress=-1.0 | safe_check=False | rook_safe=True"
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 1: e8f8",
+    "note": "Eval tick 20 (move 1)",
+    "tick": 20,
+    "nodes": {
+      "king_at_edge": "INACTIVE",
+      "box_can_shrink": "INACTIVE",
+      "can_take_opposition": "INACTIVE",
+      "can_deliver_mate": "FAILED",
+      "is_stalemate": "INACTIVE",
+      "phase1_drive_to_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "krk_root": "WAITING",
+      "king_drive_moves": "WAITING",
+      "box_shrink_moves": "WAITING",
+      "opposition_moves": "WAITING",
+      "mate_moves": "WAITING",
+      "random_legal_moves": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "5k1K/8/8/8/8/8/R7/8 w - - 2 2",
-      "ply": 1,
-      "opponent_move": "e8f8"
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "move_number": 1,
+      "evaluation_tick": 20
     },
-    "thoughts": "Random defense."
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 2: a2f2",
+    "note": "Eval tick 30 (move 1)",
+    "tick": 30,
+    "nodes": {
+      "king_at_edge": "INACTIVE",
+      "box_can_shrink": "INACTIVE",
+      "can_take_opposition": "INACTIVE",
+      "can_deliver_mate": "FAILED",
+      "is_stalemate": "INACTIVE",
+      "phase1_drive_to_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "krk_root": "WAITING",
+      "king_drive_moves": "WAITING",
+      "box_shrink_moves": "WAITING",
+      "opposition_moves": "WAITING",
+      "mate_moves": "WAITING",
+      "random_legal_moves": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "5k1K/8/8/8/8/8/5R2/8 b - - 3 2",
-      "ply": 2,
-      "chosen_move": "a2f2",
-      "features": {
-        "box_area_before": 1,
-        "box_area_after": 1,
-        "king_progress": 0.0,
-        "rook_safe_after": true,
-        "gives_safe_check": true
-      },
-      "box_area_delta": 0
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "move_number": 1,
+      "evaluation_tick": 30
     },
-    "thoughts": "Chose a2f2 | \u0394box=0 | king_progress=0.0 | safe_check=True | rook_safe=True"
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 2: f8e8",
+    "note": "Eval tick 40 (move 1)",
+    "tick": 40,
+    "nodes": {
+      "king_at_edge": "INACTIVE",
+      "box_can_shrink": "INACTIVE",
+      "can_take_opposition": "INACTIVE",
+      "can_deliver_mate": "FAILED",
+      "is_stalemate": "INACTIVE",
+      "phase1_drive_to_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "krk_root": "WAITING",
+      "king_drive_moves": "WAITING",
+      "box_shrink_moves": "WAITING",
+      "opposition_moves": "WAITING",
+      "mate_moves": "WAITING",
+      "random_legal_moves": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "4k2K/8/8/8/8/8/5R2/8 w - - 4 3",
-      "ply": 2,
-      "opponent_move": "f8e8"
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "move_number": 1,
+      "evaluation_tick": 40
     },
-    "thoughts": "Random defense."
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 3: h8g8",
+    "note": "Eval tick 50 (move 1)",
+    "tick": 50,
+    "nodes": {
+      "king_at_edge": "INACTIVE",
+      "box_can_shrink": "INACTIVE",
+      "can_take_opposition": "INACTIVE",
+      "can_deliver_mate": "FAILED",
+      "is_stalemate": "INACTIVE",
+      "phase1_drive_to_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "krk_root": "WAITING",
+      "king_drive_moves": "WAITING",
+      "box_shrink_moves": "WAITING",
+      "opposition_moves": "WAITING",
+      "mate_moves": "WAITING",
+      "random_legal_moves": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "4k1K1/8/8/8/8/8/5R2/8 b - - 5 3",
-      "ply": 3,
-      "chosen_move": "h8g8",
-      "features": {
-        "box_area_before": 1,
-        "box_area_after": 1,
-        "king_progress": 1.0,
-        "rook_safe_after": true,
-        "gives_safe_check": false
-      },
-      "box_area_delta": 0
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "move_number": 1,
+      "evaluation_tick": 50
     },
-    "thoughts": "Chose h8g8 | \u0394box=0 | king_progress=1.0 | safe_check=False | rook_safe=True"
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 3: e8e7",
+    "note": "Eval tick 60 (move 1)",
+    "tick": 60,
+    "nodes": {
+      "king_at_edge": "INACTIVE",
+      "box_can_shrink": "INACTIVE",
+      "can_take_opposition": "INACTIVE",
+      "can_deliver_mate": "FAILED",
+      "is_stalemate": "INACTIVE",
+      "phase1_drive_to_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "krk_root": "WAITING",
+      "king_drive_moves": "WAITING",
+      "box_shrink_moves": "WAITING",
+      "opposition_moves": "WAITING",
+      "mate_moves": "WAITING",
+      "random_legal_moves": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "6K1/4k3/8/8/8/8/5R2/8 w - - 6 4",
-      "ply": 3,
-      "opponent_move": "e8e7"
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "move_number": 1,
+      "evaluation_tick": 60
     },
-    "thoughts": "Random defense."
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 4: f2e2",
+    "note": "Eval tick 70 (move 1)",
+    "tick": 70,
+    "nodes": {
+      "king_at_edge": "INACTIVE",
+      "box_can_shrink": "INACTIVE",
+      "can_take_opposition": "INACTIVE",
+      "can_deliver_mate": "FAILED",
+      "is_stalemate": "INACTIVE",
+      "phase1_drive_to_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "krk_root": "WAITING",
+      "king_drive_moves": "WAITING",
+      "box_shrink_moves": "WAITING",
+      "opposition_moves": "WAITING",
+      "mate_moves": "WAITING",
+      "random_legal_moves": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "6K1/4k3/8/8/8/8/4R3/8 b - - 7 4",
-      "ply": 4,
-      "chosen_move": "f2e2",
-      "features": {
-        "box_area_before": 9,
-        "box_area_after": 1,
-        "king_progress": 0.0,
-        "rook_safe_after": true,
-        "gives_safe_check": true
-      },
-      "box_area_delta": -8
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "move_number": 1,
+      "evaluation_tick": 70
     },
-    "thoughts": "Chose f2e2 | \u0394box=-8 | king_progress=0.0 | safe_check=True | rook_safe=True"
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 4: e7d7",
+    "note": "Eval tick 80 (move 1)",
+    "tick": 80,
+    "nodes": {
+      "king_at_edge": "INACTIVE",
+      "box_can_shrink": "INACTIVE",
+      "can_take_opposition": "INACTIVE",
+      "can_deliver_mate": "FAILED",
+      "is_stalemate": "INACTIVE",
+      "phase1_drive_to_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "krk_root": "WAITING",
+      "king_drive_moves": "WAITING",
+      "box_shrink_moves": "WAITING",
+      "opposition_moves": "WAITING",
+      "mate_moves": "WAITING",
+      "random_legal_moves": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "6K1/3k4/8/8/8/8/4R3/8 w - - 8 5",
-      "ply": 4,
-      "opponent_move": "e7d7"
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "move_number": 1,
+      "evaluation_tick": 80
     },
-    "thoughts": "Random defense."
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 5: g8f8",
+    "note": "Eval tick 90 (move 1)",
+    "tick": 90,
+    "nodes": {
+      "king_at_edge": "INACTIVE",
+      "box_can_shrink": "INACTIVE",
+      "can_take_opposition": "INACTIVE",
+      "can_deliver_mate": "FAILED",
+      "is_stalemate": "INACTIVE",
+      "phase1_drive_to_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "krk_root": "WAITING",
+      "king_drive_moves": "WAITING",
+      "box_shrink_moves": "WAITING",
+      "opposition_moves": "WAITING",
+      "mate_moves": "WAITING",
+      "random_legal_moves": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "5K2/3k4/8/8/8/8/4R3/8 b - - 9 5",
-      "ply": 5,
-      "chosen_move": "g8f8",
-      "features": {
-        "box_area_before": 9,
-        "box_area_after": 1,
-        "king_progress": 1.0,
-        "rook_safe_after": true,
-        "gives_safe_check": false
-      },
-      "box_area_delta": -8
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "move_number": 1,
+      "evaluation_tick": 90
     },
-    "thoughts": "Chose g8f8 | \u0394box=-8 | king_progress=1.0 | safe_check=False | rook_safe=True"
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 5: d7c8",
+    "note": "Eval tick 100 (move 1)",
+    "tick": 100,
+    "nodes": {
+      "king_at_edge": "INACTIVE",
+      "box_can_shrink": "INACTIVE",
+      "can_take_opposition": "INACTIVE",
+      "can_deliver_mate": "FAILED",
+      "is_stalemate": "INACTIVE",
+      "phase1_drive_to_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "krk_root": "WAITING",
+      "king_drive_moves": "WAITING",
+      "box_shrink_moves": "WAITING",
+      "opposition_moves": "WAITING",
+      "mate_moves": "WAITING",
+      "random_legal_moves": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "2k2K2/8/8/8/8/8/4R3/8 w - - 10 6",
-      "ply": 5,
-      "opponent_move": "d7c8"
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "move_number": 1,
+      "evaluation_tick": 100
     },
-    "thoughts": "Random defense."
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 6: f8e8",
+    "note": "Eval tick 110 (move 1)",
+    "tick": 110,
+    "nodes": {
+      "king_at_edge": "INACTIVE",
+      "box_can_shrink": "INACTIVE",
+      "can_take_opposition": "INACTIVE",
+      "can_deliver_mate": "FAILED",
+      "is_stalemate": "INACTIVE",
+      "phase1_drive_to_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "krk_root": "WAITING",
+      "king_drive_moves": "WAITING",
+      "box_shrink_moves": "WAITING",
+      "opposition_moves": "WAITING",
+      "mate_moves": "WAITING",
+      "random_legal_moves": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "2k1K3/8/8/8/8/8/4R3/8 b - - 11 6",
-      "ply": 6,
-      "chosen_move": "f8e8",
-      "features": {
-        "box_area_before": 1,
-        "box_area_after": 1,
-        "king_progress": 1.0,
-        "rook_safe_after": true,
-        "gives_safe_check": false
-      },
-      "box_area_delta": 0
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "move_number": 1,
+      "evaluation_tick": 110
     },
-    "thoughts": "Chose f8e8 | \u0394box=0 | king_progress=1.0 | safe_check=False | rook_safe=True"
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 6: c8b8",
+    "note": "Eval tick 120 (move 1)",
+    "tick": 120,
+    "nodes": {
+      "king_at_edge": "INACTIVE",
+      "box_can_shrink": "INACTIVE",
+      "can_take_opposition": "INACTIVE",
+      "can_deliver_mate": "FAILED",
+      "is_stalemate": "INACTIVE",
+      "phase1_drive_to_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "krk_root": "WAITING",
+      "king_drive_moves": "WAITING",
+      "box_shrink_moves": "WAITING",
+      "opposition_moves": "WAITING",
+      "mate_moves": "WAITING",
+      "random_legal_moves": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "1k2K3/8/8/8/8/8/4R3/8 w - - 12 7",
-      "ply": 6,
-      "opponent_move": "c8b8"
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "move_number": 1,
+      "evaluation_tick": 120
     },
-    "thoughts": "Random defense."
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 7: e8d8",
+    "note": "Eval tick 130 (move 1)",
+    "tick": 130,
+    "nodes": {
+      "king_at_edge": "INACTIVE",
+      "box_can_shrink": "INACTIVE",
+      "can_take_opposition": "INACTIVE",
+      "can_deliver_mate": "FAILED",
+      "is_stalemate": "INACTIVE",
+      "phase1_drive_to_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "krk_root": "WAITING",
+      "king_drive_moves": "WAITING",
+      "box_shrink_moves": "WAITING",
+      "opposition_moves": "WAITING",
+      "mate_moves": "WAITING",
+      "random_legal_moves": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "1k1K4/8/8/8/8/8/4R3/8 b - - 13 7",
-      "ply": 7,
-      "chosen_move": "e8d8",
-      "features": {
-        "box_area_before": 1,
-        "box_area_after": 1,
-        "king_progress": 1.0,
-        "rook_safe_after": true,
-        "gives_safe_check": false
-      },
-      "box_area_delta": 0
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "move_number": 1,
+      "evaluation_tick": 130
     },
-    "thoughts": "Chose e8d8 | \u0394box=0 | king_progress=1.0 | safe_check=False | rook_safe=True"
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 7: b8b7",
+    "note": "Eval tick 140 (move 1)",
+    "tick": 140,
+    "nodes": {
+      "king_at_edge": "INACTIVE",
+      "box_can_shrink": "INACTIVE",
+      "can_take_opposition": "INACTIVE",
+      "can_deliver_mate": "FAILED",
+      "is_stalemate": "INACTIVE",
+      "phase1_drive_to_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "krk_root": "WAITING",
+      "king_drive_moves": "WAITING",
+      "box_shrink_moves": "WAITING",
+      "opposition_moves": "WAITING",
+      "mate_moves": "WAITING",
+      "random_legal_moves": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "3K4/1k6/8/8/8/8/4R3/8 w - - 14 8",
-      "ply": 7,
-      "opponent_move": "b8b7"
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "move_number": 1,
+      "evaluation_tick": 140
     },
-    "thoughts": "Random defense."
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 8: e2b2",
+    "note": "Eval tick 150 (move 1)",
+    "tick": 150,
+    "nodes": {
+      "king_at_edge": "INACTIVE",
+      "box_can_shrink": "INACTIVE",
+      "can_take_opposition": "INACTIVE",
+      "can_deliver_mate": "FAILED",
+      "is_stalemate": "INACTIVE",
+      "phase1_drive_to_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "krk_root": "WAITING",
+      "king_drive_moves": "WAITING",
+      "box_shrink_moves": "WAITING",
+      "opposition_moves": "WAITING",
+      "mate_moves": "WAITING",
+      "random_legal_moves": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "3K4/1k6/8/8/8/8/1R6/8 b - - 15 8",
-      "ply": 8,
-      "chosen_move": "e2b2",
-      "features": {
-        "box_area_before": 9,
-        "box_area_after": 1,
-        "king_progress": 0.0,
-        "rook_safe_after": true,
-        "gives_safe_check": true
-      },
-      "box_area_delta": -8
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "move_number": 1,
+      "evaluation_tick": 150
     },
-    "thoughts": "Chose e2b2 | \u0394box=-8 | king_progress=0.0 | safe_check=True | rook_safe=True"
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 8: b7a7",
+    "note": "Eval tick 160 (move 1)",
+    "tick": 160,
+    "nodes": {
+      "king_at_edge": "INACTIVE",
+      "box_can_shrink": "INACTIVE",
+      "can_take_opposition": "INACTIVE",
+      "can_deliver_mate": "FAILED",
+      "is_stalemate": "INACTIVE",
+      "phase1_drive_to_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "krk_root": "WAITING",
+      "king_drive_moves": "WAITING",
+      "box_shrink_moves": "WAITING",
+      "opposition_moves": "WAITING",
+      "mate_moves": "WAITING",
+      "random_legal_moves": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "3K4/k7/8/8/8/8/1R6/8 w - - 16 9",
-      "ply": 8,
-      "opponent_move": "b7a7"
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "move_number": 1,
+      "evaluation_tick": 160
     },
-    "thoughts": "Random defense."
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 9: d8c8",
+    "note": "Eval tick 170 (move 1)",
+    "tick": 170,
+    "nodes": {
+      "king_at_edge": "INACTIVE",
+      "box_can_shrink": "INACTIVE",
+      "can_take_opposition": "INACTIVE",
+      "can_deliver_mate": "FAILED",
+      "is_stalemate": "INACTIVE",
+      "phase1_drive_to_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "krk_root": "WAITING",
+      "king_drive_moves": "WAITING",
+      "box_shrink_moves": "WAITING",
+      "opposition_moves": "WAITING",
+      "mate_moves": "WAITING",
+      "random_legal_moves": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "2K5/k7/8/8/8/8/1R6/8 b - - 17 9",
-      "ply": 9,
-      "chosen_move": "d8c8",
-      "features": {
-        "box_area_before": 1,
-        "box_area_after": 1,
-        "king_progress": 1.0,
-        "rook_safe_after": true,
-        "gives_safe_check": false
-      },
-      "box_area_delta": 0
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "move_number": 1,
+      "evaluation_tick": 170
     },
-    "thoughts": "Chose d8c8 | \u0394box=0 | king_progress=1.0 | safe_check=False | rook_safe=True"
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 9: a7a8",
+    "note": "Eval tick 180 (move 1)",
+    "tick": 180,
+    "nodes": {
+      "king_at_edge": "INACTIVE",
+      "box_can_shrink": "INACTIVE",
+      "can_take_opposition": "INACTIVE",
+      "can_deliver_mate": "FAILED",
+      "is_stalemate": "INACTIVE",
+      "phase1_drive_to_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "krk_root": "WAITING",
+      "king_drive_moves": "WAITING",
+      "box_shrink_moves": "WAITING",
+      "opposition_moves": "WAITING",
+      "mate_moves": "WAITING",
+      "random_legal_moves": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "k1K5/8/8/8/8/8/1R6/8 w - - 18 10",
-      "ply": 9,
-      "opponent_move": "a7a8"
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "move_number": 1,
+      "evaluation_tick": 180
     },
-    "thoughts": "Random defense."
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 10: b2a2",
+    "note": "Eval tick 190 (move 1)",
+    "tick": 190,
+    "nodes": {
+      "king_at_edge": "INACTIVE",
+      "box_can_shrink": "INACTIVE",
+      "can_take_opposition": "INACTIVE",
+      "can_deliver_mate": "FAILED",
+      "is_stalemate": "INACTIVE",
+      "phase1_drive_to_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "krk_root": "WAITING",
+      "king_drive_moves": "WAITING",
+      "box_shrink_moves": "WAITING",
+      "opposition_moves": "WAITING",
+      "mate_moves": "WAITING",
+      "random_legal_moves": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "k1K5/8/8/8/8/8/R7/8 b - - 19 10",
-      "ply": 10,
-      "chosen_move": "b2a2",
-      "features": {
-        "box_area_before": 1,
-        "box_area_after": 1,
-        "king_progress": 0.0,
-        "rook_safe_after": true,
-        "gives_safe_check": true
-      },
-      "box_area_delta": 0
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "move_number": 1,
+      "evaluation_tick": 190
     },
-    "thoughts": "Chose b2a2 | \u0394box=0 | king_progress=0.0 | safe_check=True | rook_safe=True"
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 200 (move 1)",
+    "tick": 200,
+    "nodes": {
+      "king_at_edge": "INACTIVE",
+      "box_can_shrink": "INACTIVE",
+      "can_take_opposition": "INACTIVE",
+      "can_deliver_mate": "FAILED",
+      "is_stalemate": "INACTIVE",
+      "phase1_drive_to_edge": "WAITING",
+      "phase2_shrink_box": "WAITING",
+      "phase3_take_opposition": "WAITING",
+      "phase4_deliver_mate": "WAITING",
+      "krk_root": "WAITING",
+      "king_drive_moves": "WAITING",
+      "box_shrink_moves": "WAITING",
+      "opposition_moves": "WAITING",
+      "mate_moves": "WAITING",
+      "random_legal_moves": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "move_number": 1,
+      "evaluation_tick": 200
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
   }
 ]

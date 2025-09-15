@@ -1,0 +1,3968 @@
+{
+  "total_runs": 5,
+  "mate_games": 0,
+  "stalemate_games": 0,
+  "timeout_games": 4,
+  "rook_lost_games": 0,
+  "stall_games": 1,
+  "mate_rate_percent": 0.0,
+  "avg_game_length": 18.6,
+  "total_time_seconds": 1.2150509357452393,
+  "avg_time_per_game": 0.24301018714904785,
+  "results": [
+    {
+      "initial_fen": "7K/8/1R6/k7/8/8/8/8 w - - 0 1",
+      "final_fen": "7K/8/1R6/k7/8/8/8/8 w - - 24 13",
+      "moves": [
+        "b6c6",
+        "c2d3",
+        "c6d6",
+        "d3c3",
+        "d6c6",
+        "c3d2",
+        "c6d6",
+        "d2e2",
+        "d6e6",
+        "e2f1",
+        "e6f6",
+        "f1e1",
+        "f6e6",
+        "e1d1",
+        "e6d6",
+        "d1e1",
+        "d6e6",
+        "e1d2",
+        "e6d6",
+        "d2c3",
+        "d6c6",
+        "c3b4",
+        "c6b6",
+        "b4a5"
+      ],
+      "plies": 13,
+      "stalls": 1,
+      "rook_lost": false,
+      "outcome": {
+        "checkmate": false,
+        "stalemate": false,
+        "insufficient_material": false,
+        "fifty_moves": false,
+        "threefold_repetition": false
+      },
+      "logs": [
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 1: b6c6",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "7K/8/2R5/8/8/8/2k5/8 b - - 1 1",
+            "ply": 1,
+            "recons_move": "b6c6"
+          },
+          "thoughts": "Chose b6c6"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 1: c2d3",
+          "new_requests": [],
+          "env": {
+            "fen": "7K/8/2R5/8/8/3k4/8/8 w - - 2 2",
+            "ply": 1,
+            "opponents_move": "c2d3"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 2: c6d6",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "7K/8/3R4/8/8/3k4/8/8 b - - 3 2",
+            "ply": 2,
+            "recons_move": "c6d6"
+          },
+          "thoughts": "Chose c6d6"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 2: d3c3",
+          "new_requests": [],
+          "env": {
+            "fen": "7K/8/3R4/8/8/2k5/8/8 w - - 4 3",
+            "ply": 2,
+            "opponents_move": "d3c3"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 3: d6c6",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "7K/8/2R5/8/8/2k5/8/8 b - - 5 3",
+            "ply": 3,
+            "recons_move": "d6c6"
+          },
+          "thoughts": "Chose d6c6"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 3: c3d2",
+          "new_requests": [],
+          "env": {
+            "fen": "7K/8/2R5/8/8/8/3k4/8 w - - 6 4",
+            "ply": 3,
+            "opponents_move": "c3d2"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 4: c6d6",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "7K/8/3R4/8/8/8/3k4/8 b - - 7 4",
+            "ply": 4,
+            "recons_move": "c6d6"
+          },
+          "thoughts": "Chose c6d6"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 4: d2e2",
+          "new_requests": [],
+          "env": {
+            "fen": "7K/8/3R4/8/8/8/4k3/8 w - - 8 5",
+            "ply": 4,
+            "opponents_move": "d2e2"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 5: d6e6",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "7K/8/4R3/8/8/8/4k3/8 b - - 9 5",
+            "ply": 5,
+            "recons_move": "d6e6"
+          },
+          "thoughts": "Chose d6e6"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 5: e2f1",
+          "new_requests": [],
+          "env": {
+            "fen": "7K/8/4R3/8/8/8/8/5k2 w - - 10 6",
+            "ply": 5,
+            "opponents_move": "e2f1"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 6: e6f6",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "7K/8/5R2/8/8/8/8/5k2 b - - 11 6",
+            "ply": 6,
+            "recons_move": "e6f6"
+          },
+          "thoughts": "Chose e6f6"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 6: f1e1",
+          "new_requests": [],
+          "env": {
+            "fen": "7K/8/5R2/8/8/8/8/4k3 w - - 12 7",
+            "ply": 6,
+            "opponents_move": "f1e1"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 7: f6e6",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "7K/8/4R3/8/8/8/8/4k3 b - - 13 7",
+            "ply": 7,
+            "recons_move": "f6e6"
+          },
+          "thoughts": "Chose f6e6"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 7: e1d1",
+          "new_requests": [],
+          "env": {
+            "fen": "7K/8/4R3/8/8/8/8/3k4 w - - 14 8",
+            "ply": 7,
+            "opponents_move": "e1d1"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 8: e6d6",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "7K/8/3R4/8/8/8/8/3k4 b - - 15 8",
+            "ply": 8,
+            "recons_move": "e6d6"
+          },
+          "thoughts": "Chose e6d6"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 8: d1e1",
+          "new_requests": [],
+          "env": {
+            "fen": "7K/8/3R4/8/8/8/8/4k3 w - - 16 9",
+            "ply": 8,
+            "opponents_move": "d1e1"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 9: d6e6",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "7K/8/4R3/8/8/8/8/4k3 b - - 17 9",
+            "ply": 9,
+            "recons_move": "d6e6"
+          },
+          "thoughts": "Chose d6e6"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 9: e1d2",
+          "new_requests": [],
+          "env": {
+            "fen": "7K/8/4R3/8/8/8/3k4/8 w - - 18 10",
+            "ply": 9,
+            "opponents_move": "e1d2"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 10: e6d6",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "7K/8/3R4/8/8/8/3k4/8 b - - 19 10",
+            "ply": 10,
+            "recons_move": "e6d6"
+          },
+          "thoughts": "Chose e6d6"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 10: d2c3",
+          "new_requests": [],
+          "env": {
+            "fen": "7K/8/3R4/8/8/2k5/8/8 w - - 20 11",
+            "ply": 10,
+            "opponents_move": "d2c3"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 11: d6c6",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "7K/8/2R5/8/8/2k5/8/8 b - - 21 11",
+            "ply": 11,
+            "recons_move": "d6c6"
+          },
+          "thoughts": "Chose d6c6"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 11: c3b4",
+          "new_requests": [],
+          "env": {
+            "fen": "7K/8/2R5/8/1k6/8/8/8 w - - 22 12",
+            "ply": 11,
+            "opponents_move": "c3b4"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 12: c6b6",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "7K/8/1R6/8/1k6/8/8/8 b - - 23 12",
+            "ply": 12,
+            "recons_move": "c6b6"
+          },
+          "thoughts": "Chose c6b6"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 12: b4a5",
+          "new_requests": [],
+          "env": {
+            "fen": "7K/8/1R6/k7/8/8/8/8 w - - 24 13",
+            "ply": 12,
+            "opponents_move": "b4a5"
+          },
+          "thoughts": "Random defense"
+        }
+      ]
+    },
+    {
+      "initial_fen": "R4K2/8/8/8/8/1k6/8/8 w - - 0 1",
+      "final_fen": "R4K2/8/8/8/8/1k6/8/8 w - - 40 21",
+      "moves": [
+        "a5b5",
+        "b7a8",
+        "b5a5",
+        "a8b8",
+        "a5b5",
+        "b8c8",
+        "b5c5",
+        "c8d8",
+        "c5d5",
+        "d8c8",
+        "d5c5",
+        "c8d7",
+        "c5d5",
+        "d7e6",
+        "d5d8",
+        "e6f6",
+        "d8f8",
+        "f6e6",
+        "f8e8",
+        "e6d7",
+        "g8f8",
+        "d7c6",
+        "e8c8",
+        "c6b6",
+        "c8b8",
+        "b6c5",
+        "b8c8",
+        "c5b6",
+        "c8b8",
+        "b6a5",
+        "b8a8",
+        "a5b6",
+        "a8b8",
+        "b6c6",
+        "b8c8",
+        "c6b5",
+        "c8b8",
+        "b5a4",
+        "b8a8",
+        "a4b3"
+      ],
+      "plies": 20,
+      "stalls": 0,
+      "rook_lost": false,
+      "outcome": {
+        "checkmate": false,
+        "stalemate": false,
+        "insufficient_material": false,
+        "fifty_moves": false,
+        "threefold_repetition": false
+      },
+      "logs": [
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 1: a5b5",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/1k6/8/1R6/8/8/8/8 b - - 1 1",
+            "ply": 1,
+            "recons_move": "a5b5"
+          },
+          "thoughts": "Chose a5b5"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 1: b7a8",
+          "new_requests": [],
+          "env": {
+            "fen": "k5K1/8/8/1R6/8/8/8/8 w - - 2 2",
+            "ply": 1,
+            "opponents_move": "b7a8"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 2: b5a5",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "k5K1/8/8/R7/8/8/8/8 b - - 3 2",
+            "ply": 2,
+            "recons_move": "b5a5"
+          },
+          "thoughts": "Chose b5a5"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 2: a8b8",
+          "new_requests": [],
+          "env": {
+            "fen": "1k4K1/8/8/R7/8/8/8/8 w - - 4 3",
+            "ply": 2,
+            "opponents_move": "a8b8"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 3: a5b5",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "1k4K1/8/8/1R6/8/8/8/8 b - - 5 3",
+            "ply": 3,
+            "recons_move": "a5b5"
+          },
+          "thoughts": "Chose a5b5"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 3: b8c8",
+          "new_requests": [],
+          "env": {
+            "fen": "2k3K1/8/8/1R6/8/8/8/8 w - - 6 4",
+            "ply": 3,
+            "opponents_move": "b8c8"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 4: b5c5",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "2k3K1/8/8/2R5/8/8/8/8 b - - 7 4",
+            "ply": 4,
+            "recons_move": "b5c5"
+          },
+          "thoughts": "Chose b5c5"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 4: c8d8",
+          "new_requests": [],
+          "env": {
+            "fen": "3k2K1/8/8/2R5/8/8/8/8 w - - 8 5",
+            "ply": 4,
+            "opponents_move": "c8d8"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 5: c5d5",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "3k2K1/8/8/3R4/8/8/8/8 b - - 9 5",
+            "ply": 5,
+            "recons_move": "c5d5"
+          },
+          "thoughts": "Chose c5d5"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 5: d8c8",
+          "new_requests": [],
+          "env": {
+            "fen": "2k3K1/8/8/3R4/8/8/8/8 w - - 10 6",
+            "ply": 5,
+            "opponents_move": "d8c8"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 6: d5c5",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "2k3K1/8/8/2R5/8/8/8/8 b - - 11 6",
+            "ply": 6,
+            "recons_move": "d5c5"
+          },
+          "thoughts": "Chose d5c5"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 6: c8d7",
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/3k4/8/2R5/8/8/8/8 w - - 12 7",
+            "ply": 6,
+            "opponents_move": "c8d7"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 7: c5d5",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/3k4/8/3R4/8/8/8/8 b - - 13 7",
+            "ply": 7,
+            "recons_move": "c5d5"
+          },
+          "thoughts": "Chose c5d5"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 7: d7e6",
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/8/4k3/3R4/8/8/8/8 w - - 14 8",
+            "ply": 7,
+            "opponents_move": "d7e6"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 8: d5d8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "3R2K1/8/4k3/8/8/8/8/8 b - - 15 8",
+            "ply": 8,
+            "recons_move": "d5d8"
+          },
+          "thoughts": "Chose d5d8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 8: e6f6",
+          "new_requests": [],
+          "env": {
+            "fen": "3R2K1/8/5k2/8/8/8/8/8 w - - 16 9",
+            "ply": 8,
+            "opponents_move": "e6f6"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 9: d8f8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "5RK1/8/5k2/8/8/8/8/8 b - - 17 9",
+            "ply": 9,
+            "recons_move": "d8f8"
+          },
+          "thoughts": "Chose d8f8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 9: f6e6",
+          "new_requests": [],
+          "env": {
+            "fen": "5RK1/8/4k3/8/8/8/8/8 w - - 18 10",
+            "ply": 9,
+            "opponents_move": "f6e6"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 10: f8e8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "4R1K1/8/4k3/8/8/8/8/8 b - - 19 10",
+            "ply": 10,
+            "recons_move": "f8e8"
+          },
+          "thoughts": "Chose f8e8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 10: e6d7",
+          "new_requests": [],
+          "env": {
+            "fen": "4R1K1/3k4/8/8/8/8/8/8 w - - 20 11",
+            "ply": 10,
+            "opponents_move": "e6d7"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 11: g8f8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "4RK2/3k4/8/8/8/8/8/8 b - - 21 11",
+            "ply": 11,
+            "recons_move": "g8f8"
+          },
+          "thoughts": "Chose g8f8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 11: d7c6",
+          "new_requests": [],
+          "env": {
+            "fen": "4RK2/8/2k5/8/8/8/8/8 w - - 22 12",
+            "ply": 11,
+            "opponents_move": "d7c6"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 12: e8c8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "2R2K2/8/2k5/8/8/8/8/8 b - - 23 12",
+            "ply": 12,
+            "recons_move": "e8c8"
+          },
+          "thoughts": "Chose e8c8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 12: c6b6",
+          "new_requests": [],
+          "env": {
+            "fen": "2R2K2/8/1k6/8/8/8/8/8 w - - 24 13",
+            "ply": 12,
+            "opponents_move": "c6b6"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 13: c8b8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "1R3K2/8/1k6/8/8/8/8/8 b - - 25 13",
+            "ply": 13,
+            "recons_move": "c8b8"
+          },
+          "thoughts": "Chose c8b8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 13: b6c5",
+          "new_requests": [],
+          "env": {
+            "fen": "1R3K2/8/8/2k5/8/8/8/8 w - - 26 14",
+            "ply": 13,
+            "opponents_move": "b6c5"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 14: b8c8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "2R2K2/8/8/2k5/8/8/8/8 b - - 27 14",
+            "ply": 14,
+            "recons_move": "b8c8"
+          },
+          "thoughts": "Chose b8c8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 14: c5b6",
+          "new_requests": [],
+          "env": {
+            "fen": "2R2K2/8/1k6/8/8/8/8/8 w - - 28 15",
+            "ply": 14,
+            "opponents_move": "c5b6"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 15: c8b8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "1R3K2/8/1k6/8/8/8/8/8 b - - 29 15",
+            "ply": 15,
+            "recons_move": "c8b8"
+          },
+          "thoughts": "Chose c8b8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 15: b6a5",
+          "new_requests": [],
+          "env": {
+            "fen": "1R3K2/8/8/k7/8/8/8/8 w - - 30 16",
+            "ply": 15,
+            "opponents_move": "b6a5"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 16: b8a8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "R4K2/8/8/k7/8/8/8/8 b - - 31 16",
+            "ply": 16,
+            "recons_move": "b8a8"
+          },
+          "thoughts": "Chose b8a8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 16: a5b6",
+          "new_requests": [],
+          "env": {
+            "fen": "R4K2/8/1k6/8/8/8/8/8 w - - 32 17",
+            "ply": 16,
+            "opponents_move": "a5b6"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 17: a8b8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "1R3K2/8/1k6/8/8/8/8/8 b - - 33 17",
+            "ply": 17,
+            "recons_move": "a8b8"
+          },
+          "thoughts": "Chose a8b8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 17: b6c6",
+          "new_requests": [],
+          "env": {
+            "fen": "1R3K2/8/2k5/8/8/8/8/8 w - - 34 18",
+            "ply": 17,
+            "opponents_move": "b6c6"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 18: b8c8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "2R2K2/8/2k5/8/8/8/8/8 b - - 35 18",
+            "ply": 18,
+            "recons_move": "b8c8"
+          },
+          "thoughts": "Chose b8c8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 18: c6b5",
+          "new_requests": [],
+          "env": {
+            "fen": "2R2K2/8/8/1k6/8/8/8/8 w - - 36 19",
+            "ply": 18,
+            "opponents_move": "c6b5"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 19: c8b8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "1R3K2/8/8/1k6/8/8/8/8 b - - 37 19",
+            "ply": 19,
+            "recons_move": "c8b8"
+          },
+          "thoughts": "Chose c8b8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 19: b5a4",
+          "new_requests": [],
+          "env": {
+            "fen": "1R3K2/8/8/8/k7/8/8/8 w - - 38 20",
+            "ply": 19,
+            "opponents_move": "b5a4"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 20: b8a8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "R4K2/8/8/8/k7/8/8/8 b - - 39 20",
+            "ply": 20,
+            "recons_move": "b8a8"
+          },
+          "thoughts": "Chose b8a8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 20: a4b3",
+          "new_requests": [],
+          "env": {
+            "fen": "R4K2/8/8/8/8/1k6/8/8 w - - 40 21",
+            "ply": 20,
+            "opponents_move": "a4b3"
+          },
+          "thoughts": "Random defense"
+        }
+      ]
+    },
+    {
+      "initial_fen": "5RK1/3k4/8/8/8/8/8/8 w - - 0 1",
+      "final_fen": "5RK1/3k4/8/8/8/8/8/8 w - - 40 21",
+      "moves": [
+        "h7g8",
+        "a5a6",
+        "d5d6",
+        "a6a5",
+        "d6d5",
+        "a5a4",
+        "d5d4",
+        "a4a5",
+        "d4d5",
+        "a5a4",
+        "d5d4",
+        "a4a3",
+        "d4d3",
+        "a3b4",
+        "d3d4",
+        "b4c5",
+        "d4d8",
+        "c5c4",
+        "d8c8",
+        "c4d4",
+        "c8d8",
+        "d4c5",
+        "d8c8",
+        "c5b6",
+        "c8b8",
+        "b6a5",
+        "b8a8",
+        "a5b5",
+        "a8b8",
+        "b5a4",
+        "b8a8",
+        "a4b5",
+        "a8b8",
+        "b5a5",
+        "b8a8",
+        "a5b6",
+        "a8b8",
+        "b6c7",
+        "b8f8",
+        "c7d7"
+      ],
+      "plies": 20,
+      "stalls": 0,
+      "rook_lost": false,
+      "outcome": {
+        "checkmate": false,
+        "stalemate": false,
+        "insufficient_material": false,
+        "fifty_moves": false,
+        "threefold_repetition": false
+      },
+      "logs": [
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 1: h7g8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/8/8/k2R4/8/8/8/8 b - - 1 1",
+            "ply": 1,
+            "recons_move": "h7g8"
+          },
+          "thoughts": "Chose h7g8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 1: a5a6",
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/8/k7/3R4/8/8/8/8 w - - 2 2",
+            "ply": 1,
+            "opponents_move": "a5a6"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 2: d5d6",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/8/k2R4/8/8/8/8/8 b - - 3 2",
+            "ply": 2,
+            "recons_move": "d5d6"
+          },
+          "thoughts": "Chose d5d6"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 2: a6a5",
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/8/3R4/k7/8/8/8/8 w - - 4 3",
+            "ply": 2,
+            "opponents_move": "a6a5"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 3: d6d5",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/8/8/k2R4/8/8/8/8 b - - 5 3",
+            "ply": 3,
+            "recons_move": "d6d5"
+          },
+          "thoughts": "Chose d6d5"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 3: a5a4",
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/8/8/3R4/k7/8/8/8 w - - 6 4",
+            "ply": 3,
+            "opponents_move": "a5a4"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 4: d5d4",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/8/8/8/k2R4/8/8/8 b - - 7 4",
+            "ply": 4,
+            "recons_move": "d5d4"
+          },
+          "thoughts": "Chose d5d4"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 4: a4a5",
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/8/8/k7/3R4/8/8/8 w - - 8 5",
+            "ply": 4,
+            "opponents_move": "a4a5"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 5: d4d5",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/8/8/k2R4/8/8/8/8 b - - 9 5",
+            "ply": 5,
+            "recons_move": "d4d5"
+          },
+          "thoughts": "Chose d4d5"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 5: a5a4",
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/8/8/3R4/k7/8/8/8 w - - 10 6",
+            "ply": 5,
+            "opponents_move": "a5a4"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 6: d5d4",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/8/8/8/k2R4/8/8/8 b - - 11 6",
+            "ply": 6,
+            "recons_move": "d5d4"
+          },
+          "thoughts": "Chose d5d4"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 6: a4a3",
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/8/8/8/3R4/k7/8/8 w - - 12 7",
+            "ply": 6,
+            "opponents_move": "a4a3"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 7: d4d3",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/8/8/8/8/k2R4/8/8 b - - 13 7",
+            "ply": 7,
+            "recons_move": "d4d3"
+          },
+          "thoughts": "Chose d4d3"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 7: a3b4",
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/8/8/8/1k6/3R4/8/8 w - - 14 8",
+            "ply": 7,
+            "opponents_move": "a3b4"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 8: d3d4",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/8/8/8/1k1R4/8/8/8 b - - 15 8",
+            "ply": 8,
+            "recons_move": "d3d4"
+          },
+          "thoughts": "Chose d3d4"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 8: b4c5",
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/8/8/2k5/3R4/8/8/8 w - - 16 9",
+            "ply": 8,
+            "opponents_move": "b4c5"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 9: d4d8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "3R2K1/8/8/2k5/8/8/8/8 b - - 17 9",
+            "ply": 9,
+            "recons_move": "d4d8"
+          },
+          "thoughts": "Chose d4d8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 9: c5c4",
+          "new_requests": [],
+          "env": {
+            "fen": "3R2K1/8/8/8/2k5/8/8/8 w - - 18 10",
+            "ply": 9,
+            "opponents_move": "c5c4"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 10: d8c8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "2R3K1/8/8/8/2k5/8/8/8 b - - 19 10",
+            "ply": 10,
+            "recons_move": "d8c8"
+          },
+          "thoughts": "Chose d8c8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 10: c4d4",
+          "new_requests": [],
+          "env": {
+            "fen": "2R3K1/8/8/8/3k4/8/8/8 w - - 20 11",
+            "ply": 10,
+            "opponents_move": "c4d4"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 11: c8d8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "3R2K1/8/8/8/3k4/8/8/8 b - - 21 11",
+            "ply": 11,
+            "recons_move": "c8d8"
+          },
+          "thoughts": "Chose c8d8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 11: d4c5",
+          "new_requests": [],
+          "env": {
+            "fen": "3R2K1/8/8/2k5/8/8/8/8 w - - 22 12",
+            "ply": 11,
+            "opponents_move": "d4c5"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 12: d8c8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "2R3K1/8/8/2k5/8/8/8/8 b - - 23 12",
+            "ply": 12,
+            "recons_move": "d8c8"
+          },
+          "thoughts": "Chose d8c8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 12: c5b6",
+          "new_requests": [],
+          "env": {
+            "fen": "2R3K1/8/1k6/8/8/8/8/8 w - - 24 13",
+            "ply": 12,
+            "opponents_move": "c5b6"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 13: c8b8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "1R4K1/8/1k6/8/8/8/8/8 b - - 25 13",
+            "ply": 13,
+            "recons_move": "c8b8"
+          },
+          "thoughts": "Chose c8b8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 13: b6a5",
+          "new_requests": [],
+          "env": {
+            "fen": "1R4K1/8/8/k7/8/8/8/8 w - - 26 14",
+            "ply": 13,
+            "opponents_move": "b6a5"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 14: b8a8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "R5K1/8/8/k7/8/8/8/8 b - - 27 14",
+            "ply": 14,
+            "recons_move": "b8a8"
+          },
+          "thoughts": "Chose b8a8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 14: a5b5",
+          "new_requests": [],
+          "env": {
+            "fen": "R5K1/8/8/1k6/8/8/8/8 w - - 28 15",
+            "ply": 14,
+            "opponents_move": "a5b5"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 15: a8b8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "1R4K1/8/8/1k6/8/8/8/8 b - - 29 15",
+            "ply": 15,
+            "recons_move": "a8b8"
+          },
+          "thoughts": "Chose a8b8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 15: b5a4",
+          "new_requests": [],
+          "env": {
+            "fen": "1R4K1/8/8/8/k7/8/8/8 w - - 30 16",
+            "ply": 15,
+            "opponents_move": "b5a4"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 16: b8a8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "R5K1/8/8/8/k7/8/8/8 b - - 31 16",
+            "ply": 16,
+            "recons_move": "b8a8"
+          },
+          "thoughts": "Chose b8a8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 16: a4b5",
+          "new_requests": [],
+          "env": {
+            "fen": "R5K1/8/8/1k6/8/8/8/8 w - - 32 17",
+            "ply": 16,
+            "opponents_move": "a4b5"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 17: a8b8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "1R4K1/8/8/1k6/8/8/8/8 b - - 33 17",
+            "ply": 17,
+            "recons_move": "a8b8"
+          },
+          "thoughts": "Chose a8b8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 17: b5a5",
+          "new_requests": [],
+          "env": {
+            "fen": "1R4K1/8/8/k7/8/8/8/8 w - - 34 18",
+            "ply": 17,
+            "opponents_move": "b5a5"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 18: b8a8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "R5K1/8/8/k7/8/8/8/8 b - - 35 18",
+            "ply": 18,
+            "recons_move": "b8a8"
+          },
+          "thoughts": "Chose b8a8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 18: a5b6",
+          "new_requests": [],
+          "env": {
+            "fen": "R5K1/8/1k6/8/8/8/8/8 w - - 36 19",
+            "ply": 18,
+            "opponents_move": "a5b6"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 19: a8b8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "1R4K1/8/1k6/8/8/8/8/8 b - - 37 19",
+            "ply": 19,
+            "recons_move": "a8b8"
+          },
+          "thoughts": "Chose a8b8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 19: b6c7",
+          "new_requests": [],
+          "env": {
+            "fen": "1R4K1/2k5/8/8/8/8/8/8 w - - 38 20",
+            "ply": 19,
+            "opponents_move": "b6c7"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 20: b8f8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "5RK1/2k5/8/8/8/8/8/8 b - - 39 20",
+            "ply": 20,
+            "recons_move": "b8f8"
+          },
+          "thoughts": "Chose b8f8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 20: c7d7",
+          "new_requests": [],
+          "env": {
+            "fen": "5RK1/3k4/8/8/8/8/8/8 w - - 40 21",
+            "ply": 20,
+            "opponents_move": "c7d7"
+          },
+          "thoughts": "Random defense"
+        }
+      ]
+    },
+    {
+      "initial_fen": "1k3K2/7R/8/8/8/8/8/8 w - - 0 1",
+      "final_fen": "1k3K2/7R/8/8/8/8/8/8 w - - 40 21",
+      "moves": [
+        "c5d5",
+        "d3c2",
+        "d5c5",
+        "c2b1",
+        "c5b5",
+        "b1c2",
+        "b5c5",
+        "c2b2",
+        "c5b5",
+        "b2a1",
+        "b5a5",
+        "a1b2",
+        "a5b5",
+        "b2a1",
+        "b5a5",
+        "a1b2",
+        "a5b5",
+        "b2a1",
+        "b5a5",
+        "a1b2",
+        "a5b5",
+        "b2a3",
+        "b5a5",
+        "a3b4",
+        "a5a8",
+        "b4c5",
+        "a8c8",
+        "c5b6",
+        "c8b8",
+        "b6c6",
+        "b8c8",
+        "c6b7",
+        "c8h8",
+        "b7c7",
+        "h7g8",
+        "c7b8",
+        "g8f8",
+        "b8b7",
+        "h8h7",
+        "b7b8"
+      ],
+      "plies": 20,
+      "stalls": 0,
+      "rook_lost": false,
+      "outcome": {
+        "checkmate": false,
+        "stalemate": false,
+        "insufficient_material": false,
+        "fifty_moves": false,
+        "threefold_repetition": false
+      },
+      "logs": [
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 1: c5d5",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "8/7K/8/3R4/8/3k4/8/8 b - - 1 1",
+            "ply": 1,
+            "recons_move": "c5d5"
+          },
+          "thoughts": "Chose c5d5"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 1: d3c2",
+          "new_requests": [],
+          "env": {
+            "fen": "8/7K/8/3R4/8/8/2k5/8 w - - 2 2",
+            "ply": 1,
+            "opponents_move": "d3c2"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 2: d5c5",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "8/7K/8/2R5/8/8/2k5/8 b - - 3 2",
+            "ply": 2,
+            "recons_move": "d5c5"
+          },
+          "thoughts": "Chose d5c5"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 2: c2b1",
+          "new_requests": [],
+          "env": {
+            "fen": "8/7K/8/2R5/8/8/8/1k6 w - - 4 3",
+            "ply": 2,
+            "opponents_move": "c2b1"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 3: c5b5",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "8/7K/8/1R6/8/8/8/1k6 b - - 5 3",
+            "ply": 3,
+            "recons_move": "c5b5"
+          },
+          "thoughts": "Chose c5b5"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 3: b1c2",
+          "new_requests": [],
+          "env": {
+            "fen": "8/7K/8/1R6/8/8/2k5/8 w - - 6 4",
+            "ply": 3,
+            "opponents_move": "b1c2"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 4: b5c5",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "8/7K/8/2R5/8/8/2k5/8 b - - 7 4",
+            "ply": 4,
+            "recons_move": "b5c5"
+          },
+          "thoughts": "Chose b5c5"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 4: c2b2",
+          "new_requests": [],
+          "env": {
+            "fen": "8/7K/8/2R5/8/8/1k6/8 w - - 8 5",
+            "ply": 4,
+            "opponents_move": "c2b2"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 5: c5b5",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "8/7K/8/1R6/8/8/1k6/8 b - - 9 5",
+            "ply": 5,
+            "recons_move": "c5b5"
+          },
+          "thoughts": "Chose c5b5"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 5: b2a1",
+          "new_requests": [],
+          "env": {
+            "fen": "8/7K/8/1R6/8/8/8/k7 w - - 10 6",
+            "ply": 5,
+            "opponents_move": "b2a1"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 6: b5a5",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "8/7K/8/R7/8/8/8/k7 b - - 11 6",
+            "ply": 6,
+            "recons_move": "b5a5"
+          },
+          "thoughts": "Chose b5a5"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 6: a1b2",
+          "new_requests": [],
+          "env": {
+            "fen": "8/7K/8/R7/8/8/1k6/8 w - - 12 7",
+            "ply": 6,
+            "opponents_move": "a1b2"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 7: a5b5",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "8/7K/8/1R6/8/8/1k6/8 b - - 13 7",
+            "ply": 7,
+            "recons_move": "a5b5"
+          },
+          "thoughts": "Chose a5b5"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 7: b2a1",
+          "new_requests": [],
+          "env": {
+            "fen": "8/7K/8/1R6/8/8/8/k7 w - - 14 8",
+            "ply": 7,
+            "opponents_move": "b2a1"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 8: b5a5",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "8/7K/8/R7/8/8/8/k7 b - - 15 8",
+            "ply": 8,
+            "recons_move": "b5a5"
+          },
+          "thoughts": "Chose b5a5"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 8: a1b2",
+          "new_requests": [],
+          "env": {
+            "fen": "8/7K/8/R7/8/8/1k6/8 w - - 16 9",
+            "ply": 8,
+            "opponents_move": "a1b2"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 9: a5b5",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "8/7K/8/1R6/8/8/1k6/8 b - - 17 9",
+            "ply": 9,
+            "recons_move": "a5b5"
+          },
+          "thoughts": "Chose a5b5"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 9: b2a1",
+          "new_requests": [],
+          "env": {
+            "fen": "8/7K/8/1R6/8/8/8/k7 w - - 18 10",
+            "ply": 9,
+            "opponents_move": "b2a1"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 10: b5a5",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "8/7K/8/R7/8/8/8/k7 b - - 19 10",
+            "ply": 10,
+            "recons_move": "b5a5"
+          },
+          "thoughts": "Chose b5a5"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 10: a1b2",
+          "new_requests": [],
+          "env": {
+            "fen": "8/7K/8/R7/8/8/1k6/8 w - - 20 11",
+            "ply": 10,
+            "opponents_move": "a1b2"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 11: a5b5",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "8/7K/8/1R6/8/8/1k6/8 b - - 21 11",
+            "ply": 11,
+            "recons_move": "a5b5"
+          },
+          "thoughts": "Chose a5b5"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 11: b2a3",
+          "new_requests": [],
+          "env": {
+            "fen": "8/7K/8/1R6/8/k7/8/8 w - - 22 12",
+            "ply": 11,
+            "opponents_move": "b2a3"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 12: b5a5",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "8/7K/8/R7/8/k7/8/8 b - - 23 12",
+            "ply": 12,
+            "recons_move": "b5a5"
+          },
+          "thoughts": "Chose b5a5"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 12: a3b4",
+          "new_requests": [],
+          "env": {
+            "fen": "8/7K/8/R7/1k6/8/8/8 w - - 24 13",
+            "ply": 12,
+            "opponents_move": "a3b4"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 13: a5a8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "R7/7K/8/8/1k6/8/8/8 b - - 25 13",
+            "ply": 13,
+            "recons_move": "a5a8"
+          },
+          "thoughts": "Chose a5a8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 13: b4c5",
+          "new_requests": [],
+          "env": {
+            "fen": "R7/7K/8/2k5/8/8/8/8 w - - 26 14",
+            "ply": 13,
+            "opponents_move": "b4c5"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 14: a8c8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "2R5/7K/8/2k5/8/8/8/8 b - - 27 14",
+            "ply": 14,
+            "recons_move": "a8c8"
+          },
+          "thoughts": "Chose a8c8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 14: c5b6",
+          "new_requests": [],
+          "env": {
+            "fen": "2R5/7K/1k6/8/8/8/8/8 w - - 28 15",
+            "ply": 14,
+            "opponents_move": "c5b6"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 15: c8b8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "1R6/7K/1k6/8/8/8/8/8 b - - 29 15",
+            "ply": 15,
+            "recons_move": "c8b8"
+          },
+          "thoughts": "Chose c8b8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 15: b6c6",
+          "new_requests": [],
+          "env": {
+            "fen": "1R6/7K/2k5/8/8/8/8/8 w - - 30 16",
+            "ply": 15,
+            "opponents_move": "b6c6"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 16: b8c8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "2R5/7K/2k5/8/8/8/8/8 b - - 31 16",
+            "ply": 16,
+            "recons_move": "b8c8"
+          },
+          "thoughts": "Chose b8c8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 16: c6b7",
+          "new_requests": [],
+          "env": {
+            "fen": "2R5/1k5K/8/8/8/8/8/8 w - - 32 17",
+            "ply": 16,
+            "opponents_move": "c6b7"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 17: c8h8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "7R/1k5K/8/8/8/8/8/8 b - - 33 17",
+            "ply": 17,
+            "recons_move": "c8h8"
+          },
+          "thoughts": "Chose c8h8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 17: b7c7",
+          "new_requests": [],
+          "env": {
+            "fen": "7R/2k4K/8/8/8/8/8/8 w - - 34 18",
+            "ply": 17,
+            "opponents_move": "b7c7"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 18: h7g8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "6KR/2k5/8/8/8/8/8/8 b - - 35 18",
+            "ply": 18,
+            "recons_move": "h7g8"
+          },
+          "thoughts": "Chose h7g8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 18: c7b8",
+          "new_requests": [],
+          "env": {
+            "fen": "1k4KR/8/8/8/8/8/8/8 w - - 36 19",
+            "ply": 18,
+            "opponents_move": "c7b8"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 19: g8f8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "1k3K1R/8/8/8/8/8/8/8 b - - 37 19",
+            "ply": 19,
+            "recons_move": "g8f8"
+          },
+          "thoughts": "Chose g8f8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 19: b8b7",
+          "new_requests": [],
+          "env": {
+            "fen": "5K1R/1k6/8/8/8/8/8/8 w - - 38 20",
+            "ply": 19,
+            "opponents_move": "b8b7"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 20: h8h7",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "5K2/1k5R/8/8/8/8/8/8 b - - 39 20",
+            "ply": 20,
+            "recons_move": "h8h7"
+          },
+          "thoughts": "Chose h8h7"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 20: b7b8",
+          "new_requests": [],
+          "env": {
+            "fen": "1k3K2/7R/8/8/8/8/8/8 w - - 40 21",
+            "ply": 20,
+            "opponents_move": "b7b8"
+          },
+          "thoughts": "Random defense"
+        }
+      ]
+    },
+    {
+      "initial_fen": "5R2/7K/8/8/6k1/8/8/8 w - - 0 1",
+      "final_fen": "5R2/7K/8/8/6k1/8/8/8 w - - 40 21",
+      "moves": [
+        "h7c7",
+        "c3d3",
+        "c7d7",
+        "d3c4",
+        "d7c7",
+        "c4b4",
+        "c7b7",
+        "b4c3",
+        "b7c7",
+        "c3b4",
+        "c7b7",
+        "b4a4",
+        "b7a7",
+        "a4b4",
+        "a7b7",
+        "b4a5",
+        "b7a7",
+        "a5b6",
+        "a7a8",
+        "b6b7",
+        "a8f8",
+        "b7a6",
+        "f8a8",
+        "a6b7",
+        "a8f8",
+        "b7c6",
+        "f8c8",
+        "c6b5",
+        "c8b8",
+        "b5c6",
+        "b8c8",
+        "c6d6",
+        "c8d8",
+        "d6e6",
+        "d8e8",
+        "e6f6",
+        "e8f8",
+        "f6g5",
+        "g8h7",
+        "g5g4"
+      ],
+      "plies": 20,
+      "stalls": 0,
+      "rook_lost": false,
+      "outcome": {
+        "checkmate": false,
+        "stalemate": false,
+        "insufficient_material": false,
+        "fifty_moves": false,
+        "threefold_repetition": false
+      },
+      "logs": [
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 1: h7c7",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/2R5/8/8/8/2k5/8/8 b - - 1 1",
+            "ply": 1,
+            "recons_move": "h7c7"
+          },
+          "thoughts": "Chose h7c7"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 1: c3d3",
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/2R5/8/8/8/3k4/8/8 w - - 2 2",
+            "ply": 1,
+            "opponents_move": "c3d3"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 2: c7d7",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/3R4/8/8/8/3k4/8/8 b - - 3 2",
+            "ply": 2,
+            "recons_move": "c7d7"
+          },
+          "thoughts": "Chose c7d7"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 2: d3c4",
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/3R4/8/8/2k5/8/8/8 w - - 4 3",
+            "ply": 2,
+            "opponents_move": "d3c4"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 3: d7c7",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/2R5/8/8/2k5/8/8/8 b - - 5 3",
+            "ply": 3,
+            "recons_move": "d7c7"
+          },
+          "thoughts": "Chose d7c7"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 3: c4b4",
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/2R5/8/8/1k6/8/8/8 w - - 6 4",
+            "ply": 3,
+            "opponents_move": "c4b4"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 4: c7b7",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/1R6/8/8/1k6/8/8/8 b - - 7 4",
+            "ply": 4,
+            "recons_move": "c7b7"
+          },
+          "thoughts": "Chose c7b7"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 4: b4c3",
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/1R6/8/8/8/2k5/8/8 w - - 8 5",
+            "ply": 4,
+            "opponents_move": "b4c3"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 5: b7c7",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/2R5/8/8/8/2k5/8/8 b - - 9 5",
+            "ply": 5,
+            "recons_move": "b7c7"
+          },
+          "thoughts": "Chose b7c7"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 5: c3b4",
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/2R5/8/8/1k6/8/8/8 w - - 10 6",
+            "ply": 5,
+            "opponents_move": "c3b4"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 6: c7b7",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/1R6/8/8/1k6/8/8/8 b - - 11 6",
+            "ply": 6,
+            "recons_move": "c7b7"
+          },
+          "thoughts": "Chose c7b7"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 6: b4a4",
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/1R6/8/8/k7/8/8/8 w - - 12 7",
+            "ply": 6,
+            "opponents_move": "b4a4"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 7: b7a7",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/R7/8/8/k7/8/8/8 b - - 13 7",
+            "ply": 7,
+            "recons_move": "b7a7"
+          },
+          "thoughts": "Chose b7a7"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 7: a4b4",
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/R7/8/8/1k6/8/8/8 w - - 14 8",
+            "ply": 7,
+            "opponents_move": "a4b4"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 8: a7b7",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/1R6/8/8/1k6/8/8/8 b - - 15 8",
+            "ply": 8,
+            "recons_move": "a7b7"
+          },
+          "thoughts": "Chose a7b7"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 8: b4a5",
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/1R6/8/k7/8/8/8/8 w - - 16 9",
+            "ply": 8,
+            "opponents_move": "b4a5"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 9: b7a7",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/R7/8/k7/8/8/8/8 b - - 17 9",
+            "ply": 9,
+            "recons_move": "b7a7"
+          },
+          "thoughts": "Chose b7a7"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 9: a5b6",
+          "new_requests": [],
+          "env": {
+            "fen": "6K1/R7/1k6/8/8/8/8/8 w - - 18 10",
+            "ply": 9,
+            "opponents_move": "a5b6"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 10: a7a8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "R5K1/8/1k6/8/8/8/8/8 b - - 19 10",
+            "ply": 10,
+            "recons_move": "a7a8"
+          },
+          "thoughts": "Chose a7a8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 10: b6b7",
+          "new_requests": [],
+          "env": {
+            "fen": "R5K1/1k6/8/8/8/8/8/8 w - - 20 11",
+            "ply": 10,
+            "opponents_move": "b6b7"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 11: a8f8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "5RK1/1k6/8/8/8/8/8/8 b - - 21 11",
+            "ply": 11,
+            "recons_move": "a8f8"
+          },
+          "thoughts": "Chose a8f8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 11: b7a6",
+          "new_requests": [],
+          "env": {
+            "fen": "5RK1/8/k7/8/8/8/8/8 w - - 22 12",
+            "ply": 11,
+            "opponents_move": "b7a6"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 12: f8a8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "R5K1/8/k7/8/8/8/8/8 b - - 23 12",
+            "ply": 12,
+            "recons_move": "f8a8"
+          },
+          "thoughts": "Chose f8a8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 12: a6b7",
+          "new_requests": [],
+          "env": {
+            "fen": "R5K1/1k6/8/8/8/8/8/8 w - - 24 13",
+            "ply": 12,
+            "opponents_move": "a6b7"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 13: a8f8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "5RK1/1k6/8/8/8/8/8/8 b - - 25 13",
+            "ply": 13,
+            "recons_move": "a8f8"
+          },
+          "thoughts": "Chose a8f8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 13: b7c6",
+          "new_requests": [],
+          "env": {
+            "fen": "5RK1/8/2k5/8/8/8/8/8 w - - 26 14",
+            "ply": 13,
+            "opponents_move": "b7c6"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 14: f8c8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "2R3K1/8/2k5/8/8/8/8/8 b - - 27 14",
+            "ply": 14,
+            "recons_move": "f8c8"
+          },
+          "thoughts": "Chose f8c8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 14: c6b5",
+          "new_requests": [],
+          "env": {
+            "fen": "2R3K1/8/8/1k6/8/8/8/8 w - - 28 15",
+            "ply": 14,
+            "opponents_move": "c6b5"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 15: c8b8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "1R4K1/8/8/1k6/8/8/8/8 b - - 29 15",
+            "ply": 15,
+            "recons_move": "c8b8"
+          },
+          "thoughts": "Chose c8b8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 15: b5c6",
+          "new_requests": [],
+          "env": {
+            "fen": "1R4K1/8/2k5/8/8/8/8/8 w - - 30 16",
+            "ply": 15,
+            "opponents_move": "b5c6"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 16: b8c8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "2R3K1/8/2k5/8/8/8/8/8 b - - 31 16",
+            "ply": 16,
+            "recons_move": "b8c8"
+          },
+          "thoughts": "Chose b8c8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 16: c6d6",
+          "new_requests": [],
+          "env": {
+            "fen": "2R3K1/8/3k4/8/8/8/8/8 w - - 32 17",
+            "ply": 16,
+            "opponents_move": "c6d6"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 17: c8d8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "3R2K1/8/3k4/8/8/8/8/8 b - - 33 17",
+            "ply": 17,
+            "recons_move": "c8d8"
+          },
+          "thoughts": "Chose c8d8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 17: d6e6",
+          "new_requests": [],
+          "env": {
+            "fen": "3R2K1/8/4k3/8/8/8/8/8 w - - 34 18",
+            "ply": 17,
+            "opponents_move": "d6e6"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 18: d8e8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "4R1K1/8/4k3/8/8/8/8/8 b - - 35 18",
+            "ply": 18,
+            "recons_move": "d8e8"
+          },
+          "thoughts": "Chose d8e8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 18: e6f6",
+          "new_requests": [],
+          "env": {
+            "fen": "4R1K1/8/5k2/8/8/8/8/8 w - - 36 19",
+            "ply": 18,
+            "opponents_move": "e6f6"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 19: e8f8",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "5RK1/8/5k2/8/8/8/8/8 b - - 37 19",
+            "ply": 19,
+            "recons_move": "e8f8"
+          },
+          "thoughts": "Chose e8f8"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 19: f6g5",
+          "new_requests": [],
+          "env": {
+            "fen": "5RK1/8/8/6k1/8/8/8/8 w - - 38 20",
+            "ply": 19,
+            "opponents_move": "f6g5"
+          },
+          "thoughts": "Random defense"
+        },
+        {
+          "type": "snapshot",
+          "note": "ReCoN move 20: g8h7",
+          "tick": 4,
+          "nodes": {
+            "king_at_edge": "INACTIVE",
+            "box_can_shrink": "INACTIVE",
+            "can_take_opposition": "INACTIVE",
+            "can_deliver_mate": "FAILED",
+            "is_stalemate": "INACTIVE",
+            "phase1_drive_to_edge": "WAITING",
+            "phase2_shrink_box": "WAITING",
+            "phase3_take_opposition": "WAITING",
+            "phase4_deliver_mate": "WAITING",
+            "krk_root": "WAITING",
+            "king_drive_moves": "TRUE",
+            "box_shrink_moves": "TRUE",
+            "opposition_moves": "TRUE",
+            "mate_moves": "TRUE",
+            "random_legal_moves": "INACTIVE"
+          },
+          "new_requests": [],
+          "env": {
+            "fen": "5R2/7K/8/6k1/8/8/8/8 b - - 39 20",
+            "ply": 20,
+            "recons_move": "g8h7"
+          },
+          "thoughts": "Chose g8h7"
+        },
+        {
+          "type": "snapshot",
+          "note": "Opponent move 20: g5g4",
+          "new_requests": [],
+          "env": {
+            "fen": "5R2/7K/8/8/6k1/8/8/8 w - - 40 21",
+            "ply": 20,
+            "opponents_move": "g5g4"
+          },
+          "thoughts": "Random defense"
+        }
+      ]
+    }
+  ]
+}
