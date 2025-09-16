@@ -6,7 +6,7 @@ Chess domain module for ReCoN networks (KRK endgame).
 from .krk_nodes import (
     # Terminal evaluators
     KingAtEdgeDetector, BoxShrinkEvaluator, OppositionEvaluator,
-    MateDeliverEvaluator, StalemateDetector,
+    MateDeliverEvaluator, StalemateDetector, WaitForBoardChange,
 
     # Move generators (actuators)
     Phase0ChooseMoves, KingDriveMoves, BoxShrinkMoves, OppositionMoves, MateMoves, RandomLegalMoves,
@@ -18,7 +18,7 @@ from .krk_nodes import (
     # Factories (evaluators)
     create_king_edge_detector, create_box_shrink_evaluator,
     create_opposition_evaluator, create_mate_deliver_evaluator,
-    create_stalemate_detector,
+    create_stalemate_detector, create_wait_for_board_change,
 
     # Factories (actuators)
     create_phase0_choose_moves, create_king_drive_moves, create_box_shrink_moves,
@@ -39,7 +39,7 @@ from . import actuators
 __all__ = [
     # Terminal evaluators
     "KingAtEdgeDetector", "BoxShrinkEvaluator", "OppositionEvaluator",
-    "MateDeliverEvaluator", "StalemateDetector",
+    "MateDeliverEvaluator", "StalemateDetector", "WaitForBoardChange",
 
     # Move generators (actuators)
     "Phase0ChooseMoves", "KingDriveMoves", "BoxShrinkMoves", "OppositionMoves", "MateMoves", "RandomLegalMoves",
@@ -51,7 +51,7 @@ __all__ = [
     # Factories
     "create_king_edge_detector", "create_box_shrink_evaluator",
     "create_opposition_evaluator", "create_mate_deliver_evaluator",
-    "create_stalemate_detector",
+    "create_stalemate_detector", "create_wait_for_board_change",
     "create_phase0_choose_moves", "create_king_drive_moves", "create_box_shrink_moves",
     "create_opposition_moves", "create_mate_moves", "create_random_legal_moves",
     "create_phase0_establish_cut", "create_phase1_drive_to_edge", "create_phase2_shrink_box",

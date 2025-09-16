@@ -307,6 +307,10 @@
                         <span class="state-failed">Failed</span>
                     </div>
                 </div>
+                <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
+                    <input type="file" id="file-input" accept="application/json" />
+                    <button class="control-btn" id="load-file-btn">Load JSON</button>
+                </div>
                 <canvas id="network-canvas" style="flex: 1; border-radius: 8px; background: #f8f9fa;"></canvas>
             </div>
 
@@ -315,13 +319,13 @@
                 <div class="phase-title"><i class="fas fa-layer-group"></i> KRK Checkmate Phases</div>
                 <div class="phases-grid" id="phases-grid">
                     <div class="phase-item state-inactive" data-phase="krk_root">ROOT: KRK Checkmate</div>
-                    <div class="phase-item state-inactive" data-phase="phase1_drive_edge">PHASE1: Drive to Edge</div>
+                    <div class="phase-item state-inactive" data-phase="phase1_drive_to_edge">PHASE1: Drive to Edge</div>
                     <div class="phase-item state-inactive" data-phase="phase2_shrink_box">PHASE2: Shrink Box</div>
                     <div class="phase-item state-inactive" data-phase="phase3_take_opposition">PHASE3: Take Opposition</div>
                     <div class="phase-item state-inactive" data-phase="phase4_deliver_mate">PHASE4: Deliver Mate</div>
-                    <div class="phase-item state-inactive" data-phase="king_at_edge_detector">King at Edge?</div>
-                    <div class="phase-item state-inactive" data-phase="box_shrink_evaluator">Box Shrink Possible?</div>
-                    <div class="phase-item state-inactive" data-phase="opposition_evaluator">Has Opposition?</div>
+                    <div class="phase-item state-inactive" data-phase="king_at_edge">King at Edge?</div>
+                    <div class="phase-item state-inactive" data-phase="box_can_shrink">Box Shrink Possible?</div>
+                    <div class="phase-item state-inactive" data-phase="can_take_opposition">Has Opposition?</div>
                 </div>
             </div>
         </div>
@@ -348,43 +352,103 @@
         let isPlaying = false;
         let playInterval = null;
         let chessBoard = null;
+        let externalEdges = null; // from JSON graph.edges if provided
+        let lastNodesState = {};  // for transition detection
+        let transitionSet = new Set(); // nodes that changed state this frame
 
         // Node positions for network visualization (simplified)
         const nodePositions = {
-            'krk_root': { x: 400, y: 100 },
-            'phase1_drive_edge': { x: 200, y: 200 },
-            'phase2_shrink_box': { x: 600, y: 200 },
-            'phase3_take_opposition': { x: 300, y: 300 },
-            'phase4_deliver_mate': { x: 500, y: 300 },
-            'king_at_edge_detector': { x: 150, y: 400 },
-            'box_shrink_evaluator': { x: 350, y: 400 },
-            'opposition_evaluator': { x: 250, y: 500 },
-            'mate_deliver_evaluator': { x: 450, y: 500 },
-            'stalemate_detector': { x: 550, y: 500 }
+            // Root and gating
+            'krk_root': { x: 400, y: 80 },
+            'wait_for_board_change': { x: 400, y: 140 },
+
+            // Phases (scripts)
+            'phase0_establish_cut': { x: 200, y: 200 },
+            'phase1_drive_to_edge': { x: 600, y: 200 },
+            'phase2_shrink_box': { x: 200, y: 300 },
+            'phase3_take_opposition': { x: 400, y: 300 },
+            'phase4_deliver_mate': { x: 600, y: 300 },
+
+            // Move generators (actuators)
+            'choose_phase0': { x: 200, y: 260 },
+            'king_drive_moves': { x: 600, y: 260 },
+            'box_shrink_moves': { x: 200, y: 360 },
+            'opposition_moves': { x: 400, y: 360 },
+            'mate_moves': { x: 600, y: 360 },
+            'random_legal_moves': { x: 400, y: 420 },
+
+            // Evaluators/sensors
+            'king_at_edge': { x: 100, y: 440 },
+            'box_can_shrink': { x: 300, y: 440 },
+            'can_take_opposition': { x: 500, y: 440 },
+            'can_deliver_mate': { x: 700, y: 440 },
+            'is_stalemate': { x: 700, y: 500 }
         };
 
         // Edges between nodes
         const edges = [
-            ['krk_root', 'phase1_drive_edge'],
+            // Root and gating
+            ['krk_root', 'wait_for_board_change'],
+            ['wait_for_board_change', 'phase0_establish_cut'],
+            ['wait_for_board_change', 'phase1_drive_to_edge'],
+
+            // Root subs
             ['krk_root', 'phase2_shrink_box'],
             ['krk_root', 'phase3_take_opposition'],
             ['krk_root', 'phase4_deliver_mate'],
-            ['phase1_drive_edge', 'king_at_edge_detector'],
-            ['phase2_shrink_box', 'box_shrink_evaluator'],
-            ['phase3_take_opposition', 'opposition_evaluator'],
-            ['phase4_deliver_mate', 'mate_deliver_evaluator'],
-            ['phase4_deliver_mate', 'stalemate_detector']
+
+            // Phase internals
+            ['phase0_establish_cut', 'choose_phase0'],
+            ['phase1_drive_to_edge', 'king_drive_moves'],
+            ['phase2_shrink_box', 'box_shrink_moves'],
+            ['phase3_take_opposition', 'opposition_moves'],
+            ['phase4_deliver_mate', 'mate_moves'],
+
+            // Evaluators
+            ['phase1_drive_to_edge', 'king_at_edge'],
+            ['phase2_shrink_box', 'box_can_shrink'],
+            ['phase3_take_opposition', 'can_take_opposition'],
+            ['phase4_deliver_mate', 'can_deliver_mate'],
+            ['phase4_deliver_mate', 'is_stalemate']
         ];
 
         // State colors
         const stateColors = {
-            'INACTIVE': '#6c757d',
-            'REQUESTED': '#0066cc',
-            'WAITING': '#856404',
-            'TRUE': '#155724',
-            'CONFIRMED': '#0c5460',
-            'FAILED': '#721c24'
+            'INACTIVE': '#cfd8dc',
+            'REQUESTED': '#64b5f6',
+            'WAITING': '#ffd54f',
+            'TRUE': '#81c784',
+            'CONFIRMED': '#4dd0e1',
+            'FAILED': '#e57373'
         };
+        const stateBorderColors = {
+            'INACTIVE': '#90a4ae',
+            'REQUESTED': '#1e88e5',
+            'WAITING': '#f9a825',
+            'TRUE': '#2e7d32',
+            'CONFIRMED': '#00838f',
+            'FAILED': '#b71c1c'
+        };
+
+        function hexToRgb(hex) {
+            const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return m ? {
+                r: parseInt(m[1], 16),
+                g: parseInt(m[2], 16),
+                b: parseInt(m[3], 16)
+            } : { r: 255, g: 255, b: 255 };
+        }
+        function luminance(hex) {
+            const { r, g, b } = hexToRgb(hex);
+            const a = [r, g, b].map(v => {
+                v /= 255;
+                return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+            });
+            return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
+        }
+        function textColorFor(bgHex) {
+            return luminance(bgHex) > 0.55 ? '#1f2937' : '#ffffff';
+        }
 
         // Initialize the application
         async function init() {
@@ -420,6 +484,11 @@
                 }
                 visualizationData = await response.json();
                 console.log('Loaded visualization data:', visualizationData);
+
+                // Read graph edges if present on first frame
+                if (visualizationData.length > 0 && visualizationData[0].graph && visualizationData[0].graph.edges) {
+                    externalEdges = visualizationData[0].graph.edges;
+                }
 
                 // Detect data type and update header
                 detectDataType(visualizationData);
@@ -471,7 +540,7 @@
 
             // Check if it's evaluation data (has ReCoN node states)
             const hasReconNodes = data.some(frame =>
-                frame.nodes && (frame.nodes.krk_root || frame.nodes.phase1_drive_edge)
+                frame.nodes && (frame.nodes.krk_root || frame.nodes.phase1_drive_to_edge)
             );
 
             if (hasGameMoves && hasReconNodes) {
@@ -498,15 +567,15 @@
                     note: "Initial state",
                     nodes: {
                         "krk_root": "INACTIVE",
-                        "phase1_drive_edge": "INACTIVE",
+                        "phase1_drive_to_edge": "INACTIVE",
                         "phase2_shrink_box": "INACTIVE",
                         "phase3_take_opposition": "INACTIVE",
                         "phase4_deliver_mate": "INACTIVE",
-                        "king_at_edge_detector": "INACTIVE",
-                        "box_shrink_evaluator": "INACTIVE",
-                        "opposition_evaluator": "INACTIVE",
-                        "mate_deliver_evaluator": "INACTIVE",
-                        "stalemate_detector": "INACTIVE"
+                        "king_at_edge": "INACTIVE",
+                        "box_can_shrink": "INACTIVE",
+                        "can_take_opposition": "INACTIVE",
+                        "can_deliver_mate": "INACTIVE",
+                        "is_stalemate": "INACTIVE"
                     },
                     env: {
                         "initial_fen": "4k3/8/8/8/8/8/8/R3K3 w - - 0 1",
@@ -522,10 +591,10 @@
                     note: "Step 1",
                     nodes: {
                         "krk_root": "REQUESTED",
-                        "phase1_drive_edge": "REQUESTED",
+                        "phase1_drive_to_edge": "REQUESTED",
                         "phase2_shrink_box": "REQUESTED",
-                        "king_at_edge_detector": "REQUESTED",
-                        "box_shrink_evaluator": "REQUESTED"
+                        "king_at_edge": "REQUESTED",
+                        "box_can_shrink": "REQUESTED"
                     },
                     env: {
                         "initial_fen": "4k3/8/8/8/8/8/8/R3K3 w - - 0 1",
@@ -535,7 +604,7 @@
                         "evaluation_tick": 5
                     },
                     thoughts: "Evaluating KRK position...",
-                    new_requests: ["phase1_drive_edge", "phase2_shrink_box"]
+                    new_requests: ["phase1_drive_to_edge", "phase2_shrink_box"]
                 },
                 {
                     type: "snapshot",
@@ -543,7 +612,7 @@
                     note: "ReCoN move 1: a1a2",
                     nodes: {
                         "krk_root": "CONFIRMED",
-                        "phase1_drive_edge": "CONFIRMED",
+                        "phase1_drive_to_edge": "CONFIRMED",
                         "king_drive_moves": "TRUE"
                     },
                     env: {
@@ -657,36 +726,74 @@
             // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Draw edges
-            ctx.strokeStyle = '#ddd';
-            ctx.lineWidth = 2;
-            edges.forEach(([from, to]) => {
-                const fromPos = nodePositions[from];
-                const toPos = nodePositions[to];
-                if (fromPos && toPos) {
-                    ctx.beginPath();
-                    ctx.moveTo(fromPos.x, fromPos.y);
-                    ctx.lineTo(toPos.x, toPos.y);
-                    ctx.stroke();
-                }
+            const frame = (currentStep < visualizationData.length) ? visualizationData[currentStep] : {};
+            const nodesState = (frame && frame.nodes) ? frame.nodes : {};
+            const newReqSet = new Set((frame && frame.new_requests) ? frame.new_requests : []);
+
+            // Determine edges to draw: JSON-provided else fallback static
+            const edgesToDraw = externalEdges ? externalEdges.map(e => [e.src, e.dst, e.type]) : edges.map(([a,b]) => [a,b,'SUB']);
+
+            // Draw edges with labels
+            edgesToDraw.forEach(([src, dst, etype]) => {
+                const fromPos = nodePositions[src];
+                const toPos = nodePositions[dst];
+                if (!fromPos || !toPos) return;
+                const dstState = nodesState[dst] || 'INACTIVE';
+                const isNewReq = newReqSet.has(dst);
+                const colorMap = { SUB: '#94a3b8', POR: '#1e88e5', RET: '#8e24aa', SUR: '#90a4ae' };
+                ctx.strokeStyle = isNewReq ? '#1e88e5' : (dstState === 'TRUE' || dstState === 'CONFIRMED') ? '#2e7d32' : (colorMap[etype] || '#cbd5e1');
+                ctx.lineWidth = isNewReq ? 3 : 2;
+                ctx.beginPath();
+                ctx.moveTo(fromPos.x, fromPos.y);
+                ctx.lineTo(toPos.x, toPos.y);
+                ctx.stroke();
+
+                // Label at edge midpoint
+                const mx = (fromPos.x + toPos.x) / 2;
+                const my = (fromPos.y + toPos.y) / 2;
+                ctx.fillStyle = '#374151';
+                ctx.font = '10px Segoe UI, Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                ctx.fillText(etype, mx, my - 4);
             });
 
             // Draw nodes
             Object.entries(nodePositions).forEach(([nodeId, pos]) => {
-                const state = getNodeState(nodeId);
-                const color = stateColors[state] || '#6c757d';
+                const state = nodesState[nodeId] || 'INACTIVE';
+                const fill = stateColors[state] || stateColors['INACTIVE'];
+                const border = stateBorderColors[state] || '#607d8b';
 
-                // Draw node circle
-                ctx.fillStyle = color;
+                // Node circle
                 ctx.beginPath();
-                ctx.arc(pos.x, pos.y, 20, 0, 2 * Math.PI);
+                const radius = 22;
+                ctx.arc(pos.x, pos.y, radius, 0, 2 * Math.PI);
+                ctx.fillStyle = fill;
                 ctx.fill();
+                ctx.lineWidth = (state === 'REQUESTED' || state === 'WAITING') ? 4 : 2;
+                ctx.strokeStyle = border;
+                ctx.stroke();
 
-                // Draw node label
-                ctx.fillStyle = '#fff';
-                ctx.font = '10px Arial';
+                // Transition glow for nodes that changed state this frame
+                if (transitionSet.has(nodeId)) {
+                    ctx.save();
+                    ctx.shadowColor = 'rgba(255,255,255,0.8)';
+                    ctx.shadowBlur = 12;
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, radius + 4, 0, 2 * Math.PI);
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                // Label
+                ctx.fillStyle = textColorFor(fill);
+                ctx.font = '12px Segoe UI, Arial';
                 ctx.textAlign = 'center';
-                ctx.fillText(nodeId.replace(/_/g, ' ').toUpperCase(), pos.x, pos.y + 25);
+                ctx.textBaseline = 'top';
+                const label = nodeId.replace(/_/g, ' ').toUpperCase();
+                ctx.fillText(label, pos.x, pos.y + 26);
             });
         }
 
@@ -808,6 +915,18 @@
                 document.getElementById('thoughts-text').textContent = frame.thoughts;
             }
 
+            // Detect node state transitions for this frame
+            const currentNodes = frame.nodes || {};
+            transitionSet = new Set();
+            Object.keys(currentNodes).forEach(nid => {
+                const prev = lastNodesState[nid];
+                const cur = currentNodes[nid];
+                if (prev !== undefined && prev !== cur) {
+                    transitionSet.add(nid);
+                }
+            });
+            lastNodesState = { ...currentNodes };
+
             // Update phase states
             updatePhaseStates(frame.nodes || {});
 
@@ -839,6 +958,29 @@
 
         // Start the application
         document.addEventListener('DOMContentLoaded', init);
+
+        // Allow manual loading of a JSON file
+        document.addEventListener('DOMContentLoaded', () => {
+            const input = document.getElementById('file-input');
+            const btn = document.getElementById('load-file-btn');
+            if (btn && input) {
+                btn.addEventListener('click', async () => {
+                    const file = input.files && input.files[0];
+                    if (!file) return;
+                    try {
+                        const text = await file.text();
+                        const data = JSON.parse(text);
+                        visualizationData = data;
+                        externalEdges = (data.length > 0 && data[0].graph && data[0].graph.edges) ? data[0].graph.edges : null;
+                        currentStep = 0;
+                        updateControls();
+                        updateVisualization(0);
+                    } catch (e) {
+                        console.error('Failed to load JSON file:', e);
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>

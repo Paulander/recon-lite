@@ -13,7 +13,7 @@ from recon_lite_chess import (
     # Terminal evaluators
     create_king_edge_detector, create_box_shrink_evaluator,
     create_opposition_evaluator, create_mate_deliver_evaluator,
-    create_stalemate_detector,
+    create_stalemate_detector, create_wait_for_board_change,
 
     # Script phase nodes
     create_phase0_establish_cut, create_phase1_drive_to_edge, create_phase2_shrink_box,
@@ -88,8 +88,15 @@ def build_krk_network() -> Graph:
     # Phase 0 connections
     g.add_edge("phase0_establish_cut", "choose_phase0", LinkType.SUB)
 
-    # POR chain between phases
-    g.add_edge("phase0_establish_cut", "phase1_drive_to_edge", LinkType.POR)
+    # Wait-for-change gating: ensure strategic phases only proceed when a new position is present
+    g.add_node(create_wait_for_board_change("wait_for_board_change"))
+    # Parent it under root so it can be requested immediately
+    g.add_edge("krk_root", "wait_for_board_change", LinkType.SUB)
+    # Gate P0 and P1 (parallel) on a board change; P2..P4 are already gated via POR from P1
+    g.add_edge("wait_for_board_change", "phase0_establish_cut", LinkType.POR)
+    g.add_edge("wait_for_board_change", "phase1_drive_to_edge", LinkType.POR)
+
+    # Phase 0 and Phase 1 run in parallel (no POR between them)
     g.add_edge("phase1_drive_to_edge", "phase2_shrink_box", LinkType.POR)
     g.add_edge("phase2_shrink_box", "phase3_take_opposition", LinkType.POR)
     g.add_edge("phase3_take_opposition", "phase4_deliver_mate", LinkType.POR)
@@ -99,7 +106,8 @@ def build_krk_network() -> Graph:
 
     # Phase 2 connections
     g.add_edge("phase2_shrink_box", "box_can_shrink", LinkType.SUB)
-    # removed POR to king_at_edge to allow early shrinking
+    # POR: Phase 2 only requestable after enemy king is at edge
+    g.add_edge("phase2_shrink_box", "king_at_edge", LinkType.POR)
 
     # Phase 3 connections
     g.add_edge("phase3_take_opposition", "can_take_opposition", LinkType.SUB)

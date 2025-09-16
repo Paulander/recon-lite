@@ -20,6 +20,34 @@ from recon_lite.graph import Node, NodeType, NodeState, LinkType  # LinkType for
 # ===== TERMINAL NODES (Leaf Operations) =====
 
 @dataclass
+class WaitForBoardChange(Node):
+    """
+    Terminal that waits until the board position changes.
+    - On first evaluation, caches current FEN and returns TRUE immediately to allow the opening move.
+    - On subsequent ticks, returns TRUE only when the FEN changes; otherwise keeps WAITING.
+    """
+    def __init__(self, nid: str):
+        super().__init__(nid=nid, ntype=NodeType.TERMINAL, predicate=self._wait_predicate)
+
+    def _wait_predicate(self, node: Node, env: Dict[str, Any]) -> Tuple[bool, bool]:
+        board = env.get("board")
+        if board is None:
+            return True, False
+        cur_fen = board.fen()
+        last_fen = node.meta.get("last_fen")
+
+        # First-time arming: allow pipeline to proceed, while caching baseline
+        if last_fen is None:
+            node.meta["last_fen"] = cur_fen
+            return True, True
+
+        if cur_fen != last_fen:
+            node.meta["last_fen"] = cur_fen
+            return True, True
+
+        return False, False
+
+@dataclass
 class KingAtEdgeDetector(Node):
     def __init__(self, nid: str):
         super().__init__(nid=nid, ntype=NodeType.TERMINAL, predicate=self._king_at_edge)
@@ -272,6 +300,7 @@ def create_box_shrink_evaluator(nid: str) -> BoxShrinkEvaluator: return BoxShrin
 def create_opposition_evaluator(nid: str) -> OppositionEvaluator: return OppositionEvaluator(nid)
 def create_mate_deliver_evaluator(nid: str) -> MateDeliverEvaluator: return MateDeliverEvaluator(nid)
 def create_stalemate_detector(nid: str) -> StalemateDetector: return StalemateDetector(nid)
+def create_wait_for_board_change(nid: str) -> WaitForBoardChange: return WaitForBoardChange(nid)
 
 def create_phase0_establish_cut(nid: str) -> Phase0EstablishCut: return Phase0EstablishCut(nid)
 def create_phase1_drive_to_edge(nid: str) -> Phase1DriveToEdge: return Phase1DriveToEdge(nid)

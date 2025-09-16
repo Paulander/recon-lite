@@ -58,7 +58,7 @@ def opponent_random_move(board: chess.Board) -> str | None:
 # -------- engine stepper --------
 
 def choose_move_with_graph(board: chess.Board, logger: RunLogger, move_no: int,
-                           max_ticks: int = 200) -> str | None:
+                           max_ticks: int = 500) -> str | None:
     """
     Build a fresh KRK graph, request krk_root, tick until env["chosen_move"] is set
     or until max_ticks. Returns UCI string or None.
@@ -68,6 +68,9 @@ def choose_move_with_graph(board: chess.Board, logger: RunLogger, move_no: int,
     g = build_krk_graph()
     eng = ReConEngine(g)
     g.nodes["krk_root"].state = NodeState.REQUESTED
+
+    # Precompute graph edges for visualization
+    graph_edges = [{"src": e.src, "dst": e.dst, "type": e.ltype.name} for e in g.edges]
 
     ticks = 0
     watchdog_triggered = False
@@ -82,11 +85,14 @@ def choose_move_with_graph(board: chess.Board, logger: RunLogger, move_no: int,
             note=f"Eval tick {ticks} (move {move_no})",
             env={"fen": board.fen(), "move_number": move_no, "evaluation_tick": ticks},
             thoughts="Evaluating KRK position...",
-            new_requests=list(now_req.keys()) if now_req else []
+            new_requests=list(now_req.keys()) if now_req else [],
         )
+        # Attach graph edges only on the first tick snapshot to avoid repetition
+        if ticks == 1:
+            logger.events[-1]["graph"] = {"edges": graph_edges}
 
         # WATCHDOG: Force a move after 50 ticks to prevent infinite stalls
-        if ticks == 50 and env.get("chosen_move") is None:
+        if ticks == 150 and env.get("chosen_move") is None:
             from demos.shared.krk_network import choose_any_safe_move
             fallback_move = choose_any_safe_move(board)
             if fallback_move:

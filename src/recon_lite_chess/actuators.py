@@ -1,3 +1,4 @@
+
 """
 Chess move selection actuators for ReCoN KRK system.
 
@@ -18,7 +19,7 @@ from typing import List, Tuple, Optional, Dict, Any
 from .predicates import (
     is_stalemate_after, rook_safe_after, box_area, box_area_after,
     shrinks_or_preserves_box, our_king_progress, gives_safe_check,
-    has_opposition_after, creates_stable_cut, enemy_king_mobility_after
+    has_opposition_after, creates_stable_cut
 )
 
 
@@ -398,42 +399,31 @@ def choose_move_with_filters(board: chess.Board, phase: str = "general") -> Opti
 
         # Base box shrinking score (always positive factor)
         area_reduction = base_area - area_next
-        score += area_reduction * 4.0
+        score += area_reduction * 3.0
 
         # King progress score
         king_score = our_king_progress(board, move)
-        score += king_score * 1.5
+        score += king_score
 
         # Phase-specific bonuses
         if phase == "phase1":
-            # Phase 1: Prioritize edge-driving
-            score += edge_driving_bonus(board, move) * 3.0
+            score += edge_driving_bonus(board, move) * 2.0
         elif phase == "phase2":
-            # Phase 2: Maximize box shrinking
-            score += area_reduction * 6.0  # Extra weight for shrinking
+            score += area_reduction * 5.0
         elif phase == "phase3":
-            # Phase 3: Opposition and positioning
             if has_opposition_after(board, move):
                 score += 1.0
-            score += king_score * 1.5  # Extra king positioning weight
+            score += king_score * 1.5
         elif phase == "phase4":
-            # Phase 4: Checkmate focus
             if gives_safe_check(board, move):
-                score += 0.5
+                score += 1.0
 
         # Global: bonus for forming a stable rook cut
         if creates_stable_cut(board, move):
-            score += 3.0
-
-        # Global: punish enemy king mobility (prefer confinement)
-        try:
-            mobility = enemy_king_mobility_after(board, move)
-        except Exception:
-            mobility = 8
-        score += (4 - mobility) * 0.5  # positive if mobility <= 4
+            score += 1.5
 
         # Penalize rook drag to avoid shuffling
-        score -= 0.3 * _rook_distance_travel(move)
+        score -= 0.2 * _rook_distance_travel(move)
 
         scored_moves.append((score, move))
 
