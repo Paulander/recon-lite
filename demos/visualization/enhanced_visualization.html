@@ -307,9 +307,18 @@
                         <span class="state-failed">Failed</span>
                     </div>
                 </div>
-                <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
+                <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px; flex-wrap: wrap;">
                     <input type="file" id="file-input" accept="application/json" />
                     <button class="control-btn" id="load-file-btn">Load JSON</button>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <span style="font-size:12px;color:#555;">Speed</span>
+                        <select id="speed-select" class="control-btn" style="padding:6px 10px; background:#fff; color:#333; border:1px solid #ddd;">
+                            <option value="1">1x</option>
+                            <option value="2">2x</option>
+                            <option value="4">4x</option>
+                        </select>
+                    </div>
+                    <div style="font-size:12px;color:#555;">Shape: sensors = ◇, others = ●</div>
                 </div>
                 <canvas id="network-canvas" style="flex: 1; border-radius: 8px; background: #f8f9fa;"></canvas>
             </div>
@@ -342,6 +351,12 @@
         <button class="control-btn" id="next-btn" disabled>
             Next <i class="fas fa-step-forward"></i>
         </button>
+        <button class="control-btn" id="prev-move-btn" disabled>
+            <i class="fas fa-backward"></i> Prev Move
+        </button>
+        <button class="control-btn" id="next-move-btn" disabled>
+            Next Move <i class="fas fa-forward"></i>
+        </button>
         <div class="step-counter" id="step-counter">Step 0 / 0</div>
     </div>
 
@@ -355,34 +370,36 @@
         let externalEdges = null; // from JSON graph.edges if provided
         let lastNodesState = {};  // for transition detection
         let transitionSet = new Set(); // nodes that changed state this frame
+        let speedFactor = 1;
+        let moveSteps = []; // indices where a move was applied/logged
 
         // Node positions for network visualization (simplified)
         const nodePositions = {
             // Root and gating
-            'krk_root': { x: 400, y: 80 },
-            'wait_for_board_change': { x: 400, y: 140 },
+            'krk_root': { x: 400, y: 70 },
+            'wait_for_board_change': { x: 400, y: 150 },
 
             // Phases (scripts)
-            'phase0_establish_cut': { x: 200, y: 200 },
-            'phase1_drive_to_edge': { x: 600, y: 200 },
-            'phase2_shrink_box': { x: 200, y: 300 },
-            'phase3_take_opposition': { x: 400, y: 300 },
-            'phase4_deliver_mate': { x: 600, y: 300 },
+            'phase0_establish_cut': { x: 220, y: 240 },
+            'phase1_drive_to_edge': { x: 580, y: 240 },
+            'phase2_shrink_box': { x: 220, y: 330 },
+            'phase3_take_opposition': { x: 400, y: 330 },
+            'phase4_deliver_mate': { x: 580, y: 330 },
 
             // Move generators (actuators)
-            'choose_phase0': { x: 200, y: 260 },
-            'king_drive_moves': { x: 600, y: 260 },
-            'box_shrink_moves': { x: 200, y: 360 },
-            'opposition_moves': { x: 400, y: 360 },
-            'mate_moves': { x: 600, y: 360 },
-            'random_legal_moves': { x: 400, y: 420 },
+            'choose_phase0': { x: 220, y: 290 },
+            'king_drive_moves': { x: 580, y: 290 },
+            'box_shrink_moves': { x: 220, y: 380 },
+            'opposition_moves': { x: 400, y: 380 },
+            'mate_moves': { x: 580, y: 380 },
+            'random_legal_moves': { x: 400, y: 430 },
 
             // Evaluators/sensors
-            'king_at_edge': { x: 100, y: 440 },
-            'box_can_shrink': { x: 300, y: 440 },
-            'can_take_opposition': { x: 500, y: 440 },
-            'can_deliver_mate': { x: 700, y: 440 },
-            'is_stalemate': { x: 700, y: 500 }
+            'king_at_edge': { x: 120, y: 480 },
+            'box_can_shrink': { x: 300, y: 480 },
+            'can_take_opposition': { x: 500, y: 480 },
+            'can_deliver_mate': { x: 680, y: 480 },
+            'is_stalemate': { x: 680, y: 540 }
         };
 
         // Edges between nodes
@@ -411,6 +428,12 @@
             ['phase4_deliver_mate', 'can_deliver_mate'],
             ['phase4_deliver_mate', 'is_stalemate']
         ];
+
+        // Node categories
+        const sensorNodes = new Set([
+            'wait_for_board_change',
+            'king_at_edge', 'box_can_shrink', 'can_take_opposition', 'can_deliver_mate', 'is_stalemate'
+        ]);
 
         // State colors
         const stateColors = {
@@ -765,14 +788,28 @@
                 const border = stateBorderColors[state] || '#607d8b';
 
                 // Node circle
-                ctx.beginPath();
                 const radius = 22;
-                ctx.arc(pos.x, pos.y, radius, 0, 2 * Math.PI);
                 ctx.fillStyle = fill;
-                ctx.fill();
-                ctx.lineWidth = (state === 'REQUESTED' || state === 'WAITING') ? 4 : 2;
                 ctx.strokeStyle = border;
-                ctx.stroke();
+                ctx.lineWidth = (state === 'REQUESTED' || state === 'WAITING') ? 4 : 2;
+
+                if (sensorNodes.has(nodeId)) {
+                    // Diamond for sensors
+                    ctx.beginPath();
+                    ctx.moveTo(pos.x, pos.y - radius);
+                    ctx.lineTo(pos.x + radius, pos.y);
+                    ctx.lineTo(pos.x, pos.y + radius);
+                    ctx.lineTo(pos.x - radius, pos.y);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                } else {
+                    // Circle for scripts/actuators
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, radius, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.stroke();
+                }
 
                 // Transition glow for nodes that changed state this frame
                 if (transitionSet.has(nodeId)) {
@@ -780,7 +817,15 @@
                     ctx.shadowColor = 'rgba(255,255,255,0.8)';
                     ctx.shadowBlur = 12;
                     ctx.beginPath();
-                    ctx.arc(pos.x, pos.y, radius + 4, 0, 2 * Math.PI);
+                    if (sensorNodes.has(nodeId)) {
+                        ctx.moveTo(pos.x, pos.y - (radius + 4));
+                        ctx.lineTo(pos.x + (radius + 4), pos.y);
+                        ctx.lineTo(pos.x, pos.y + (radius + 4));
+                        ctx.lineTo(pos.x - (radius + 4), pos.y);
+                        ctx.closePath();
+                    } else {
+                        ctx.arc(pos.x, pos.y, radius + 4, 0, 2 * Math.PI);
+                    }
                     ctx.lineWidth = 2;
                     ctx.strokeStyle = '#ffffff';
                     ctx.stroke();
@@ -810,6 +855,9 @@
             const prevBtn = document.getElementById('prev-btn');
             const nextBtn = document.getElementById('next-btn');
             const playPauseBtn = document.getElementById('play-pause-btn');
+            const speedSelect = document.getElementById('speed-select');
+            const prevMoveBtn = document.getElementById('prev-move-btn');
+            const nextMoveBtn = document.getElementById('next-move-btn');
 
             prevBtn.addEventListener('click', () => {
                 if (currentStep > 0) {
@@ -833,6 +881,35 @@
                 }
             });
 
+            speedSelect.addEventListener('change', (e) => {
+                speedFactor = parseFloat(e.target.value) || 1;
+                if (isPlaying) {
+                    // Restart playback to apply new speed
+                    pausePlayback();
+                    startPlayback();
+                }
+            });
+
+            prevMoveBtn.addEventListener('click', () => {
+                if (!moveSteps.length) return;
+                // find the previous move index strictly less than currentStep
+                let idx = moveSteps.findIndex(i => i >= currentStep);
+                const prevIdx = (idx <= 0) ? -1 : moveSteps[idx - 1];
+                const target = (idx === -1) ? moveSteps[moveSteps.length - 1] : prevIdx;
+                if (target !== -1 && target !== undefined) {
+                    currentStep = target;
+                    updateVisualization(currentStep);
+                }
+            });
+
+            nextMoveBtn.addEventListener('click', () => {
+                if (!moveSteps.length) return;
+                let idx = moveSteps.findIndex(i => i > currentStep);
+                if (idx === -1) return;
+                currentStep = moveSteps[idx];
+                updateVisualization(currentStep);
+            });
+
             updateControls();
         }
 
@@ -841,6 +918,7 @@
             isPlaying = true;
             document.getElementById('play-pause-btn').innerHTML = '<i class="fas fa-pause"></i> Pause';
 
+            const intervalMs = Math.max(50, 1000 / speedFactor);
             playInterval = setInterval(() => {
                 if (currentStep >= visualizationData.length - 1) {
                     pausePlayback();
@@ -848,7 +926,7 @@
                 }
                 currentStep++;
                 updateVisualization(currentStep);
-            }, 1000);
+            }, intervalMs);
         }
 
         // Pause playback
@@ -865,10 +943,14 @@
         function updateControls() {
             const prevBtn = document.getElementById('prev-btn');
             const nextBtn = document.getElementById('next-btn');
+            const prevMoveBtn = document.getElementById('prev-move-btn');
+            const nextMoveBtn = document.getElementById('next-move-btn');
             const stepCounter = document.getElementById('step-counter');
 
             prevBtn.disabled = currentStep <= 0;
             nextBtn.disabled = currentStep >= visualizationData.length - 1;
+            prevMoveBtn.disabled = moveSteps.length === 0 || currentStep <= (moveSteps[0] || 0);
+            nextMoveBtn.disabled = moveSteps.length === 0 || currentStep >= (moveSteps[moveSteps.length - 1] || 0);
 
             const total = visualizationData.length;
             stepCounter.textContent = `Step ${currentStep + 1} / ${total}`;
@@ -926,6 +1008,16 @@
                 }
             });
             lastNodesState = { ...currentNodes };
+
+            // Build or update move index (once)
+            if (!moveSteps.length) {
+                moveSteps = [];
+                visualizationData.forEach((f, i) => {
+                    const env = f.env || {};
+                    const hasMove = !!(env.recons_move || env.chosen_move || env.opponents_move || env.opponent_move);
+                    if (hasMove) moveSteps.push(i);
+                });
+            }
 
             // Update phase states
             updatePhaseStates(frame.nodes || {});
