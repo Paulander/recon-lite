@@ -7,261 +7,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.12.0/chess.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: #333;
-            overflow: hidden;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .header {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 15px 30px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-        }
-
-        .header h1 {
-            color: white;
-            font-size: 1.5em;
-            font-weight: 300;
-        }
-
-        .main-content {
-            flex: 1;
-            display: flex;
-            gap: 20px;
-            padding: 20px;
-        }
-
-        /* Left side - Chess board */
-        .left-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .chess-container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .chess-board {
-            width: 100%;
-            max-width: 400px;
-            margin: 0 auto;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-        }
-
-        .chess-info {
-            margin-top: 15px;
-            text-align: center;
-            color: #666;
-            font-size: 0.9em;
-        }
-
-        /* Bottom left - AI Portrait & Thoughts */
-        .ai-panel {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            height: 200px;
-        }
-
-        .ai-portrait {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 2em;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-        }
-
-        .thoughts-container {
-            flex: 1;
-        }
-
-        .thoughts-label {
-            font-size: 0.9em;
-            color: #666;
-            margin-bottom: 8px;
-        }
-
-        .thoughts-text {
-            background: #f8f9fa;
-            padding: 12px;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-            font-style: italic;
-            color: #333;
-        }
-
-        /* Right side - ReCoN Network */
-        .right-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .network-container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .network-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .network-title {
-            font-size: 1.1em;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .phase-container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            height: 250px;
-        }
-
-        .phase-title {
-            font-size: 1.1em;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 15px;
-        }
-
-        .phases-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
-
-        .phase-item {
-            padding: 10px;
-            border-radius: 8px;
-            text-align: center;
-            font-size: 0.85em;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        /* Controls */
-        .controls {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 25px;
-            padding: 15px 30px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            backdrop-filter: blur(10px);
-        }
-
-        .control-btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 20px;
-            padding: 10px 20px;
-            cursor: pointer;
-            font-size: 0.9em;
-            transition: all 0.3s ease;
-        }
-
-        .control-btn:hover {
-            background: #5a6fd8;
-            transform: translateY(-2px);
-        }
-
-        .control-btn:active {
-            transform: translateY(0);
-        }
-
-        .step-counter {
-            font-weight: 600;
-            color: #333;
-        }
-
-        /* Node states */
-        .state-inactive { background: #e9ecef; color: #6c757d; }
-        .state-requested { background: #cce5ff; color: #0066cc; }
-        .state-waiting { background: #fff3cd; color: #856404; }
-        .state-true { background: #d4edda; color: #155724; }
-        .state-confirmed { background: #d1ecf1; color: #0c5460; }
-        .state-failed { background: #f8d7da; color: #721c24; }
-
-        /* Chess board styling */
-        .square {
-            width: 12.5%;
-            height: 50px;
-            display: inline-block;
-            position: relative;
-        }
-
-        .square.white { background: #f0d9b5; }
-        .square.black { background: #b58863; }
-
-        .piece {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 36px;
-            font-weight: bold;
-            color: #333;
-        }
-
-        .square.white .piece.black { color: #333; }
-        .square.black .piece.white { color: #f0f0f0; }
-
-        /* Hide Three.js canvas initially */
-        canvas { display: none; }
-        /* Ensure our 2D network canvas remains visible */
-        #network-canvas { display: block !important; }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="header">
@@ -360,696 +106,261 @@
         <div class="step-counter" id="step-counter">Step 0 / 0</div>
     </div>
 
+    <script src="data-manager.js"></script>
+    <script src="chess-board.js"></script>
+    <script src="network-visualization.js"></script>
     <script>
-        // Global variables
-        let visualizationData = [];
-        let currentStep = 0;
-        let isPlaying = false;
-        let playInterval = null;
-        let chessBoard = null;
-        let externalEdges = null; // from JSON graph.edges if provided
-        let lastNodesState = {};  // for transition detection
-        let transitionSet = new Set(); // nodes that changed state this frame
-        let speedFactor = 1;
-        let moveSteps = []; // indices where a move was applied/logged
+        // Main application controller
+        // Coordinates between the different visualization modules
 
-        // Node positions for network visualization (simplified)
-        const nodePositions = {
-            // Root and gating
-            'krk_root': { x: 400, y: 70 },
-            'wait_for_board_change': { x: 400, y: 150 },
+        class ReConVisualization {
+            constructor() {
+                this.currentStep = 0;
+                this.isPlaying = false;
+                this.playInterval = null;
+                this.speedFactor = 1;
+                this.moveSteps = []; // indices where a move was applied/logged
 
-            // Phases (scripts)
-            'phase0_establish_cut': { x: 220, y: 240 },
-            'phase1_drive_to_edge': { x: 580, y: 240 },
-            'phase2_shrink_box': { x: 220, y: 330 },
-            'phase3_take_opposition': { x: 400, y: 330 },
-            'phase4_deliver_mate': { x: 580, y: 330 },
-
-            // Move generators (actuators)
-            'choose_phase0': { x: 220, y: 290 },
-            'king_drive_moves': { x: 580, y: 290 },
-            'box_shrink_moves': { x: 220, y: 380 },
-            'opposition_moves': { x: 400, y: 380 },
-            'mate_moves': { x: 580, y: 380 },
-            'random_legal_moves': { x: 400, y: 430 },
-
-            // Evaluators/sensors
-            'king_at_edge': { x: 120, y: 480 },
-            'box_can_shrink': { x: 300, y: 480 },
-            'can_take_opposition': { x: 500, y: 480 },
-            'can_deliver_mate': { x: 680, y: 480 },
-            'is_stalemate': { x: 680, y: 540 }
-        };
-
-        // Edges between nodes
-        const edges = [
-            // Root and gating
-            ['krk_root', 'wait_for_board_change'],
-            ['wait_for_board_change', 'phase0_establish_cut'],
-            ['wait_for_board_change', 'phase1_drive_to_edge'],
-
-            // Root subs
-            ['krk_root', 'phase2_shrink_box'],
-            ['krk_root', 'phase3_take_opposition'],
-            ['krk_root', 'phase4_deliver_mate'],
-
-            // Phase internals
-            ['phase0_establish_cut', 'choose_phase0'],
-            ['phase1_drive_to_edge', 'king_drive_moves'],
-            ['phase2_shrink_box', 'box_shrink_moves'],
-            ['phase3_take_opposition', 'opposition_moves'],
-            ['phase4_deliver_mate', 'mate_moves'],
-
-            // Evaluators
-            ['phase1_drive_to_edge', 'king_at_edge'],
-            ['phase2_shrink_box', 'box_can_shrink'],
-            ['phase3_take_opposition', 'can_take_opposition'],
-            ['phase4_deliver_mate', 'can_deliver_mate'],
-            ['phase4_deliver_mate', 'is_stalemate']
-        ];
-
-        // Node categories
-        const sensorNodes = new Set([
-            'wait_for_board_change',
-            'king_at_edge', 'box_can_shrink', 'can_take_opposition', 'can_deliver_mate', 'is_stalemate'
-        ]);
-
-        // State colors
-        const stateColors = {
-            'INACTIVE': '#cfd8dc',
-            'REQUESTED': '#64b5f6',
-            'WAITING': '#ffd54f',
-            'TRUE': '#81c784',
-            'CONFIRMED': '#4dd0e1',
-            'FAILED': '#e57373'
-        };
-        const stateBorderColors = {
-            'INACTIVE': '#90a4ae',
-            'REQUESTED': '#1e88e5',
-            'WAITING': '#f9a825',
-            'TRUE': '#2e7d32',
-            'CONFIRMED': '#00838f',
-            'FAILED': '#b71c1c'
-        };
-
-        function hexToRgb(hex) {
-            const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            return m ? {
-                r: parseInt(m[1], 16),
-                g: parseInt(m[2], 16),
-                b: parseInt(m[3], 16)
-            } : { r: 255, g: 255, b: 255 };
-        }
-        function luminance(hex) {
-            const { r, g, b } = hexToRgb(hex);
-            const a = [r, g, b].map(v => {
-                v /= 255;
-                return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
-            });
-            return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
-        }
-        function textColorFor(bgHex) {
-            return luminance(bgHex) > 0.55 ? '#1f2937' : '#ffffff';
-        }
-
-        // Initialize the application
-        async function init() {
-            console.log('Initializing ReCoN visualization...');
-
-            try {
-                // Initialize chess board first (show placeholder)
-                initChessBoard();
-
-                // Initialize network visualization
-                initNetwork();
-
-                // Setup controls
-                setupControls();
-
-                // Load visualization data (this will show initial state)
-                await loadVisualizationData();
-
-                console.log('ReCoN visualization initialized successfully');
-
-            } catch (error) {
-                console.error('Error initializing application:', error);
-                document.getElementById('thoughts-text').textContent = 'Error initializing visualization';
-            }
-        }
-
-        // Load visualization data from JSON
-        async function loadVisualizationData() {
-            try {
-                const response = await fetch('../krk_visualization_data.json');
-                if (!response.ok) {
-                    throw new Error('Failed to load visualization data');
-                }
-                visualizationData = await response.json();
-                console.log('Loaded visualization data:', visualizationData);
-
-                // Read graph edges if present on first frame
-                if (visualizationData.length > 0 && visualizationData[0].graph && visualizationData[0].graph.edges) {
-                    externalEdges = visualizationData[0].graph.edges;
-                }
-
-                // Detect data type and update header
-                detectDataType(visualizationData);
-
-                // Update controls with loaded data
-                updateControls();
-
-                // Show initial state immediately
-                if (visualizationData.length > 0) {
-                    updateVisualization(0);
-                }
-
-            } catch (error) {
-                console.error('Error loading visualization data:', error);
-                console.log('Falling back to mock data for testing');
-
-                // Create mock data for testing
-                visualizationData = createMockData();
-
-                // Update controls with mock data
-                updateControls();
-
-                // Show mock data immediately
-                if (visualizationData.length > 0) {
-                    updateVisualization(0);
-                }
-
-                // Show user-friendly message
-                document.getElementById('thoughts-text').textContent = 'Using demo data - run the KRK demo to see live data';
-            }
-        }
-
-        // Detect data type and update header
-        function detectDataType(data) {
-            if (!data || data.length === 0) {
-                document.getElementById('game-info').textContent = 'No data loaded';
-                return;
+                // Initialize modules
+                this.dataManager = new DataManager();
+                this.chessBoard = new ChessBoard();
+                this.networkVis = new NetworkVisualization();
             }
 
-            const firstFrame = data[0];
-            let infoText = '';
+            async init() {
+                console.log('Initializing ReCoN visualization...');
 
-            // Check if it's an interactive game (has move_number)
-            const hasGameMoves = data.some(frame =>
-                frame.env && (frame.env.move_number !== undefined ||
-                             frame.env.recons_move ||
-                             frame.env.opponents_move)
-            );
+                try {
+                    // Initialize chess board first (show placeholder)
+                    this.chessBoard.init();
 
-            // Check if it's evaluation data (has ReCoN node states)
-            const hasReconNodes = data.some(frame =>
-                frame.nodes && (frame.nodes.krk_root || frame.nodes.phase1_drive_to_edge)
-            );
+                    // Initialize network visualization
+                    this.networkVis.init();
 
-            if (hasGameMoves && hasReconNodes) {
-                infoText = '🎮 Interactive Game + ReCoN Evaluation - Full Experience!';
-            } else if (hasGameMoves) {
-                infoText = '🎮 Interactive Chess Game - Move by move';
-            } else if (hasReconNodes) {
-                infoText = '🧠 ReCoN Network Evaluation - Thinking process';
-            } else {
-                infoText = '📊 Static Data Visualization';
+                    // Setup controls
+                    this.setupControls();
+
+                    // Load visualization data (this will show initial state)
+                    await this.dataManager.loadVisualizationData();
+
+                    // Set external edges if available
+                    const externalEdges = this.dataManager.getExternalEdges();
+                    if (externalEdges) {
+                        this.networkVis.setExternalEdges(externalEdges);
+                    }
+
+                    console.log('ReCoN visualization initialized successfully');
+
+                } catch (error) {
+                    console.error('Error initializing application:', error);
+                    document.getElementById('thoughts-text').textContent = 'Error initializing visualization';
+                }
             }
 
-            infoText += ` | ${data.length} frames loaded`;
+            // Setup controls
+            setupControls() {
+                const prevBtn = document.getElementById('prev-btn');
+                const nextBtn = document.getElementById('next-btn');
+                const playPauseBtn = document.getElementById('play-pause-btn');
+                const speedSelect = document.getElementById('speed-select');
+                const prevMoveBtn = document.getElementById('prev-move-btn');
+                const nextMoveBtn = document.getElementById('next-move-btn');
 
-            document.getElementById('game-info').textContent = infoText;
-        }
+                prevBtn.addEventListener('click', () => {
+                    if (this.currentStep > 0) {
+                        this.currentStep--;
+                        this.updateVisualization(this.currentStep);
+                    }
+                });
 
-        // Create mock data for testing
-        function createMockData() {
-            return [
-                {
-                    type: "snapshot",
-                    tick: 0,
-                    note: "Initial state",
-                    nodes: {
-                        "krk_root": "INACTIVE",
-                        "phase1_drive_to_edge": "INACTIVE",
-                        "phase2_shrink_box": "INACTIVE",
-                        "phase3_take_opposition": "INACTIVE",
-                        "phase4_deliver_mate": "INACTIVE",
-                        "king_at_edge": "INACTIVE",
-                        "box_can_shrink": "INACTIVE",
-                        "can_take_opposition": "INACTIVE",
-                        "can_deliver_mate": "INACTIVE",
-                        "is_stalemate": "INACTIVE"
-                    },
-                    env: {
-                        "initial_fen": "4k3/8/8/8/8/8/8/R3K3 w - - 0 1",
-                        "moves": [],
-                        "fen": "4k3/8/8/8/8/8/8/R3K3 w - - 0 1"
-                    },
-                    thoughts: "Initializing ReCoN network...",
-                    new_requests: []
-                },
-                {
-                    type: "snapshot",
-                    tick: 1,
-                    note: "Step 1",
-                    nodes: {
-                        "krk_root": "REQUESTED",
-                        "phase1_drive_to_edge": "REQUESTED",
-                        "phase2_shrink_box": "REQUESTED",
-                        "king_at_edge": "REQUESTED",
-                        "box_can_shrink": "REQUESTED"
-                    },
-                    env: {
-                        "initial_fen": "4k3/8/8/8/8/8/8/R3K3 w - - 0 1",
-                        "moves": [],
-                        "fen": "4k3/8/8/8/8/8/8/R3K3 w - - 0 1",
-                        "move_number": 1,
-                        "evaluation_tick": 5
-                    },
-                    thoughts: "Evaluating KRK position...",
-                    new_requests: ["phase1_drive_to_edge", "phase2_shrink_box"]
-                },
-                {
-                    type: "snapshot",
-                    tick: 2,
-                    note: "ReCoN move 1: a1a2",
-                    nodes: {
-                        "krk_root": "CONFIRMED",
-                        "phase1_drive_to_edge": "CONFIRMED",
-                        "king_drive_moves": "TRUE"
-                    },
-                    env: {
-                        "initial_fen": "4k3/8/8/8/8/8/8/R3K3 w - - 0 1",
-                        "moves": ["a1a2"],
-                        "fen": "4k3/8/8/8/8/8/R7/3K3 b - - 0 1",
-                        "move_number": 1,
-                        "recons_move": "a1a2"
-                    },
-                    thoughts: "Chose a1a2 on move 1",
-                    new_requests: []
-                }
-            ];
-        }
+                nextBtn.addEventListener('click', () => {
+                    const data = this.dataManager.getData();
+                    if (this.currentStep < data.length - 1) {
+                        this.currentStep++;
+                        this.updateVisualization(this.currentStep);
+                    }
+                });
 
-        // Initialize chess board
-        function initChessBoard() {
-            const boardElement = document.getElementById('chess-board');
-            boardElement.innerHTML = '<div class="chess-info">Loading chess position...</div>';
-        }
+                playPauseBtn.addEventListener('click', () => {
+                    if (this.isPlaying) {
+                        this.pausePlayback();
+                    } else {
+                        this.startPlayback();
+                    }
+                });
 
-        // Render chess board from FEN or moves
-        function renderChessBoard(env) {
-            const boardElement = document.getElementById('chess-board');
+                speedSelect.addEventListener('change', (e) => {
+                    this.speedFactor = parseFloat(e.target.value) || 1;
+                    if (this.isPlaying) {
+                        // Restart playback to apply new speed
+                        this.pausePlayback();
+                        this.startPlayback();
+                    }
+                });
 
-            // Create chess instance
-            let chess;
+                prevMoveBtn.addEventListener('click', () => {
+                    if (!this.moveSteps.length) return;
+                    // find the previous move index strictly less than currentStep
+                    let idx = this.moveSteps.findIndex(i => i >= this.currentStep);
+                    const prevIdx = (idx <= 0) ? -1 : this.moveSteps[idx - 1];
+                    const target = (idx === -1) ? this.moveSteps[this.moveSteps.length - 1] : prevIdx;
+                    if (target !== -1 && target !== undefined) {
+                        this.currentStep = target;
+                        this.updateVisualization(this.currentStep);
+                    }
+                });
 
-            if (env.moves && env.moves.length > 0) {
-                // Use move-based format for efficiency
-                chess = new Chess(env.initial_fen || env.fen || undefined);
-                // Apply all moves to get current position (UCI parsing)
-                env.moves.forEach(moveUci => {
-                    if (typeof moveUci !== 'string' || moveUci.length < 4) {
-                        console.warn(`Invalid move string:`, moveUci);
+                nextMoveBtn.addEventListener('click', () => {
+                    if (!this.moveSteps.length) return;
+                    let idx = this.moveSteps.findIndex(i => i > this.currentStep);
+                    if (idx === -1) return;
+                    this.currentStep = this.moveSteps[idx];
+                    this.updateVisualization(this.currentStep);
+                });
+
+                this.updateControls();
+            }
+
+            // Start playback
+            startPlayback() {
+                this.isPlaying = true;
+                document.getElementById('play-pause-btn').innerHTML = '<i class="fas fa-pause"></i> Pause';
+
+                const intervalMs = Math.max(50, 1000 / this.speedFactor);
+                this.playInterval = setInterval(() => {
+                    const data = this.dataManager.getData();
+                    if (this.currentStep >= data.length - 1) {
+                        this.pausePlayback();
                         return;
                     }
-                    const from = moveUci.slice(0, 2);
-                    const to = moveUci.slice(2, 4);
-                    const promotion = moveUci.length >= 5 ? moveUci.slice(4, 5) : undefined;
-                    const spec = promotion ? { from, to, promotion } : { from, to };
-                    const m = chess.move(spec);
-                    if (!m) {
-                        console.warn(`Invalid UCI move for chess.js: ${moveUci}`);
-                    }
-                });
-            } else if (env.fen) {
-                // Fallback to FEN format
-                chess = new Chess(env.fen);
-            } else {
-                // No position data available
-                boardElement.innerHTML = '<div class="chess-info">No position data available</div>';
-                return;
+                    this.currentStep++;
+                    this.updateVisualization(this.currentStep);
+                }, intervalMs);
             }
 
-            let boardHtml = '';
-            const board = chess.board();
-
-            for (let row = 0; row < 8; row++) {
-                for (let col = 0; col < 8; col++) {
-                    const square = board[row][col];
-                    const isLight = (row + col) % 2 === 0;
-                    const squareClass = isLight ? 'white' : 'black';
-
-                    boardHtml += `<div class="square ${squareClass}">`;
-
-                    if (square) {
-                        const piece = square.type;
-                        const color = square.color === 'w' ? 'white' : 'black';
-                        const pieceSymbol = getPieceSymbol(piece, color);
-                        boardHtml += `<div class="piece ${color}">${pieceSymbol}</div>`;
-                    }
-
-                    boardHtml += '</div>';
+            // Pause playback
+            pausePlayback() {
+                this.isPlaying = false;
+                document.getElementById('play-pause-btn').innerHTML = '<i class="fas fa-play"></i> Play';
+                if (this.playInterval) {
+                    clearInterval(this.playInterval);
+                    this.playInterval = null;
                 }
             }
 
-            boardElement.innerHTML = boardHtml;
-        }
+            // Update controls state
+            updateControls() {
+                const data = this.dataManager.getData();
+                const prevBtn = document.getElementById('prev-btn');
+                const nextBtn = document.getElementById('next-btn');
+                const prevMoveBtn = document.getElementById('prev-move-btn');
+                const nextMoveBtn = document.getElementById('next-move-btn');
+                const stepCounter = document.getElementById('step-counter');
 
-        // Get chess piece symbol
-        function getPieceSymbol(piece, color) {
-            const symbols = {
-                'p': '♟', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚',
-                'P': '♙', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔'
-            };
-            return symbols[color === 'white' ? piece.toUpperCase() : piece.toLowerCase()] || '';
-        }
+                prevBtn.disabled = this.currentStep <= 0;
+                nextBtn.disabled = this.currentStep >= data.length - 1;
+                prevMoveBtn.disabled = this.moveSteps.length === 0 || this.currentStep <= (this.moveSteps[0] || 0);
+                nextMoveBtn.disabled = this.moveSteps.length === 0 || this.currentStep >= (this.moveSteps[this.moveSteps.length - 1] || 0);
 
-        // Initialize network visualization
-        function initNetwork() {
-            const canvas = document.getElementById('network-canvas');
-            const ctx = canvas.getContext('2d');
-
-            function resizeCanvas() {
-                canvas.width = canvas.offsetWidth;
-                canvas.height = canvas.offsetHeight;
+                const total = data.length;
+                stepCounter.textContent = `Step ${this.currentStep + 1} / ${total}`;
             }
 
-            resizeCanvas();
-            window.addEventListener('resize', resizeCanvas);
-
-            // Draw initial network
-            drawNetwork(ctx);
-        }
-
-        // Draw network visualization
-        function drawNetwork(ctx) {
-            const canvas = ctx.canvas;
-
-            // Clear canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            const frame = (currentStep < visualizationData.length) ? visualizationData[currentStep] : {};
-            const nodesState = (frame && frame.nodes) ? frame.nodes : {};
-            const newReqSet = new Set((frame && frame.new_requests) ? frame.new_requests : []);
-
-            // Determine edges to draw: JSON-provided else fallback static
-            const edgesToDraw = externalEdges ? externalEdges.map(e => [e.src, e.dst, e.type]) : edges.map(([a,b]) => [a,b,'SUB']);
-
-            // Draw edges with labels
-            edgesToDraw.forEach(([src, dst, etype]) => {
-                const fromPos = nodePositions[src];
-                const toPos = nodePositions[dst];
-                if (!fromPos || !toPos) return;
-                const dstState = nodesState[dst] || 'INACTIVE';
-                const isNewReq = newReqSet.has(dst);
-                const colorMap = { SUB: '#94a3b8', POR: '#1e88e5', RET: '#8e24aa', SUR: '#90a4ae' };
-                ctx.strokeStyle = isNewReq ? '#1e88e5' : (dstState === 'TRUE' || dstState === 'CONFIRMED') ? '#2e7d32' : (colorMap[etype] || '#cbd5e1');
-                ctx.lineWidth = isNewReq ? 3 : 2;
-                ctx.beginPath();
-                ctx.moveTo(fromPos.x, fromPos.y);
-                ctx.lineTo(toPos.x, toPos.y);
-                ctx.stroke();
-
-                // Label at edge midpoint
-                const mx = (fromPos.x + toPos.x) / 2;
-                const my = (fromPos.y + toPos.y) / 2;
-                ctx.fillStyle = '#374151';
-                ctx.font = '10px Segoe UI, Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'bottom';
-                ctx.fillText(etype, mx, my - 4);
-            });
-
-            // Draw nodes
-            Object.entries(nodePositions).forEach(([nodeId, pos]) => {
-                const state = nodesState[nodeId] || 'INACTIVE';
-                const fill = stateColors[state] || stateColors['INACTIVE'];
-                const border = stateBorderColors[state] || '#607d8b';
-
-                // Node circle
-                const radius = 22;
-                ctx.fillStyle = fill;
-                ctx.strokeStyle = border;
-                ctx.lineWidth = (state === 'REQUESTED' || state === 'WAITING') ? 4 : 2;
-
-                if (sensorNodes.has(nodeId)) {
-                    // Diamond for sensors
-                    ctx.beginPath();
-                    ctx.moveTo(pos.x, pos.y - radius);
-                    ctx.lineTo(pos.x + radius, pos.y);
-                    ctx.lineTo(pos.x, pos.y + radius);
-                    ctx.lineTo(pos.x - radius, pos.y);
-                    ctx.closePath();
-                    ctx.fill();
-                    ctx.stroke();
-                } else {
-                    // Circle for scripts/actuators
-                    ctx.beginPath();
-                    ctx.arc(pos.x, pos.y, radius, 0, 2 * Math.PI);
-                    ctx.fill();
-                    ctx.stroke();
-                }
-
-                // Transition glow for nodes that changed state this frame
-                if (transitionSet.has(nodeId)) {
-                    ctx.save();
-                    ctx.shadowColor = 'rgba(255,255,255,0.8)';
-                    ctx.shadowBlur = 12;
-                    ctx.beginPath();
-                    if (sensorNodes.has(nodeId)) {
-                        ctx.moveTo(pos.x, pos.y - (radius + 4));
-                        ctx.lineTo(pos.x + (radius + 4), pos.y);
-                        ctx.lineTo(pos.x, pos.y + (radius + 4));
-                        ctx.lineTo(pos.x - (radius + 4), pos.y);
-                        ctx.closePath();
-                    } else {
-                        ctx.arc(pos.x, pos.y, radius + 4, 0, 2 * Math.PI);
-                    }
-                    ctx.lineWidth = 2;
-                    ctx.strokeStyle = '#ffffff';
-                    ctx.stroke();
-                    ctx.restore();
-                }
-
-                // Label
-                ctx.fillStyle = textColorFor(fill);
-                ctx.font = '12px Segoe UI, Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'top';
-                const label = nodeId.replace(/_/g, ' ').toUpperCase();
-                ctx.fillText(label, pos.x, pos.y + 26);
-            });
-        }
-
-        // Get node state for current step
-        function getNodeState(nodeId) {
-            if (currentStep >= visualizationData.length) return 'INACTIVE';
-            const frame = visualizationData[currentStep];
-            const nodes = (frame && frame.nodes) ? frame.nodes : {};
-            return nodes[nodeId] || 'INACTIVE';
-        }
-
-        // Setup controls
-        function setupControls() {
-            const prevBtn = document.getElementById('prev-btn');
-            const nextBtn = document.getElementById('next-btn');
-            const playPauseBtn = document.getElementById('play-pause-btn');
-            const speedSelect = document.getElementById('speed-select');
-            const prevMoveBtn = document.getElementById('prev-move-btn');
-            const nextMoveBtn = document.getElementById('next-move-btn');
-
-            prevBtn.addEventListener('click', () => {
-                if (currentStep > 0) {
-                    currentStep--;
-                    updateVisualization(currentStep);
-                }
-            });
-
-            nextBtn.addEventListener('click', () => {
-                if (currentStep < visualizationData.length - 1) {
-                    currentStep++;
-                    updateVisualization(currentStep);
-                }
-            });
-
-            playPauseBtn.addEventListener('click', () => {
-                if (isPlaying) {
-                    pausePlayback();
-                } else {
-                    startPlayback();
-                }
-            });
-
-            speedSelect.addEventListener('change', (e) => {
-                speedFactor = parseFloat(e.target.value) || 1;
-                if (isPlaying) {
-                    // Restart playback to apply new speed
-                    pausePlayback();
-                    startPlayback();
-                }
-            });
-
-            prevMoveBtn.addEventListener('click', () => {
-                if (!moveSteps.length) return;
-                // find the previous move index strictly less than currentStep
-                let idx = moveSteps.findIndex(i => i >= currentStep);
-                const prevIdx = (idx <= 0) ? -1 : moveSteps[idx - 1];
-                const target = (idx === -1) ? moveSteps[moveSteps.length - 1] : prevIdx;
-                if (target !== -1 && target !== undefined) {
-                    currentStep = target;
-                    updateVisualization(currentStep);
-                }
-            });
-
-            nextMoveBtn.addEventListener('click', () => {
-                if (!moveSteps.length) return;
-                let idx = moveSteps.findIndex(i => i > currentStep);
-                if (idx === -1) return;
-                currentStep = moveSteps[idx];
-                updateVisualization(currentStep);
-            });
-
-            updateControls();
-        }
-
-        // Start playback
-        function startPlayback() {
-            isPlaying = true;
-            document.getElementById('play-pause-btn').innerHTML = '<i class="fas fa-pause"></i> Pause';
-
-            const intervalMs = Math.max(50, 1000 / speedFactor);
-            playInterval = setInterval(() => {
-                if (currentStep >= visualizationData.length - 1) {
-                    pausePlayback();
+            // Update visualization for given step
+            updateVisualization(step) {
+                const data = this.dataManager.getData();
+                console.log(`Updating visualization for step ${step}`);
+                if (step >= data.length) {
+                    console.log(`Step ${step} is beyond data length ${data.length}`);
                     return;
                 }
-                currentStep++;
-                updateVisualization(currentStep);
-            }, intervalMs);
-        }
 
-        // Pause playback
-        function pausePlayback() {
-            isPlaying = false;
-            document.getElementById('play-pause-btn').innerHTML = '<i class="fas fa-play"></i> Play';
-            if (playInterval) {
-                clearInterval(playInterval);
-                playInterval = null;
-            }
-        }
+                const frame = data[step];
+                console.log('Frame data:', frame);
 
-        // Update controls state
-        function updateControls() {
-            const prevBtn = document.getElementById('prev-btn');
-            const nextBtn = document.getElementById('next-btn');
-            const prevMoveBtn = document.getElementById('prev-move-btn');
-            const nextMoveBtn = document.getElementById('next-move-btn');
-            const stepCounter = document.getElementById('step-counter');
+                // Update chess board (supports both FEN and move-based formats)
+                if (frame.env) {
+                    this.chessBoard.render(frame.env);
 
-            prevBtn.disabled = currentStep <= 0;
-            nextBtn.disabled = currentStep >= visualizationData.length - 1;
-            prevMoveBtn.disabled = moveSteps.length === 0 || currentStep <= (moveSteps[0] || 0);
-            nextMoveBtn.disabled = moveSteps.length === 0 || currentStep >= (moveSteps[moveSteps.length - 1] || 0);
-
-            const total = visualizationData.length;
-            stepCounter.textContent = `Step ${currentStep + 1} / ${total}`;
-        }
-
-        // Update visualization for given step
-        function updateVisualization(step) {
-            console.log(`Updating visualization for step ${step}`);
-            if (step >= visualizationData.length) {
-                console.log(`Step ${step} is beyond data length ${visualizationData.length}`);
-                return;
-            }
-
-            const frame = visualizationData[step];
-            console.log('Frame data:', frame);
-
-            // Update chess board (supports both FEN and move-based formats)
-            if (frame.env) {
-                renderChessBoard(frame.env);
-
-                // Show position info (enhanced for interactive games)
-                let positionInfo = "";
-                if (frame.env.move_number !== undefined) {
-                    positionInfo = `Move ${frame.env.move_number}`;
-                    const reconMove = frame.env.recons_move || frame.env.chosen_move;
-                    const oppMove = frame.env.opponents_move || frame.env.opponent_move;
-                    if (reconMove) {
-                        positionInfo += ` - ReCoN: ${reconMove}`;
-                    } else if (oppMove) {
-                        positionInfo += ` - Opponent: ${oppMove}`;
-                    } else if (frame.env.evaluation_tick) {
-                        positionInfo += ` - Evaluation tick ${frame.env.evaluation_tick}`;
+                    // Show position info (enhanced for interactive games)
+                    let positionInfo = "";
+                    if (frame.env.move_number !== undefined) {
+                        positionInfo = `Move ${frame.env.move_number}`;
+                        const reconMove = frame.env.recons_move || frame.env.chosen_move;
+                        const oppMove = frame.env.opponents_move || frame.env.opponent_move;
+                        if (reconMove) {
+                            positionInfo += ` - ReCoN: ${reconMove}`;
+                        } else if (oppMove) {
+                            positionInfo += ` - Opponent: ${oppMove}`;
+                        } else if (frame.env.evaluation_tick) {
+                            positionInfo += ` - Evaluation tick ${frame.env.evaluation_tick}`;
+                        }
+                    } else if (frame.env.moves && frame.env.moves.length > 0) {
+                        positionInfo = `Moves: ${frame.env.moves.length}`;
+                    } else if (frame.env.fen) {
+                        positionInfo = `Position: ${frame.env.fen.substring(0, 20)}...`;
                     }
-                } else if (frame.env.moves && frame.env.moves.length > 0) {
-                    positionInfo = `Moves: ${frame.env.moves.length}`;
-                } else if (frame.env.fen) {
-                    positionInfo = `Position: ${frame.env.fen.substring(0, 20)}...`;
+                    document.getElementById('chess-info').textContent = positionInfo;
                 }
-                document.getElementById('chess-info').textContent = positionInfo;
+
+                // Update thoughts
+                if (frame.thoughts) {
+                    document.getElementById('thoughts-text').textContent = frame.thoughts;
+                }
+
+                // Update network visualization with transition detection
+                this.networkVis.updateTransitionSet(frame.nodes || {});
+                this.networkVis.draw(frame, new Set((frame && frame.new_requests) ? frame.new_requests : []));
+
+                // Build or update move index (once)
+                if (!this.moveSteps.length) {
+                    this.moveSteps = [];
+                    data.forEach((f, i) => {
+                        const env = f.env || {};
+                        const hasMove = !!(env.recons_move || env.chosen_move || env.opponents_move || env.opponent_move);
+                        if (hasMove) this.moveSteps.push(i);
+                    });
+                }
+
+                // Update phase states
+                this.updatePhaseStates(frame.nodes || {});
+
+                // Update controls
+                this.updateControls();
             }
 
-            // Update thoughts
-            if (frame.thoughts) {
-                document.getElementById('thoughts-text').textContent = frame.thoughts;
-            }
+            // Update phase states in the UI
+            updatePhaseStates(nodes) {
+                const phaseElements = document.querySelectorAll('.phase-item');
 
-            // Detect node state transitions for this frame
-            const currentNodes = frame.nodes || {};
-            transitionSet = new Set();
-            Object.keys(currentNodes).forEach(nid => {
-                const prev = lastNodesState[nid];
-                const cur = currentNodes[nid];
-                if (prev !== undefined && prev !== cur) {
-                    transitionSet.add(nid);
-                }
-            });
-            lastNodesState = { ...currentNodes };
+                phaseElements.forEach(element => {
+                    const phaseId = element.getAttribute('data-phase');
+                    const state = nodes[phaseId] || 'INACTIVE';
+                    const stateClass = `state-${state.toLowerCase()}`;
 
-            // Build or update move index (once)
-            if (!moveSteps.length) {
-                moveSteps = [];
-                visualizationData.forEach((f, i) => {
-                    const env = f.env || {};
-                    const hasMove = !!(env.recons_move || env.chosen_move || env.opponents_move || env.opponent_move);
-                    if (hasMove) moveSteps.push(i);
+                    // Remove all state classes
+                    element.className = 'phase-item';
+
+                    // Add current state class
+                    element.classList.add(stateClass);
                 });
             }
-
-            // Update phase states
-            updatePhaseStates(frame.nodes || {});
-
-            // Update network visualization
-            const canvas = document.getElementById('network-canvas');
-            const ctx = canvas.getContext('2d');
-            drawNetwork(ctx);
-
-            // Update controls
-            updateControls();
         }
 
-        // Update phase states in the UI
-        function updatePhaseStates(nodes) {
-            const phaseElements = document.querySelectorAll('.phase-item');
+        // Global application instance
+        let app;
 
-            phaseElements.forEach(element => {
-                const phaseId = element.getAttribute('data-phase');
-                const state = nodes[phaseId] || 'INACTIVE';
-                const stateClass = `state-${state.toLowerCase()}`;
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', async () => {
+            app = new ReConVisualization();
+            await app.init();
 
-                // Remove all state classes
-                element.className = 'phase-item';
-
-                // Add current state class
-                element.classList.add(stateClass);
-            });
-        }
-
-        // Start the application
-        document.addEventListener('DOMContentLoaded', init);
+            // Show initial state immediately
+            const data = app.dataManager.getData();
+            if (data.length > 0) {
+                app.updateVisualization(0);
+            }
+        });
 
         // Allow manual loading of a JSON file
         document.addEventListener('DOMContentLoaded', () => {
@@ -1060,13 +371,11 @@
                     const file = input.files && input.files[0];
                     if (!file) return;
                     try {
-                        const text = await file.text();
-                        const data = JSON.parse(text);
-                        visualizationData = data;
-                        externalEdges = (data.length > 0 && data[0].graph && data[0].graph.edges) ? data[0].graph.edges : null;
-                        currentStep = 0;
-                        updateControls();
-                        updateVisualization(0);
+                        const data = await app.dataManager.loadFromFile(file);
+                        app.currentStep = 0;
+                        app.moveSteps = []; // Reset move index
+                        app.updateControls();
+                        app.updateVisualization(0);
                     } catch (e) {
                         console.error('Failed to load JSON file:', e);
                     }
