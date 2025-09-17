@@ -4,7 +4,7 @@ KRK Chess Demo (ReCoN-driven)
 
 What this does
 --------------
-- Builds a fresh KRK ReCoN graph each white move. (a bit stupid but for now)
+- Builds a fresh KRK ReCoN graph each white move.
 - Uses Phase-0 (establish cut + king/rook rendezvous), then Phase-1..4.
 - The engine runs until a terminal sets env["chosen_move"].
 - Logs per-move features to help diagnose stalls/oscillation.
@@ -28,20 +28,52 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from recon_lite.graph import Graph, LinkType, NodeState
 from recon_lite.engine import ReConEngine
 from recon_lite.logger import RunLogger
-from recon_lite.graph import NodeState
-from demos.shared.krk_network import build_krk_network, create_random_krk_board
+
+# KRK nodes + helpers
+from recon_lite_chess import (
+    create_krk_root,
+    create_phase0_establish_cut, create_phase0_choose_moves,
+    create_phase1_drive_to_edge, create_phase2_shrink_box,
+    create_phase3_take_opposition, create_phase4_deliver_mate,
+)
+from recon_lite_chess.krk_nodes import wire_default_krk
 from recon_lite_chess.predicates import move_features, box_area
 
 
 # -------- graph building --------
 
-def build_krk_graph():
+def build_krk_graph() -> Graph:
     """
-    Build the KRK graph using the shared network module.
+    Build a KRK graph with Phase-0..4, and POR sequencing Phase0→1→2→3→4.
+    Includes a Phase-0 terminal that must set env["chosen_move"].
     """
-    return build_krk_network()
+    g = Graph()
+
+    root  = create_krk_root("ROOT")
+    p0    = create_phase0_establish_cut("PHASE0")
+    ch0   = create_phase0_choose_moves("CHOOSE_P0")
+    p1    = create_phase1_drive_to_edge("PHASE1")
+    p2    = create_phase2_shrink_box("PHASE2")
+    p3    = create_phase3_take_opposition("PHASE3")
+    p4    = create_phase4_deliver_mate("PHASE4")
+
+    for n in [root, p0, ch0, p1, p2, p3, p4]:
+        g.add_node(n)
+
+    wire_default_krk(g, "ROOT", {
+        "root": "ROOT",
+        "phase0": "PHASE0",
+        "choose_p0": "CHOOSE_P0",
+        "phase1": "PHASE1",
+        "phase2": "PHASE2",
+        "phase3": "PHASE3",
+        "phase4": "PHASE4",
+    })
+
+    return g
 
 
 # -------- opponent --------
@@ -58,54 +90,31 @@ def opponent_random_move(board: chess.Board) -> str | None:
 # -------- engine stepper --------
 
 def choose_move_with_graph(board: chess.Board, logger: RunLogger, move_no: int,
-                           max_ticks: int = 500) -> str | None:
+                           max_ticks: int = 200) -> str | None:
     """
-    Build a fresh KRK graph, request krk_root, tick until env["chosen_move"] is set
+    Build a fresh KRK graph, request ROOT, tick until env["chosen_move"] is set
     or until max_ticks. Returns UCI string or None.
     """
     env = {"board": board, "chosen_move": None}
 
     g = build_krk_graph()
     eng = ReConEngine(g)
-    g.nodes["krk_root"].state = NodeState.REQUESTED
-
-    # Precompute graph edges for visualization
-    graph_edges = [{"src": e.src, "dst": e.dst, "type": e.ltype.name} for e in g.edges]
+    g.nodes["ROOT"].state = NodeState.REQUESTED
 
     ticks = 0
-    watchdog_triggered = False
-
     while ticks < max_ticks and env.get("chosen_move") is None:
         ticks += 1
         now_req = eng.step(env)
 
-        # Per-tick snapshot for visualization (network states + fen)
-        logger.snapshot(
-            engine=eng,
-            note=f"Eval tick {ticks} (move {move_no})",
-            env={"fen": board.fen(), "move_number": move_no, "evaluation_tick": ticks},
-            thoughts="Evaluating KRK position...",
-            new_requests=list(now_req.keys()) if now_req else [],
-        )
-        # Attach graph edges only on the first tick snapshot to avoid repetition
-        if ticks == 1:
-            logger.events[-1]["graph"] = {"edges": graph_edges}
-
-        # WATCHDOG: Force a move after 50 ticks to prevent infinite stalls
-        if ticks == 150 and env.get("chosen_move") is None:
-            from demos.shared.krk_network import choose_any_safe_move
-            fallback_move = choose_any_safe_move(board)
-            if fallback_move:
-                env["chosen_move"] = fallback_move
-                watchdog_triggered = True
-                logger.snapshot(
-                    engine=eng,
-                    note=f"WATCHDOG: Forced move {fallback_move} after {ticks} ticks",
-                    env={"fen": board.fen(), "move_number": move_no, "evaluation_tick": ticks, "watchdog": True},
-                    thoughts=f"Watchdog activated: No move chosen after {ticks} ticks, using fallback",
-                    new_requests=[]
-                )
-                break
+        # snapshot periodically to inspect why the graph might be idle
+        if ticks % 10 == 0:
+            logger.snapshot(
+                engine=eng,
+                note=f"Eval tick {ticks} (move {move_no})",
+                env={"fen": board.fen(), "move_number": move_no, "evaluation_tick": ticks},
+                thoughts=f"Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move'].",
+                new_requests=list(now_req.keys()) if now_req else []
+            )
 
     return env.get("chosen_move")
 
@@ -119,8 +128,6 @@ def play_single_game(initial_fen: str | None = None, max_plies: int = 200) -> di
     """
     logger = RunLogger()
     board = chess.Board(initial_fen) if initial_fen else random_krk_board(white_to_move=True)
-    initial_fen_str = board.fen()
-    moves_log: list[str] = []
 
     stalls = 0
     rook_lost = False
@@ -153,9 +160,6 @@ def play_single_game(initial_fen: str | None = None, max_plies: int = 200) -> di
             stalls += 1
             break
 
-        # Append White move to cumulative log now that it is applied
-        moves_log.append(chosen_uci)
-
         # rook loss check
         if not any(p.piece_type == chess.ROOK and p.color == chess.WHITE for p in board.piece_map().values()):
             rook_lost = True
@@ -167,16 +171,8 @@ def play_single_game(initial_fen: str | None = None, max_plies: int = 200) -> di
         logger.snapshot(
             engine=None,  # not strictly needed here
             note=f"ReCoN ply {ply}: {chosen_uci}",
-            env={
-                "initial_fen": initial_fen_str,
-                "moves": list(moves_log),
-                "fen": board.fen(),
-                "ply": ply,
-                "chosen_move": chosen_uci,
-                "recons_move": chosen_uci,
-                "features": feats,
-                "box_area_delta": feats["box_area_after"] - prev_area
-            },
+            env={"fen": board.fen(), "ply": ply, "chosen_move": chosen_uci, "recons_move": chosen_uci,
+                 "features": feats, "box_area_delta": feats["box_area_after"] - prev_area},
             thoughts=f"Chose {chosen_uci} | Δbox={feats['box_area_after']-prev_area} | king_progress={feats['king_progress']} | safe_check={feats['gives_safe_check']} | rook_safe={feats['rook_safe_after']}",
             new_requests=[]
         )
@@ -189,10 +185,7 @@ def play_single_game(initial_fen: str | None = None, max_plies: int = 200) -> di
         if not opp_uci:
             break
 
-        # Update cumulative moves then apply
         board.push_uci(opp_uci)
-        moves_log.append(opp_uci)
-
         print(f"♚ Black (Random) plays: {opp_uci}")
         print(board)
         print()
@@ -200,14 +193,7 @@ def play_single_game(initial_fen: str | None = None, max_plies: int = 200) -> di
         logger.snapshot(
             engine=None,
             note=f"Opponent ply {ply}: {opp_uci}",
-            env={
-                "initial_fen": initial_fen_str,
-                "moves": list(moves_log),
-                "fen": board.fen(),
-                "ply": ply,
-                "opponent_move": opp_uci,
-                "opponents_move": opp_uci
-            },
+            env={"fen": board.fen(), "ply": ply, "opponent_move": opp_uci, "opponents_move": opp_uci},
             thoughts="Random defense.",
             new_requests=[]
         )

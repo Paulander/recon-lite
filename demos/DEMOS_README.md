@@ -113,14 +113,8 @@ uv run python demos/krk_play_demo.py
 
 ---
 
-## 🎓 Learning Outcomes
+## 🎓Summary/Outlook
 
-By working through these demos in order, you'll learn:
-
-1. **ReCoN Fundamentals:** Node types, links, execution flow
-2. **Domain Integration:** Chess-specific evaluators and actuators
-3. **Interactive Systems:** Game loops, alternating execution
-4. **State Management:** Stateless vs persistent approaches
-5. **Visualization:** Real-time execution monitoring
-
-Each demo builds on the previous one, creating a complete learning path from basic ReCoN concepts to advanced interactive chess playing! 🧠♟️
+I tried to "build" up from simple to more advanced examples. However later it "branches out" 
+a bit too much. But in  a nutshell: 
+The first example just shows a 

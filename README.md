@@ -9,6 +9,20 @@ A small, dependency-light Python implementation of a ReCoN-style executor with s
 - ✅ **Visualization**: Structured logging for replay and debugging
 - ✅ **Extensible**: Plugin system for domain-specific nodes
 
+
+## State of the project and quick overview
+See `ARCHITECTURE.md` for a more complete description of the project. 
+On a top level we have the following hierarchy: 
+
+```
+├── src                   # The ReCoN implementation
+   ├── recon_lite         # Core ReCoN data structures and graph management
+   └── recon_lite_chess   # Chess specific ReCoN data structures and helper functions
+└──demos                 # Several example implementations of ReCoN networks. 
+    └──visualization      # Html visualizations of ReCoN outputs. (Run scripts to produce json)
+
+```
+
 ## Install (uv)
 ```bash
 uv venv .venv
@@ -22,7 +36,7 @@ uv run python -m demos.sequence_demo
 Try the King+Rook vs King checkmate solver:
 
 ```bash
-uv run python demos/krk_checkmate_demo.py
+uv run python demos/gameplay/krk_play_demo.py
 ```
 
 This demonstrates the hierarchical KRK strategy:
@@ -31,8 +45,14 @@ This demonstrates the hierarchical KRK strategy:
 - **Phase 3**: Take opposition
 - **Phase 4**: Deliver checkmate
 
-\* Realization: Obviously I will want an internal representation (probably using the python chess library already included) of the 
-chess board but I will want to extend to using specialized nodes (tiny MLP over feature vector or a “board-plane” CNN (8×8×k encodings) to read boards from photos or 2D-chess engines. this should probably be it's own subtree with (local) root node "identify position"... should probably be its own classes/module as well in the future. 
+Some comments and outlook:
+This solver is far from perfect; in fact it's quite mediocre as a chess engine. I think it serves as a good demo of how 
+to set up a ReCoN network though. It could easily be expanded/improved in several ways (that is out of scope for now as I am running out of time):
+    - Terminal Nodes could added:
+        -- a small CNN or MLP to identify chess positions from pngs (or other images)
+        -- a more sophisticated image recognition (CNN or other) to identify positions from photos or videos of real chessboards
+    - Use a true chess engine:
+      -- instead of using the "phases" and heuristics above an API call to e.g. stockfish could be wrapped into one node and connected to the ReCoN. This would report back with suggested move. So the rest of the graph could stay the same, as long as the new node adheres to the interface spec. 
 
 ## Other demos and file structure
 

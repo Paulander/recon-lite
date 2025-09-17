@@ -1,0 +1,1526 @@
+[
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 1: a2e2",
+    "new_requests": [],
+    "env": {
+      "fen": "4k3/6K1/8/8/8/8/4R3/8 b - - 1 1",
+      "ply": 1,
+      "chosen_move": "a2e2",
+      "recons_move": "a2e2",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 9,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": 8
+    },
+    "thoughts": "Chose a2e2 | \u0394box=8 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 1: e8d8",
+    "new_requests": [],
+    "env": {
+      "fen": "3k4/6K1/8/8/8/8/4R3/8 w - - 2 2",
+      "ply": 1,
+      "opponent_move": "e8d8",
+      "opponents_move": "e8d8"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 2: g7f7",
+    "new_requests": [],
+    "env": {
+      "fen": "3k4/5K2/8/8/8/8/4R3/8 b - - 3 2",
+      "ply": 2,
+      "chosen_move": "g7f7",
+      "recons_move": "g7f7",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 9,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 8
+    },
+    "thoughts": "Chose g7f7 | \u0394box=8 | king_progress=1.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 2: d8d7",
+    "new_requests": [],
+    "env": {
+      "fen": "8/3k1K2/8/8/8/8/4R3/8 w - - 4 3",
+      "ply": 2,
+      "opponent_move": "d8d7",
+      "opponents_move": "d8d7"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 3: f7f8",
+    "new_requests": [],
+    "env": {
+      "fen": "5K2/3k4/8/8/8/8/4R3/8 b - - 5 3",
+      "ply": 3,
+      "chosen_move": "f7f8",
+      "recons_move": "f7f8",
+      "features": {
+        "box_area_before": 9,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": -8
+    },
+    "thoughts": "Chose f7f8 | \u0394box=-8 | king_progress=0.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 3: d7d8",
+    "new_requests": [],
+    "env": {
+      "fen": "3k1K2/8/8/8/8/8/4R3/8 w - - 6 4",
+      "ply": 3,
+      "opponent_move": "d7d8",
+      "opponents_move": "d7d8"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 4: e2d2",
+    "new_requests": [],
+    "env": {
+      "fen": "3k1K2/8/8/8/8/8/3R4/8 b - - 7 4",
+      "ply": 4,
+      "chosen_move": "e2d2",
+      "recons_move": "e2d2",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": 0
+    },
+    "thoughts": "Chose e2d2 | \u0394box=0 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 4: d8c7",
+    "new_requests": [],
+    "env": {
+      "fen": "5K2/2k5/8/8/8/8/3R4/8 w - - 8 5",
+      "ply": 4,
+      "opponent_move": "d8c7",
+      "opponents_move": "d8c7"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 5: f8e8",
+    "new_requests": [],
+    "env": {
+      "fen": "4K3/2k5/8/8/8/8/3R4/8 b - - 9 5",
+      "ply": 5,
+      "chosen_move": "f8e8",
+      "recons_move": "f8e8",
+      "features": {
+        "box_area_before": 9,
+        "box_area_after": 1,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": -8
+    },
+    "thoughts": "Chose f8e8 | \u0394box=-8 | king_progress=1.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 5: c7c8",
+    "new_requests": [],
+    "env": {
+      "fen": "2k1K3/8/8/8/8/8/3R4/8 w - - 10 6",
+      "ply": 5,
+      "opponent_move": "c7c8",
+      "opponents_move": "c7c8"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 6: d2c2",
+    "new_requests": [],
+    "env": {
+      "fen": "2k1K3/8/8/8/8/8/2R5/8 b - - 11 6",
+      "ply": 6,
+      "chosen_move": "d2c2",
+      "recons_move": "d2c2",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": 0
+    },
+    "thoughts": "Chose d2c2 | \u0394box=0 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 6: c8b7",
+    "new_requests": [],
+    "env": {
+      "fen": "4K3/1k6/8/8/8/8/2R5/8 w - - 12 7",
+      "ply": 6,
+      "opponent_move": "c8b7",
+      "opponents_move": "c8b7"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 7: e8d8",
+    "new_requests": [],
+    "env": {
+      "fen": "3K4/1k6/8/8/8/8/2R5/8 b - - 13 7",
+      "ply": 7,
+      "chosen_move": "e8d8",
+      "recons_move": "e8d8",
+      "features": {
+        "box_area_before": 9,
+        "box_area_after": 1,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": -8
+    },
+    "thoughts": "Chose e8d8 | \u0394box=-8 | king_progress=1.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 7: b7a7",
+    "new_requests": [],
+    "env": {
+      "fen": "3K4/k7/8/8/8/8/2R5/8 w - - 14 8",
+      "ply": 7,
+      "opponent_move": "b7a7",
+      "opponents_move": "b7a7"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 8: d8c8",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/k7/8/8/8/8/2R5/8 b - - 15 8",
+      "ply": 8,
+      "chosen_move": "d8c8",
+      "recons_move": "d8c8",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 1,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 0
+    },
+    "thoughts": "Chose d8c8 | \u0394box=0 | king_progress=1.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 8: a7b6",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/1k6/8/8/8/2R5/8 w - - 16 9",
+      "ply": 8,
+      "opponent_move": "a7b6",
+      "opponents_move": "a7b6"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 9: c2b2",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/1k6/8/8/8/1R6/8 b - - 17 9",
+      "ply": 9,
+      "chosen_move": "c2b2",
+      "recons_move": "c2b2",
+      "features": {
+        "box_area_before": 9,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -8
+    },
+    "thoughts": "Chose c2b2 | \u0394box=-8 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 9: b6a7",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/k7/8/8/8/8/1R6/8 w - - 18 10",
+      "ply": 9,
+      "opponent_move": "b6a7",
+      "opponents_move": "b6a7"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 10: b2a2",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/k7/8/8/8/8/R7/8 b - - 19 10",
+      "ply": 10,
+      "chosen_move": "b2a2",
+      "recons_move": "b2a2",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": 0
+    },
+    "thoughts": "Chose b2a2 | \u0394box=0 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 10: a7b6",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/1k6/8/8/8/R7/8 w - - 20 11",
+      "ply": 10,
+      "opponent_move": "a7b6",
+      "opponents_move": "a7b6"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 11: c8b8",
+    "new_requests": [],
+    "env": {
+      "fen": "1K6/8/1k6/8/8/8/R7/8 b - - 21 11",
+      "ply": 11,
+      "chosen_move": "c8b8",
+      "recons_move": "c8b8",
+      "features": {
+        "box_area_before": 9,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": -8
+    },
+    "thoughts": "Chose c8b8 | \u0394box=-8 | king_progress=0.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 11: b6c6",
+    "new_requests": [],
+    "env": {
+      "fen": "1K6/8/2k5/8/8/8/R7/8 w - - 22 12",
+      "ply": 11,
+      "opponent_move": "b6c6",
+      "opponents_move": "b6c6"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 12: b8a8",
+    "new_requests": [],
+    "env": {
+      "fen": "K7/8/2k5/8/8/8/R7/8 b - - 23 12",
+      "ply": 12,
+      "chosen_move": "b8a8",
+      "recons_move": "b8a8",
+      "features": {
+        "box_area_before": 25,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": -24
+    },
+    "thoughts": "Chose b8a8 | \u0394box=-24 | king_progress=0.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 12: c6c7",
+    "new_requests": [],
+    "env": {
+      "fen": "K7/2k5/8/8/8/8/R7/8 w - - 24 13",
+      "ply": 12,
+      "opponent_move": "c6c7",
+      "opponents_move": "c6c7"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 13: a8a7",
+    "new_requests": [],
+    "env": {
+      "fen": "8/K1k5/8/8/8/8/R7/8 b - - 25 13",
+      "ply": 13,
+      "chosen_move": "a8a7",
+      "recons_move": "a8a7",
+      "features": {
+        "box_area_before": 9,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": -8
+    },
+    "thoughts": "Chose a8a7 | \u0394box=-8 | king_progress=0.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 13: c7c8",
+    "new_requests": [],
+    "env": {
+      "fen": "2k5/K7/8/8/8/8/R7/8 w - - 26 14",
+      "ply": 13,
+      "opponent_move": "c7c8",
+      "opponents_move": "c7c8"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 14: a2c2",
+    "new_requests": [],
+    "env": {
+      "fen": "2k5/K7/8/8/8/8/2R5/8 b - - 27 14",
+      "ply": 14,
+      "chosen_move": "a2c2",
+      "recons_move": "a2c2",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": 0
+    },
+    "thoughts": "Chose a2c2 | \u0394box=0 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 14: c8d7",
+    "new_requests": [],
+    "env": {
+      "fen": "8/K2k4/8/8/8/8/2R5/8 w - - 28 15",
+      "ply": 14,
+      "opponent_move": "c8d7",
+      "opponents_move": "c8d7"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 15: a7b8",
+    "new_requests": [],
+    "env": {
+      "fen": "1K6/3k4/8/8/8/8/2R5/8 b - - 29 15",
+      "ply": 15,
+      "chosen_move": "a7b8",
+      "recons_move": "a7b8",
+      "features": {
+        "box_area_before": 9,
+        "box_area_after": 1,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": -8
+    },
+    "thoughts": "Chose a7b8 | \u0394box=-8 | king_progress=1.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 15: d7d8",
+    "new_requests": [],
+    "env": {
+      "fen": "1K1k4/8/8/8/8/8/2R5/8 w - - 30 16",
+      "ply": 15,
+      "opponent_move": "d7d8",
+      "opponents_move": "d7d8"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 16: c2d2",
+    "new_requests": [],
+    "env": {
+      "fen": "1K1k4/8/8/8/8/8/3R4/8 b - - 31 16",
+      "ply": 16,
+      "chosen_move": "c2d2",
+      "recons_move": "c2d2",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": 0
+    },
+    "thoughts": "Chose c2d2 | \u0394box=0 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 16: d8e7",
+    "new_requests": [],
+    "env": {
+      "fen": "1K6/4k3/8/8/8/8/3R4/8 w - - 32 17",
+      "ply": 16,
+      "opponent_move": "d8e7",
+      "opponents_move": "d8e7"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 17: b8c8",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/4k3/8/8/8/8/3R4/8 b - - 33 17",
+      "ply": 17,
+      "chosen_move": "b8c8",
+      "recons_move": "b8c8",
+      "features": {
+        "box_area_before": 9,
+        "box_area_after": 1,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": -8
+    },
+    "thoughts": "Chose b8c8 | \u0394box=-8 | king_progress=1.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 17: e7e8",
+    "new_requests": [],
+    "env": {
+      "fen": "2K1k3/8/8/8/8/8/3R4/8 w - - 34 18",
+      "ply": 17,
+      "opponent_move": "e7e8",
+      "opponents_move": "e7e8"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 18: d2e2",
+    "new_requests": [],
+    "env": {
+      "fen": "2K1k3/8/8/8/8/8/4R3/8 b - - 35 18",
+      "ply": 18,
+      "chosen_move": "d2e2",
+      "recons_move": "d2e2",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": 0
+    },
+    "thoughts": "Chose d2e2 | \u0394box=0 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 18: e8f7",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/5k2/8/8/8/8/4R3/8 w - - 36 19",
+      "ply": 18,
+      "opponent_move": "e8f7",
+      "opponents_move": "e8f7"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 19: c8d8",
+    "new_requests": [],
+    "env": {
+      "fen": "3K4/5k2/8/8/8/8/4R3/8 b - - 37 19",
+      "ply": 19,
+      "chosen_move": "c8d8",
+      "recons_move": "c8d8",
+      "features": {
+        "box_area_before": 9,
+        "box_area_after": 1,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": -8
+    },
+    "thoughts": "Chose c8d8 | \u0394box=-8 | king_progress=1.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 19: f7f8",
+    "new_requests": [],
+    "env": {
+      "fen": "3K1k2/8/8/8/8/8/4R3/8 w - - 38 20",
+      "ply": 19,
+      "opponent_move": "f7f8",
+      "opponents_move": "f7f8"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 20: e2f2",
+    "new_requests": [],
+    "env": {
+      "fen": "3K1k2/8/8/8/8/8/5R2/8 b - - 39 20",
+      "ply": 20,
+      "chosen_move": "e2f2",
+      "recons_move": "e2f2",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": 0
+    },
+    "thoughts": "Chose e2f2 | \u0394box=0 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 20: f8g8",
+    "new_requests": [],
+    "env": {
+      "fen": "3K2k1/8/8/8/8/8/5R2/8 w - - 40 21",
+      "ply": 20,
+      "opponent_move": "f8g8",
+      "opponents_move": "f8g8"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 21: d8e8",
+    "new_requests": [],
+    "env": {
+      "fen": "4K1k1/8/8/8/8/8/5R2/8 b - - 41 21",
+      "ply": 21,
+      "chosen_move": "d8e8",
+      "recons_move": "d8e8",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 1,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 0
+    },
+    "thoughts": "Chose d8e8 | \u0394box=0 | king_progress=1.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 21: g8h8",
+    "new_requests": [],
+    "env": {
+      "fen": "4K2k/8/8/8/8/8/5R2/8 w - - 42 22",
+      "ply": 21,
+      "opponent_move": "g8h8",
+      "opponents_move": "g8h8"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 22: e8f8",
+    "new_requests": [],
+    "env": {
+      "fen": "5K1k/8/8/8/8/8/5R2/8 b - - 43 22",
+      "ply": 22,
+      "chosen_move": "e8f8",
+      "recons_move": "e8f8",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 1,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 0
+    },
+    "thoughts": "Chose e8f8 | \u0394box=0 | king_progress=1.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 22: h8h7",
+    "new_requests": [],
+    "env": {
+      "fen": "5K2/7k/8/8/8/8/5R2/8 w - - 44 23",
+      "ply": 22,
+      "opponent_move": "h8h7",
+      "opponents_move": "h8h7"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 23: f2h2",
+    "new_requests": [],
+    "env": {
+      "fen": "5K2/7k/8/8/8/8/7R/8 b - - 45 23",
+      "ply": 23,
+      "chosen_move": "f2h2",
+      "recons_move": "f2h2",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": 0
+    },
+    "thoughts": "Chose f2h2 | \u0394box=0 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 23: h7g6",
+    "new_requests": [],
+    "env": {
+      "fen": "5K2/8/6k1/8/8/8/7R/8 w - - 46 24",
+      "ply": 23,
+      "opponent_move": "h7g6",
+      "opponents_move": "h7g6"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 24: f8g8",
+    "new_requests": [],
+    "env": {
+      "fen": "6K1/8/6k1/8/8/8/7R/8 b - - 47 24",
+      "ply": 24,
+      "chosen_move": "f8g8",
+      "recons_move": "f8g8",
+      "features": {
+        "box_area_before": 9,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": -8
+    },
+    "thoughts": "Chose f8g8 | \u0394box=-8 | king_progress=0.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 24: g6f6",
+    "new_requests": [],
+    "env": {
+      "fen": "6K1/8/5k2/8/8/8/7R/8 w - - 48 25",
+      "ply": 24,
+      "opponent_move": "g6f6",
+      "opponents_move": "g6f6"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 25: g8h8",
+    "new_requests": [],
+    "env": {
+      "fen": "7K/8/5k2/8/8/8/7R/8 b - - 49 25",
+      "ply": 25,
+      "chosen_move": "g8h8",
+      "recons_move": "g8h8",
+      "features": {
+        "box_area_before": 25,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": -24
+    },
+    "thoughts": "Chose g8h8 | \u0394box=-24 | king_progress=0.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 25: f6e5",
+    "new_requests": [],
+    "env": {
+      "fen": "7K/8/8/4k3/8/8/7R/8 w - - 50 26",
+      "ply": 25,
+      "opponent_move": "f6e5",
+      "opponents_move": "f6e5"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 26: h8h7",
+    "new_requests": [],
+    "env": {
+      "fen": "8/7K/8/4k3/8/8/7R/8 b - - 51 26",
+      "ply": 26,
+      "chosen_move": "h8h7",
+      "recons_move": "h8h7",
+      "features": {
+        "box_area_before": 49,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": -48
+    },
+    "thoughts": "Chose h8h7 | \u0394box=-48 | king_progress=0.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 26: e5d4",
+    "new_requests": [],
+    "env": {
+      "fen": "8/7K/8/8/3k4/8/7R/8 w - - 52 27",
+      "ply": 26,
+      "opponent_move": "e5d4",
+      "opponents_move": "e5d4"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 27: h7h6",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/7K/8/3k4/8/7R/8 b - - 53 27",
+      "ply": 27,
+      "chosen_move": "h7h6",
+      "recons_move": "h7h6",
+      "features": {
+        "box_area_before": 49,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": -48
+    },
+    "thoughts": "Chose h7h6 | \u0394box=-48 | king_progress=0.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 27: d4c5",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/7K/2k5/8/8/7R/8 w - - 54 28",
+      "ply": 27,
+      "opponent_move": "d4c5",
+      "opponents_move": "d4c5"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 28: h6h5",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/2k4K/8/8/7R/8 b - - 55 28",
+      "ply": 28,
+      "chosen_move": "h6h5",
+      "recons_move": "h6h5",
+      "features": {
+        "box_area_before": 25,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": -24
+    },
+    "thoughts": "Chose h6h5 | \u0394box=-24 | king_progress=0.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 28: c5d6",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/3k4/7K/8/8/7R/8 w - - 56 29",
+      "ply": 28,
+      "opponent_move": "c5d6",
+      "opponents_move": "c5d6"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 29: h5h4",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/3k4/8/7K/8/7R/8 b - - 57 29",
+      "ply": 29,
+      "chosen_move": "h5h4",
+      "recons_move": "h5h4",
+      "features": {
+        "box_area_before": 25,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": -24
+    },
+    "thoughts": "Chose h5h4 | \u0394box=-24 | king_progress=0.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 29: d6c7",
+    "new_requests": [],
+    "env": {
+      "fen": "8/2k5/8/8/7K/8/7R/8 w - - 58 30",
+      "ply": 29,
+      "opponent_move": "d6c7",
+      "opponents_move": "d6c7"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 30: h2c2",
+    "new_requests": [],
+    "env": {
+      "fen": "8/2k5/8/8/7K/8/2R5/8 b - - 59 30",
+      "ply": 30,
+      "chosen_move": "h2c2",
+      "recons_move": "h2c2",
+      "features": {
+        "box_area_before": 9,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -8
+    },
+    "thoughts": "Chose h2c2 | \u0394box=-8 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 30: c7d7",
+    "new_requests": [],
+    "env": {
+      "fen": "8/3k4/8/8/7K/8/2R5/8 w - - 60 31",
+      "ply": 30,
+      "opponent_move": "c7d7",
+      "opponents_move": "c7d7"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 31: h4h3",
+    "new_requests": [],
+    "env": {
+      "fen": "8/3k4/8/8/8/7K/2R5/8 b - - 61 31",
+      "ply": 31,
+      "chosen_move": "h4h3",
+      "recons_move": "h4h3",
+      "features": {
+        "box_area_before": 9,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": -8
+    },
+    "thoughts": "Chose h4h3 | \u0394box=-8 | king_progress=0.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 31: d7e7",
+    "new_requests": [],
+    "env": {
+      "fen": "8/4k3/8/8/8/7K/2R5/8 w - - 62 32",
+      "ply": 31,
+      "opponent_move": "d7e7",
+      "opponents_move": "d7e7"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 32: h3h4",
+    "new_requests": [],
+    "env": {
+      "fen": "8/4k3/8/8/7K/8/2R5/8 b - - 63 32",
+      "ply": 32,
+      "chosen_move": "h3h4",
+      "recons_move": "h3h4",
+      "features": {
+        "box_area_before": 9,
+        "box_area_after": 1,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": -8
+    },
+    "thoughts": "Chose h3h4 | \u0394box=-8 | king_progress=1.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 32: e7d8",
+    "new_requests": [],
+    "env": {
+      "fen": "3k4/8/8/8/7K/8/2R5/8 w - - 64 33",
+      "ply": 32,
+      "opponent_move": "e7d8",
+      "opponents_move": "e7d8"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 33: h4g5",
+    "new_requests": [],
+    "env": {
+      "fen": "3k4/8/8/6K1/8/8/2R5/8 b - - 65 33",
+      "ply": 33,
+      "chosen_move": "h4g5",
+      "recons_move": "h4g5",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 9,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 8
+    },
+    "thoughts": "Chose h4g5 | \u0394box=8 | king_progress=1.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 33: d8e8",
+    "new_requests": [],
+    "env": {
+      "fen": "4k3/8/8/6K1/8/8/2R5/8 w - - 66 34",
+      "ply": 33,
+      "opponent_move": "d8e8",
+      "opponents_move": "d8e8"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 34: g5g6",
+    "new_requests": [],
+    "env": {
+      "fen": "4k3/8/6K1/8/8/8/2R5/8 b - - 67 34",
+      "ply": 34,
+      "chosen_move": "g5g6",
+      "recons_move": "g5g6",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 9,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 8
+    },
+    "thoughts": "Chose g5g6 | \u0394box=8 | king_progress=1.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 34: e8d8",
+    "new_requests": [],
+    "env": {
+      "fen": "3k4/8/6K1/8/8/8/2R5/8 w - - 68 35",
+      "ply": 34,
+      "opponent_move": "e8d8",
+      "opponents_move": "e8d8"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 35: g6f6",
+    "new_requests": [],
+    "env": {
+      "fen": "3k4/8/5K2/8/8/8/2R5/8 b - - 69 35",
+      "ply": 35,
+      "chosen_move": "g6f6",
+      "recons_move": "g6f6",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 25,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 24
+    },
+    "thoughts": "Chose g6f6 | \u0394box=24 | king_progress=1.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 35: d8d7",
+    "new_requests": [],
+    "env": {
+      "fen": "8/3k4/5K2/8/8/8/2R5/8 w - - 70 36",
+      "ply": 35,
+      "opponent_move": "d8d7",
+      "opponents_move": "d8d7"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 36: c2d2",
+    "new_requests": [],
+    "env": {
+      "fen": "8/3k4/5K2/8/8/8/3R4/8 b - - 71 36",
+      "ply": 36,
+      "chosen_move": "c2d2",
+      "recons_move": "c2d2",
+      "features": {
+        "box_area_before": 9,
+        "box_area_after": 25,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": 16
+    },
+    "thoughts": "Chose c2d2 | \u0394box=16 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 36: d7c8",
+    "new_requests": [],
+    "env": {
+      "fen": "2k5/8/5K2/8/8/8/3R4/8 w - - 72 37",
+      "ply": 36,
+      "opponent_move": "d7c8",
+      "opponents_move": "d7c8"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 37: f6e6",
+    "new_requests": [],
+    "env": {
+      "fen": "2k5/8/4K3/8/8/8/3R4/8 b - - 73 37",
+      "ply": 37,
+      "chosen_move": "f6e6",
+      "recons_move": "f6e6",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 25,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 24
+    },
+    "thoughts": "Chose f6e6 | \u0394box=24 | king_progress=1.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 37: c8c7",
+    "new_requests": [],
+    "env": {
+      "fen": "8/2k5/4K3/8/8/8/3R4/8 w - - 74 38",
+      "ply": 37,
+      "opponent_move": "c8c7",
+      "opponents_move": "c8c7"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 38: d2c2",
+    "new_requests": [],
+    "env": {
+      "fen": "8/2k5/4K3/8/8/8/2R5/8 b - - 75 38",
+      "ply": 38,
+      "chosen_move": "d2c2",
+      "recons_move": "d2c2",
+      "features": {
+        "box_area_before": 9,
+        "box_area_after": 25,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": 16
+    },
+    "thoughts": "Chose d2c2 | \u0394box=16 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 38: c7b6",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/1k2K3/8/8/8/2R5/8 w - - 76 39",
+      "ply": 38,
+      "opponent_move": "c7b6",
+      "opponents_move": "c7b6"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 39: e6d6",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/1k1K4/8/8/8/2R5/8 b - - 77 39",
+      "ply": 39,
+      "chosen_move": "e6d6",
+      "recons_move": "e6d6",
+      "features": {
+        "box_area_before": 9,
+        "box_area_after": 25,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 16
+    },
+    "thoughts": "Chose e6d6 | \u0394box=16 | king_progress=1.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 39: b6a6",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/k2K4/8/8/8/2R5/8 w - - 78 40",
+      "ply": 39,
+      "opponent_move": "b6a6",
+      "opponents_move": "b6a6"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 40: d6c6",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/k1K5/8/8/8/2R5/8 b - - 79 40",
+      "ply": 40,
+      "chosen_move": "d6c6",
+      "recons_move": "d6c6",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 25,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 24
+    },
+    "thoughts": "Chose d6c6 | \u0394box=24 | king_progress=1.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 40: a6a7",
+    "new_requests": [],
+    "env": {
+      "fen": "8/k7/2K5/8/8/8/2R5/8 w - - 80 41",
+      "ply": 40,
+      "opponent_move": "a6a7",
+      "opponents_move": "a6a7"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 41: c2a2",
+    "new_requests": [],
+    "env": {
+      "fen": "8/k7/2K5/8/8/8/R7/8 b - - 81 41",
+      "ply": 41,
+      "chosen_move": "c2a2",
+      "recons_move": "c2a2",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 25,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": 24
+    },
+    "thoughts": "Chose c2a2 | \u0394box=24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 41: a7b8",
+    "new_requests": [],
+    "env": {
+      "fen": "1k6/8/2K5/8/8/8/R7/8 w - - 82 42",
+      "ply": 41,
+      "opponent_move": "a7b8",
+      "opponents_move": "a7b8"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 42: a2b2",
+    "new_requests": [],
+    "env": {
+      "fen": "1k6/8/2K5/8/8/8/1R6/8 b - - 83 42",
+      "ply": 42,
+      "chosen_move": "a2b2",
+      "recons_move": "a2b2",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 25,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": 24
+    },
+    "thoughts": "Chose a2b2 | \u0394box=24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 42: b8a8",
+    "new_requests": [],
+    "env": {
+      "fen": "k7/8/2K5/8/8/8/1R6/8 w - - 84 43",
+      "ply": 42,
+      "opponent_move": "b8a8",
+      "opponents_move": "b8a8"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 43: b2a2",
+    "new_requests": [],
+    "env": {
+      "fen": "k7/8/2K5/8/8/8/R7/8 b - - 85 43",
+      "ply": 43,
+      "chosen_move": "b2a2",
+      "recons_move": "b2a2",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 25,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": 24
+    },
+    "thoughts": "Chose b2a2 | \u0394box=24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 43: a8b8",
+    "new_requests": [],
+    "env": {
+      "fen": "1k6/8/2K5/8/8/8/R7/8 w - - 86 44",
+      "ply": 43,
+      "opponent_move": "a8b8",
+      "opponents_move": "a8b8"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 44: a2b2",
+    "new_requests": [],
+    "env": {
+      "fen": "1k6/8/2K5/8/8/8/1R6/8 b - - 87 44",
+      "ply": 44,
+      "chosen_move": "a2b2",
+      "recons_move": "a2b2",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 25,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": 24
+    },
+    "thoughts": "Chose a2b2 | \u0394box=24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 44: b8a8",
+    "new_requests": [],
+    "env": {
+      "fen": "k7/8/2K5/8/8/8/1R6/8 w - - 88 45",
+      "ply": 44,
+      "opponent_move": "b8a8",
+      "opponents_move": "b8a8"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 45: b2a2",
+    "new_requests": [],
+    "env": {
+      "fen": "k7/8/2K5/8/8/8/R7/8 b - - 89 45",
+      "ply": 45,
+      "chosen_move": "b2a2",
+      "recons_move": "b2a2",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 25,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": 24
+    },
+    "thoughts": "Chose b2a2 | \u0394box=24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 45: a8b8",
+    "new_requests": [],
+    "env": {
+      "fen": "1k6/8/2K5/8/8/8/R7/8 w - - 90 46",
+      "ply": 45,
+      "opponent_move": "a8b8",
+      "opponents_move": "a8b8"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 46: a2b2",
+    "new_requests": [],
+    "env": {
+      "fen": "1k6/8/2K5/8/8/8/1R6/8 b - - 91 46",
+      "ply": 46,
+      "chosen_move": "a2b2",
+      "recons_move": "a2b2",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 25,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": 24
+    },
+    "thoughts": "Chose a2b2 | \u0394box=24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 46: b8c8",
+    "new_requests": [],
+    "env": {
+      "fen": "2k5/8/2K5/8/8/8/1R6/8 w - - 92 47",
+      "ply": 46,
+      "opponent_move": "b8c8",
+      "opponents_move": "b8c8"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 47: c6d6",
+    "new_requests": [],
+    "env": {
+      "fen": "2k5/8/3K4/8/8/8/1R6/8 b - - 93 47",
+      "ply": 47,
+      "chosen_move": "c6d6",
+      "recons_move": "c6d6",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 25,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 24
+    },
+    "thoughts": "Chose c6d6 | \u0394box=24 | king_progress=0.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 47: c8d8",
+    "new_requests": [],
+    "env": {
+      "fen": "3k4/8/3K4/8/8/8/1R6/8 w - - 94 48",
+      "ply": 47,
+      "opponent_move": "c8d8",
+      "opponents_move": "c8d8"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 48: b2b8",
+    "new_requests": [],
+    "env": {
+      "fen": "1R1k4/8/3K4/8/8/8/8/8 b - - 95 48",
+      "ply": 48,
+      "chosen_move": "b2b8",
+      "recons_move": "b2b8",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 25,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": 24
+    },
+    "thoughts": "Chose b2b8 | \u0394box=24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  }
+]
