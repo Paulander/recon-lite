@@ -55,11 +55,13 @@ class KingAtEdgeDetector(Node):
     def _king_at_edge(self, node: Node, env: Dict[str, Any]) -> Tuple[bool, bool]:
         board = env.get("board")
         if board is None:
-            return True, False
+            return False, False
         enemy_king = board.king(not board.turn)
         f, r = chess.square_file(enemy_king), chess.square_rank(enemy_king)
         at_edge = f in (0, 7) or r in (0, 7)
-        return True, at_edge
+        if at_edge:
+            return True, True
+        return False, False
 
 
 @dataclass
@@ -70,7 +72,7 @@ class BoxShrinkEvaluator(Node):
     def _can_shrink_box(self, node: Node, env: Dict[str, Any]) -> Tuple[bool, bool]:
         board = env.get("board")
         if board is None:
-            return True, False
+            return False, False
 
         enemy_king = board.king(not board.turn)
         our_king = board.king(board.turn)
@@ -82,12 +84,14 @@ class BoxShrinkEvaluator(Node):
                 our_rook = sq
                 break
         if our_rook is None:
-            return True, False
+            return False, False
 
         kd = chess.square_distance(our_king, enemy_king)
         rd = chess.square_distance(our_rook, enemy_king)
         can_shrink = kd >= 2 and rd <= 3
-        return True, can_shrink
+        if can_shrink:
+            return True, True
+        return False, False
 
 
 @dataclass
@@ -98,13 +102,16 @@ class OppositionEvaluator(Node):
     def _has_opposition(self, node: Node, env: Dict[str, Any]) -> Tuple[bool, bool]:
         board = env.get("board")
         if board is None:
-            return True, False
+            return False, False
         ok = board.king(board.turn)
         ek = board.king(not board.turn)
         same_file = chess.square_file(ok) == chess.square_file(ek)
         same_rank = chess.square_rank(ok) == chess.square_rank(ek)
         enemy_at_edge = (chess.square_file(ek) in (0, 7)) or (chess.square_rank(ek) in (0, 7))
-        return True, (enemy_at_edge and (same_file or same_rank))
+        cond = enemy_at_edge and (same_file or same_rank)
+        if cond:
+            return True, True
+        return False, False
 
 
 @dataclass
@@ -115,14 +122,14 @@ class MateDeliverEvaluator(Node):
     def _can_deliver_mate(self, node: Node, env: Dict[str, Any]) -> Tuple[bool, bool]:
         board = env.get("board")
         if board is None:
-            return True, False
+            return False, False
         for mv in board.legal_moves:
             board.push(mv)
             is_mate = board.is_checkmate()
             board.pop()
             if is_mate:
                 return True, True
-        return True, False
+        return False, False
 
 
 @dataclass
@@ -132,7 +139,11 @@ class StalemateDetector(Node):
 
     def _detect_stalemate(self, node: Node, env: Dict[str, Any]) -> Tuple[bool, bool]:
         board = env.get("board")
-        return (board is not None), (board.is_stalemate() if board else False)
+        if board is None:
+            return False, False
+        if board.is_stalemate():
+            return True, True
+        return False, False
 
 
 # ===== SCRIPT NODES =====

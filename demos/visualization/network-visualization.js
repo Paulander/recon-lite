@@ -10,6 +10,27 @@ class NetworkVisualization {
         this.transitionSet = new Set(); // nodes that changed state this frame
     }
 
+    normalizeId(id) {
+        const map = {
+            ROOT: 'krk_root',
+            PHASE0: 'phase0_establish_cut',
+            CHOOSE_P0: 'choose_phase0',
+            PHASE1: 'phase1_drive_to_edge',
+            PHASE2: 'phase2_shrink_box',
+            PHASE3: 'phase3_take_opposition',
+            PHASE4: 'phase4_deliver_mate'
+        };
+        return map[id] || id;
+    }
+
+    normalizeNodes(nodes) {
+        const out = {};
+        Object.entries(nodes).forEach(([k, v]) => {
+            out[this.normalizeId(k)] = v;
+        });
+        return out;
+    }
+
     // Node positions for network visualization (simplified)
     static get nodePositions() {
         return {
@@ -83,6 +104,8 @@ class NetworkVisualization {
         return {
             'INACTIVE': '#cfd8dc',
             'REQUESTED': '#64b5f6',
+            'ACTIVE': '#90caf9',
+            'SUPPRESSED': '#b0bec5',
             'WAITING': '#ffd54f',
             'TRUE': '#81c784',
             'CONFIRMED': '#4dd0e1',
@@ -94,6 +117,8 @@ class NetworkVisualization {
         return {
             'INACTIVE': '#90a4ae',
             'REQUESTED': '#1e88e5',
+            'ACTIVE': '#1976d2',
+            'SUPPRESSED': '#607d8b',
             'WAITING': '#f9a825',
             'TRUE': '#2e7d32',
             'CONFIRMED': '#00838f',
@@ -149,11 +174,11 @@ class NetworkVisualization {
         // Clear canvas
         this.ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        const nodesState = (frame && frame.nodes) ? frame.nodes : {};
+        const nodesState = (frame && frame.nodes) ? this.normalizeNodes(frame.nodes) : {};
 
         // Determine edges to draw: JSON-provided else fallback static
         const edgesToDraw = this.externalEdges ?
-            this.externalEdges.map(e => [e.src, e.dst, e.type]) :
+            this.externalEdges.map(e => [this.normalizeId(e.src), this.normalizeId(e.dst), e.type]) :
             NetworkVisualization.edges.map(([a,b]) => [a,b,'SUB']);
 
         // Draw edges with labels
@@ -191,7 +216,7 @@ class NetworkVisualization {
             const radius = 22;
             this.ctx.fillStyle = fill;
             this.ctx.strokeStyle = border;
-            this.ctx.lineWidth = (state === 'REQUESTED' || state === 'WAITING') ? 4 : 2;
+            this.ctx.lineWidth = (state === 'REQUESTED' || state === 'WAITING' || state === 'ACTIVE') ? 4 : 2;
 
             if (NetworkVisualization.sensorNodes.has(nodeId)) {
                 // Diamond for sensors

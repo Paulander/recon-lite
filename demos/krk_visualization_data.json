@@ -1,6 +1,164 @@
 [
   {
     "type": "snapshot",
+    "note": "Eval tick 1 (move 1)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "move_number": 1,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 2 (move 1)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "move_number": 1,
+      "evaluation_tick": 2
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 3 (move 1)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "move_number": 1,
+      "evaluation_tick": 3
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Decision at tick 3 (move 1)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "move_number": 1,
+      "evaluation_tick": 3,
+      "chosen_move": "a2e2"
+    },
+    "thoughts": "Decision made; capturing final node states."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 1/3 (move 1)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "move_number": 1,
+      "evaluation_tick": 4,
+      "chosen_move": "a2e2"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 2/3 (move 1)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "move_number": 1,
+      "evaluation_tick": 5,
+      "chosen_move": "a2e2"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 3/3 (move 1)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "move_number": 1,
+      "evaluation_tick": 6,
+      "chosen_move": "a2e2"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
     "note": "ReCoN ply 1: a2e2",
     "new_requests": [],
     "env": {
@@ -21,75 +179,201 @@
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 1: e8d8",
+    "note": "Opponent ply 1: e8d7",
     "new_requests": [],
     "env": {
-      "fen": "3k4/6K1/8/8/8/8/4R3/8 w - - 2 2",
+      "fen": "8/3k2K1/8/8/8/8/4R3/8 w - - 2 2",
       "ply": 1,
-      "opponent_move": "e8d8",
-      "opponents_move": "e8d8"
+      "opponent_move": "e8d7",
+      "opponents_move": "e8d7"
     },
     "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 2: g7f7",
-    "new_requests": [],
-    "env": {
-      "fen": "3k4/5K2/8/8/8/8/4R3/8 b - - 3 2",
-      "ply": 2,
-      "chosen_move": "g7f7",
-      "recons_move": "g7f7",
-      "features": {
-        "box_area_before": 1,
-        "box_area_after": 9,
-        "king_progress": 1.0,
-        "rook_safe_after": true,
-        "gives_safe_check": false
-      },
-      "box_area_delta": 8
+    "note": "Eval tick 1 (move 2)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
     },
-    "thoughts": "Chose g7f7 | \u0394box=8 | king_progress=1.0 | safe_check=False | rook_safe=True"
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "8/3k2K1/8/8/8/8/4R3/8 w - - 2 2",
+      "move_number": 2,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 2: d8d7",
+    "note": "Eval tick 2 (move 2)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "8/3k1K2/8/8/8/8/4R3/8 w - - 4 3",
-      "ply": 2,
-      "opponent_move": "d8d7",
-      "opponents_move": "d8d7"
+      "fen": "8/3k2K1/8/8/8/8/4R3/8 w - - 2 2",
+      "move_number": 2,
+      "evaluation_tick": 2
     },
-    "thoughts": "Random defense."
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 3: f7f8",
+    "note": "Eval tick 3 (move 2)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "5K2/3k4/8/8/8/8/4R3/8 b - - 5 3",
-      "ply": 3,
-      "chosen_move": "f7f8",
-      "recons_move": "f7f8",
+      "fen": "8/3k2K1/8/8/8/8/4R3/8 w - - 2 2",
+      "move_number": 2,
+      "evaluation_tick": 3
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Decision at tick 3 (move 2)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/3k2K1/8/8/8/8/4R3/8 w - - 2 2",
+      "move_number": 2,
+      "evaluation_tick": 3,
+      "chosen_move": "g7f8"
+    },
+    "thoughts": "Decision made; capturing final node states."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 1/3 (move 2)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/3k2K1/8/8/8/8/4R3/8 w - - 2 2",
+      "move_number": 2,
+      "evaluation_tick": 4,
+      "chosen_move": "g7f8"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 2/3 (move 2)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "8/3k2K1/8/8/8/8/4R3/8 w - - 2 2",
+      "move_number": 2,
+      "evaluation_tick": 5,
+      "chosen_move": "g7f8"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 3/3 (move 2)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "8/3k2K1/8/8/8/8/4R3/8 w - - 2 2",
+      "move_number": 2,
+      "evaluation_tick": 6,
+      "chosen_move": "g7f8"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 2: g7f8",
+    "new_requests": [],
+    "env": {
+      "fen": "5K2/3k4/8/8/8/8/4R3/8 b - - 3 2",
+      "ply": 2,
+      "chosen_move": "g7f8",
+      "recons_move": "g7f8",
       "features": {
         "box_area_before": 9,
         "box_area_after": 1,
-        "king_progress": 0.0,
+        "king_progress": 1.0,
         "rook_safe_after": true,
         "gives_safe_check": false
       },
       "box_area_delta": -8
     },
-    "thoughts": "Chose f7f8 | \u0394box=-8 | king_progress=0.0 | safe_check=False | rook_safe=True"
+    "thoughts": "Chose g7f8 | \u0394box=-8 | king_progress=1.0 | safe_check=False | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 3: d7d8",
+    "note": "Opponent ply 2: d7d8",
     "new_requests": [],
     "env": {
-      "fen": "3k1K2/8/8/8/8/8/4R3/8 w - - 6 4",
-      "ply": 3,
+      "fen": "3k1K2/8/8/8/8/8/4R3/8 w - - 4 3",
+      "ply": 2,
       "opponent_move": "d7d8",
       "opponents_move": "d7d8"
     },
@@ -97,11 +381,169 @@
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 4: e2d2",
+    "note": "Eval tick 1 (move 3)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "3k1K2/8/8/8/8/8/4R3/8 w - - 4 3",
+      "move_number": 3,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 2 (move 3)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "3k1K2/8/8/8/8/8/3R4/8 b - - 7 4",
-      "ply": 4,
+      "fen": "3k1K2/8/8/8/8/8/4R3/8 w - - 4 3",
+      "move_number": 3,
+      "evaluation_tick": 2
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 3 (move 3)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "3k1K2/8/8/8/8/8/4R3/8 w - - 4 3",
+      "move_number": 3,
+      "evaluation_tick": 3
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Decision at tick 3 (move 3)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "3k1K2/8/8/8/8/8/4R3/8 w - - 4 3",
+      "move_number": 3,
+      "evaluation_tick": 3,
+      "chosen_move": "e2d2"
+    },
+    "thoughts": "Decision made; capturing final node states."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 1/3 (move 3)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "3k1K2/8/8/8/8/8/4R3/8 w - - 4 3",
+      "move_number": 3,
+      "evaluation_tick": 4,
+      "chosen_move": "e2d2"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 2/3 (move 3)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "3k1K2/8/8/8/8/8/4R3/8 w - - 4 3",
+      "move_number": 3,
+      "evaluation_tick": 5,
+      "chosen_move": "e2d2"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 3/3 (move 3)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "3k1K2/8/8/8/8/8/4R3/8 w - - 4 3",
+      "move_number": 3,
+      "evaluation_tick": 6,
+      "chosen_move": "e2d2"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 3: e2d2",
+    "new_requests": [],
+    "env": {
+      "fen": "3k1K2/8/8/8/8/8/3R4/8 b - - 5 3",
+      "ply": 3,
       "chosen_move": "e2d2",
       "recons_move": "e2d2",
       "features": {
@@ -117,87 +559,561 @@
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 4: d8c7",
+    "note": "Opponent ply 3: d8c8",
     "new_requests": [],
     "env": {
-      "fen": "5K2/2k5/8/8/8/8/3R4/8 w - - 8 5",
-      "ply": 4,
-      "opponent_move": "d8c7",
-      "opponents_move": "d8c7"
+      "fen": "2k2K2/8/8/8/8/8/3R4/8 w - - 6 4",
+      "ply": 3,
+      "opponent_move": "d8c8",
+      "opponents_move": "d8c8"
     },
     "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 5: f8e8",
+    "note": "Eval tick 1 (move 4)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "2k2K2/8/8/8/8/8/3R4/8 w - - 6 4",
+      "move_number": 4,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 2 (move 4)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "4K3/2k5/8/8/8/8/3R4/8 b - - 9 5",
-      "ply": 5,
+      "fen": "2k2K2/8/8/8/8/8/3R4/8 w - - 6 4",
+      "move_number": 4,
+      "evaluation_tick": 2
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 3 (move 4)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "2k2K2/8/8/8/8/8/3R4/8 w - - 6 4",
+      "move_number": 4,
+      "evaluation_tick": 3
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Decision at tick 3 (move 4)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "2k2K2/8/8/8/8/8/3R4/8 w - - 6 4",
+      "move_number": 4,
+      "evaluation_tick": 3,
+      "chosen_move": "f8e8"
+    },
+    "thoughts": "Decision made; capturing final node states."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 1/3 (move 4)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "2k2K2/8/8/8/8/8/3R4/8 w - - 6 4",
+      "move_number": 4,
+      "evaluation_tick": 4,
+      "chosen_move": "f8e8"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 2/3 (move 4)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "2k2K2/8/8/8/8/8/3R4/8 w - - 6 4",
+      "move_number": 4,
+      "evaluation_tick": 5,
+      "chosen_move": "f8e8"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 3/3 (move 4)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "2k2K2/8/8/8/8/8/3R4/8 w - - 6 4",
+      "move_number": 4,
+      "evaluation_tick": 6,
+      "chosen_move": "f8e8"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 4: f8e8",
+    "new_requests": [],
+    "env": {
+      "fen": "2k1K3/8/8/8/8/8/3R4/8 b - - 7 4",
+      "ply": 4,
       "chosen_move": "f8e8",
       "recons_move": "f8e8",
       "features": {
-        "box_area_before": 9,
+        "box_area_before": 1,
         "box_area_after": 1,
         "king_progress": 1.0,
         "rook_safe_after": true,
         "gives_safe_check": false
       },
-      "box_area_delta": -8
+      "box_area_delta": 0
     },
-    "thoughts": "Chose f8e8 | \u0394box=-8 | king_progress=1.0 | safe_check=False | rook_safe=True"
+    "thoughts": "Chose f8e8 | \u0394box=0 | king_progress=1.0 | safe_check=False | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 5: c7c8",
+    "note": "Opponent ply 4: c8c7",
     "new_requests": [],
     "env": {
-      "fen": "2k1K3/8/8/8/8/8/3R4/8 w - - 10 6",
-      "ply": 5,
-      "opponent_move": "c7c8",
-      "opponents_move": "c7c8"
+      "fen": "4K3/2k5/8/8/8/8/3R4/8 w - - 8 5",
+      "ply": 4,
+      "opponent_move": "c8c7",
+      "opponents_move": "c8c7"
     },
     "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 6: d2c2",
+    "note": "Eval tick 1 (move 5)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "4K3/2k5/8/8/8/8/3R4/8 w - - 8 5",
+      "move_number": 5,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 2 (move 5)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "2k1K3/8/8/8/8/8/2R5/8 b - - 11 6",
-      "ply": 6,
+      "fen": "4K3/2k5/8/8/8/8/3R4/8 w - - 8 5",
+      "move_number": 5,
+      "evaluation_tick": 2
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 3 (move 5)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "4K3/2k5/8/8/8/8/3R4/8 w - - 8 5",
+      "move_number": 5,
+      "evaluation_tick": 3
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Decision at tick 3 (move 5)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "4K3/2k5/8/8/8/8/3R4/8 w - - 8 5",
+      "move_number": 5,
+      "evaluation_tick": 3,
+      "chosen_move": "d2c2"
+    },
+    "thoughts": "Decision made; capturing final node states."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 1/3 (move 5)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "4K3/2k5/8/8/8/8/3R4/8 w - - 8 5",
+      "move_number": 5,
+      "evaluation_tick": 4,
+      "chosen_move": "d2c2"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 2/3 (move 5)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "4K3/2k5/8/8/8/8/3R4/8 w - - 8 5",
+      "move_number": 5,
+      "evaluation_tick": 5,
+      "chosen_move": "d2c2"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 3/3 (move 5)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "4K3/2k5/8/8/8/8/3R4/8 w - - 8 5",
+      "move_number": 5,
+      "evaluation_tick": 6,
+      "chosen_move": "d2c2"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 5: d2c2",
+    "new_requests": [],
+    "env": {
+      "fen": "4K3/2k5/8/8/8/8/2R5/8 b - - 9 5",
+      "ply": 5,
       "chosen_move": "d2c2",
       "recons_move": "d2c2",
       "features": {
-        "box_area_before": 1,
+        "box_area_before": 9,
         "box_area_after": 1,
         "king_progress": 0.0,
         "rook_safe_after": true,
         "gives_safe_check": true
       },
-      "box_area_delta": 0
+      "box_area_delta": -8
     },
-    "thoughts": "Chose d2c2 | \u0394box=0 | king_progress=0.0 | safe_check=True | rook_safe=True"
+    "thoughts": "Chose d2c2 | \u0394box=-8 | king_progress=0.0 | safe_check=True | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 6: c8b7",
+    "note": "Opponent ply 5: c7b6",
     "new_requests": [],
     "env": {
-      "fen": "4K3/1k6/8/8/8/8/2R5/8 w - - 12 7",
-      "ply": 6,
-      "opponent_move": "c8b7",
-      "opponents_move": "c8b7"
+      "fen": "4K3/8/1k6/8/8/8/2R5/8 w - - 10 6",
+      "ply": 5,
+      "opponent_move": "c7b6",
+      "opponents_move": "c7b6"
     },
     "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 7: e8d8",
+    "note": "Eval tick 1 (move 6)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "4K3/8/1k6/8/8/8/2R5/8 w - - 10 6",
+      "move_number": 6,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 2 (move 6)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "3K4/1k6/8/8/8/8/2R5/8 b - - 13 7",
-      "ply": 7,
+      "fen": "4K3/8/1k6/8/8/8/2R5/8 w - - 10 6",
+      "move_number": 6,
+      "evaluation_tick": 2
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 3 (move 6)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "4K3/8/1k6/8/8/8/2R5/8 w - - 10 6",
+      "move_number": 6,
+      "evaluation_tick": 3
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Decision at tick 3 (move 6)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "4K3/8/1k6/8/8/8/2R5/8 w - - 10 6",
+      "move_number": 6,
+      "evaluation_tick": 3,
+      "chosen_move": "e8d8"
+    },
+    "thoughts": "Decision made; capturing final node states."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 1/3 (move 6)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "4K3/8/1k6/8/8/8/2R5/8 w - - 10 6",
+      "move_number": 6,
+      "evaluation_tick": 4,
+      "chosen_move": "e8d8"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 2/3 (move 6)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "4K3/8/1k6/8/8/8/2R5/8 w - - 10 6",
+      "move_number": 6,
+      "evaluation_tick": 5,
+      "chosen_move": "e8d8"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 3/3 (move 6)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "4K3/8/1k6/8/8/8/2R5/8 w - - 10 6",
+      "move_number": 6,
+      "evaluation_tick": 6,
+      "chosen_move": "e8d8"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 6: e8d8",
+    "new_requests": [],
+    "env": {
+      "fen": "3K4/8/1k6/8/8/8/2R5/8 b - - 11 6",
+      "ply": 6,
       "chosen_move": "e8d8",
       "recons_move": "e8d8",
       "features": {
@@ -213,23 +1129,181 @@
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 7: b7a7",
+    "note": "Opponent ply 6: b6a7",
     "new_requests": [],
     "env": {
-      "fen": "3K4/k7/8/8/8/8/2R5/8 w - - 14 8",
-      "ply": 7,
-      "opponent_move": "b7a7",
-      "opponents_move": "b7a7"
+      "fen": "3K4/k7/8/8/8/8/2R5/8 w - - 12 7",
+      "ply": 6,
+      "opponent_move": "b6a7",
+      "opponents_move": "b6a7"
     },
     "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 8: d8c8",
+    "note": "Eval tick 1 (move 7)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "3K4/k7/8/8/8/8/2R5/8 w - - 12 7",
+      "move_number": 7,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 2 (move 7)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "2K5/k7/8/8/8/8/2R5/8 b - - 15 8",
-      "ply": 8,
+      "fen": "3K4/k7/8/8/8/8/2R5/8 w - - 12 7",
+      "move_number": 7,
+      "evaluation_tick": 2
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 3 (move 7)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "3K4/k7/8/8/8/8/2R5/8 w - - 12 7",
+      "move_number": 7,
+      "evaluation_tick": 3
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Decision at tick 3 (move 7)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "3K4/k7/8/8/8/8/2R5/8 w - - 12 7",
+      "move_number": 7,
+      "evaluation_tick": 3,
+      "chosen_move": "d8c8"
+    },
+    "thoughts": "Decision made; capturing final node states."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 1/3 (move 7)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "3K4/k7/8/8/8/8/2R5/8 w - - 12 7",
+      "move_number": 7,
+      "evaluation_tick": 4,
+      "chosen_move": "d8c8"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 2/3 (move 7)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "3K4/k7/8/8/8/8/2R5/8 w - - 12 7",
+      "move_number": 7,
+      "evaluation_tick": 5,
+      "chosen_move": "d8c8"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 3/3 (move 7)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "3K4/k7/8/8/8/8/2R5/8 w - - 12 7",
+      "move_number": 7,
+      "evaluation_tick": 6,
+      "chosen_move": "d8c8"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 7: d8c8",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/k7/8/8/8/8/2R5/8 b - - 13 7",
+      "ply": 7,
       "chosen_move": "d8c8",
       "recons_move": "d8c8",
       "features": {
@@ -245,57 +1319,183 @@
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 8: a7b6",
+    "note": "Opponent ply 7: a7a6",
     "new_requests": [],
     "env": {
-      "fen": "2K5/8/1k6/8/8/8/2R5/8 w - - 16 9",
+      "fen": "2K5/8/k7/8/8/8/2R5/8 w - - 14 8",
+      "ply": 7,
+      "opponent_move": "a7a6",
+      "opponents_move": "a7a6"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 1 (move 8)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "2K5/8/k7/8/8/8/2R5/8 w - - 14 8",
+      "move_number": 8,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 2 (move 8)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/k7/8/8/8/2R5/8 w - - 14 8",
+      "move_number": 8,
+      "evaluation_tick": 2
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 3 (move 8)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/k7/8/8/8/2R5/8 w - - 14 8",
+      "move_number": 8,
+      "evaluation_tick": 3
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Decision at tick 3 (move 8)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/k7/8/8/8/2R5/8 w - - 14 8",
+      "move_number": 8,
+      "evaluation_tick": 3,
+      "chosen_move": "c2a2"
+    },
+    "thoughts": "Decision made; capturing final node states."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 1/3 (move 8)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/k7/8/8/8/2R5/8 w - - 14 8",
+      "move_number": 8,
+      "evaluation_tick": 4,
+      "chosen_move": "c2a2"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 2/3 (move 8)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "2K5/8/k7/8/8/8/2R5/8 w - - 14 8",
+      "move_number": 8,
+      "evaluation_tick": 5,
+      "chosen_move": "c2a2"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 3/3 (move 8)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "2K5/8/k7/8/8/8/2R5/8 w - - 14 8",
+      "move_number": 8,
+      "evaluation_tick": 6,
+      "chosen_move": "c2a2"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 8: c2a2",
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/k7/8/8/8/R7/8 b - - 15 8",
       "ply": 8,
-      "opponent_move": "a7b6",
-      "opponents_move": "a7b6"
-    },
-    "thoughts": "Random defense."
-  },
-  {
-    "type": "snapshot",
-    "note": "ReCoN ply 9: c2b2",
-    "new_requests": [],
-    "env": {
-      "fen": "2K5/8/1k6/8/8/8/1R6/8 b - - 17 9",
-      "ply": 9,
-      "chosen_move": "c2b2",
-      "recons_move": "c2b2",
-      "features": {
-        "box_area_before": 9,
-        "box_area_after": 1,
-        "king_progress": 0.0,
-        "rook_safe_after": true,
-        "gives_safe_check": true
-      },
-      "box_area_delta": -8
-    },
-    "thoughts": "Chose c2b2 | \u0394box=-8 | king_progress=0.0 | safe_check=True | rook_safe=True"
-  },
-  {
-    "type": "snapshot",
-    "note": "Opponent ply 9: b6a7",
-    "new_requests": [],
-    "env": {
-      "fen": "2K5/k7/8/8/8/8/1R6/8 w - - 18 10",
-      "ply": 9,
-      "opponent_move": "b6a7",
-      "opponents_move": "b6a7"
-    },
-    "thoughts": "Random defense."
-  },
-  {
-    "type": "snapshot",
-    "note": "ReCoN ply 10: b2a2",
-    "new_requests": [],
-    "env": {
-      "fen": "2K5/k7/8/8/8/8/R7/8 b - - 19 10",
-      "ply": 10,
-      "chosen_move": "b2a2",
-      "recons_move": "b2a2",
+      "chosen_move": "c2a2",
+      "recons_move": "c2a2",
       "features": {
         "box_area_before": 1,
         "box_area_after": 1,
@@ -305,27 +1505,185 @@
       },
       "box_area_delta": 0
     },
-    "thoughts": "Chose b2a2 | \u0394box=0 | king_progress=0.0 | safe_check=True | rook_safe=True"
+    "thoughts": "Chose c2a2 | \u0394box=0 | king_progress=0.0 | safe_check=True | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 10: a7b6",
+    "note": "Opponent ply 8: a6b6",
     "new_requests": [],
     "env": {
-      "fen": "2K5/8/1k6/8/8/8/R7/8 w - - 20 11",
-      "ply": 10,
-      "opponent_move": "a7b6",
-      "opponents_move": "a7b6"
+      "fen": "2K5/8/1k6/8/8/8/R7/8 w - - 16 9",
+      "ply": 8,
+      "opponent_move": "a6b6",
+      "opponents_move": "a6b6"
     },
     "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 11: c8b8",
+    "note": "Eval tick 1 (move 9)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "2K5/8/1k6/8/8/8/R7/8 w - - 16 9",
+      "move_number": 9,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 2 (move 9)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "1K6/8/1k6/8/8/8/R7/8 b - - 21 11",
-      "ply": 11,
+      "fen": "2K5/8/1k6/8/8/8/R7/8 w - - 16 9",
+      "move_number": 9,
+      "evaluation_tick": 2
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 3 (move 9)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/1k6/8/8/8/R7/8 w - - 16 9",
+      "move_number": 9,
+      "evaluation_tick": 3
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Decision at tick 3 (move 9)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/1k6/8/8/8/R7/8 w - - 16 9",
+      "move_number": 9,
+      "evaluation_tick": 3,
+      "chosen_move": "c8b8"
+    },
+    "thoughts": "Decision made; capturing final node states."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 1/3 (move 9)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "2K5/8/1k6/8/8/8/R7/8 w - - 16 9",
+      "move_number": 9,
+      "evaluation_tick": 4,
+      "chosen_move": "c8b8"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 2/3 (move 9)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "2K5/8/1k6/8/8/8/R7/8 w - - 16 9",
+      "move_number": 9,
+      "evaluation_tick": 5,
+      "chosen_move": "c8b8"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 3/3 (move 9)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "2K5/8/1k6/8/8/8/R7/8 w - - 16 9",
+      "move_number": 9,
+      "evaluation_tick": 6,
+      "chosen_move": "c8b8"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 9: c8b8",
+    "new_requests": [],
+    "env": {
+      "fen": "1K6/8/1k6/8/8/8/R7/8 b - - 17 9",
+      "ply": 9,
       "chosen_move": "c8b8",
       "recons_move": "c8b8",
       "features": {
@@ -341,11 +1699,11 @@
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 11: b6c6",
+    "note": "Opponent ply 9: b6c6",
     "new_requests": [],
     "env": {
-      "fen": "1K6/8/2k5/8/8/8/R7/8 w - - 22 12",
-      "ply": 11,
+      "fen": "1K6/8/2k5/8/8/8/R7/8 w - - 18 10",
+      "ply": 9,
       "opponent_move": "b6c6",
       "opponents_move": "b6c6"
     },
@@ -353,11 +1711,169 @@
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 12: b8a8",
+    "note": "Eval tick 1 (move 10)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "1K6/8/2k5/8/8/8/R7/8 w - - 18 10",
+      "move_number": 10,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 2 (move 10)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "K7/8/2k5/8/8/8/R7/8 b - - 23 12",
-      "ply": 12,
+      "fen": "1K6/8/2k5/8/8/8/R7/8 w - - 18 10",
+      "move_number": 10,
+      "evaluation_tick": 2
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 3 (move 10)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1K6/8/2k5/8/8/8/R7/8 w - - 18 10",
+      "move_number": 10,
+      "evaluation_tick": 3
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Decision at tick 3 (move 10)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1K6/8/2k5/8/8/8/R7/8 w - - 18 10",
+      "move_number": 10,
+      "evaluation_tick": 3,
+      "chosen_move": "b8a8"
+    },
+    "thoughts": "Decision made; capturing final node states."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 1/3 (move 10)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1K6/8/2k5/8/8/8/R7/8 w - - 18 10",
+      "move_number": 10,
+      "evaluation_tick": 4,
+      "chosen_move": "b8a8"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 2/3 (move 10)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "1K6/8/2k5/8/8/8/R7/8 w - - 18 10",
+      "move_number": 10,
+      "evaluation_tick": 5,
+      "chosen_move": "b8a8"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 3/3 (move 10)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "1K6/8/2k5/8/8/8/R7/8 w - - 18 10",
+      "move_number": 10,
+      "evaluation_tick": 6,
+      "chosen_move": "b8a8"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 10: b8a8",
+    "new_requests": [],
+    "env": {
+      "fen": "K7/8/2k5/8/8/8/R7/8 b - - 19 10",
+      "ply": 10,
       "chosen_move": "b8a8",
       "recons_move": "b8a8",
       "features": {
@@ -373,441 +1889,563 @@
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 12: c6c7",
+    "note": "Opponent ply 10: c6d5",
     "new_requests": [],
     "env": {
-      "fen": "K7/2k5/8/8/8/8/R7/8 w - - 24 13",
-      "ply": 12,
-      "opponent_move": "c6c7",
-      "opponents_move": "c6c7"
+      "fen": "K7/8/8/3k4/8/8/R7/8 w - - 20 11",
+      "ply": 10,
+      "opponent_move": "c6d5",
+      "opponents_move": "c6d5"
     },
     "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 13: a8a7",
+    "note": "Eval tick 1 (move 11)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "K7/8/8/3k4/8/8/R7/8 w - - 20 11",
+      "move_number": 11,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 2 (move 11)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "8/K1k5/8/8/8/8/R7/8 b - - 25 13",
-      "ply": 13,
+      "fen": "K7/8/8/3k4/8/8/R7/8 w - - 20 11",
+      "move_number": 11,
+      "evaluation_tick": 2
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 3 (move 11)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "K7/8/8/3k4/8/8/R7/8 w - - 20 11",
+      "move_number": 11,
+      "evaluation_tick": 3
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Decision at tick 3 (move 11)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "K7/8/8/3k4/8/8/R7/8 w - - 20 11",
+      "move_number": 11,
+      "evaluation_tick": 3,
+      "chosen_move": "a8a7"
+    },
+    "thoughts": "Decision made; capturing final node states."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 1/3 (move 11)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "K7/8/8/3k4/8/8/R7/8 w - - 20 11",
+      "move_number": 11,
+      "evaluation_tick": 4,
+      "chosen_move": "a8a7"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 2/3 (move 11)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "K7/8/8/3k4/8/8/R7/8 w - - 20 11",
+      "move_number": 11,
+      "evaluation_tick": 5,
+      "chosen_move": "a8a7"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 3/3 (move 11)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "K7/8/8/3k4/8/8/R7/8 w - - 20 11",
+      "move_number": 11,
+      "evaluation_tick": 6,
+      "chosen_move": "a8a7"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 11: a8a7",
+    "new_requests": [],
+    "env": {
+      "fen": "8/K7/8/3k4/8/8/R7/8 b - - 21 11",
+      "ply": 11,
       "chosen_move": "a8a7",
       "recons_move": "a8a7",
       "features": {
-        "box_area_before": 9,
+        "box_area_before": 49,
         "box_area_after": 1,
         "king_progress": 0.0,
         "rook_safe_after": true,
         "gives_safe_check": false
       },
-      "box_area_delta": -8
+      "box_area_delta": -48
     },
-    "thoughts": "Chose a8a7 | \u0394box=-8 | king_progress=0.0 | safe_check=False | rook_safe=True"
+    "thoughts": "Chose a8a7 | \u0394box=-48 | king_progress=0.0 | safe_check=False | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 13: c7c8",
+    "note": "Opponent ply 11: d5d4",
     "new_requests": [],
     "env": {
-      "fen": "2k5/K7/8/8/8/8/R7/8 w - - 26 14",
+      "fen": "8/K7/8/8/3k4/8/R7/8 w - - 22 12",
+      "ply": 11,
+      "opponent_move": "d5d4",
+      "opponents_move": "d5d4"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 1 (move 12)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "8/K7/8/8/3k4/8/R7/8 w - - 22 12",
+      "move_number": 12,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 2 (move 12)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/K7/8/8/3k4/8/R7/8 w - - 22 12",
+      "move_number": 12,
+      "evaluation_tick": 2
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 3 (move 12)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/K7/8/8/3k4/8/R7/8 w - - 22 12",
+      "move_number": 12,
+      "evaluation_tick": 3
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Decision at tick 3 (move 12)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/K7/8/8/3k4/8/R7/8 w - - 22 12",
+      "move_number": 12,
+      "evaluation_tick": 3,
+      "chosen_move": "a7a6"
+    },
+    "thoughts": "Decision made; capturing final node states."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 1/3 (move 12)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/K7/8/8/3k4/8/R7/8 w - - 22 12",
+      "move_number": 12,
+      "evaluation_tick": 4,
+      "chosen_move": "a7a6"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 2/3 (move 12)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "8/K7/8/8/3k4/8/R7/8 w - - 22 12",
+      "move_number": 12,
+      "evaluation_tick": 5,
+      "chosen_move": "a7a6"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 3/3 (move 12)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "8/K7/8/8/3k4/8/R7/8 w - - 22 12",
+      "move_number": 12,
+      "evaluation_tick": 6,
+      "chosen_move": "a7a6"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 12: a7a6",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/K7/8/3k4/8/R7/8 b - - 23 12",
+      "ply": 12,
+      "chosen_move": "a7a6",
+      "recons_move": "a7a6",
+      "features": {
+        "box_area_before": 49,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": -48
+    },
+    "thoughts": "Chose a7a6 | \u0394box=-48 | king_progress=0.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 12: d4d5",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/K7/3k4/8/8/R7/8 w - - 24 13",
+      "ply": 12,
+      "opponent_move": "d4d5",
+      "opponents_move": "d4d5"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 1 (move 13)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "8/8/K7/3k4/8/8/R7/8 w - - 24 13",
+      "move_number": 13,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 2 (move 13)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/K7/3k4/8/8/R7/8 w - - 24 13",
+      "move_number": 13,
+      "evaluation_tick": 2
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 3 (move 13)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/K7/3k4/8/8/R7/8 w - - 24 13",
+      "move_number": 13,
+      "evaluation_tick": 3
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Decision at tick 3 (move 13)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/K7/3k4/8/8/R7/8 w - - 24 13",
+      "move_number": 13,
+      "evaluation_tick": 3,
+      "chosen_move": "a6a5"
+    },
+    "thoughts": "Decision made; capturing final node states."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 1/3 (move 13)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/K7/3k4/8/8/R7/8 w - - 24 13",
+      "move_number": 13,
+      "evaluation_tick": 4,
+      "chosen_move": "a6a5"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 2/3 (move 13)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "8/8/K7/3k4/8/8/R7/8 w - - 24 13",
+      "move_number": 13,
+      "evaluation_tick": 5,
+      "chosen_move": "a6a5"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 3/3 (move 13)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "8/8/K7/3k4/8/8/R7/8 w - - 24 13",
+      "move_number": 13,
+      "evaluation_tick": 6,
+      "chosen_move": "a6a5"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 13: a6a5",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/K2k4/8/8/R7/8 b - - 25 13",
       "ply": 13,
-      "opponent_move": "c7c8",
-      "opponents_move": "c7c8"
-    },
-    "thoughts": "Random defense."
-  },
-  {
-    "type": "snapshot",
-    "note": "ReCoN ply 14: a2c2",
-    "new_requests": [],
-    "env": {
-      "fen": "2k5/K7/8/8/8/8/2R5/8 b - - 27 14",
-      "ply": 14,
-      "chosen_move": "a2c2",
-      "recons_move": "a2c2",
-      "features": {
-        "box_area_before": 1,
-        "box_area_after": 1,
-        "king_progress": 0.0,
-        "rook_safe_after": true,
-        "gives_safe_check": true
-      },
-      "box_area_delta": 0
-    },
-    "thoughts": "Chose a2c2 | \u0394box=0 | king_progress=0.0 | safe_check=True | rook_safe=True"
-  },
-  {
-    "type": "snapshot",
-    "note": "Opponent ply 14: c8d7",
-    "new_requests": [],
-    "env": {
-      "fen": "8/K2k4/8/8/8/8/2R5/8 w - - 28 15",
-      "ply": 14,
-      "opponent_move": "c8d7",
-      "opponents_move": "c8d7"
-    },
-    "thoughts": "Random defense."
-  },
-  {
-    "type": "snapshot",
-    "note": "ReCoN ply 15: a7b8",
-    "new_requests": [],
-    "env": {
-      "fen": "1K6/3k4/8/8/8/8/2R5/8 b - - 29 15",
-      "ply": 15,
-      "chosen_move": "a7b8",
-      "recons_move": "a7b8",
-      "features": {
-        "box_area_before": 9,
-        "box_area_after": 1,
-        "king_progress": 1.0,
-        "rook_safe_after": true,
-        "gives_safe_check": false
-      },
-      "box_area_delta": -8
-    },
-    "thoughts": "Chose a7b8 | \u0394box=-8 | king_progress=1.0 | safe_check=False | rook_safe=True"
-  },
-  {
-    "type": "snapshot",
-    "note": "Opponent ply 15: d7d8",
-    "new_requests": [],
-    "env": {
-      "fen": "1K1k4/8/8/8/8/8/2R5/8 w - - 30 16",
-      "ply": 15,
-      "opponent_move": "d7d8",
-      "opponents_move": "d7d8"
-    },
-    "thoughts": "Random defense."
-  },
-  {
-    "type": "snapshot",
-    "note": "ReCoN ply 16: c2d2",
-    "new_requests": [],
-    "env": {
-      "fen": "1K1k4/8/8/8/8/8/3R4/8 b - - 31 16",
-      "ply": 16,
-      "chosen_move": "c2d2",
-      "recons_move": "c2d2",
-      "features": {
-        "box_area_before": 1,
-        "box_area_after": 1,
-        "king_progress": 0.0,
-        "rook_safe_after": true,
-        "gives_safe_check": true
-      },
-      "box_area_delta": 0
-    },
-    "thoughts": "Chose c2d2 | \u0394box=0 | king_progress=0.0 | safe_check=True | rook_safe=True"
-  },
-  {
-    "type": "snapshot",
-    "note": "Opponent ply 16: d8e7",
-    "new_requests": [],
-    "env": {
-      "fen": "1K6/4k3/8/8/8/8/3R4/8 w - - 32 17",
-      "ply": 16,
-      "opponent_move": "d8e7",
-      "opponents_move": "d8e7"
-    },
-    "thoughts": "Random defense."
-  },
-  {
-    "type": "snapshot",
-    "note": "ReCoN ply 17: b8c8",
-    "new_requests": [],
-    "env": {
-      "fen": "2K5/4k3/8/8/8/8/3R4/8 b - - 33 17",
-      "ply": 17,
-      "chosen_move": "b8c8",
-      "recons_move": "b8c8",
-      "features": {
-        "box_area_before": 9,
-        "box_area_after": 1,
-        "king_progress": 1.0,
-        "rook_safe_after": true,
-        "gives_safe_check": false
-      },
-      "box_area_delta": -8
-    },
-    "thoughts": "Chose b8c8 | \u0394box=-8 | king_progress=1.0 | safe_check=False | rook_safe=True"
-  },
-  {
-    "type": "snapshot",
-    "note": "Opponent ply 17: e7e8",
-    "new_requests": [],
-    "env": {
-      "fen": "2K1k3/8/8/8/8/8/3R4/8 w - - 34 18",
-      "ply": 17,
-      "opponent_move": "e7e8",
-      "opponents_move": "e7e8"
-    },
-    "thoughts": "Random defense."
-  },
-  {
-    "type": "snapshot",
-    "note": "ReCoN ply 18: d2e2",
-    "new_requests": [],
-    "env": {
-      "fen": "2K1k3/8/8/8/8/8/4R3/8 b - - 35 18",
-      "ply": 18,
-      "chosen_move": "d2e2",
-      "recons_move": "d2e2",
-      "features": {
-        "box_area_before": 1,
-        "box_area_after": 1,
-        "king_progress": 0.0,
-        "rook_safe_after": true,
-        "gives_safe_check": true
-      },
-      "box_area_delta": 0
-    },
-    "thoughts": "Chose d2e2 | \u0394box=0 | king_progress=0.0 | safe_check=True | rook_safe=True"
-  },
-  {
-    "type": "snapshot",
-    "note": "Opponent ply 18: e8f7",
-    "new_requests": [],
-    "env": {
-      "fen": "2K5/5k2/8/8/8/8/4R3/8 w - - 36 19",
-      "ply": 18,
-      "opponent_move": "e8f7",
-      "opponents_move": "e8f7"
-    },
-    "thoughts": "Random defense."
-  },
-  {
-    "type": "snapshot",
-    "note": "ReCoN ply 19: c8d8",
-    "new_requests": [],
-    "env": {
-      "fen": "3K4/5k2/8/8/8/8/4R3/8 b - - 37 19",
-      "ply": 19,
-      "chosen_move": "c8d8",
-      "recons_move": "c8d8",
-      "features": {
-        "box_area_before": 9,
-        "box_area_after": 1,
-        "king_progress": 1.0,
-        "rook_safe_after": true,
-        "gives_safe_check": false
-      },
-      "box_area_delta": -8
-    },
-    "thoughts": "Chose c8d8 | \u0394box=-8 | king_progress=1.0 | safe_check=False | rook_safe=True"
-  },
-  {
-    "type": "snapshot",
-    "note": "Opponent ply 19: f7f8",
-    "new_requests": [],
-    "env": {
-      "fen": "3K1k2/8/8/8/8/8/4R3/8 w - - 38 20",
-      "ply": 19,
-      "opponent_move": "f7f8",
-      "opponents_move": "f7f8"
-    },
-    "thoughts": "Random defense."
-  },
-  {
-    "type": "snapshot",
-    "note": "ReCoN ply 20: e2f2",
-    "new_requests": [],
-    "env": {
-      "fen": "3K1k2/8/8/8/8/8/5R2/8 b - - 39 20",
-      "ply": 20,
-      "chosen_move": "e2f2",
-      "recons_move": "e2f2",
-      "features": {
-        "box_area_before": 1,
-        "box_area_after": 1,
-        "king_progress": 0.0,
-        "rook_safe_after": true,
-        "gives_safe_check": true
-      },
-      "box_area_delta": 0
-    },
-    "thoughts": "Chose e2f2 | \u0394box=0 | king_progress=0.0 | safe_check=True | rook_safe=True"
-  },
-  {
-    "type": "snapshot",
-    "note": "Opponent ply 20: f8g8",
-    "new_requests": [],
-    "env": {
-      "fen": "3K2k1/8/8/8/8/8/5R2/8 w - - 40 21",
-      "ply": 20,
-      "opponent_move": "f8g8",
-      "opponents_move": "f8g8"
-    },
-    "thoughts": "Random defense."
-  },
-  {
-    "type": "snapshot",
-    "note": "ReCoN ply 21: d8e8",
-    "new_requests": [],
-    "env": {
-      "fen": "4K1k1/8/8/8/8/8/5R2/8 b - - 41 21",
-      "ply": 21,
-      "chosen_move": "d8e8",
-      "recons_move": "d8e8",
-      "features": {
-        "box_area_before": 1,
-        "box_area_after": 1,
-        "king_progress": 1.0,
-        "rook_safe_after": true,
-        "gives_safe_check": false
-      },
-      "box_area_delta": 0
-    },
-    "thoughts": "Chose d8e8 | \u0394box=0 | king_progress=1.0 | safe_check=False | rook_safe=True"
-  },
-  {
-    "type": "snapshot",
-    "note": "Opponent ply 21: g8h8",
-    "new_requests": [],
-    "env": {
-      "fen": "4K2k/8/8/8/8/8/5R2/8 w - - 42 22",
-      "ply": 21,
-      "opponent_move": "g8h8",
-      "opponents_move": "g8h8"
-    },
-    "thoughts": "Random defense."
-  },
-  {
-    "type": "snapshot",
-    "note": "ReCoN ply 22: e8f8",
-    "new_requests": [],
-    "env": {
-      "fen": "5K1k/8/8/8/8/8/5R2/8 b - - 43 22",
-      "ply": 22,
-      "chosen_move": "e8f8",
-      "recons_move": "e8f8",
-      "features": {
-        "box_area_before": 1,
-        "box_area_after": 1,
-        "king_progress": 1.0,
-        "rook_safe_after": true,
-        "gives_safe_check": false
-      },
-      "box_area_delta": 0
-    },
-    "thoughts": "Chose e8f8 | \u0394box=0 | king_progress=1.0 | safe_check=False | rook_safe=True"
-  },
-  {
-    "type": "snapshot",
-    "note": "Opponent ply 22: h8h7",
-    "new_requests": [],
-    "env": {
-      "fen": "5K2/7k/8/8/8/8/5R2/8 w - - 44 23",
-      "ply": 22,
-      "opponent_move": "h8h7",
-      "opponents_move": "h8h7"
-    },
-    "thoughts": "Random defense."
-  },
-  {
-    "type": "snapshot",
-    "note": "ReCoN ply 23: f2h2",
-    "new_requests": [],
-    "env": {
-      "fen": "5K2/7k/8/8/8/8/7R/8 b - - 45 23",
-      "ply": 23,
-      "chosen_move": "f2h2",
-      "recons_move": "f2h2",
-      "features": {
-        "box_area_before": 1,
-        "box_area_after": 1,
-        "king_progress": 0.0,
-        "rook_safe_after": true,
-        "gives_safe_check": true
-      },
-      "box_area_delta": 0
-    },
-    "thoughts": "Chose f2h2 | \u0394box=0 | king_progress=0.0 | safe_check=True | rook_safe=True"
-  },
-  {
-    "type": "snapshot",
-    "note": "Opponent ply 23: h7g6",
-    "new_requests": [],
-    "env": {
-      "fen": "5K2/8/6k1/8/8/8/7R/8 w - - 46 24",
-      "ply": 23,
-      "opponent_move": "h7g6",
-      "opponents_move": "h7g6"
-    },
-    "thoughts": "Random defense."
-  },
-  {
-    "type": "snapshot",
-    "note": "ReCoN ply 24: f8g8",
-    "new_requests": [],
-    "env": {
-      "fen": "6K1/8/6k1/8/8/8/7R/8 b - - 47 24",
-      "ply": 24,
-      "chosen_move": "f8g8",
-      "recons_move": "f8g8",
-      "features": {
-        "box_area_before": 9,
-        "box_area_after": 1,
-        "king_progress": 0.0,
-        "rook_safe_after": true,
-        "gives_safe_check": false
-      },
-      "box_area_delta": -8
-    },
-    "thoughts": "Chose f8g8 | \u0394box=-8 | king_progress=0.0 | safe_check=False | rook_safe=True"
-  },
-  {
-    "type": "snapshot",
-    "note": "Opponent ply 24: g6f6",
-    "new_requests": [],
-    "env": {
-      "fen": "6K1/8/5k2/8/8/8/7R/8 w - - 48 25",
-      "ply": 24,
-      "opponent_move": "g6f6",
-      "opponents_move": "g6f6"
-    },
-    "thoughts": "Random defense."
-  },
-  {
-    "type": "snapshot",
-    "note": "ReCoN ply 25: g8h8",
-    "new_requests": [],
-    "env": {
-      "fen": "7K/8/5k2/8/8/8/7R/8 b - - 49 25",
-      "ply": 25,
-      "chosen_move": "g8h8",
-      "recons_move": "g8h8",
-      "features": {
-        "box_area_before": 25,
-        "box_area_after": 1,
-        "king_progress": 0.0,
-        "rook_safe_after": true,
-        "gives_safe_check": false
-      },
-      "box_area_delta": -24
-    },
-    "thoughts": "Chose g8h8 | \u0394box=-24 | king_progress=0.0 | safe_check=False | rook_safe=True"
-  },
-  {
-    "type": "snapshot",
-    "note": "Opponent ply 25: f6e5",
-    "new_requests": [],
-    "env": {
-      "fen": "7K/8/8/4k3/8/8/7R/8 w - - 50 26",
-      "ply": 25,
-      "opponent_move": "f6e5",
-      "opponents_move": "f6e5"
-    },
-    "thoughts": "Random defense."
-  },
-  {
-    "type": "snapshot",
-    "note": "ReCoN ply 26: h8h7",
-    "new_requests": [],
-    "env": {
-      "fen": "8/7K/8/4k3/8/8/7R/8 b - - 51 26",
-      "ply": 26,
-      "chosen_move": "h8h7",
-      "recons_move": "h8h7",
+      "chosen_move": "a6a5",
+      "recons_move": "a6a5",
       "features": {
         "box_area_before": 49,
         "box_area_after": 1,
@@ -817,29 +2455,947 @@
       },
       "box_area_delta": -48
     },
-    "thoughts": "Chose h8h7 | \u0394box=-48 | king_progress=0.0 | safe_check=False | rook_safe=True"
+    "thoughts": "Chose a6a5 | \u0394box=-48 | king_progress=0.0 | safe_check=False | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 26: e5d4",
+    "note": "Opponent ply 13: d5c4",
     "new_requests": [],
     "env": {
-      "fen": "8/7K/8/8/3k4/8/7R/8 w - - 52 27",
-      "ply": 26,
-      "opponent_move": "e5d4",
-      "opponents_move": "e5d4"
+      "fen": "8/8/8/K7/2k5/8/R7/8 w - - 26 14",
+      "ply": 13,
+      "opponent_move": "d5c4",
+      "opponents_move": "d5c4"
     },
     "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 27: h7h6",
+    "note": "Eval tick 1 (move 14)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "8/8/8/K7/2k5/8/R7/8 w - - 26 14",
+      "move_number": 14,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 2 (move 14)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "8/8/7K/8/3k4/8/7R/8 b - - 53 27",
-      "ply": 27,
-      "chosen_move": "h7h6",
-      "recons_move": "h7h6",
+      "fen": "8/8/8/K7/2k5/8/R7/8 w - - 26 14",
+      "move_number": 14,
+      "evaluation_tick": 2
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 3 (move 14)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/K7/2k5/8/R7/8 w - - 26 14",
+      "move_number": 14,
+      "evaluation_tick": 3
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Decision at tick 3 (move 14)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/K7/2k5/8/R7/8 w - - 26 14",
+      "move_number": 14,
+      "evaluation_tick": 3,
+      "chosen_move": "a5a4"
+    },
+    "thoughts": "Decision made; capturing final node states."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 1/3 (move 14)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/K7/2k5/8/R7/8 w - - 26 14",
+      "move_number": 14,
+      "evaluation_tick": 4,
+      "chosen_move": "a5a4"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 2/3 (move 14)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "8/8/8/K7/2k5/8/R7/8 w - - 26 14",
+      "move_number": 14,
+      "evaluation_tick": 5,
+      "chosen_move": "a5a4"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 3/3 (move 14)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "8/8/8/K7/2k5/8/R7/8 w - - 26 14",
+      "move_number": 14,
+      "evaluation_tick": 6,
+      "chosen_move": "a5a4"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 14: a5a4",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/8/K1k5/8/R7/8 b - - 27 14",
+      "ply": 14,
+      "chosen_move": "a5a4",
+      "recons_move": "a5a4",
+      "features": {
+        "box_area_before": 25,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": -24
+    },
+    "thoughts": "Chose a5a4 | \u0394box=-24 | king_progress=0.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 14: c4d3",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/8/K7/3k4/R7/8 w - - 28 15",
+      "ply": 14,
+      "opponent_move": "c4d3",
+      "opponents_move": "c4d3"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 1 (move 15)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "8/8/8/8/K7/3k4/R7/8 w - - 28 15",
+      "move_number": 15,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 2 (move 15)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/8/K7/3k4/R7/8 w - - 28 15",
+      "move_number": 15,
+      "evaluation_tick": 2
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 3 (move 15)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/8/K7/3k4/R7/8 w - - 28 15",
+      "move_number": 15,
+      "evaluation_tick": 3
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Decision at tick 3 (move 15)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/8/K7/3k4/R7/8 w - - 28 15",
+      "move_number": 15,
+      "evaluation_tick": 3,
+      "chosen_move": "a2a3"
+    },
+    "thoughts": "Decision made; capturing final node states."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 1/3 (move 15)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/8/K7/3k4/R7/8 w - - 28 15",
+      "move_number": 15,
+      "evaluation_tick": 4,
+      "chosen_move": "a2a3"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 2/3 (move 15)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "8/8/8/8/K7/3k4/R7/8 w - - 28 15",
+      "move_number": 15,
+      "evaluation_tick": 5,
+      "chosen_move": "a2a3"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 3/3 (move 15)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "8/8/8/8/K7/3k4/R7/8 w - - 28 15",
+      "move_number": 15,
+      "evaluation_tick": 6,
+      "chosen_move": "a2a3"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 15: a2a3",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/8/K7/R2k4/8/8 b - - 29 15",
+      "ply": 15,
+      "chosen_move": "a2a3",
+      "recons_move": "a2a3",
+      "features": {
+        "box_area_before": 25,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -24
+    },
+    "thoughts": "Chose a2a3 | \u0394box=-24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 15: d3c4",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/8/K1k5/R7/8/8 w - - 30 16",
+      "ply": 15,
+      "opponent_move": "d3c4",
+      "opponents_move": "d3c4"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 1 (move 16)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "8/8/8/8/K1k5/R7/8/8 w - - 30 16",
+      "move_number": 16,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 2 (move 16)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/8/K1k5/R7/8/8 w - - 30 16",
+      "move_number": 16,
+      "evaluation_tick": 2
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 3 (move 16)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/8/K1k5/R7/8/8 w - - 30 16",
+      "move_number": 16,
+      "evaluation_tick": 3
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Decision at tick 3 (move 16)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/8/K1k5/R7/8/8 w - - 30 16",
+      "move_number": 16,
+      "evaluation_tick": 3,
+      "chosen_move": "a4a5"
+    },
+    "thoughts": "Decision made; capturing final node states."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 1/3 (move 16)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/8/K1k5/R7/8/8 w - - 30 16",
+      "move_number": 16,
+      "evaluation_tick": 4,
+      "chosen_move": "a4a5"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 2/3 (move 16)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "8/8/8/8/K1k5/R7/8/8 w - - 30 16",
+      "move_number": 16,
+      "evaluation_tick": 5,
+      "chosen_move": "a4a5"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 3/3 (move 16)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "8/8/8/8/K1k5/R7/8/8 w - - 30 16",
+      "move_number": 16,
+      "evaluation_tick": 6,
+      "chosen_move": "a4a5"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 16: a4a5",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/K7/2k5/R7/8/8 b - - 31 16",
+      "ply": 16,
+      "chosen_move": "a4a5",
+      "recons_move": "a4a5",
+      "features": {
+        "box_area_before": 25,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": -24
+    },
+    "thoughts": "Chose a4a5 | \u0394box=-24 | king_progress=0.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 16: c4c5",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/K1k5/8/R7/8/8 w - - 32 17",
+      "ply": 16,
+      "opponent_move": "c4c5",
+      "opponents_move": "c4c5"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 1 (move 17)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "8/8/8/K1k5/8/R7/8/8 w - - 32 17",
+      "move_number": 17,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 2 (move 17)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/K1k5/8/R7/8/8 w - - 32 17",
+      "move_number": 17,
+      "evaluation_tick": 2
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 3 (move 17)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/K1k5/8/R7/8/8 w - - 32 17",
+      "move_number": 17,
+      "evaluation_tick": 3
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Decision at tick 3 (move 17)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/K1k5/8/R7/8/8 w - - 32 17",
+      "move_number": 17,
+      "evaluation_tick": 3,
+      "chosen_move": "a3c3"
+    },
+    "thoughts": "Decision made; capturing final node states."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 1/3 (move 17)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/K1k5/8/R7/8/8 w - - 32 17",
+      "move_number": 17,
+      "evaluation_tick": 4,
+      "chosen_move": "a3c3"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 2/3 (move 17)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "8/8/8/K1k5/8/R7/8/8 w - - 32 17",
+      "move_number": 17,
+      "evaluation_tick": 5,
+      "chosen_move": "a3c3"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 3/3 (move 17)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "8/8/8/K1k5/8/R7/8/8 w - - 32 17",
+      "move_number": 17,
+      "evaluation_tick": 6,
+      "chosen_move": "a3c3"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 17: a3c3",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/K1k5/8/2R5/8/8 b - - 33 17",
+      "ply": 17,
+      "chosen_move": "a3c3",
+      "recons_move": "a3c3",
+      "features": {
+        "box_area_before": 25,
+        "box_area_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": -24
+    },
+    "thoughts": "Chose a3c3 | \u0394box=-24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 17: c5d4",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/K7/3k4/2R5/8/8 w - - 34 18",
+      "ply": 17,
+      "opponent_move": "c5d4",
+      "opponents_move": "c5d4"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 1 (move 18)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "8/8/8/K7/3k4/2R5/8/8 w - - 34 18",
+      "move_number": 18,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 2 (move 18)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/K7/3k4/2R5/8/8 w - - 34 18",
+      "move_number": 18,
+      "evaluation_tick": 2
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 3 (move 18)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/K7/3k4/2R5/8/8 w - - 34 18",
+      "move_number": 18,
+      "evaluation_tick": 3
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Decision at tick 3 (move 18)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/K7/3k4/2R5/8/8 w - - 34 18",
+      "move_number": 18,
+      "evaluation_tick": 3,
+      "chosen_move": "c3b3"
+    },
+    "thoughts": "Decision made; capturing final node states."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 1/3 (move 18)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/K7/3k4/2R5/8/8 w - - 34 18",
+      "move_number": 18,
+      "evaluation_tick": 4,
+      "chosen_move": "c3b3"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 2/3 (move 18)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "8/8/8/K7/3k4/2R5/8/8 w - - 34 18",
+      "move_number": 18,
+      "evaluation_tick": 5,
+      "chosen_move": "c3b3"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 3/3 (move 18)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "8/8/8/K7/3k4/2R5/8/8 w - - 34 18",
+      "move_number": 18,
+      "evaluation_tick": 6,
+      "chosen_move": "c3b3"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 18: c3b3",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/K7/3k4/1R6/8/8 b - - 35 18",
+      "ply": 18,
+      "chosen_move": "c3b3",
+      "recons_move": "c3b3",
       "features": {
         "box_area_before": 49,
         "box_area_after": 1,
@@ -849,125 +3405,567 @@
       },
       "box_area_delta": -48
     },
-    "thoughts": "Chose h7h6 | \u0394box=-48 | king_progress=0.0 | safe_check=False | rook_safe=True"
+    "thoughts": "Chose c3b3 | \u0394box=-48 | king_progress=0.0 | safe_check=False | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 27: d4c5",
+    "note": "Opponent ply 18: d4d5",
     "new_requests": [],
     "env": {
-      "fen": "8/8/7K/2k5/8/8/7R/8 w - - 54 28",
-      "ply": 27,
-      "opponent_move": "d4c5",
-      "opponents_move": "d4c5"
+      "fen": "8/8/8/K2k4/8/1R6/8/8 w - - 36 19",
+      "ply": 18,
+      "opponent_move": "d4d5",
+      "opponents_move": "d4d5"
     },
     "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 28: h6h5",
+    "note": "Eval tick 1 (move 19)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "8/8/8/K2k4/8/1R6/8/8 w - - 36 19",
+      "move_number": 19,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 2 (move 19)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "8/8/8/2k4K/8/8/7R/8 b - - 55 28",
-      "ply": 28,
-      "chosen_move": "h6h5",
-      "recons_move": "h6h5",
+      "fen": "8/8/8/K2k4/8/1R6/8/8 w - - 36 19",
+      "move_number": 19,
+      "evaluation_tick": 2
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 3 (move 19)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/K2k4/8/1R6/8/8 w - - 36 19",
+      "move_number": 19,
+      "evaluation_tick": 3
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Decision at tick 3 (move 19)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/K2k4/8/1R6/8/8 w - - 36 19",
+      "move_number": 19,
+      "evaluation_tick": 3,
+      "chosen_move": "a5a4"
+    },
+    "thoughts": "Decision made; capturing final node states."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 1/3 (move 19)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/K2k4/8/1R6/8/8 w - - 36 19",
+      "move_number": 19,
+      "evaluation_tick": 4,
+      "chosen_move": "a5a4"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 2/3 (move 19)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "8/8/8/K2k4/8/1R6/8/8 w - - 36 19",
+      "move_number": 19,
+      "evaluation_tick": 5,
+      "chosen_move": "a5a4"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 3/3 (move 19)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "8/8/8/K2k4/8/1R6/8/8 w - - 36 19",
+      "move_number": 19,
+      "evaluation_tick": 6,
+      "chosen_move": "a5a4"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 19: a5a4",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/8/3k4/K7/1R6/8/8 b - - 37 19",
+      "ply": 19,
+      "chosen_move": "a5a4",
+      "recons_move": "a5a4",
       "features": {
-        "box_area_before": 25,
+        "box_area_before": 49,
         "box_area_after": 1,
         "king_progress": 0.0,
         "rook_safe_after": true,
         "gives_safe_check": false
       },
-      "box_area_delta": -24
+      "box_area_delta": -48
     },
-    "thoughts": "Chose h6h5 | \u0394box=-24 | king_progress=0.0 | safe_check=False | rook_safe=True"
+    "thoughts": "Chose a5a4 | \u0394box=-48 | king_progress=0.0 | safe_check=False | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 28: c5d6",
+    "note": "Opponent ply 19: d5e6",
     "new_requests": [],
     "env": {
-      "fen": "8/8/3k4/7K/8/8/7R/8 w - - 56 29",
-      "ply": 28,
-      "opponent_move": "c5d6",
-      "opponents_move": "c5d6"
+      "fen": "8/8/4k3/8/K7/1R6/8/8 w - - 38 20",
+      "ply": 19,
+      "opponent_move": "d5e6",
+      "opponents_move": "d5e6"
     },
     "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 29: h5h4",
+    "note": "Eval tick 1 (move 20)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "8/8/4k3/8/K7/1R6/8/8 w - - 38 20",
+      "move_number": 20,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 2 (move 20)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "8/8/3k4/8/7K/8/7R/8 b - - 57 29",
-      "ply": 29,
-      "chosen_move": "h5h4",
-      "recons_move": "h5h4",
+      "fen": "8/8/4k3/8/K7/1R6/8/8 w - - 38 20",
+      "move_number": 20,
+      "evaluation_tick": 2
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 3 (move 20)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/4k3/8/K7/1R6/8/8 w - - 38 20",
+      "move_number": 20,
+      "evaluation_tick": 3
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Decision at tick 3 (move 20)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/4k3/8/K7/1R6/8/8 w - - 38 20",
+      "move_number": 20,
+      "evaluation_tick": 3,
+      "chosen_move": "b3b6"
+    },
+    "thoughts": "Decision made; capturing final node states."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 1/3 (move 20)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/4k3/8/K7/1R6/8/8 w - - 38 20",
+      "move_number": 20,
+      "evaluation_tick": 4,
+      "chosen_move": "b3b6"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 2/3 (move 20)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "8/8/4k3/8/K7/1R6/8/8 w - - 38 20",
+      "move_number": 20,
+      "evaluation_tick": 5,
+      "chosen_move": "b3b6"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 3/3 (move 20)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "8/8/4k3/8/K7/1R6/8/8 w - - 38 20",
+      "move_number": 20,
+      "evaluation_tick": 6,
+      "chosen_move": "b3b6"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 20: b3b6",
+    "new_requests": [],
+    "env": {
+      "fen": "8/8/1R2k3/8/K7/8/8/8 b - - 39 20",
+      "ply": 20,
+      "chosen_move": "b3b6",
+      "recons_move": "b3b6",
       "features": {
         "box_area_before": 25,
-        "box_area_after": 1,
-        "king_progress": 0.0,
-        "rook_safe_after": true,
-        "gives_safe_check": false
-      },
-      "box_area_delta": -24
-    },
-    "thoughts": "Chose h5h4 | \u0394box=-24 | king_progress=0.0 | safe_check=False | rook_safe=True"
-  },
-  {
-    "type": "snapshot",
-    "note": "Opponent ply 29: d6c7",
-    "new_requests": [],
-    "env": {
-      "fen": "8/2k5/8/8/7K/8/7R/8 w - - 58 30",
-      "ply": 29,
-      "opponent_move": "d6c7",
-      "opponents_move": "d6c7"
-    },
-    "thoughts": "Random defense."
-  },
-  {
-    "type": "snapshot",
-    "note": "ReCoN ply 30: h2c2",
-    "new_requests": [],
-    "env": {
-      "fen": "8/2k5/8/8/7K/8/2R5/8 b - - 59 30",
-      "ply": 30,
-      "chosen_move": "h2c2",
-      "recons_move": "h2c2",
-      "features": {
-        "box_area_before": 9,
         "box_area_after": 1,
         "king_progress": 0.0,
         "rook_safe_after": true,
         "gives_safe_check": true
       },
-      "box_area_delta": -8
+      "box_area_delta": -24
     },
-    "thoughts": "Chose h2c2 | \u0394box=-8 | king_progress=0.0 | safe_check=True | rook_safe=True"
+    "thoughts": "Chose b3b6 | \u0394box=-24 | king_progress=0.0 | safe_check=True | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 30: c7d7",
+    "note": "Opponent ply 20: e6d7",
     "new_requests": [],
     "env": {
-      "fen": "8/3k4/8/8/7K/8/2R5/8 w - - 60 31",
-      "ply": 30,
-      "opponent_move": "c7d7",
-      "opponents_move": "c7d7"
+      "fen": "8/3k4/1R6/8/K7/8/8/8 w - - 40 21",
+      "ply": 20,
+      "opponent_move": "e6d7",
+      "opponents_move": "e6d7"
     },
     "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 31: h4h3",
+    "note": "Eval tick 1 (move 21)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "8/3k4/1R6/8/K7/8/8/8 w - - 40 21",
+      "move_number": 21,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 2 (move 21)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "8/3k4/8/8/8/7K/2R5/8 b - - 61 31",
-      "ply": 31,
-      "chosen_move": "h4h3",
-      "recons_move": "h4h3",
+      "fen": "8/3k4/1R6/8/K7/8/8/8 w - - 40 21",
+      "move_number": 21,
+      "evaluation_tick": 2
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 3 (move 21)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/3k4/1R6/8/K7/8/8/8 w - - 40 21",
+      "move_number": 21,
+      "evaluation_tick": 3
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Decision at tick 3 (move 21)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/3k4/1R6/8/K7/8/8/8 w - - 40 21",
+      "move_number": 21,
+      "evaluation_tick": 3,
+      "chosen_move": "a4a5"
+    },
+    "thoughts": "Decision made; capturing final node states."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 1/3 (move 21)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/3k4/1R6/8/K7/8/8/8 w - - 40 21",
+      "move_number": 21,
+      "evaluation_tick": 4,
+      "chosen_move": "a4a5"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 2/3 (move 21)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "8/3k4/1R6/8/K7/8/8/8 w - - 40 21",
+      "move_number": 21,
+      "evaluation_tick": 5,
+      "chosen_move": "a4a5"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 3/3 (move 21)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "8/3k4/1R6/8/K7/8/8/8 w - - 40 21",
+      "move_number": 21,
+      "evaluation_tick": 6,
+      "chosen_move": "a4a5"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 21: a4a5",
+    "new_requests": [],
+    "env": {
+      "fen": "8/3k4/1R6/K7/8/8/8/8 b - - 41 21",
+      "ply": 21,
+      "chosen_move": "a4a5",
+      "recons_move": "a4a5",
       "features": {
         "box_area_before": 9,
         "box_area_after": 1,
@@ -977,15 +3975,15 @@
       },
       "box_area_delta": -8
     },
-    "thoughts": "Chose h4h3 | \u0394box=-8 | king_progress=0.0 | safe_check=False | rook_safe=True"
+    "thoughts": "Chose a4a5 | \u0394box=-8 | king_progress=0.0 | safe_check=False | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 31: d7e7",
+    "note": "Opponent ply 21: d7e7",
     "new_requests": [],
     "env": {
-      "fen": "8/4k3/8/8/8/7K/2R5/8 w - - 62 32",
-      "ply": 31,
+      "fen": "8/4k3/1R6/K7/8/8/8/8 w - - 42 22",
+      "ply": 21,
       "opponent_move": "d7e7",
       "opponents_move": "d7e7"
     },
@@ -993,45 +3991,361 @@
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 32: h3h4",
+    "note": "Eval tick 1 (move 22)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "8/4k3/1R6/K7/8/8/8/8 w - - 42 22",
+      "move_number": 22,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 2 (move 22)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "8/4k3/8/8/7K/8/2R5/8 b - - 63 32",
-      "ply": 32,
-      "chosen_move": "h3h4",
-      "recons_move": "h3h4",
+      "fen": "8/4k3/1R6/K7/8/8/8/8 w - - 42 22",
+      "move_number": 22,
+      "evaluation_tick": 2
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 3 (move 22)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/4k3/1R6/K7/8/8/8/8 w - - 42 22",
+      "move_number": 22,
+      "evaluation_tick": 3
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Decision at tick 3 (move 22)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/4k3/1R6/K7/8/8/8/8 w - - 42 22",
+      "move_number": 22,
+      "evaluation_tick": 3,
+      "chosen_move": "b6b7"
+    },
+    "thoughts": "Decision made; capturing final node states."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 1/3 (move 22)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "8/4k3/1R6/K7/8/8/8/8 w - - 42 22",
+      "move_number": 22,
+      "evaluation_tick": 4,
+      "chosen_move": "b6b7"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 2/3 (move 22)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "8/4k3/1R6/K7/8/8/8/8 w - - 42 22",
+      "move_number": 22,
+      "evaluation_tick": 5,
+      "chosen_move": "b6b7"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 3/3 (move 22)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "8/4k3/1R6/K7/8/8/8/8 w - - 42 22",
+      "move_number": 22,
+      "evaluation_tick": 6,
+      "chosen_move": "b6b7"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 22: b6b7",
+    "new_requests": [],
+    "env": {
+      "fen": "8/1R2k3/8/K7/8/8/8/8 b - - 43 22",
+      "ply": 22,
+      "chosen_move": "b6b7",
+      "recons_move": "b6b7",
       "features": {
         "box_area_before": 9,
         "box_area_after": 1,
-        "king_progress": 1.0,
+        "king_progress": 0.0,
         "rook_safe_after": true,
-        "gives_safe_check": false
+        "gives_safe_check": true
       },
       "box_area_delta": -8
     },
-    "thoughts": "Chose h3h4 | \u0394box=-8 | king_progress=1.0 | safe_check=False | rook_safe=True"
+    "thoughts": "Chose b6b7 | \u0394box=-8 | king_progress=0.0 | safe_check=True | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 32: e7d8",
+    "note": "Opponent ply 22: e7f8",
     "new_requests": [],
     "env": {
-      "fen": "3k4/8/8/8/7K/8/2R5/8 w - - 64 33",
-      "ply": 32,
-      "opponent_move": "e7d8",
-      "opponents_move": "e7d8"
+      "fen": "5k2/1R6/8/K7/8/8/8/8 w - - 44 23",
+      "ply": 22,
+      "opponent_move": "e7f8",
+      "opponents_move": "e7f8"
     },
     "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 33: h4g5",
+    "note": "Eval tick 1 (move 23)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "5k2/1R6/8/K7/8/8/8/8 w - - 44 23",
+      "move_number": 23,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 2 (move 23)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "3k4/8/8/6K1/8/8/2R5/8 b - - 65 33",
-      "ply": 33,
-      "chosen_move": "h4g5",
-      "recons_move": "h4g5",
+      "fen": "5k2/1R6/8/K7/8/8/8/8 w - - 44 23",
+      "move_number": 23,
+      "evaluation_tick": 2
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 3 (move 23)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "5k2/1R6/8/K7/8/8/8/8 w - - 44 23",
+      "move_number": 23,
+      "evaluation_tick": 3
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Decision at tick 3 (move 23)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "5k2/1R6/8/K7/8/8/8/8 w - - 44 23",
+      "move_number": 23,
+      "evaluation_tick": 3,
+      "chosen_move": "a5b5"
+    },
+    "thoughts": "Decision made; capturing final node states."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 1/3 (move 23)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "5k2/1R6/8/K7/8/8/8/8 w - - 44 23",
+      "move_number": 23,
+      "evaluation_tick": 4,
+      "chosen_move": "a5b5"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 2/3 (move 23)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "5k2/1R6/8/K7/8/8/8/8 w - - 44 23",
+      "move_number": 23,
+      "evaluation_tick": 5,
+      "chosen_move": "a5b5"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 3/3 (move 23)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "5k2/1R6/8/K7/8/8/8/8 w - - 44 23",
+      "move_number": 23,
+      "evaluation_tick": 6,
+      "chosen_move": "a5b5"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 23: a5b5",
+    "new_requests": [],
+    "env": {
+      "fen": "5k2/1R6/8/1K6/8/8/8/8 b - - 45 23",
+      "ply": 23,
+      "chosen_move": "a5b5",
+      "recons_move": "a5b5",
       "features": {
         "box_area_before": 1,
         "box_area_after": 9,
@@ -1041,221 +4355,187 @@
       },
       "box_area_delta": 8
     },
-    "thoughts": "Chose h4g5 | \u0394box=8 | king_progress=1.0 | safe_check=False | rook_safe=True"
+    "thoughts": "Chose a5b5 | \u0394box=8 | king_progress=1.0 | safe_check=False | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 33: d8e8",
+    "note": "Opponent ply 23: f8e8",
     "new_requests": [],
     "env": {
-      "fen": "4k3/8/8/6K1/8/8/2R5/8 w - - 66 34",
-      "ply": 33,
-      "opponent_move": "d8e8",
-      "opponents_move": "d8e8"
+      "fen": "4k3/1R6/8/1K6/8/8/8/8 w - - 46 24",
+      "ply": 23,
+      "opponent_move": "f8e8",
+      "opponents_move": "f8e8"
     },
     "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 34: g5g6",
-    "new_requests": [],
-    "env": {
-      "fen": "4k3/8/6K1/8/8/8/2R5/8 b - - 67 34",
-      "ply": 34,
-      "chosen_move": "g5g6",
-      "recons_move": "g5g6",
-      "features": {
-        "box_area_before": 1,
-        "box_area_after": 9,
-        "king_progress": 1.0,
-        "rook_safe_after": true,
-        "gives_safe_check": false
-      },
-      "box_area_delta": 8
+    "note": "Eval tick 1 (move 24)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
     },
-    "thoughts": "Chose g5g6 | \u0394box=8 | king_progress=1.0 | safe_check=False | rook_safe=True"
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "4k3/1R6/8/1K6/8/8/8/8 w - - 46 24",
+      "move_number": 24,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 34: e8d8",
+    "note": "Eval tick 2 (move 24)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "3k4/8/6K1/8/8/8/2R5/8 w - - 68 35",
-      "ply": 34,
-      "opponent_move": "e8d8",
-      "opponents_move": "e8d8"
+      "fen": "4k3/1R6/8/1K6/8/8/8/8 w - - 46 24",
+      "move_number": 24,
+      "evaluation_tick": 2
     },
-    "thoughts": "Random defense."
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 35: g6f6",
+    "note": "Eval tick 3 (move 24)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "3k4/8/5K2/8/8/8/2R5/8 b - - 69 35",
-      "ply": 35,
-      "chosen_move": "g6f6",
-      "recons_move": "g6f6",
-      "features": {
-        "box_area_before": 1,
-        "box_area_after": 25,
-        "king_progress": 1.0,
-        "rook_safe_after": true,
-        "gives_safe_check": false
-      },
-      "box_area_delta": 24
+      "fen": "4k3/1R6/8/1K6/8/8/8/8 w - - 46 24",
+      "move_number": 24,
+      "evaluation_tick": 3
     },
-    "thoughts": "Chose g6f6 | \u0394box=24 | king_progress=1.0 | safe_check=False | rook_safe=True"
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 35: d8d7",
+    "note": "Decision at tick 3 (move 24)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "8/3k4/5K2/8/8/8/2R5/8 w - - 70 36",
-      "ply": 35,
-      "opponent_move": "d8d7",
-      "opponents_move": "d8d7"
+      "fen": "4k3/1R6/8/1K6/8/8/8/8 w - - 46 24",
+      "move_number": 24,
+      "evaluation_tick": 3,
+      "chosen_move": "b5c6"
     },
-    "thoughts": "Random defense."
+    "thoughts": "Decision made; capturing final node states."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 36: c2d2",
+    "note": "Post-decision linger tick 1/3 (move 24)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "8/3k4/5K2/8/8/8/3R4/8 b - - 71 36",
-      "ply": 36,
-      "chosen_move": "c2d2",
-      "recons_move": "c2d2",
-      "features": {
-        "box_area_before": 9,
-        "box_area_after": 25,
-        "king_progress": 0.0,
-        "rook_safe_after": true,
-        "gives_safe_check": true
-      },
-      "box_area_delta": 16
+      "fen": "4k3/1R6/8/1K6/8/8/8/8 w - - 46 24",
+      "move_number": 24,
+      "evaluation_tick": 4,
+      "chosen_move": "b5c6"
     },
-    "thoughts": "Chose c2d2 | \u0394box=16 | king_progress=0.0 | safe_check=True | rook_safe=True"
+    "thoughts": "Linger after choice to visualize downstream phase activation."
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 36: d7c8",
-    "new_requests": [],
-    "env": {
-      "fen": "2k5/8/5K2/8/8/8/3R4/8 w - - 72 37",
-      "ply": 36,
-      "opponent_move": "d7c8",
-      "opponents_move": "d7c8"
+    "note": "Post-decision linger tick 2/3 (move 24)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
     },
-    "thoughts": "Random defense."
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "4k3/1R6/8/1K6/8/8/8/8 w - - 46 24",
+      "move_number": 24,
+      "evaluation_tick": 5,
+      "chosen_move": "b5c6"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 37: f6e6",
-    "new_requests": [],
-    "env": {
-      "fen": "2k5/8/4K3/8/8/8/3R4/8 b - - 73 37",
-      "ply": 37,
-      "chosen_move": "f6e6",
-      "recons_move": "f6e6",
-      "features": {
-        "box_area_before": 1,
-        "box_area_after": 25,
-        "king_progress": 1.0,
-        "rook_safe_after": true,
-        "gives_safe_check": false
-      },
-      "box_area_delta": 24
+    "note": "Post-decision linger tick 3/3 (move 24)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
     },
-    "thoughts": "Chose f6e6 | \u0394box=24 | king_progress=1.0 | safe_check=False | rook_safe=True"
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "4k3/1R6/8/1K6/8/8/8/8 w - - 46 24",
+      "move_number": 24,
+      "evaluation_tick": 6,
+      "chosen_move": "b5c6"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 37: c8c7",
+    "note": "ReCoN ply 24: b5c6",
     "new_requests": [],
     "env": {
-      "fen": "8/2k5/4K3/8/8/8/3R4/8 w - - 74 38",
-      "ply": 37,
-      "opponent_move": "c8c7",
-      "opponents_move": "c8c7"
-    },
-    "thoughts": "Random defense."
-  },
-  {
-    "type": "snapshot",
-    "note": "ReCoN ply 38: d2c2",
-    "new_requests": [],
-    "env": {
-      "fen": "8/2k5/4K3/8/8/8/2R5/8 b - - 75 38",
-      "ply": 38,
-      "chosen_move": "d2c2",
-      "recons_move": "d2c2",
-      "features": {
-        "box_area_before": 9,
-        "box_area_after": 25,
-        "king_progress": 0.0,
-        "rook_safe_after": true,
-        "gives_safe_check": true
-      },
-      "box_area_delta": 16
-    },
-    "thoughts": "Chose d2c2 | \u0394box=16 | king_progress=0.0 | safe_check=True | rook_safe=True"
-  },
-  {
-    "type": "snapshot",
-    "note": "Opponent ply 38: c7b6",
-    "new_requests": [],
-    "env": {
-      "fen": "8/8/1k2K3/8/8/8/2R5/8 w - - 76 39",
-      "ply": 38,
-      "opponent_move": "c7b6",
-      "opponents_move": "c7b6"
-    },
-    "thoughts": "Random defense."
-  },
-  {
-    "type": "snapshot",
-    "note": "ReCoN ply 39: e6d6",
-    "new_requests": [],
-    "env": {
-      "fen": "8/8/1k1K4/8/8/8/2R5/8 b - - 77 39",
-      "ply": 39,
-      "chosen_move": "e6d6",
-      "recons_move": "e6d6",
-      "features": {
-        "box_area_before": 9,
-        "box_area_after": 25,
-        "king_progress": 1.0,
-        "rook_safe_after": true,
-        "gives_safe_check": false
-      },
-      "box_area_delta": 16
-    },
-    "thoughts": "Chose e6d6 | \u0394box=16 | king_progress=1.0 | safe_check=False | rook_safe=True"
-  },
-  {
-    "type": "snapshot",
-    "note": "Opponent ply 39: b6a6",
-    "new_requests": [],
-    "env": {
-      "fen": "8/8/k2K4/8/8/8/2R5/8 w - - 78 40",
-      "ply": 39,
-      "opponent_move": "b6a6",
-      "opponents_move": "b6a6"
-    },
-    "thoughts": "Random defense."
-  },
-  {
-    "type": "snapshot",
-    "note": "ReCoN ply 40: d6c6",
-    "new_requests": [],
-    "env": {
-      "fen": "8/8/k1K5/8/8/8/2R5/8 b - - 79 40",
-      "ply": 40,
-      "chosen_move": "d6c6",
-      "recons_move": "d6c6",
+      "fen": "4k3/1R6/2K5/8/8/8/8/8 b - - 47 24",
+      "ply": 24,
+      "chosen_move": "b5c6",
+      "recons_move": "b5c6",
       "features": {
         "box_area_before": 1,
         "box_area_after": 25,
@@ -1265,253 +4545,567 @@
       },
       "box_area_delta": 24
     },
-    "thoughts": "Chose d6c6 | \u0394box=24 | king_progress=1.0 | safe_check=False | rook_safe=True"
+    "thoughts": "Chose b5c6 | \u0394box=24 | king_progress=1.0 | safe_check=False | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 40: a6a7",
+    "note": "Opponent ply 24: e8f8",
     "new_requests": [],
     "env": {
-      "fen": "8/k7/2K5/8/8/8/2R5/8 w - - 80 41",
-      "ply": 40,
-      "opponent_move": "a6a7",
-      "opponents_move": "a6a7"
+      "fen": "5k2/1R6/2K5/8/8/8/8/8 w - - 48 25",
+      "ply": 24,
+      "opponent_move": "e8f8",
+      "opponents_move": "e8f8"
     },
     "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 41: c2a2",
-    "new_requests": [],
-    "env": {
-      "fen": "8/k7/2K5/8/8/8/R7/8 b - - 81 41",
-      "ply": 41,
-      "chosen_move": "c2a2",
-      "recons_move": "c2a2",
-      "features": {
-        "box_area_before": 1,
-        "box_area_after": 25,
-        "king_progress": 0.0,
-        "rook_safe_after": true,
-        "gives_safe_check": true
-      },
-      "box_area_delta": 24
+    "note": "Eval tick 1 (move 25)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
     },
-    "thoughts": "Chose c2a2 | \u0394box=24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "5k2/1R6/2K5/8/8/8/8/8 w - - 48 25",
+      "move_number": 25,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 41: a7b8",
+    "note": "Eval tick 2 (move 25)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "1k6/8/2K5/8/8/8/R7/8 w - - 82 42",
-      "ply": 41,
-      "opponent_move": "a7b8",
-      "opponents_move": "a7b8"
+      "fen": "5k2/1R6/2K5/8/8/8/8/8 w - - 48 25",
+      "move_number": 25,
+      "evaluation_tick": 2
     },
-    "thoughts": "Random defense."
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 42: a2b2",
+    "note": "Eval tick 3 (move 25)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "1k6/8/2K5/8/8/8/1R6/8 b - - 83 42",
-      "ply": 42,
-      "chosen_move": "a2b2",
-      "recons_move": "a2b2",
-      "features": {
-        "box_area_before": 1,
-        "box_area_after": 25,
-        "king_progress": 0.0,
-        "rook_safe_after": true,
-        "gives_safe_check": true
-      },
-      "box_area_delta": 24
+      "fen": "5k2/1R6/2K5/8/8/8/8/8 w - - 48 25",
+      "move_number": 25,
+      "evaluation_tick": 3
     },
-    "thoughts": "Chose a2b2 | \u0394box=24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 42: b8a8",
+    "note": "Decision at tick 3 (move 25)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "k7/8/2K5/8/8/8/1R6/8 w - - 84 43",
-      "ply": 42,
-      "opponent_move": "b8a8",
-      "opponents_move": "b8a8"
+      "fen": "5k2/1R6/2K5/8/8/8/8/8 w - - 48 25",
+      "move_number": 25,
+      "evaluation_tick": 3,
+      "chosen_move": "c6d6"
     },
-    "thoughts": "Random defense."
+    "thoughts": "Decision made; capturing final node states."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 43: b2a2",
+    "note": "Post-decision linger tick 1/3 (move 25)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "k7/8/2K5/8/8/8/R7/8 b - - 85 43",
-      "ply": 43,
-      "chosen_move": "b2a2",
-      "recons_move": "b2a2",
-      "features": {
-        "box_area_before": 1,
-        "box_area_after": 25,
-        "king_progress": 0.0,
-        "rook_safe_after": true,
-        "gives_safe_check": true
-      },
-      "box_area_delta": 24
+      "fen": "5k2/1R6/2K5/8/8/8/8/8 w - - 48 25",
+      "move_number": 25,
+      "evaluation_tick": 4,
+      "chosen_move": "c6d6"
     },
-    "thoughts": "Chose b2a2 | \u0394box=24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+    "thoughts": "Linger after choice to visualize downstream phase activation."
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 43: a8b8",
-    "new_requests": [],
-    "env": {
-      "fen": "1k6/8/2K5/8/8/8/R7/8 w - - 86 44",
-      "ply": 43,
-      "opponent_move": "a8b8",
-      "opponents_move": "a8b8"
+    "note": "Post-decision linger tick 2/3 (move 25)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
     },
-    "thoughts": "Random defense."
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "5k2/1R6/2K5/8/8/8/8/8 w - - 48 25",
+      "move_number": 25,
+      "evaluation_tick": 5,
+      "chosen_move": "c6d6"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 44: a2b2",
-    "new_requests": [],
-    "env": {
-      "fen": "1k6/8/2K5/8/8/8/1R6/8 b - - 87 44",
-      "ply": 44,
-      "chosen_move": "a2b2",
-      "recons_move": "a2b2",
-      "features": {
-        "box_area_before": 1,
-        "box_area_after": 25,
-        "king_progress": 0.0,
-        "rook_safe_after": true,
-        "gives_safe_check": true
-      },
-      "box_area_delta": 24
+    "note": "Post-decision linger tick 3/3 (move 25)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
     },
-    "thoughts": "Chose a2b2 | \u0394box=24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "5k2/1R6/2K5/8/8/8/8/8 w - - 48 25",
+      "move_number": 25,
+      "evaluation_tick": 6,
+      "chosen_move": "c6d6"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 44: b8a8",
+    "note": "ReCoN ply 25: c6d6",
     "new_requests": [],
     "env": {
-      "fen": "k7/8/2K5/8/8/8/1R6/8 w - - 88 45",
-      "ply": 44,
-      "opponent_move": "b8a8",
-      "opponents_move": "b8a8"
-    },
-    "thoughts": "Random defense."
-  },
-  {
-    "type": "snapshot",
-    "note": "ReCoN ply 45: b2a2",
-    "new_requests": [],
-    "env": {
-      "fen": "k7/8/2K5/8/8/8/R7/8 b - - 89 45",
-      "ply": 45,
-      "chosen_move": "b2a2",
-      "recons_move": "b2a2",
-      "features": {
-        "box_area_before": 1,
-        "box_area_after": 25,
-        "king_progress": 0.0,
-        "rook_safe_after": true,
-        "gives_safe_check": true
-      },
-      "box_area_delta": 24
-    },
-    "thoughts": "Chose b2a2 | \u0394box=24 | king_progress=0.0 | safe_check=True | rook_safe=True"
-  },
-  {
-    "type": "snapshot",
-    "note": "Opponent ply 45: a8b8",
-    "new_requests": [],
-    "env": {
-      "fen": "1k6/8/2K5/8/8/8/R7/8 w - - 90 46",
-      "ply": 45,
-      "opponent_move": "a8b8",
-      "opponents_move": "a8b8"
-    },
-    "thoughts": "Random defense."
-  },
-  {
-    "type": "snapshot",
-    "note": "ReCoN ply 46: a2b2",
-    "new_requests": [],
-    "env": {
-      "fen": "1k6/8/2K5/8/8/8/1R6/8 b - - 91 46",
-      "ply": 46,
-      "chosen_move": "a2b2",
-      "recons_move": "a2b2",
-      "features": {
-        "box_area_before": 1,
-        "box_area_after": 25,
-        "king_progress": 0.0,
-        "rook_safe_after": true,
-        "gives_safe_check": true
-      },
-      "box_area_delta": 24
-    },
-    "thoughts": "Chose a2b2 | \u0394box=24 | king_progress=0.0 | safe_check=True | rook_safe=True"
-  },
-  {
-    "type": "snapshot",
-    "note": "Opponent ply 46: b8c8",
-    "new_requests": [],
-    "env": {
-      "fen": "2k5/8/2K5/8/8/8/1R6/8 w - - 92 47",
-      "ply": 46,
-      "opponent_move": "b8c8",
-      "opponents_move": "b8c8"
-    },
-    "thoughts": "Random defense."
-  },
-  {
-    "type": "snapshot",
-    "note": "ReCoN ply 47: c6d6",
-    "new_requests": [],
-    "env": {
-      "fen": "2k5/8/3K4/8/8/8/1R6/8 b - - 93 47",
-      "ply": 47,
+      "fen": "5k2/1R6/3K4/8/8/8/8/8 b - - 49 25",
+      "ply": 25,
       "chosen_move": "c6d6",
       "recons_move": "c6d6",
       "features": {
         "box_area_before": 1,
         "box_area_after": 25,
-        "king_progress": 0.0,
+        "king_progress": 1.0,
         "rook_safe_after": true,
         "gives_safe_check": false
       },
       "box_area_delta": 24
     },
-    "thoughts": "Chose c6d6 | \u0394box=24 | king_progress=0.0 | safe_check=False | rook_safe=True"
+    "thoughts": "Chose c6d6 | \u0394box=24 | king_progress=1.0 | safe_check=False | rook_safe=True"
   },
   {
     "type": "snapshot",
-    "note": "Opponent ply 47: c8d8",
+    "note": "Opponent ply 25: f8g8",
     "new_requests": [],
     "env": {
-      "fen": "3k4/8/3K4/8/8/8/1R6/8 w - - 94 48",
-      "ply": 47,
-      "opponent_move": "c8d8",
-      "opponents_move": "c8d8"
+      "fen": "6k1/1R6/3K4/8/8/8/8/8 w - - 50 26",
+      "ply": 25,
+      "opponent_move": "f8g8",
+      "opponents_move": "f8g8"
     },
     "thoughts": "Random defense."
   },
   {
     "type": "snapshot",
-    "note": "ReCoN ply 48: b2b8",
+    "note": "Eval tick 1 (move 26)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "6k1/1R6/3K4/8/8/8/8/8 w - - 50 26",
+      "move_number": 26,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 2 (move 26)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
     "new_requests": [],
     "env": {
-      "fen": "1R1k4/8/3K4/8/8/8/8/8 b - - 95 48",
-      "ply": 48,
-      "chosen_move": "b2b8",
-      "recons_move": "b2b8",
+      "fen": "6k1/1R6/3K4/8/8/8/8/8 w - - 50 26",
+      "move_number": 26,
+      "evaluation_tick": 2
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 3 (move 26)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "6k1/1R6/3K4/8/8/8/8/8 w - - 50 26",
+      "move_number": 26,
+      "evaluation_tick": 3
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Decision at tick 3 (move 26)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "6k1/1R6/3K4/8/8/8/8/8 w - - 50 26",
+      "move_number": 26,
+      "evaluation_tick": 3,
+      "chosen_move": "d6e6"
+    },
+    "thoughts": "Decision made; capturing final node states."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 1/3 (move 26)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "6k1/1R6/3K4/8/8/8/8/8 w - - 50 26",
+      "move_number": 26,
+      "evaluation_tick": 4,
+      "chosen_move": "d6e6"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 2/3 (move 26)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "6k1/1R6/3K4/8/8/8/8/8 w - - 50 26",
+      "move_number": 26,
+      "evaluation_tick": 5,
+      "chosen_move": "d6e6"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 3/3 (move 26)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "6k1/1R6/3K4/8/8/8/8/8 w - - 50 26",
+      "move_number": 26,
+      "evaluation_tick": 6,
+      "chosen_move": "d6e6"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 26: d6e6",
+    "new_requests": [],
+    "env": {
+      "fen": "6k1/1R6/4K3/8/8/8/8/8 b - - 51 26",
+      "ply": 26,
+      "chosen_move": "d6e6",
+      "recons_move": "d6e6",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 25,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 24
+    },
+    "thoughts": "Chose d6e6 | \u0394box=24 | king_progress=1.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 26: g8f8",
+    "new_requests": [],
+    "env": {
+      "fen": "5k2/1R6/4K3/8/8/8/8/8 w - - 52 27",
+      "ply": 26,
+      "opponent_move": "g8f8",
+      "opponents_move": "g8f8"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 1 (move 27)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "5k2/1R6/4K3/8/8/8/8/8 w - - 52 27",
+      "move_number": 27,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 2 (move 27)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "5k2/1R6/4K3/8/8/8/8/8 w - - 52 27",
+      "move_number": 27,
+      "evaluation_tick": 2
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 3 (move 27)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "5k2/1R6/4K3/8/8/8/8/8 w - - 52 27",
+      "move_number": 27,
+      "evaluation_tick": 3
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Decision at tick 3 (move 27)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "5k2/1R6/4K3/8/8/8/8/8 w - - 52 27",
+      "move_number": 27,
+      "evaluation_tick": 3,
+      "chosen_move": "b7b8"
+    },
+    "thoughts": "Decision made; capturing final node states."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 1/3 (move 27)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "5k2/1R6/4K3/8/8/8/8/8 w - - 52 27",
+      "move_number": 27,
+      "evaluation_tick": 4,
+      "chosen_move": "b7b8"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 2/3 (move 27)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "5k2/1R6/4K3/8/8/8/8/8 w - - 52 27",
+      "move_number": 27,
+      "evaluation_tick": 5,
+      "chosen_move": "b7b8"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 3/3 (move 27)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "5k2/1R6/4K3/8/8/8/8/8 w - - 52 27",
+      "move_number": 27,
+      "evaluation_tick": 6,
+      "chosen_move": "b7b8"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 27: b7b8",
+    "new_requests": [],
+    "env": {
+      "fen": "1R3k2/8/4K3/8/8/8/8/8 b - - 53 27",
+      "ply": 27,
+      "chosen_move": "b7b8",
+      "recons_move": "b7b8",
       "features": {
         "box_area_before": 1,
         "box_area_after": 25,
@@ -1521,6 +5115,766 @@
       },
       "box_area_delta": 24
     },
-    "thoughts": "Chose b2b8 | \u0394box=24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+    "thoughts": "Chose b7b8 | \u0394box=24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 27: f8g7",
+    "new_requests": [],
+    "env": {
+      "fen": "1R6/6k1/4K3/8/8/8/8/8 w - - 54 28",
+      "ply": 27,
+      "opponent_move": "f8g7",
+      "opponents_move": "f8g7"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 1 (move 28)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "1R6/6k1/4K3/8/8/8/8/8 w - - 54 28",
+      "move_number": 28,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 2 (move 28)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1R6/6k1/4K3/8/8/8/8/8 w - - 54 28",
+      "move_number": 28,
+      "evaluation_tick": 2
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 3 (move 28)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1R6/6k1/4K3/8/8/8/8/8 w - - 54 28",
+      "move_number": 28,
+      "evaluation_tick": 3
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Decision at tick 3 (move 28)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1R6/6k1/4K3/8/8/8/8/8 w - - 54 28",
+      "move_number": 28,
+      "evaluation_tick": 3,
+      "chosen_move": "b8b7"
+    },
+    "thoughts": "Decision made; capturing final node states."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 1/3 (move 28)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1R6/6k1/4K3/8/8/8/8/8 w - - 54 28",
+      "move_number": 28,
+      "evaluation_tick": 4,
+      "chosen_move": "b8b7"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 2/3 (move 28)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "1R6/6k1/4K3/8/8/8/8/8 w - - 54 28",
+      "move_number": 28,
+      "evaluation_tick": 5,
+      "chosen_move": "b8b7"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 3/3 (move 28)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "1R6/6k1/4K3/8/8/8/8/8 w - - 54 28",
+      "move_number": 28,
+      "evaluation_tick": 6,
+      "chosen_move": "b8b7"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 28: b8b7",
+    "new_requests": [],
+    "env": {
+      "fen": "8/1R4k1/4K3/8/8/8/8/8 b - - 55 28",
+      "ply": 28,
+      "chosen_move": "b8b7",
+      "recons_move": "b8b7",
+      "features": {
+        "box_area_before": 9,
+        "box_area_after": 25,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": 16
+    },
+    "thoughts": "Chose b8b7 | \u0394box=16 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 28: g7g8",
+    "new_requests": [],
+    "env": {
+      "fen": "6k1/1R6/4K3/8/8/8/8/8 w - - 56 29",
+      "ply": 28,
+      "opponent_move": "g7g8",
+      "opponents_move": "g7g8"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 1 (move 29)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "6k1/1R6/4K3/8/8/8/8/8 w - - 56 29",
+      "move_number": 29,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 2 (move 29)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "6k1/1R6/4K3/8/8/8/8/8 w - - 56 29",
+      "move_number": 29,
+      "evaluation_tick": 2
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 3 (move 29)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "6k1/1R6/4K3/8/8/8/8/8 w - - 56 29",
+      "move_number": 29,
+      "evaluation_tick": 3
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Decision at tick 3 (move 29)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "6k1/1R6/4K3/8/8/8/8/8 w - - 56 29",
+      "move_number": 29,
+      "evaluation_tick": 3,
+      "chosen_move": "b7b8"
+    },
+    "thoughts": "Decision made; capturing final node states."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 1/3 (move 29)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "6k1/1R6/4K3/8/8/8/8/8 w - - 56 29",
+      "move_number": 29,
+      "evaluation_tick": 4,
+      "chosen_move": "b7b8"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 2/3 (move 29)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "6k1/1R6/4K3/8/8/8/8/8 w - - 56 29",
+      "move_number": 29,
+      "evaluation_tick": 5,
+      "chosen_move": "b7b8"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 3/3 (move 29)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "6k1/1R6/4K3/8/8/8/8/8 w - - 56 29",
+      "move_number": 29,
+      "evaluation_tick": 6,
+      "chosen_move": "b7b8"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 29: b7b8",
+    "new_requests": [],
+    "env": {
+      "fen": "1R4k1/8/4K3/8/8/8/8/8 b - - 57 29",
+      "ply": 29,
+      "chosen_move": "b7b8",
+      "recons_move": "b7b8",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 25,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": 24
+    },
+    "thoughts": "Chose b7b8 | \u0394box=24 | king_progress=0.0 | safe_check=True | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 29: g8h7",
+    "new_requests": [],
+    "env": {
+      "fen": "1R6/7k/4K3/8/8/8/8/8 w - - 58 30",
+      "ply": 29,
+      "opponent_move": "g8h7",
+      "opponents_move": "g8h7"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 1 (move 30)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "1R6/7k/4K3/8/8/8/8/8 w - - 58 30",
+      "move_number": 30,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 2 (move 30)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1R6/7k/4K3/8/8/8/8/8 w - - 58 30",
+      "move_number": 30,
+      "evaluation_tick": 2
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 3 (move 30)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1R6/7k/4K3/8/8/8/8/8 w - - 58 30",
+      "move_number": 30,
+      "evaluation_tick": 3
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Decision at tick 3 (move 30)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1R6/7k/4K3/8/8/8/8/8 w - - 58 30",
+      "move_number": 30,
+      "evaluation_tick": 3,
+      "chosen_move": "e6f6"
+    },
+    "thoughts": "Decision made; capturing final node states."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 1/3 (move 30)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1R6/7k/4K3/8/8/8/8/8 w - - 58 30",
+      "move_number": 30,
+      "evaluation_tick": 4,
+      "chosen_move": "e6f6"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 2/3 (move 30)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "1R6/7k/4K3/8/8/8/8/8 w - - 58 30",
+      "move_number": 30,
+      "evaluation_tick": 5,
+      "chosen_move": "e6f6"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 3/3 (move 30)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "1R6/7k/4K3/8/8/8/8/8 w - - 58 30",
+      "move_number": 30,
+      "evaluation_tick": 6,
+      "chosen_move": "e6f6"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 30: e6f6",
+    "new_requests": [],
+    "env": {
+      "fen": "1R6/7k/5K2/8/8/8/8/8 b - - 59 30",
+      "ply": 30,
+      "chosen_move": "e6f6",
+      "recons_move": "e6f6",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 25,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 24
+    },
+    "thoughts": "Chose e6f6 | \u0394box=24 | king_progress=1.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 30: h7h6",
+    "new_requests": [],
+    "env": {
+      "fen": "1R6/8/5K1k/8/8/8/8/8 w - - 60 31",
+      "ply": 30,
+      "opponent_move": "h7h6",
+      "opponents_move": "h7h6"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 1 (move 31)",
+    "tick": 1,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "REQUESTED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE0",
+      "CHOOSE_P0"
+    ],
+    "env": {
+      "fen": "1R6/8/5K1k/8/8/8/8/8 w - - 60 31",
+      "move_number": 31,
+      "evaluation_tick": 1
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 2 (move 31)",
+    "tick": 2,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "WAITING",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1R6/8/5K1k/8/8/8/8/8 w - - 60 31",
+      "move_number": 31,
+      "evaluation_tick": 2
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 3 (move 31)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1R6/8/5K1k/8/8/8/8/8 w - - 60 31",
+      "move_number": 31,
+      "evaluation_tick": 3
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Decision at tick 3 (move 31)",
+    "tick": 3,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "WAITING",
+      "CHOOSE_P0": "TRUE",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1R6/8/5K1k/8/8/8/8/8 w - - 60 31",
+      "move_number": 31,
+      "evaluation_tick": 3,
+      "chosen_move": "b8h8"
+    },
+    "thoughts": "Decision made; capturing final node states."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 1/3 (move 31)",
+    "tick": 4,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "INACTIVE",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1R6/8/5K1k/8/8/8/8/8 w - - 60 31",
+      "move_number": 31,
+      "evaluation_tick": 4,
+      "chosen_move": "b8h8"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 2/3 (move 31)",
+    "tick": 5,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE1"
+    ],
+    "env": {
+      "fen": "1R6/8/5K1k/8/8/8/8/8 w - - 60 31",
+      "move_number": 31,
+      "evaluation_tick": 5,
+      "chosen_move": "b8h8"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "Post-decision linger tick 3/3 (move 31)",
+    "tick": 6,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "CONFIRMED",
+      "PHASE2": "CONFIRMED",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE"
+    },
+    "new_requests": [
+      "PHASE2"
+    ],
+    "env": {
+      "fen": "1R6/8/5K1k/8/8/8/8/8 w - - 60 31",
+      "move_number": 31,
+      "evaluation_tick": 6,
+      "chosen_move": "b8h8"
+    },
+    "thoughts": "Linger after choice to visualize downstream phase activation."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 31: b8h8",
+    "new_requests": [],
+    "env": {
+      "fen": "7R/8/5K1k/8/8/8/8/8 b - - 61 31",
+      "ply": 31,
+      "chosen_move": "b8h8",
+      "recons_move": "b8h8",
+      "features": {
+        "box_area_before": 1,
+        "box_area_after": 25,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": true
+      },
+      "box_area_delta": 24
+    },
+    "thoughts": "Chose b8h8 | \u0394box=24 | king_progress=0.0 | safe_check=True | rook_safe=True"
   }
 ]

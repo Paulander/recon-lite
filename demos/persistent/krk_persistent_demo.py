@@ -20,13 +20,19 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from recon_lite.engine import ReConEngine
 from recon_lite.logger import RunLogger
-from recon_lite.graph import NodeState, Graph
+from recon_lite.graph import NodeState, Graph, LinkType
 from demos.shared.krk_network import build_krk_network, create_random_krk_board
 from recon_lite_chess import (
     create_krk_root,
     create_phase0_establish_cut, create_phase0_choose_moves,
     create_phase1_drive_to_edge, create_phase2_shrink_box,
     create_phase3_take_opposition, create_phase4_deliver_mate,
+    create_king_edge_detector, create_box_shrink_evaluator,
+    create_opposition_evaluator, create_mate_deliver_evaluator,
+    create_phase1_drive_to_edge, create_phase2_shrink_box,
+    create_phase3_take_opposition, create_phase4_deliver_mate,
+    create_king_drive_moves, create_box_shrink_moves,
+    create_opposition_moves, create_mate_moves
 )
 from recon_lite_chess.krk_nodes import wire_default_krk
 
@@ -40,7 +46,19 @@ def _build_basic_krk_graph() -> Graph:
     p2    = create_phase2_shrink_box("PHASE2")
     p3    = create_phase3_take_opposition("PHASE3")
     p4    = create_phase4_deliver_mate("PHASE4")
-    for n in [root, p0, ch0, p1, p2, p3, p4]:
+    # Evaluators (no wait-for-board-change gate in basic)
+    e_edge = create_king_edge_detector("king_at_edge")
+    e_box  = create_box_shrink_evaluator("box_can_shrink")
+    e_opp  = create_opposition_evaluator("can_take_opposition")
+    e_mate = create_mate_deliver_evaluator("can_deliver_mate")
+
+    # Actuators
+    m_p1 = create_king_drive_moves("king_drive_moves")
+    m_p2 = create_box_shrink_moves("box_shrink_moves")
+    m_p3 = create_opposition_moves("opposition_moves")
+    m_p4 = create_mate_moves("mate_moves")
+
+    for n in [root, p0, ch0, p1, p2, p3, p4, e_edge, e_box, e_opp, e_mate, m_p1, m_p2, m_p3, m_p4]:
         g.add_node(n)
     wire_default_krk(g, "ROOT", {
         "root": "ROOT",
@@ -51,6 +69,25 @@ def _build_basic_krk_graph() -> Graph:
         "phase3": "PHASE3",
         "phase4": "PHASE4",
     })
+
+    # Basic wiring to match shared semantics (minus wait gate):
+    # Phase 1
+    g.add_edge("PHASE1", "king_drive_moves", LinkType.SUB)
+    g.add_edge("PHASE1", "king_at_edge", LinkType.SUB)
+
+    # Phase 2 depends on king at edge
+    g.add_edge("PHASE2", "box_shrink_moves", LinkType.SUB)
+    g.add_edge("king_at_edge", "PHASE2", LinkType.POR)
+
+    # Phase 3 depends on box shrink possible
+    g.add_edge("PHASE3", "opposition_moves", LinkType.SUB)
+    g.add_edge("box_can_shrink", "PHASE3", LinkType.POR)
+    g.add_edge("PHASE3", "box_can_shrink", LinkType.SUB)
+
+    # Phase 4 depends on opposition
+    g.add_edge("PHASE4", "mate_moves", LinkType.SUB)
+    g.add_edge("can_take_opposition", "PHASE4", LinkType.POR)
+    g.add_edge("PHASE4", "can_deliver_mate", LinkType.SUB)
     return g
 
 
@@ -78,8 +115,11 @@ def play_persistent_game(initial_fen: str | None = None, max_plies: int = 200,
         # One decision cycle (White/ReCoN)
         env = {"board": board, "chosen_move": None}
         ticks = 0
+        min_decision_ticks = 3  # allow parallel phases a short window to compete
+        proposals: list[dict] = []
+        phase_rank = {"phase0": 0, "phase1": 1, "phase2": 2, "phase3": 3, "phase4": 4}
 
-        while ticks < tick_watchdog and env.get("chosen_move") is None and not board.is_game_over():
+        while ticks < tick_watchdog and not board.is_game_over():
             ticks += 1
             now_req = engine.step(env)
             logger.snapshot(
@@ -92,7 +132,36 @@ def play_persistent_game(initial_fen: str | None = None, max_plies: int = 200,
             if ticks == 1:
                 logger.events[-1]["graph"] = {"edges": graph_edges}
 
-        move_uci = env.get("chosen_move")
+            # If any terminal proposed a move this tick, record its phase and keep evaluating briefly
+            if env.get("chosen_move"):
+                proposed = env["chosen_move"]
+                # Try to identify which phase proposed this move
+                phase_name = None
+                for nid, node in engine.g.nodes.items():
+                    ph = node.meta.get("phase")
+                    sugg = node.meta.get("suggested_moves")
+                    if ph and sugg and proposed in sugg:
+                        phase_name = ph
+                        break
+                proposals.append({
+                    "move": proposed,
+                    "phase": phase_name or "unknown",
+                    "rank": phase_rank.get(phase_name or "", -1)
+                })
+                # Clear to allow other phases to propose within the window
+                env["chosen_move"] = None
+
+            # Exit the evaluation window if we have proposals and minimum ticks elapsed
+            if proposals and ticks >= min_decision_ticks:
+                break
+
+        # Choose the best proposal (prefer higher phase); fall back to any remaining choice
+        move_uci = None
+        if proposals:
+            proposals.sort(key=lambda p: p["rank"])  # ensure deterministic order for equal ranks
+            move_uci = max(proposals, key=lambda p: p["rank"]) ["move"]
+        else:
+            move_uci = env.get("chosen_move")
         if not move_uci:
             # Watchdog: pick a safe fallback to avoid failing fast
             from recon_lite_chess.actuators import choose_any_safe_move
@@ -162,7 +231,7 @@ def play_persistent_game(initial_fen: str | None = None, max_plies: int = 200,
         "final_fen": board.fen(),
     }
 
-    out_path = Path("demos/outputs/krk_persistent_visualization.json")
+    out_path = Path("demos/krk_visualization_data.json")
     out_path.parent.mkdir(parents=True, exist_ok=True)
     logger.to_json(str(out_path))
 

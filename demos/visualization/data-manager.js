@@ -10,12 +10,15 @@ class DataManager {
     // Load visualization data from JSON
     async loadVisualizationData() {
         try {
-            const response = await fetch('../krk_visualization_data.json');
-            if (!response.ok) {
-                throw new Error('Failed to load visualization data');
-            }
+            const params = new URLSearchParams(window.location.search);
+            const file = params.get('file') || '../krk_visualization_data.json';
+            const url = `${file}${file.includes('?') ? '&' : '?'}t=${Date.now()}`;
+
+            const response = await fetch(url, { cache: 'no-store' });
+            if (!response.ok) throw new Error('Failed to load visualization data');
+
             this.visualizationData = await response.json();
-            console.log('Loaded visualization data:', this.visualizationData);
+            console.log('Loaded visualization data from', url, this.visualizationData);
 
             // Read graph edges if present on first frame
             if (this.visualizationData.length > 0 && this.visualizationData[0].graph && this.visualizationData[0].graph.edges) {

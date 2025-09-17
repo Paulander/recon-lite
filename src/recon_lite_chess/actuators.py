@@ -112,7 +112,7 @@ def _calculate_score(board: chess.Board, move: chess.Move, phase: int) -> float:
     score = 0.0
 
     # King progress (most important)
-    score += 3.0 * our_king_progress(board, move)
+    score += 2.0 * our_king_progress(board, move)
 
     # Box shrinking
     old_area = box_area(board)

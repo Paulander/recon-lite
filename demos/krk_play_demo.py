@@ -85,7 +85,7 @@ def opponent_random_move(board: chess.Board) -> str | None:
 # -------- engine stepper --------
 
 def choose_move_with_graph(board: chess.Board, logger: RunLogger, move_no: int,
-                           max_ticks: int = 200) -> str | None:
+                           max_ticks: int = 200, linger_ticks_after_choice: int = 3) -> str | None:
     """
     Build a fresh KRK graph, request ROOT, tick until env["chosen_move"] is set
     or until max_ticks. Returns UCI string or None.
@@ -101,13 +101,36 @@ def choose_move_with_graph(board: chess.Board, logger: RunLogger, move_no: int,
         ticks += 1
         now_req = eng.step(env)
 
-        # snapshot periodically to inspect why the graph might be idle
-        if ticks % 10 == 0:
+        # snapshot EVERY tick so visualization always has node states
+        logger.snapshot(
+            engine=eng,
+            note=f"Eval tick {ticks} (move {move_no})",
+            env={"fen": board.fen(), "move_number": move_no, "evaluation_tick": ticks},
+            thoughts=f"Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move'].",
+            new_requests=list(now_req.keys()) if now_req else []
+        )
+
+    # Final decision snapshot to capture the terminal activation that proposed the move
+    if env.get("chosen_move") is not None:
+        logger.snapshot(
+            engine=eng,
+            note=f"Decision at tick {ticks} (move {move_no})",
+            env={"fen": board.fen(), "move_number": move_no, "evaluation_tick": ticks, "chosen_move": env.get("chosen_move")},
+            thoughts="Decision made; capturing final node states.",
+            new_requests=[]
+        )
+
+        # Linger for a few ticks to allow downstream phases (e.g., Phase1) to request
+        # so the visualization can show progression beyond Phase0 within this cycle.
+        linger = max(0, int(linger_ticks_after_choice))
+        for i in range(linger):
+            ticks += 1
+            now_req = eng.step(env)
             logger.snapshot(
                 engine=eng,
-                note=f"Eval tick {ticks} (move {move_no})",
-                env={"fen": board.fen(), "move_number": move_no, "evaluation_tick": ticks},
-                thoughts=f"Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move'].",
+                note=f"Post-decision linger tick {i+1}/{linger} (move {move_no})",
+                env={"fen": board.fen(), "move_number": move_no, "evaluation_tick": ticks, "chosen_move": env.get("chosen_move")},
+                thoughts="Linger after choice to visualize downstream phase activation.",
                 new_requests=list(now_req.keys()) if now_req else []
             )
 

@@ -333,9 +333,22 @@
             updatePhaseStates(nodes) {
                 const phaseElements = document.querySelectorAll('.phase-item');
 
+                // Normalize ids from basic/top-level schema to shared schema
+                const idMap = {
+                    ROOT: 'krk_root',
+                    PHASE1: 'phase1_drive_to_edge',
+                    PHASE2: 'phase2_shrink_box',
+                    PHASE3: 'phase3_take_opposition',
+                    PHASE4: 'phase4_deliver_mate'
+                };
+                const norm = {};
+                Object.entries(nodes || {}).forEach(([k,v]) => {
+                    norm[idMap[k] || k] = v;
+                });
+
                 phaseElements.forEach(element => {
                     const phaseId = element.getAttribute('data-phase');
-                    const state = nodes[phaseId] || 'INACTIVE';
+                    const state = norm[phaseId] || 'INACTIVE';
                     const stateClass = `state-${state.toLowerCase()}`;
 
                     // Remove all state classes
