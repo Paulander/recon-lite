@@ -115,7 +115,12 @@ Here’s an updated **IMPLEMENTATION\_PLAN.md** that reflects your current state
   * Apply move, opponent plays random legal move
   * Repeat with fresh graph
 * **File**: `demos/krk_play_demo.py`
-* **Milestone**: Working player vs random opponent
+* **Milestone**: Working player vs random opponent. 
+* **Status**: Wins about 40-50% of the time. It's abysmal but in the interest of time I don't 
+think I will improve too much on the heuristics. The main purpose is to show how to build a ReCoN; 
+it can facilitate distributed decision making and interact with the environment (in the article a minecraft world, 
+in my example a chess board). To that end I want to provide different terminal nodes that can read chess notation, 
+2D images (schematic representation) or photos (later live video!) of chess boards. 
 
 #### **Option B: Persistent "Super-ReCoN" (Advanced)**
 * **Strategy**: Keep internal state between moves
@@ -128,7 +133,7 @@ Here’s an updated **IMPLEMENTATION\_PLAN.md** that reflects your current state
 * **File**: `demos/krk_super_play_demo.py`
 * **Prerequisites**: Working Option A first
 
-### **Prerequisites for Both:**
+### **Prerequisites for Both:** (✅ Advanced Implementation)
 * Phase 5 move generators: `choose_move_p1`, `choose_move_p2`, etc.
 * Actuator pattern: Terminals that write `env["chosen_move"]`
 * Random opponent: Simple legal move selector
@@ -153,27 +158,3 @@ Here’s an updated **IMPLEMENTATION\_PLAN.md** that reflects your current state
 * Export `run.json` + HTML viz for sharing.
 
 ---
-
-Would you like me to also **draft the Phase 6 demo file (`krk_play_demo.py`)** now, so you can run a first end-to-end interactive game loop with random opponent right away?
-
----
-
-## 📁 FILES READY
-
-**Core ReCoN Implementation:**
-- `src/recon_lite/graph.py` - Node/Edge definitions, core logic
-- `src/recon_lite/engine.py` - ReCoN execution engine
-- `src/recon_lite/logger.py` - Structured logging for visualization
-- `VIS_SPEC.md` - Visualization JSON schema specification
-
-**Chess Domain Implementation:**
-- `src/recon_lite_chess/krk_nodes.py` - Current KRK evaluators
-- `demos/krk_checkmate_demo.py` - Working static evaluator demo
-
-**Visualization:**
-- `demos/visualization/enhanced_visualization.html` - Advanced interactive dashboard
-- `demos/krk_visualization_data.json` - Sample logged execution data
-
-**Documentation:**
-- `ARCHITECTURE.md` - Design decisions and rationale
-- `IMPLEMENTATION_PLAN.md` - Current status and next steps
