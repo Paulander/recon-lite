@@ -13,7 +13,7 @@
         async function testVisualization() {
             try {
                 console.log('Testing visualization data loading...');
-                const response = await fetch('./krk_visualization_data.json');
+                const response = await fetch('../outputs/krk_persistent_visualization.json');
                 console.log('Fetch response:', response);
 
                 if (!response.ok) {
@@ -55,7 +55,7 @@
             const testDiv = document.createElement('div');
             testDiv.innerHTML = `
                 <h3>🎯 Test Enhanced Visualization:</h3>
-                <button onclick="window.open('./visualization/enhanced_visualization.html', '_blank')"
+                <button onclick="window.open('./chessboard_view.html', '_blank')"
                         style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">
                     🖥️ Open Enhanced Visualization
                 </button>
