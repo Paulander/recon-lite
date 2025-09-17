@@ -38,9 +38,23 @@ Explore dynamic/learned graph structure beyond hand-crafted scripts.
 ## Outlook
 
 ReCoNs strike me as a step toward more brain-like AI architectures: not end-to-end gradient blobs, but modular systems where perception, action, and reasoning interlock through structured control. Even in this small project, I’ve seen how they can serve as an “executive” layer above raw learning; a promising direction for building AI systems that are both more interpretable and more general.
+
+
 Specifically for this project I'd want to use a SOTA chess engine (as mentioned above) instead of my heuristic approach. Furthermore I would like to add terminal nodes (sensors) that could encode different representations of chessboards (API to websites, image recognnition of computer 2D-chessboards or photos or even live video of a real chess board; making it possible to play vs human opponents via a robot). This can quite easily be added by adding the terminal nodes (implemented reasonably e.g. via CNNs or similar) and maybe a selector script node as a parent that automatically identifies which sensor is active. 
 
+My original plan to build (which I didn't quite have time to implement - I partly blame a mancold, but the main issue 
+was probably me being overly optimistic and wasting time on trying to improve heuristics which was really just a side track; even though it's interesting from a ReCoN sense):
+- Implement "empty" ReCoN (the base class) and visualize dummy (done)
+- Solve King + Rook vs King (ROOT: Checkmate)
+- Solve King + Pawn vs King (ROOT: Promote)
+- Identify that King + Pawn -> Promote leaves us at King + Rook so we can expand with a "super ReCoN" that contains the two earlier examples as subtrees. *this showcases the distributed decision-making of ReCoN*; we can reuse the two earlier recons by simply hooking their respective ROOT nodes as subnodes to a higher level network that identifies what kind of position we are in and what strategy to employ. This way of thinking can be generalized to all kinds of problems/simulations. 
 
+- Fancier animations (3D, better schematic groups of subnetworks and different states in nodes/subnetworks and vertices)
+- Add image recognition, plug and play chess engines (basically making the ReCoN engine and board "environment" agnostic)
+
+
+--- 
+"Standard" ReadMe below: 
 
 
 
@@ -103,7 +117,7 @@ And open http://localhost:8000/visualization/chessboard_view.html
 
 This solver is far from perfect; in fact it's quite mediocre as a chess engine. I think it serves as a good demo of how 
 to set up a ReCoN network though. It could easily be expanded/improved in several ways (that is out of scope for now as I am running out of time):
-- Terminal Nodes could added:
+- Terminal Nodes could be added:
     - a small CNN or MLP to identify chess positions from pngs (or other images)
     - a more sophisticated image recognition (CNN or other) to identify positions from photos or videos of real chessboards
 - Use a true chess engine:
@@ -114,3 +128,8 @@ to set up a ReCoN network though. It could easily be expanded/improved in severa
 ## Architecture
 
 See `ARCHITECTURE.md` for detailed design decisions and implementation rationale.
+
+## Acknowledgements
+
+The ReCoN implementation is based on 
+**Request confirmation networks for neuro-symbolic script execution** by Joscha Bach and Priska Herger. 

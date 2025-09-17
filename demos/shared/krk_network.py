@@ -107,15 +107,15 @@ def build_krk_network() -> Graph:
     # Phase 2 connections
     g.add_edge("phase2_shrink_box", "box_can_shrink", LinkType.SUB)
     # POR: Phase 2 only requestable after enemy king is at edge
-    g.add_edge("phase2_shrink_box", "king_at_edge", LinkType.POR)
+    g.add_edge("king_at_edge", "phase2_shrink_box", LinkType.POR)
 
     # Phase 3 connections
     g.add_edge("phase3_take_opposition", "can_take_opposition", LinkType.SUB)
-    g.add_edge("phase3_take_opposition", "box_can_shrink", LinkType.POR)  # Precondition
+    g.add_edge("box_can_shrink", "phase3_take_opposition", LinkType.POR)  # Precondition
 
     # Phase 4 connections
     g.add_edge("phase4_deliver_mate", "can_deliver_mate", LinkType.SUB)
-    g.add_edge("phase4_deliver_mate", "can_take_opposition", LinkType.POR)  # Precondition
+    g.add_edge("can_take_opposition", "phase4_deliver_mate", LinkType.POR)  # Precondition
     # removed POR to is_stalemate; stalemate is enforced in move filters
 
     # Move generator connections to phases
