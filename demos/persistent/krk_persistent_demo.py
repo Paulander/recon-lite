@@ -10,6 +10,7 @@ Runs a single ReCoN engine instance across the whole game.
 """
 
 import argparse
+from collections import deque
 import chess
 import sys
 from pathlib import Path
@@ -35,6 +36,7 @@ from recon_lite_chess import (
     create_opposition_moves, create_mate_moves
 )
 from recon_lite_chess.krk_nodes import wire_default_krk
+from recon_lite_chess.predicates import dist_to_edge, on_rim, has_opposition_after, chebyshev
 
 
 def _build_basic_krk_graph() -> Graph:
@@ -84,12 +86,87 @@ def _build_basic_krk_graph() -> Graph:
     g.add_edge("box_can_shrink", "PHASE3", LinkType.POR)
     g.add_edge("PHASE3", "box_can_shrink", LinkType.SUB)
 
-    # Phase 4 depends on opposition
+    # Phase 4: deliver mate (do not POR-gate strictly on opposition; allow early mate)
     g.add_edge("PHASE4", "mate_moves", LinkType.SUB)
-    g.add_edge("can_take_opposition", "PHASE4", LinkType.POR)
+    # Removed POR from can_take_opposition -> PHASE4 to permit direct mates
     g.add_edge("PHASE4", "can_deliver_mate", LinkType.SUB)
     return g
 
+
+# ---- Deterministic arbiter helpers (demo-local, no library changes) ----
+
+def _find_our_rook_sq(board: chess.Board) -> chess.Square | None:
+    color = board.turn
+    for sq, piece in board.piece_map().items():
+        if piece.color == color and piece.piece_type == chess.ROOK:
+            return sq
+    return None
+
+def _rook_safe_now(board: chess.Board, rook_sq: chess.Square) -> bool:
+    # Safe if enemy king cannot capture rook next move, or our king can immediately recapture
+    color = board.turn
+    enemy = not color
+    ek = board.king(enemy)
+    ok = board.king(color)
+    if ek is None or ok is None or rook_sq is None:
+        return False
+    if chebyshev(ek, rook_sq) > 1:
+        return True
+    b = board.copy(stack=False)
+    b.turn = enemy
+    cap = chess.Move(ek, rook_sq)
+    if cap in b.legal_moves:
+        return chebyshev(ok, rook_sq) <= 1
+    return True
+
+def _cut_established(board: chess.Board) -> bool:
+    """
+    Conservative 'cut' heuristic: rook aligned with BK (file/rank), at least 2 away,
+    rook not droppable now, and our king is reasonably close to rook or BK.
+    """
+    color = board.turn
+    ek = board.king(not color)
+    ok = board.king(color)
+    rsq = _find_our_rook_sq(board)
+    if ek is None or ok is None or rsq is None:
+        return False
+    same_file = chess.square_file(rsq) == chess.square_file(ek)
+    same_rank = chess.square_rank(rsq) == chess.square_rank(ek)
+    aligned = same_file or same_rank
+    far_enough = chebyshev(rsq, ek) >= 2
+    safe = _rook_safe_now(board, rsq)
+    support_ok = chebyshev(ok, ek) <= 3 or chebyshev(ok, rsq) <= 3
+    return aligned and far_enough and safe and support_ok
+
+def _can_deliver_mate_now(board: chess.Board) -> bool:
+    for mv in board.legal_moves:
+        board.push(mv)
+        mate = board.is_checkmate()
+        board.pop()
+        if mate:
+            return True
+    return False
+
+def _eligible_phase(board: chess.Board) -> str:
+    """
+    Centralized eligible phase selection from board features only.
+    Highest-to-lowest precedence: 4 → 3 → 2 → 1 → 0.
+    """
+    enemy = not board.turn
+    ek = board.king(enemy)
+    if ek is None:
+        return "phase0"
+    if _can_deliver_mate_now(board):
+        return "phase4"
+    if on_rim(ek):
+        for mv in board.legal_moves:
+            if has_opposition_after(board, mv):
+                return "phase3"
+    if dist_to_edge(ek) == 0:
+        return "phase2"
+    if _cut_established(board):
+        return "phase1"
+    return "phase0"
 
 def play_persistent_game(initial_fen: str | None = None, max_plies: int = 200,
                          tick_watchdog: int = 300, graph: str = "shared") -> dict:
@@ -110,10 +187,13 @@ def play_persistent_game(initial_fen: str | None = None, max_plies: int = 200,
 
     plies = 0
     rook_lost = False
+    # Persistent env across plies to maintain fen history and pressure
+    env = {"board": board, "chosen_move": None, "fen_history": deque(maxlen=12), "pressure_steps": 0}
 
     while not board.is_game_over() and plies < max_plies:
         # One decision cycle (White/ReCoN)
-        env = {"board": board, "chosen_move": None}
+        env["board"] = board
+        env["chosen_move"] = None
         ticks = 0
         min_decision_ticks = 3  # allow parallel phases a short window to compete
         proposals: list[dict] = []
@@ -131,6 +211,8 @@ def play_persistent_game(initial_fen: str | None = None, max_plies: int = 200,
             )
             if ticks == 1:
                 logger.events[-1]["graph"] = {"edges": graph_edges}
+
+            eligible = _eligible_phase(board)
 
             # If any terminal proposed a move this tick, record its phase and keep evaluating briefly
             if env.get("chosen_move"):
@@ -151,15 +233,20 @@ def play_persistent_game(initial_fen: str | None = None, max_plies: int = 200,
                 # Clear to allow other phases to propose within the window
                 env["chosen_move"] = None
 
-            # Exit the evaluation window if we have proposals and minimum ticks elapsed
-            if proposals and ticks >= min_decision_ticks:
-                break
+            # Exit when eligible phase has at least one proposal and window elapsed
+            if ticks >= min_decision_ticks:
+                elig_props = [p for p in proposals if p["phase"] == eligible]
+                if elig_props:
+                    break
 
         # Choose the best proposal (prefer higher phase); fall back to any remaining choice
         move_uci = None
         if proposals:
-            proposals.sort(key=lambda p: p["rank"])  # ensure deterministic order for equal ranks
-            move_uci = max(proposals, key=lambda p: p["rank"]) ["move"]
+            eligible = _eligible_phase(board)
+            elig_props = [p for p in proposals if p["phase"] == eligible]
+            pick_from = elig_props if elig_props else proposals
+            pick_from.sort(key=lambda p: p["rank"])  # ensure deterministic order for equal ranks
+            move_uci = max(pick_from, key=lambda p: p["rank"]) ["move"]
         else:
             move_uci = env.get("chosen_move")
         if not move_uci:
@@ -212,16 +299,28 @@ def play_persistent_game(initial_fen: str | None = None, max_plies: int = 200,
             if board.is_game_over() or plies >= max_plies:
                 break
 
-            # Reset states so the network re-evaluates this new position next cycle
-            for n in g.nodes.values():
-                n.state = NodeState.INACTIVE
-            # Re-arm wait gate to detect new FEN (if present)
-            if graph == "shared" and "wait_for_board_change" in g.nodes:
-                g.nodes["wait_for_board_change"].meta.pop("last_fen", None)
-            g.nodes[root_id].state = NodeState.REQUESTED
-        else:
-            # No move selected by watchdog/time—stop to avoid infinite loop
-            break
+    # Reset only terminals (evaluators/actuators) and preserve confirmed phase states
+    # This was overly aggressive earlier and ruined the whole graph: 
+    # Per ReCoN engine (_request_child_if_ready): A node (e.g., PHASE1) is only REQUESTED if all POR predecessors (e.g., PHASE0) are TRUE/CONFIRMED (_all_por_predecessors_true
+    phase_ids = ["ROOT", "PHASE0", "PHASE1", "PHASE2", "PHASE3", "PHASE4"]
+    for n in g.nodes.values():
+        if n.nid not in phase_ids and n.state == NodeState.CONFIRMED:
+            n.state = NodeState.INACTIVE  # Reset confirmed terminals
+        elif n.state not in (NodeState.CONFIRMED, NodeState.INACTIVE):
+            n.state = NodeState.INACTIVE  # Reset transient states of non-phase nodes
+
+    # Re-arm evaluators (clear meta for re-evaluation)
+    for eval_id in ["king_at_edge", "box_can_shrink", "can_take_opposition", "can_deliver_mate"]:
+        if eval_id in g.nodes:
+            n = g.nodes[eval_id]
+            n.meta.clear()  # Reset meta (e.g., caches) for fresh evaluation
+
+    # Re-arm wait gate to detect new FEN (if present)
+    if graph == "shared" and "wait_for_board_change" in g.nodes:
+        g.nodes["wait_for_board_change"].meta.pop("last_fen", None)
+
+    # Re-REQUEST root to trigger next cycle with persisted phase states
+    g.nodes[root_id].state = NodeState.REQUESTED
 
     result = {
         "plies": plies,

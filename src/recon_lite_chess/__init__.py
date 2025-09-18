@@ -22,7 +22,7 @@ from .krk_nodes import (
 
     # Factories (actuators)
     create_phase0_choose_moves, create_king_drive_moves, create_box_shrink_moves,
-    create_opposition_moves, create_mate_moves, create_random_legal_moves,
+    create_opposition_moves, create_mate_moves, create_random_legal_moves, create_no_progress_watch,
 
     # Factories (scripts)
     create_phase0_establish_cut, create_phase1_drive_to_edge, create_phase2_shrink_box,
@@ -53,7 +53,7 @@ __all__ = [
     "create_opposition_evaluator", "create_mate_deliver_evaluator",
     "create_stalemate_detector", "create_wait_for_board_change",
     "create_phase0_choose_moves", "create_king_drive_moves", "create_box_shrink_moves",
-    "create_opposition_moves", "create_mate_moves", "create_random_legal_moves",
+    "create_opposition_moves", "create_mate_moves", "create_random_legal_moves", "create_no_progress_watch",
     "create_phase0_establish_cut", "create_phase1_drive_to_edge", "create_phase2_shrink_box",
     "create_phase3_take_opposition", "create_phase4_deliver_mate", "create_krk_root",
 

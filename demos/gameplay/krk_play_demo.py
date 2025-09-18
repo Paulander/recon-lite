@@ -38,6 +38,8 @@ from recon_lite_chess import (
     create_phase0_establish_cut, create_phase0_choose_moves,
     create_phase1_drive_to_edge, create_phase2_shrink_box,
     create_phase3_take_opposition, create_phase4_deliver_mate,
+    create_king_drive_moves, create_box_shrink_moves,
+    create_opposition_moves, create_mate_moves,
 )
 from recon_lite_chess.krk_nodes import wire_default_krk
 from recon_lite_chess.predicates import move_features, box_area
@@ -60,7 +62,13 @@ def build_krk_graph() -> Graph:
     p3    = create_phase3_take_opposition("PHASE3")
     p4    = create_phase4_deliver_mate("PHASE4")
 
-    for n in [root, p0, ch0, p1, p2, p3, p4]:
+    # Add move generator terminals for phases 1..4
+    m1 = create_king_drive_moves("KING_DRIVE_MOVES")
+    m2 = create_box_shrink_moves("BOX_SHRINK_MOVES")
+    m3 = create_opposition_moves("OPPOSITION_MOVES")
+    m4 = create_mate_moves("MATE_MOVES")
+
+    for n in [root, p0, ch0, p1, p2, p3, p4, m1, m2, m3, m4]:
         g.add_node(n)
 
     wire_default_krk(g, "ROOT", {
@@ -72,6 +80,12 @@ def build_krk_graph() -> Graph:
         "phase3": "PHASE3",
         "phase4": "PHASE4",
     })
+
+    # Wire move generators under their phases
+    g.add_edge("PHASE1", "KING_DRIVE_MOVES", LinkType.SUB)
+    g.add_edge("PHASE2", "BOX_SHRINK_MOVES", LinkType.SUB)
+    g.add_edge("PHASE3", "OPPOSITION_MOVES", LinkType.SUB)
+    g.add_edge("PHASE4", "MATE_MOVES", LinkType.SUB)
 
     return g
 

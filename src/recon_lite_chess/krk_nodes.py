@@ -15,6 +15,7 @@ from dataclasses import dataclass
 import chess
 
 from recon_lite.graph import Node, NodeType, NodeState, LinkType  # LinkType for wire helper
+from .predicates import box_area, move_features
 
 
 # ===== TERMINAL NODES (Leaf Operations) =====
@@ -198,13 +199,21 @@ class Phase0ChooseMoves(Node):
         board = env.get("board")
         if not board:
             return False, []
-        mv = choose_move_phase0(board)
+        mv = choose_move_phase0(board, env)
         if mv is None:
             mv = choose_any_safe_move(board)
         if mv:
             env["chosen_move"] = mv
             node.meta["suggested_moves"] = [mv]
             node.meta["phase"] = "phase0"
+            try:
+                mobj = chess.Move.from_uci(mv)
+                feats = move_features(board, mobj)
+                reason = f"P0 rendezvous: box {feats['box_area_before']}→{feats['box_area_after']}, +{feats['king_progress']} king, rook_safe={feats['rook_safe_after']}, safe_check={feats['gives_safe_check']}"
+                node.meta["reason"] = reason
+                env["last_reason"] = reason
+            except Exception:
+                pass
             return True, [mv]
         return False, []
 
@@ -219,11 +228,19 @@ class KingDriveMoves(Node):
         board = env.get("board")
         if not board:
             return False, []
-        mv = choose_move_phase1(board)
+        mv = choose_move_phase1(board, env)
         if mv:
             env["chosen_move"] = mv
             node.meta["suggested_moves"] = [mv]
             node.meta["phase"] = "phase1"
+            try:
+                mobj = chess.Move.from_uci(mv)
+                feats = move_features(board, mobj)
+                reason = f"P1 drive: box {feats['box_area_before']}→{feats['box_area_after']}, +{feats['king_progress']} king, rook_safe={feats['rook_safe_after']}"
+                node.meta["reason"] = reason
+                env["last_reason"] = reason
+            except Exception:
+                pass
             return True, [mv]
         return False, []
 
@@ -238,11 +255,19 @@ class BoxShrinkMoves(Node):
         board = env.get("board")
         if not board:
             return False, []
-        mv = choose_move_phase2(board)
+        mv = choose_move_phase2(board, env)
         if mv:
             env["chosen_move"] = mv
             node.meta["suggested_moves"] = [mv]
             node.meta["phase"] = "phase2"
+            try:
+                mobj = chess.Move.from_uci(mv)
+                feats = move_features(board, mobj)
+                reason = f"P2 shrink: box {feats['box_area_before']}→{feats['box_area_after']}, +{feats['king_progress']} king, rook_safe={feats['rook_safe_after']}"
+                node.meta["reason"] = reason
+                env["last_reason"] = reason
+            except Exception:
+                pass
             return True, [mv]
         return False, []
 
@@ -257,11 +282,19 @@ class OppositionMoves(Node):
         board = env.get("board")
         if not board:
             return False, []
-        mv = choose_move_phase3(board)
+        mv = choose_move_phase3(board, env)
         if mv:
             env["chosen_move"] = mv
             node.meta["suggested_moves"] = [mv]
             node.meta["phase"] = "phase3"
+            try:
+                mobj = chess.Move.from_uci(mv)
+                feats = move_features(board, mobj)
+                reason = f"P3 opposition: box {feats['box_area_before']}→{feats['box_area_after']}, +{feats['king_progress']} king, rook_safe={feats['rook_safe_after']}"
+                node.meta["reason"] = reason
+                env["last_reason"] = reason
+            except Exception:
+                pass
             return True, [mv]
         return False, []
 
@@ -276,13 +309,75 @@ class MateMoves(Node):
         board = env.get("board")
         if not board:
             return False, []
-        mv = choose_move_phase4(board)
+        mv = choose_move_phase4(board, env)
         if mv:
             env["chosen_move"] = mv
             node.meta["suggested_moves"] = [mv]
             node.meta["phase"] = "phase4"
+            try:
+                mobj = chess.Move.from_uci(mv)
+                feats = move_features(board, mobj)
+                reason = f"P4 mate: box {feats['box_area_before']}→{feats['box_area_after']}, +{feats['king_progress']} king, rook_safe={feats['rook_safe_after']}"
+                node.meta["reason"] = reason
+                env["last_reason"] = reason
+            except Exception:
+                pass
             return True, [mv]
         return False, []
+
+
+# ===== SUPERVISOR: NoProgressWatch =====
+
+@dataclass
+class NoProgressWatch(Node):
+    """
+    Tracks last N box areas. If no strict improvement in 6 plies, set env["pressure"] for a few plies.
+    Also maintains env["fen_history"] for repetition checks.
+    """
+    def __init__(self, nid: str):
+        super().__init__(nid=nid, ntype=NodeType.TERMINAL, predicate=self._tick)
+
+    def _tick(self, node: Node, env: Dict[str, Any]) -> Tuple[bool, bool]:
+        from collections import deque
+        board = env.get("board")
+        if board is None:
+            return True, True
+
+        # Init fen_history
+        fen_hist = env.get("fen_history")
+        if fen_hist is None:
+            fen_hist = deque(maxlen=12)
+            env["fen_history"] = fen_hist
+        # Append normalized FEN-with-turn
+        try:
+            fen_key = board.board_fen() + " " + ("w" if board.turn else "b")
+        except Exception:
+            fen_key = board.fen()
+        # Avoid duplicate spam if same as last
+        if not fen_hist or fen_hist[-1] != fen_key:
+            fen_hist.append(fen_key)
+
+        # Track recent box areas
+        areas = node.meta.get("recent_areas")
+        if areas is None:
+            areas = deque(maxlen=8)
+            node.meta["recent_areas"] = areas
+        areas.append(box_area(board))
+
+        # Pressure window management
+        steps = int(env.get("pressure_steps", 0))
+        # Trigger if last 6 entries show no strict decrease
+        if len(areas) >= 6:
+            window = list(areas)[-6:]
+            improved = any(window[i] > window[i+1] for i in range(len(window)-1))
+            if not improved and steps <= 0:
+                steps = 6
+        steps = max(0, steps - 1) if steps > 0 else steps
+        env["pressure_steps"] = steps
+        env["pressure"] = steps > 0
+
+        # This node is a side observer; do not gate
+        return True, True
 
 
 @dataclass
@@ -325,6 +420,7 @@ def create_box_shrink_moves(nid: str) -> BoxShrinkMoves: return BoxShrinkMoves(n
 def create_opposition_moves(nid: str) -> OppositionMoves: return OppositionMoves(nid)
 def create_mate_moves(nid: str) -> MateMoves: return MateMoves(nid)
 def create_random_legal_moves(nid: str) -> RandomLegalMoves: return RandomLegalMoves(nid)
+def create_no_progress_watch(nid: str) -> NoProgressWatch: return NoProgressWatch(nid)
 
 def create_krk_root(nid: str) -> KRKCheckmateRoot: return KRKCheckmateRoot(nid)
 
@@ -347,6 +443,9 @@ def wire_default_krk(g, root_id: str, ids: Dict[str, str]) -> None:
     g.add_edge(ids["root"], ids["phase2"], LinkType.SUB)
     g.add_edge(ids["root"], ids["phase3"], LinkType.SUB)
     g.add_edge(ids["root"], ids["phase4"], LinkType.SUB)
+    # Add supervisor without POR edges
+    if "watch" in ids:
+        g.add_edge(ids["root"], ids["watch"], LinkType.SUB)
 
     g.add_edge(ids["phase0"], ids["choose_p0"], LinkType.SUB)
 

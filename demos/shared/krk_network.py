@@ -22,7 +22,7 @@ from recon_lite_chess import (
 
     # Move generators (actuators)
     create_phase0_choose_moves, create_king_drive_moves, create_box_shrink_moves, create_opposition_moves,
-    create_mate_moves, create_random_legal_moves
+    create_mate_moves, create_random_legal_moves, create_no_progress_watch
 )
 from recon_lite_chess.actuators import choose_any_safe_move
 
@@ -75,6 +75,8 @@ def build_krk_network() -> Graph:
     g.add_node(create_opposition_moves("opposition_moves"))
     g.add_node(create_mate_moves("mate_moves"))
     g.add_node(create_random_legal_moves("random_legal_moves"))
+    # Supervisor / Watchdog
+    g.add_node(create_no_progress_watch("no_progress_watch"))
 
     # ===== CONNECTIONS =====
 
@@ -84,6 +86,8 @@ def build_krk_network() -> Graph:
     g.add_edge("krk_root", "phase2_shrink_box", LinkType.SUB)
     g.add_edge("krk_root", "phase3_take_opposition", LinkType.SUB)
     g.add_edge("krk_root", "phase4_deliver_mate", LinkType.SUB)
+    # Attach supervisor under root without POR edges
+    g.add_edge("krk_root", "no_progress_watch", LinkType.SUB)
 
     # Phase 0 connections
     g.add_edge("phase0_establish_cut", "choose_phase0", LinkType.SUB)
@@ -115,7 +119,7 @@ def build_krk_network() -> Graph:
 
     # Phase 4 connections
     g.add_edge("phase4_deliver_mate", "can_deliver_mate", LinkType.SUB)
-    g.add_edge("can_take_opposition", "phase4_deliver_mate", LinkType.POR)  # Precondition
+    # Note: Do not POR-gate P4 on 'can_take_opposition'; mate may exist before formal opposition
     # removed POR to is_stalemate; stalemate is enforced in move filters
 
     # Move generator connections to phases

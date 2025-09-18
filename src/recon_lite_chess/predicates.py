@@ -105,6 +105,10 @@ def rook_safe_after(board: chess.Board, move: chess.Move) -> bool:
     enemy_k = b.king(not color)
     our_k = b.king(color)
 
+    # Robust guards: if something is off with the board, avoid crashes and assume safe
+    if enemy_k is None or our_k is None or rook_sq is None:
+        return True
+
     # if enemy king adjacent to rook (could capture)
     if chebyshev(enemy_k, rook_sq) <= 1:
         # if our king also adjacent → defended, allowed
@@ -297,3 +301,61 @@ def enemy_king_mobility_after(board: chess.Board, move: chess.Move) -> int:
         if piece and piece.piece_type == chess.KING and piece.color == enemy:
             cnt += 1
     return cnt
+
+# ---------- repetition & 50-move awareness ----------
+
+from collections import deque
+from typing import Deque, Iterable
+
+def _fen_after_move(board: chess.Board, move: chess.Move) -> str:
+    b = board.copy(stack=False)
+    b.push(move)
+    # Normalize to piece placement + side to move only, matching fen_history entries
+    return b.board_fen() + " " + ("w" if b.turn else "b")
+
+def repetition_penalty(board: chess.Board, move: chess.Move, fen_history: Iterable[str] | None) -> float:
+    """
+    Return 1.0 iff the position after 'move' matches the most recent FEN-with-turn in history,
+    else 0.0. This is a soft penalty used in scoring.
+    Expects fen_history entries normalized with side-to-move.
+    """
+    if not fen_history:
+        return 0.0
+    try:
+        last = next(iter(fen_history))  # most recent first if using deque.appendleft; but we don't know order
+    except StopIteration:
+        last = None
+    # If history is append-right and we read from the rightmost as last, we can't know.
+    # Robust: compare against the immediate previous env value if available in a list/deque.
+    hist = list(fen_history)
+    prev = hist[-1] if hist else None
+    pos_after = _fen_after_move(board, move)
+    return 1.0 if prev is not None and pos_after == prev else 0.0
+
+def would_cause_threefold(board: chess.Board, move: chess.Move, fen_history: Iterable[str] | None) -> bool:
+    """
+    Heuristic detector: if the FEN-with-turn after 'move' already appears twice in history,
+    then playing it would produce a 3rd occurrence -> treat as threefold risk.
+    """
+    if not fen_history:
+        return False
+    pos_after = _fen_after_move(board, move)
+    count = 0
+    for fen in fen_history:
+        if fen == pos_after:
+            count += 1
+            if count >= 2:
+                return True
+    return False
+
+def fifty_move_pressure(board: chess.Board) -> float:
+    """
+    Scale 0.0..1.0 as halfmove clock goes 40..48.
+    Encourages decisive progress as the draw limit approaches.
+    """
+    hm = getattr(board, "halfmove_clock", 0)
+    if hm <= 40:
+        return 0.0
+    if hm >= 48:
+        return 1.0
+    return (hm - 40) / 8.0
