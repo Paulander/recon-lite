@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KRK One-Page Visualization</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 0; background: #0b2c4a; color: #fff; }
+    .wrap { display: grid; grid-template-columns: 420px 1fr; grid-template-rows: auto 1fr; gap: 12px; padding: 12px; height: 100vh; box-sizing: border-box; }
+    header { grid-column: 1 / -1; display:flex; align-items:center; justify-content:space-between; }
+    header h1 { font-size: 18px; margin: 0; }
+    .pane { background: #0f3a5d; border-radius: 10px; padding: 10px; box-shadow: 0 6px 18px rgba(0,0,0,0.18); }
+    #board { aspect-ratio: 1 / 1; width: 100%; background: #f4e3c1; border-radius: 8px; overflow: hidden; }
+    .grid { display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); height: 100%; }
+    .sq { display:flex; align-items:center; justify-content:center; font-size: 28px; }
+    .dark { background: #b8875a; }
+    .light { background: #eed9b7; }
+    .controls { display:flex; gap:6px; align-items:center; }
+    button { background:#1d76d2; border:none; color:#fff; padding:6px 10px; border-radius:6px; cursor:pointer; }
+    button:disabled { opacity:0.5; cursor:not-allowed; }
+    .network { height: 52vh; background:#f8f9fa; border-radius:8px; color:#222; overflow:auto; }
+    .nodes { display:grid; grid-template-columns: repeat(4, minmax(180px,1fr)); gap:8px; padding:10px; }
+    .node { border-radius:8px; padding:8px; border:1px solid #e5e7eb; background:#fff; font-size:12px; }
+    .state-INACTIVE { background:#f3f4f6; }
+    .state-REQUESTED { background:#cffafe; }
+    .state-WAITING { background:#eab30822; }
+    .state-TRUE { background:#a7f3d0; }
+    .state-CONFIRMED { background:#86efac; }
+    .state-FAILED { background:#fecaca; }
+    .phases { display:grid; grid-template-columns: repeat(2, 1fr); gap:6px; }
+    .phase { background:#0b2c4a; border:1px solid #1b4c7a; border-radius:8px; padding:6px; font-size:12px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>KRK One-Page Visualization</h1>
+      <div class="controls">
+        <button id="prev">Prev</button>
+        <button id="play">Play</button>
+        <button id="next">Next</button>
+        <span id="step">0 / 0</span>
+      </div>
+    </header>
+    <div class="pane">
+      <div id="board"></div>
+      <div id="pos" style="margin-top:8px; font-size:12px; opacity:0.9;">Position: -</div>
+    </div>
+    <div class="pane">
+      <div class="phases" id="phases"></div>
+      <div class="network" id="network"></div>
+    </div>
+  </div>
+
+  <script>
+    const file = new URLSearchParams(location.search).get('file') || '../outputs/krk_persistent_visualization.json';
+    let data = [];
+    let idx = 0;
+    let playing = false, timer = null;
+
+    const boardEl = document.getElementById('board');
+    const posEl = document.getElementById('pos');
+    const stepEl = document.getElementById('step');
+    const netEl = document.getElementById('network');
+    const phasesEl = document.getElementById('phases');
+
+    function drawEmptyBoard() {
+      boardEl.innerHTML = '';
+      const g = document.createElement('div');
+      g.className = 'grid';
+      for (let r = 7; r >= 0; r--) {
+        for (let f = 0; f < 8; f++) {
+          const s = document.createElement('div');
+          s.className = 'sq ' + (((r+f)%2) ? 'dark' : 'light');
+          g.appendChild(s);
+        }
+      }
+      boardEl.appendChild(g);
+    }
+
+    function placePiece(file, rank, text) {
+      const g = boardEl.querySelector('.grid');
+      const idx = (7-rank)*8 + file;
+      const cell = g.children[idx];
+      cell.textContent = text;
+    }
+
+    function fenToPieces(fen) {
+      const board = fen.split(' ')[0];
+      const rows = board.split('/');
+      for (let rank = 7; rank >= 0; rank--) {
+        let file = 0;
+        for (const ch of rows[7-rank]) {
+          if (/[1-8]/.test(ch)) {
+            file += parseInt(ch,10);
+          } else {
+            const symbol = ({'K':'♔','Q':'♕','R':'♖','B':'♗','N':'♘','P':'♙','k':'♚','q':'♛','r':'♜','b':'♝','n':'♞','p':'♟'})[ch] || '?';
+            placePiece(file, rank, symbol);
+            file += 1;
+          }
+        }
+      }
+    }
+
+    function updateBoard(env){
+      drawEmptyBoard();
+      if (env && env.fen) {
+        fenToPieces(env.fen);
+        posEl.textContent = 'Position: ' + env.fen;
+      }
+    }
+
+    function renderNodes(nodes){
+      netEl.innerHTML = '';
+      const container = document.createElement('div');
+      container.className = 'nodes';
+      const entries = Object.entries(nodes || {}).sort(([a],[b])=>a.localeCompare(b));
+      for (const [id,state] of entries) {
+        const d = document.createElement('div');
+        d.className = 'node state-' + state;
+        d.textContent = id + ' : ' + state;
+        container.appendChild(d);
+      }
+      netEl.appendChild(container);
+    }
+
+    function renderPhases(nodes){
+      const order = ['krk_root', 'phase1_drive_to_edge', 'phase2_shrink_box', 'phase3_take_opposition', 'phase4_deliver_mate', 'king_at_edge', 'box_can_shrink', 'can_take_opposition', 'can_deliver_mate', 'is_stalemate', 'choose_phase0', 'king_drive_moves', 'box_shrink_moves', 'opposition_moves', 'mate_moves', 'wait_for_board_change'];
+      phasesEl.innerHTML = '';
+      for (const id of order) {
+        const state = (nodes && nodes[id]) || 'INACTIVE';
+        const p = document.createElement('div');
+        p.className = 'phase';
+        p.textContent = id + ' : ' + state;
+        phasesEl.appendChild(p);
+      }
+    }
+
+    function render(i){
+      const frame = data[i] || {};
+      updateBoard(frame.env || {});
+      renderNodes(frame.nodes || {});
+      renderPhases(frame.nodes || {});
+      stepEl.textContent = `${i+1} / ${data.length}`;
+    }
+
+    async function load(){
+      const res = await fetch(file, {cache:'no-store'});
+      data = await res.json();
+      idx = 0;
+      render(0);
+    }
+
+    document.getElementById('prev').onclick = ()=>{ idx = Math.max(0, idx-1); render(idx); };
+    document.getElementById('next').onclick = ()=>{ idx = Math.min(data.length-1, idx+1); render(idx); };
+    document.getElementById('play').onclick = function(){
+      if (playing){ clearInterval(timer); playing=false; this.textContent='Play'; return; }
+      playing = true; this.textContent='Pause';
+      timer = setInterval(()=>{ if (idx>=data.length-1){ clearInterval(timer); playing=false; this.textContent='Play'; return; } idx++; render(idx); }, 150);
+    };
+
+    load();
+  </script>
+</body>
+</html>

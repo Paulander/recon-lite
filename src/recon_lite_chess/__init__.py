@@ -7,6 +7,7 @@ from .krk_nodes import (
     # Terminal evaluators
     KingAtEdgeDetector, BoxShrinkEvaluator, OppositionEvaluator,
     MateDeliverEvaluator, StalemateDetector, WaitForBoardChange,
+    CutEstablishedDetector, RookLostDetector,
 
     # Move generators (actuators)
     Phase0ChooseMoves, KingDriveMoves, BoxShrinkMoves, OppositionMoves, MateMoves, RandomLegalMoves,
@@ -19,6 +20,7 @@ from .krk_nodes import (
     create_king_edge_detector, create_box_shrink_evaluator,
     create_opposition_evaluator, create_mate_deliver_evaluator,
     create_stalemate_detector, create_wait_for_board_change,
+    create_cut_established_detector, create_rook_lost_detector,
 
     # Factories (actuators)
     create_phase0_choose_moves, create_king_drive_moves, create_box_shrink_moves,
@@ -40,6 +42,7 @@ __all__ = [
     # Terminal evaluators
     "KingAtEdgeDetector", "BoxShrinkEvaluator", "OppositionEvaluator",
     "MateDeliverEvaluator", "StalemateDetector", "WaitForBoardChange",
+    "CutEstablishedDetector", "RookLostDetector",
 
     # Move generators (actuators)
     "Phase0ChooseMoves", "KingDriveMoves", "BoxShrinkMoves", "OppositionMoves", "MateMoves", "RandomLegalMoves",
@@ -52,6 +55,7 @@ __all__ = [
     "create_king_edge_detector", "create_box_shrink_evaluator",
     "create_opposition_evaluator", "create_mate_deliver_evaluator",
     "create_stalemate_detector", "create_wait_for_board_change",
+    "create_cut_established_detector", "create_rook_lost_detector",
     "create_phase0_choose_moves", "create_king_drive_moves", "create_box_shrink_moves",
     "create_opposition_moves", "create_mate_moves", "create_random_legal_moves", "create_no_progress_watch",
     "create_phase0_establish_cut", "create_phase1_drive_to_edge", "create_phase2_shrink_box",

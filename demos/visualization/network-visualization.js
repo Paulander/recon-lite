@@ -8,6 +8,7 @@ class NetworkVisualization {
         this.externalEdges = null; // from JSON graph.edges if provided
         this.lastNodesState = {};  // for transition detection
         this.transitionSet = new Set(); // nodes that changed state this frame
+        this.compact = true; // render without wrapper script nodes by default
     }
 
     normalizeId(id) {
@@ -58,7 +59,37 @@ class NetworkVisualization {
             'box_can_shrink': { x: 300, y: 480 },
             'can_take_opposition': { x: 500, y: 480 },
             'can_deliver_mate': { x: 680, y: 480 },
-            'is_stalemate': { x: 680, y: 540 }
+            'is_stalemate': { x: 720, y: 150 },
+
+            // New article-compliant per-phase scripts and wait gates
+            'p0_check': { x: 180, y: 200 },
+            'p0_move':  { x: 220, y: 260 },
+            'p0_wait':  { x: 260, y: 320 },
+            'wait_after_p0': { x: 220, y: 360 },
+            'cut_established': { x: 120, y: 200 },
+
+            'p1_check': { x: 540, y: 200 },
+            'p1_move':  { x: 580, y: 260 },
+            'p1_wait':  { x: 620, y: 320 },
+            'wait_after_p1': { x: 580, y: 360 },
+
+            'p2_check': { x: 180, y: 290 },
+            'p2_move':  { x: 220, y: 350 },
+            'p2_wait':  { x: 260, y: 410 },
+            'wait_after_p2': { x: 220, y: 450 },
+
+            'p3_check': { x: 360, y: 290 },
+            'p3_move':  { x: 400, y: 350 },
+            'p3_wait':  { x: 440, y: 410 },
+            'wait_after_p3': { x: 400, y: 450 },
+
+            'p4_check': { x: 540, y: 290 },
+            'p4_move':  { x: 580, y: 350 },
+            'p4_wait':  { x: 620, y: 410 },
+            'wait_after_p4': { x: 580, y: 450 },
+
+            // Root sentinels
+            'rook_lost': { x: 760, y: 150 }
         };
     }
 
@@ -95,7 +126,10 @@ class NetworkVisualization {
     static get sensorNodes() {
         return new Set([
             'wait_for_board_change',
-            'king_at_edge', 'box_can_shrink', 'can_take_opposition', 'can_deliver_mate', 'is_stalemate'
+            'king_at_edge', 'box_can_shrink', 'can_take_opposition', 'can_deliver_mate', 'is_stalemate',
+            'cut_established',
+            'wait_after_p0','wait_after_p1','wait_after_p2','wait_after_p3','wait_after_p4',
+            'rook_lost'
         ]);
     }
 
@@ -177,9 +211,55 @@ class NetworkVisualization {
         const nodesState = (frame && frame.nodes) ? this.normalizeNodes(frame.nodes) : {};
 
         // Determine edges to draw: JSON-provided else fallback static
-        const edgesToDraw = this.externalEdges ?
+        let edgesToDraw = this.externalEdges ?
             this.externalEdges.map(e => [this.normalizeId(e.src), this.normalizeId(e.dst), e.type]) :
             NetworkVisualization.edges.map(([a,b]) => [a,b,'SUB']);
+
+        // --- Compact mode: hide wrapper script nodes and rewire edges visually ---
+        if (this.compact) {
+            const hiddenRe = /^(p[0-4]_(check|move|wait)|wait_after_p[0-4])$/;
+            const hidden = new Set();
+            edgesToDraw.forEach(([src, dst]) => {
+                if (hiddenRe.test(src)) hidden.add(src);
+                if (hiddenRe.test(dst)) hidden.add(dst);
+            });
+
+            // Build SUB adjacency to synthesize phase->terminal edges when wrapper is hidden
+            const subOut = new Map();
+            const subIn = new Map();
+            edgesToDraw.forEach(([src, dst, t]) => {
+                if (t !== 'SUB') return;
+                if (!subOut.has(src)) subOut.set(src, []);
+                subOut.get(src).push(dst);
+                if (!subIn.has(dst)) subIn.set(dst, []);
+                subIn.get(dst).push(src);
+            });
+
+            const isPhase = (id) => (
+                id === 'phase0_establish_cut' || id === 'phase1_drive_to_edge' ||
+                id === 'phase2_shrink_box'   || id === 'phase3_take_opposition' ||
+                id === 'phase4_deliver_mate'
+            );
+
+            // Filter out edges touching hidden nodes
+            let filtered = edgesToDraw.filter(([src, dst]) => !hidden.has(src) && !hidden.has(dst));
+
+            // For each hidden wrapper, add synthetic edges: (phase -> terminal) for each terminal child
+            hidden.forEach((w) => {
+                const parents = subIn.get(w) || [];
+                const phaseParent = parents.find(isPhase);
+                if (!phaseParent) return;
+                const children = subOut.get(w) || [];
+                children.forEach((c) => {
+                    if (hidden.has(c)) return; // don't show hidden wait terminals
+                    // Avoid duplicates
+                    const exists = filtered.some(([s,d,t]) => s===phaseParent && d===c && t==='SUB');
+                    if (!exists) filtered.push([phaseParent, c, 'SUB']);
+                });
+            });
+
+            edgesToDraw = filtered;
+        }
 
         // Draw edges with labels
         edgesToDraw.forEach(([src, dst, etype]) => {
@@ -206,8 +286,15 @@ class NetworkVisualization {
             this.ctx.fillText(etype, mx, my - 4);
         });
 
+        // Determine which nodes are actually present (avoid drawing unused)
+        const presentNodes = new Set();
+        Object.keys(nodesState).forEach((id) => presentNodes.add(id));
+        edgesToDraw.forEach(([src, dst]) => { presentNodes.add(src); presentNodes.add(dst); });
+
         // Draw nodes
-        Object.entries(NetworkVisualization.nodePositions).forEach(([nodeId, pos]) => {
+        presentNodes.forEach((nodeId) => {
+            const pos = NetworkVisualization.nodePositions[nodeId];
+            if (!pos) return;
             const state = nodesState[nodeId] || 'INACTIVE';
             const fill = NetworkVisualization.stateColors[state] || NetworkVisualization.stateColors['INACTIVE'];
             const border = NetworkVisualization.stateBorderColors[state] || '#607d8b';

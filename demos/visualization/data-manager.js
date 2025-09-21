@@ -11,7 +11,7 @@ class DataManager {
     async loadVisualizationData() {
         try {
             const params = new URLSearchParams(window.location.search);
-            const file = params.get('file') || '../krk_visualization_data.json';
+            const file = params.get('file') || '../outputs/krk_persistent_visualization.json';
             const url = `${file}${file.includes('?') ? '&' : '?'}t=${Date.now()}`;
 
             const response = await fetch(url, { cache: 'no-store' });

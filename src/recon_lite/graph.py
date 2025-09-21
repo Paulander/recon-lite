@@ -73,6 +73,29 @@ class Graph:
     def add_edge(self, src: str, dst: str, ltype: LinkType):
         if src not in self.nodes or dst not in self.nodes:
             raise KeyError("Both src and dst must be existing nodes")
+        src_node = self.nodes[src]
+        dst_node = self.nodes[dst]
+
+        # --- Article compliance enforcement for link types ---
+        # Terminals: can only be TARGETED by SUB, and ORIGINATE SUR
+        if src_node.ntype == NodeType.TERMINAL:
+            if ltype != LinkType.SUR:
+                raise ValueError(
+                    f"Illegal edge: terminal node '{src}' may only originate SUR links (got {ltype.name})."
+                )
+        if dst_node.ntype == NodeType.TERMINAL:
+            if ltype != LinkType.SUB:
+                raise ValueError(
+                    f"Illegal edge: terminal node '{dst}' may only be targeted by SUB links (got {ltype.name})."
+                )
+
+        # POR/RET sequences must connect scripts only
+        if ltype in (LinkType.POR, LinkType.RET):
+            if not (src_node.ntype == NodeType.SCRIPT and dst_node.ntype == NodeType.SCRIPT):
+                raise ValueError(
+                    f"Illegal {ltype.name} edge: both src '{src}' and dst '{dst}' must be SCRIPT nodes."
+                )
+
         e = Edge(src, dst, ltype)
         self.edges.append(e)
         self.out.setdefault((src, ltype), []).append(dst)
@@ -96,3 +119,38 @@ class Graph:
 
     def is_last_in_sequence(self, nid: str) -> bool:
         return len(self.successors(nid)) == 0
+
+    # --- Validation utilities ---
+    def validate_article_compliance(self) -> None:
+        """
+        Validate core article constraints:
+          - Terminal nodes only targeted by SUB, and only originate SUR
+          - POR/RET edges connect scripts only
+          - Every script node has at least one SUB child
+        Raises ValueError on violations.
+        """
+        # Edge-based checks
+        for e in self.edges:
+            src_node = self.nodes[e.src]
+            dst_node = self.nodes[e.dst]
+            if src_node.ntype == NodeType.TERMINAL and e.ltype != LinkType.SUR:
+                raise ValueError(
+                    f"Article violation: terminal '{e.src}' originates non-SUR link {e.ltype.name} to '{e.dst}'."
+                )
+            if dst_node.ntype == NodeType.TERMINAL and e.ltype != LinkType.SUB:
+                raise ValueError(
+                    f"Article violation: terminal '{e.dst}' targeted by non-SUB link {e.ltype.name} from '{e.src}'."
+                )
+            if e.ltype in (LinkType.POR, LinkType.RET):
+                if not (src_node.ntype == NodeType.SCRIPT and dst_node.ntype == NodeType.SCRIPT):
+                    raise ValueError(
+                        f"Article violation: {e.ltype.name} edge must connect scripts (got {src_node.ntype.name}->{dst_node.ntype.name})."
+                    )
+
+        # Script children check
+        for nid, n in self.nodes.items():
+            if n.ntype == NodeType.SCRIPT:
+                if len(self.children(nid)) == 0:
+                    raise ValueError(
+                        f"Article violation: script node '{nid}' has no SUB children."
+                    )
