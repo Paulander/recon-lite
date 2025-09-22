@@ -15,6 +15,7 @@ import chess
 import sys
 from pathlib import Path
 import random
+from typing import Callable, Optional
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -47,6 +48,22 @@ from recon_lite_chess.predicates import (
     box_area,
     box_min_side,
 )
+
+PHASE_SEQUENCE = ["phase0", "phase1", "phase2", "phase3", "phase4"]
+PHASE_SCRIPT_IDS = {
+    "phase0": "phase0_establish_cut",
+    "phase1": "phase1_drive_to_edge",
+    "phase2": "phase2_shrink_box",
+    "phase3": "phase3_take_opposition",
+    "phase4": "phase4_deliver_mate",
+}
+PHASE_PREFIXES = {
+    "phase0": "p0_",
+    "phase1": "p1_",
+    "phase2": "p2_",
+    "phase3": "p3_",
+    "phase4": "p4_",
+}
 
 
 def _build_basic_krk_graph() -> Graph:
@@ -134,6 +151,34 @@ def _eligible_phase(board: chess.Board) -> str:
 
 # ---- Phase-aware proposal validation ----
 
+def _prime_phase(graph: Graph, target_phase: str) -> None:
+    target_phase = target_phase.lower()
+    encountered_target = False
+    for phase in PHASE_SEQUENCE:
+        script_id = PHASE_SCRIPT_IDS.get(phase)
+        if script_id not in graph.nodes:
+            continue
+        prefix = PHASE_PREFIXES.get(phase, "")
+        script_node = graph.nodes[script_id]
+
+        if phase == target_phase:
+            encountered_target = True
+            script_node.state = NodeState.REQUESTED
+            for nid, node in graph.nodes.items():
+                if prefix and nid.startswith(prefix):
+                    node.state = NodeState.REQUESTED if nid.endswith("_move") else NodeState.INACTIVE
+            # Ensure downstream phases are reset
+        elif not encountered_target:
+            script_node.state = NodeState.CONFIRMED
+            for nid, node in graph.nodes.items():
+                if prefix and nid.startswith(prefix):
+                    node.state = NodeState.CONFIRMED
+        else:
+            script_node.state = NodeState.INACTIVE
+            for nid, node in graph.nodes.items():
+                if prefix and nid.startswith(prefix):
+                    node.state = NodeState.INACTIVE
+
 PHASE_PRIORITY = {"phase0": 0, "phase1": 1, "phase2": 2, "phase3": 3, "phase4": 4}
 
 
@@ -208,7 +253,7 @@ def _detect_proposing_phase(engine: ReConEngine, move_uci: str) -> tuple[str | N
     return phase_name, reason
 
 
-def _select_candidate(board: chess.Board, proposals: list[dict], logger: RunLogger | None) -> tuple[dict | None, list[dict]]:
+def _select_candidate(board: chess.Board, proposals: list[dict], debug_logger: RunLogger | None) -> tuple[dict | None, list[dict]]:
     if not proposals:
         return None, proposals
 
@@ -219,8 +264,8 @@ def _select_candidate(board: chess.Board, proposals: list[dict], logger: RunLogg
             ok, metrics = _validate_phase2_move(board, candidate["move"])
             candidate["validation"] = metrics
             if not ok:
-                if logger:
-                    logger.snapshot(
+                if debug_logger:
+                    debug_logger.snapshot(
                         engine=None,
                         note=f"Rejected phase2 move {candidate['move']} (not shrinking)",
                         env={
@@ -245,7 +290,8 @@ def _decision_cycle(engine: ReConEngine,
                     *,
                     tick_watchdog: int,
                     min_decision_ticks: int,
-                    logger: RunLogger | None,
+                    viz_logger: RunLogger | None,
+                    debug_logger: RunLogger | None,
                     plies: int) -> tuple[dict | None, list[dict], int]:
     env["board"] = board
     env["chosen_move"] = None
@@ -256,31 +302,49 @@ def _decision_cycle(engine: ReConEngine,
         ticks += 1
         now_req = engine.step(env)
 
-        if logger is not None:
+        if viz_logger is not None or debug_logger is not None:
             dbg = {}
             if env.get("debug_phase1"):
                 dbg["debug_phase1"] = env["debug_phase1"]
             if env.get("debug_phase2"):
                 dbg["debug_phase2"] = env["debug_phase2"]
 
-            logger.snapshot(
-                engine=engine,
-                note=f"Persistent eval tick {ticks} (ply {plies+1})",
-                env={
-                    "fen": board.fen(),
-                    "evaluation_tick": ticks,
-                    "ply": plies + 1,
-                    "chosen_move": env.get("chosen_move"),
-                    "pressure": env.get("pressure"),
-                    "require_min_side_shrink": env.get("require_min_side_shrink"),
-                    **dbg,
-                },
-                thoughts="Persistent evaluation...",
-                new_requests=list(now_req.keys()) if now_req else [],
-            )
+            view_env = {
+                "fen": board.fen(),
+                "evaluation_tick": ticks,
+                "ply": plies + 1,
+                "chosen_move": env.get("chosen_move"),
+            }
+            if "pressure" in env:
+                view_env["pressure"] = env.get("pressure")
+            if "require_min_side_shrink" in env:
+                view_env["require_min_side_shrink"] = env.get("require_min_side_shrink")
 
-            if ticks == 1 and logger.events:
-                logger.events[-1]["graph"] = {"edges": [{"src": e.src, "dst": e.dst, "type": e.ltype.name} for e in engine.g.edges]}
+            if viz_logger is not None and ticks == 1 and not viz_logger.events:
+                viz_logger.attach_graph([
+                    {"src": e.src, "dst": e.dst, "type": e.ltype.name}
+                    for e in engine.g.edges
+                ])
+
+            if viz_logger is not None:
+                viz_logger.snapshot(
+                    engine=engine,
+                    note=f"Persistent eval tick {ticks} (ply {plies+1})",
+                    env=view_env,
+                    thoughts="Persistent evaluation...",
+                    new_requests=list(now_req.keys()) if now_req else [],
+                )
+
+            if debug_logger is not None:
+                debug_payload = dict(view_env)
+                debug_payload.update(dbg)
+                debug_logger.snapshot(
+                    engine=engine,
+                    note=f"Persistent eval tick {ticks} (ply {plies+1})",
+                    env=debug_payload,
+                    thoughts="Persistent evaluation...",
+                    new_requests=list(now_req.keys()) if now_req else [],
+                )
 
         proposed_move = env.get("chosen_move")
         if proposed_move:
@@ -296,12 +360,28 @@ def _decision_cycle(engine: ReConEngine,
         if ticks >= min_decision_ticks and proposals:
             break
 
-    selected, ordered = _select_candidate(board, proposals, logger)
+    selected, ordered = _select_candidate(board, proposals, debug_logger)
     return selected, ordered, ticks
 
-def play_persistent_game(initial_fen: str | None = None, max_plies: int = 200,
-                         tick_watchdog: int = 300) -> dict:
-    logger = RunLogger()
+def play_persistent_game(initial_fen: str | None = None,
+                         max_plies: int = 200,
+                         tick_watchdog: int = 300,
+                         *,
+                         split_logs: bool = True,
+                         output_basename: str = "krk_persistent",
+                         skip_opponent: bool = False,
+                         single_phase: Optional[str] = None,
+                         seed: Optional[int] = None,
+                         step_mode: bool = False,
+                         opponent_policy: Optional[Callable[[chess.Board], Optional[chess.Move]]] = None) -> dict:
+    if split_logs:
+        viz_logger = RunLogger()
+        debug_logger = RunLogger()
+    else:
+        viz_logger = debug_logger = RunLogger()
+
+    if seed is not None:
+        random.seed(seed)
     if initial_fen:
         board = chess.Board(initial_fen)
     else:
@@ -313,6 +393,13 @@ def play_persistent_game(initial_fen: str | None = None, max_plies: int = 200,
     root_id = "krk_root"
     g.nodes[root_id].state = NodeState.REQUESTED
 
+    if single_phase:
+        phase_key = single_phase.lower()
+        if phase_key not in PHASE_SEQUENCE:
+            raise ValueError(f"Unknown phase '{single_phase}'")
+        _prime_phase(g, phase_key)
+        single_phase = phase_key
+
     # Attach graph edges for visualization
     plies = 0
     rook_lost = False
@@ -320,13 +407,16 @@ def play_persistent_game(initial_fen: str | None = None, max_plies: int = 200,
     env = {"board": board, "chosen_move": None, "fen_history": deque(maxlen=12), "pressure_steps": 0}
 
     while not board.is_game_over() and plies < max_plies:
+        if single_phase:
+            _prime_phase(g, single_phase)
         selected, ordered, ticks = _decision_cycle(
             engine,
             board,
             env,
             tick_watchdog=tick_watchdog,
             min_decision_ticks=3,
-            logger=logger,
+            viz_logger=viz_logger,
+            debug_logger=debug_logger,
             plies=plies,
         )
 
@@ -344,13 +434,22 @@ def play_persistent_game(initial_fen: str | None = None, max_plies: int = 200,
                     "reason": "safety fallback",
                 }
                 move_uci = fallback
-                logger.snapshot(
-                    engine=None,
-                    note=f"FALLBACK applied: {fallback}",
-                    env={"fen": board.fen(), "ply": plies + 1, "fallback": True},
-                    thoughts="No acceptable proposal; applying fallback",
-                    new_requests=[],
-                )
+                if viz_logger is not None:
+                    viz_logger.snapshot(
+                        engine=None,
+                        note=f"FALLBACK applied: {fallback}",
+                        env={"fen": board.fen(), "ply": plies + 1, "fallback": True},
+                        thoughts="No acceptable proposal; applying fallback",
+                        new_requests=[],
+                    )
+                if debug_logger is not None and debug_logger is not viz_logger:
+                    debug_logger.snapshot(
+                        engine=None,
+                        note=f"FALLBACK applied: {fallback}",
+                        env={"fen": board.fen(), "ply": plies + 1, "fallback": True},
+                        thoughts="No acceptable proposal; applying fallback",
+                        new_requests=[],
+                    )
 
         if move_uci:
             try:
@@ -359,8 +458,8 @@ def play_persistent_game(initial_fen: str | None = None, max_plies: int = 200,
                 break
             plies += 1
 
-            if move_record and move_record.get("validation"):
-                logger.snapshot(
+            if move_record and move_record.get("validation") and debug_logger is not None:
+                debug_logger.snapshot(
                     engine=None,
                     note=f"Phase2 validation for {move_uci}",
                     env={**move_record["validation"], "ply": plies},
@@ -371,30 +470,67 @@ def play_persistent_game(initial_fen: str | None = None, max_plies: int = 200,
             if not any(p.piece_type == chess.ROOK and p.color == chess.WHITE for p in board.piece_map().values()):
                 rook_lost = True
 
-            logger.snapshot(
-                engine=None,
-                note=f"Applied move {plies}: {move_uci}",
-                env={"fen": board.fen(), "ply": plies, "recons_move": move_uci},
-                thoughts=f"Applied {move_uci} (persistent)",
-                new_requests=[],
-            )
+            if viz_logger is not None:
+                viz_logger.snapshot(
+                    engine=None,
+                    note=f"Applied move {plies}: {move_uci}",
+                    env={"fen": board.fen(), "ply": plies, "recons_move": move_uci},
+                    thoughts=f"Applied {move_uci} (persistent)",
+                    new_requests=[],
+                )
+            if debug_logger is not None and debug_logger is not viz_logger:
+                debug_logger.snapshot(
+                    engine=None,
+                    note=f"Applied move {plies}: {move_uci}",
+                    env={"fen": board.fen(), "ply": plies, "recons_move": move_uci},
+                    thoughts=f"Applied {move_uci} (persistent)",
+                    new_requests=[],
+                )
 
             if board.is_game_over() or plies >= max_plies:
                 break
 
-            # Opponent plays immediately (random for now)
-            opp_moves = list(board.legal_moves)
-            if opp_moves:
-                opp_uci = random.choice(opp_moves).uci()
-                board.push_uci(opp_uci)
-                logger.snapshot(
-                    engine=None,
-                    note=f"Opponent ply {plies}: {opp_uci}",
-                    env={"fen": board.fen(), "ply": plies, "opponents_move": opp_uci},
-                    thoughts="Random defense (persistent)",
-                    new_requests=[],
-                )
+            if step_mode:
+                break
+
+            if not skip_opponent and not board.is_game_over():
+                opp_move_obj = None
+                if opponent_policy is not None:
+                    candidate = opponent_policy(board.copy())
+                    if isinstance(candidate, chess.Move):
+                        opp_move_obj = candidate
+                    elif isinstance(candidate, str):
+                        try:
+                            opp_move_obj = chess.Move.from_uci(candidate)
+                        except ValueError:
+                            opp_move_obj = None
+                if opp_move_obj is None:
+                    opp_candidates = list(board.legal_moves)
+                    if opp_candidates:
+                        opp_move_obj = random.choice(opp_candidates)
+                if opp_move_obj is not None and opp_move_obj in board.legal_moves:
+                    board.push(opp_move_obj)
+                    opp_uci = opp_move_obj.uci()
+                    if viz_logger is not None:
+                        viz_logger.snapshot(
+                            engine=None,
+                            note=f"Opponent ply {plies}: {opp_uci}",
+                            env={"fen": board.fen(), "ply": plies, "opponents_move": opp_uci},
+                            thoughts="Opponent move (persistent)",
+                            new_requests=[],
+                        )
+                    if debug_logger is not None and debug_logger is not viz_logger:
+                        debug_logger.snapshot(
+                            engine=None,
+                            note=f"Opponent ply {plies}: {opp_uci}",
+                            env={"fen": board.fen(), "ply": plies, "opponents_move": opp_uci},
+                            thoughts="Opponent move (persistent)",
+                            new_requests=[],
+                        )
             if board.is_game_over() or plies >= max_plies:
+                break
+
+            if step_mode:
                 break
 
     # Reset only terminals (evaluators/actuators) and preserve confirmed phase states
@@ -428,9 +564,16 @@ def play_persistent_game(initial_fen: str | None = None, max_plies: int = 200,
         "final_fen": board.fen(),
     }
 
-    out_path = Path("demos/outputs/krk_persistent_visualization.json")
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    logger.to_json(str(out_path))
+    out_dir = Path("demos/outputs")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    if split_logs and debug_logger is not viz_logger:
+        viz_path = out_dir / f"{output_basename}_viz.json"
+        debug_path = out_dir / f"{output_basename}_debug.json"
+        viz_logger.to_json(str(viz_path))
+        debug_logger.to_json(str(debug_path))
+    else:
+        combined_path = out_dir / f"{output_basename}_visualization.json"
+        viz_logger.to_json(str(combined_path))
 
     return result
 
@@ -439,24 +582,15 @@ def preview_decision(board: chess.Board,
                      *,
                      tick_watchdog: int = 60,
                      min_decision_ticks: int = 3,
-                     assume_phase2_ready: bool = True) -> dict:
+                     target_phase: str | None = "phase2") -> dict:
     """Run a single decision cycle without applying the move (test helper)."""
     g = build_krk_network()
     engine = ReConEngine(g)
     root_id = "krk_root"
     g.nodes[root_id].state = NodeState.REQUESTED
 
-    if assume_phase2_ready:
-        for nid in ["phase0_establish_cut", "phase1_drive_to_edge"]:
-            if nid in g.nodes:
-                g.nodes[nid].state = NodeState.CONFIRMED
-        for nid, node in g.nodes.items():
-            if nid.startswith("p0_") or nid.startswith("p1_"):
-                node.state = NodeState.CONFIRMED
-        if "phase2_shrink_box" in g.nodes:
-            g.nodes["phase2_shrink_box"].state = NodeState.REQUESTED
-        if "p2_move" in g.nodes:
-            g.nodes["p2_move"].state = NodeState.REQUESTED
+    if target_phase:
+        _prime_phase(g, target_phase)
 
     env = {"board": board, "chosen_move": None, "fen_history": deque(maxlen=12), "pressure_steps": 0}
     decision, proposals, ticks = _decision_cycle(
@@ -465,13 +599,14 @@ def preview_decision(board: chess.Board,
         env,
         tick_watchdog=tick_watchdog,
         min_decision_ticks=min_decision_ticks,
-        logger=None,
+        viz_logger=None,
+        debug_logger=None,
         plies=0,
     )
     return {"decision": decision, "proposals": proposals, "ticks": ticks}
 
 
-def run_batch(n_games: int = 10, max_plies: int = 200) -> dict:
+def run_batch(n_games: int = 10, max_plies: int = 200, **play_kwargs) -> dict:
     stats = {
         "games": [],
         "mates": 0,
@@ -481,7 +616,7 @@ def run_batch(n_games: int = 10, max_plies: int = 200) -> dict:
         "avg_mate_length": None,
     }
     for i in range(n_games):
-        res = play_persistent_game(initial_fen=None, max_plies=max_plies)
+        res = play_persistent_game(initial_fen=None, max_plies=max_plies, **play_kwargs)
         stats["games"].append(res)
         if res.get("checkmate"):
             stats["mates"] += 1
@@ -500,14 +635,38 @@ def main():
     parser.add_argument("--fen", type=str, default="", help="Optional FEN to start from")
     parser.add_argument("--max-plies", type=int, default=200, help="Maximum plies")
     parser.add_argument("--batch", type=int, default=0, help="Run N games in batch mode")
+    parser.add_argument("--combined-log", action="store_true", help="Write a single combined visualization log")
+    parser.add_argument("--output-basename", type=str, default="krk_persistent", help="Base name for output logs")
+    parser.add_argument("--skip-opponent", action="store_true", help="Disable opponent replies (useful for debugging)")
+    parser.add_argument("--single-phase", choices=PHASE_SEQUENCE, help="Lock the network to a single phase")
+    parser.add_argument("--seed", type=int, default=None, help="Seed RNG for reproducible runs")
+    parser.add_argument("--step-mode", action="store_true", help="Stop after each ReCoN move without opponent response")
     # Single graph; demo uses the shared KRK network
     args = parser.parse_args()
 
     if args.batch and args.batch > 0:
-        run_batch(args.batch, max_plies=args.max_plies)
+        run_batch(
+            args.batch,
+            max_plies=args.max_plies,
+            split_logs=not args.combined_log,
+            output_basename=args.output_basename,
+            skip_opponent=args.skip_opponent,
+            single_phase=args.single_phase,
+            seed=args.seed,
+            step_mode=args.step_mode,
+        )
     else:
         start_fen = args.fen if args.fen else "4k3/6K1/8/8/8/8/R7/8 w - - 0 1"
-        res = play_persistent_game(initial_fen=start_fen, max_plies=args.max_plies)
+        res = play_persistent_game(
+            initial_fen=start_fen,
+            max_plies=args.max_plies,
+            split_logs=not args.combined_log,
+            output_basename=args.output_basename,
+            skip_opponent=args.skip_opponent,
+            single_phase=args.single_phase,
+            seed=args.seed,
+            step_mode=args.step_mode,
+        )
         print(res)
 
 

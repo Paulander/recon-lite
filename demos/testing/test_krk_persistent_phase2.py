@@ -13,7 +13,7 @@ from demos.persistent.krk_persistent_demo import preview_decision
 
 
 def _validate_persistent_shrink(board: chess.Board, idx: int) -> bool:
-    result = preview_decision(board, tick_watchdog=80)
+    result = preview_decision(board, tick_watchdog=80, target_phase="phase2")
     decision = result.get("decision")
 
     print(f"\nPosition {idx}: {board.fen()}")
