@@ -140,6 +140,11 @@ def _eligible_phase(board: chess.Board) -> str:
         return "phase0"
     if _can_deliver_mate_now(board):
         return "phase4"
+    try:
+        if box_min_side(board) <= 1:
+            return "phase3"
+    except Exception:
+        pass
     if on_rim(ek):
         for mv in board.legal_moves:
             if has_opposition_after(board, mv):
@@ -422,8 +427,8 @@ def play_persistent_game(initial_fen: str | None = None,
     env = {"board": board, "chosen_move": None, "fen_history": deque(maxlen=12), "pressure_steps": 0}
 
     while not board.is_game_over() and plies < max_plies:
-        if single_phase:
-            _prime_phase(g, single_phase)
+        phase_tag = single_phase or _eligible_phase(board)
+        _prime_phase(g, phase_tag)
         selected, ordered, ticks = _decision_cycle(
             engine,
             board,

@@ -165,9 +165,6 @@ def build_krk_network() -> Graph:
     g.add_edge("phase1_drive_to_edge", "p1_wait",  LinkType.SUB)
     # Mark OR root for immediate phase completion if already satisfied
     g.nodes["p1_check"].meta["alt"] = True
-    for nid in ("king_at_edge", "king_confined", "barrier_ready"):
-        if nid in g.nodes:
-            g.nodes[nid].meta["alt"] = True
     g.add_edge("p1_check", "p1_move", LinkType.POR)
     g.add_edge("p1_move",  "p1_wait", LinkType.POR)
 
