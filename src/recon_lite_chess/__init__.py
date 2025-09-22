@@ -29,6 +29,12 @@ from .krk_nodes import (
     # Factories (scripts)
     create_phase0_establish_cut, create_phase1_drive_to_edge, create_phase2_shrink_box,
     create_phase3_take_opposition, create_phase4_deliver_mate, create_krk_root,
+
+    # New confinement-aware nodes
+    ConfinementEvaluator, BarrierReadyEvaluator,
+    ConfinementMoves, BarrierPlacementMoves,
+    create_confinement_evaluator, create_barrier_ready_evaluator,
+    create_confinement_moves, create_barrier_placement_moves,
 )
 
 # Export wiring helper
@@ -60,6 +66,12 @@ __all__ = [
     "create_opposition_moves", "create_mate_moves", "create_random_legal_moves", "create_no_progress_watch",
     "create_phase0_establish_cut", "create_phase1_drive_to_edge", "create_phase2_shrink_box",
     "create_phase3_take_opposition", "create_phase4_deliver_mate", "create_krk_root",
+
+    # New confinement-aware nodes
+    "ConfinementEvaluator", "BarrierReadyEvaluator",
+    "ConfinementMoves", "BarrierPlacementMoves",
+    "create_confinement_evaluator", "create_barrier_ready_evaluator",
+    "create_confinement_moves", "create_barrier_placement_moves",
 
     # Helper
     "wire_default_krk",

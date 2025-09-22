@@ -22,7 +22,7 @@ from .predicates import (
     has_opposition_after, creates_stable_cut,
     enemy_king_mobility_after, repetition_penalty, would_cause_threefold,
     fifty_move_pressure, box_min_side, box_min_side_after, enemy_at_edge, king_outside_rook_cut_after, has_stable_cut,
-    enemy_nearest_edge_info, rook_distance_to_target_fence_after, rook_on_target_fence_after
+    enemy_nearest_edge_info, rook_distance_to_target_fence, rook_distance_to_target_fence_after, rook_on_target_fence_after
 )
 
 

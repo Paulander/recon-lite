@@ -85,9 +85,13 @@ class ReConEngine:
                     if node.predicate is None:
                         node.state = NodeState.TRUE
                     else:
-                        done, success = node.predicate(node, env)
-                        if done:
-                            node.state = NodeState.TRUE if success else NodeState.FAILED
+                        try:
+                            done, success = node.predicate(node, env)
+                            if done:
+                                node.state = NodeState.TRUE if success else NodeState.FAILED
+                        except Exception as e:
+                            print(f"Predicate error for {node.nid}: {e}")
+                            node.state = NodeState.FAILED
                 elif node.state == NodeState.TRUE:
                     node.state = NodeState.CONFIRMED
 
