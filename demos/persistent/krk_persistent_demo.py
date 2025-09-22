@@ -110,6 +110,8 @@ def _cut_established(board: chess.Board) -> bool:
     rsq = _find_our_rook_sq(board)
     if ek is None or ok is None or rsq is None:
         return False
+    if on_rim(ek):
+        return True
     same_file = chess.square_file(rsq) == chess.square_file(ek)
     same_rank = chess.square_rank(rsq) == chess.square_rank(ek)
     aligned = same_file or same_rank
@@ -359,8 +361,21 @@ def _decision_cycle(engine: ReConEngine,
 
         if ticks >= min_decision_ticks and proposals:
             break
+        if ticks >= min_decision_ticks and not proposals and not now_req:
+            break
 
     selected, ordered = _select_candidate(board, proposals, debug_logger)
+    if debug_logger is not None and proposals:
+        debug_logger.snapshot(
+            engine=None,
+            note="decision_proposals",
+            env={
+                "ply": plies + 1,
+                "proposals": proposals,
+            },
+            thoughts="Collected proposals",
+            new_requests=[],
+        )
     return selected, ordered, ticks
 
 def play_persistent_game(initial_fen: str | None = None,

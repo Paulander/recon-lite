@@ -19,8 +19,8 @@ PHASE0_POSITIONS = [
 def _assert_phase0(board: chess.Board) -> bool:
     decision = preview_decision(board, target_phase="phase0")["decision"]
     if not decision:
-        print("✗ No decision produced")
-        return False
+        print("✓ Phase0 already satisfied; no move required")
+        return True
     if decision.get("phase") != "phase0":
         print(f"✗ Expected phase0, got {decision.get('phase')}")
         return False

@@ -207,6 +207,8 @@ def choose_any_safe_move(board: chess.Board) -> Optional[str]:
     mate = _find_mate_in_one(board)
     if mate:
         return mate
+    if box_min_side(board) <= 1:
+        return None
     legal = list(board.legal_moves)
     if not legal:
         return None
@@ -227,6 +229,8 @@ def choose_move_phase0(board: chess.Board, env: Optional[Dict[str, Any]] = None)
     mate = _find_mate_in_one(board)
     if mate:
         return mate
+    if box_min_side(board) <= 1:
+        return None
     legal_moves = list(board.legal_moves)
     # Disable P0 proposals if a stable cut already exists now or enemy is already at edge
     try:
@@ -344,7 +348,7 @@ def choose_move_phase1(board: chess.Board, env: Optional[Dict[str, Any]] = None)
             continue
         # Allow equality only if we create a stable cut or we get positive edge-driving bonus
         if new_a == old_a:
-            if not (creates_stable_cut(board, move) or edge_driving_bonus(board, move) > 0):
+            if not (creates_stable_cut(board, move) or edge_driving_bonus(board, move) > 0 or our_king_progress(board, move) > 0):
                 continue
         # Threefold guard
         if env is not None and would_cause_threefold(board, move, env.get("fen_history")):
@@ -420,6 +424,9 @@ def choose_move_phase2(board: chess.Board, env: Optional[Dict[str, Any]] = None)
     mate = _find_mate_in_one(board)
     if mate:
         return mate
+    from .predicates import box_min_side
+    if box_min_side(board) <= 1:
+        return None
     legal_moves = list(board.legal_moves)
     candidates: List[Tuple[Tuple, chess.Move]] = []
     dbg: Dict[str, Any] = {}
