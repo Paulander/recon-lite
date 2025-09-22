@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>KRK Persistent ReCoN Overview</title>
+    <style>
+        body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; margin: 40px; line-height: 1.5; color: #222; }
+        h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+        h2 { font-size: 1.2rem; margin-top: 2rem; }
+        code, pre { background: #f6f8fa; border-radius: 6px; padding: 2px 6px; }
+        pre { padding: 12px; overflow-x: auto; }
+        .graph { display: grid; grid-template-columns: repeat(5, minmax(120px, 1fr)); gap: 12px; margin-top: 12px; }
+        .node { border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+        .nt { font-size: 12px; color: #666; }
+        .em { color: #10b981; font-weight: 600; }
+        ul { margin: 0.4rem 0 0.8rem; }
+        li { margin: 0.2rem 0; }
+        .small { color: #666; font-size: 0.95rem; }
+        a { color: #2563eb; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+    </style>
+    <meta name="description" content="Overview of the KRK Persistent ReCoN demo: phases, gating, and deterministic arbitration.">
+</head>
+<body>
+    <h1>KRK Persistent ReCoN Overview</h1>
+    <p class="small">This page summarizes the ReCoN graph and the deterministic phase arbitration used in <code>demos/persistent/krk_persistent_demo.py</code>.</p>
+
+    <h2>Phases (high-level)</h2>
+    <ul>
+        <li><b>P0</b>: Establish cut (rook fence) and rendezvous king</li>
+        <li><b>P1</b>: Drive enemy king to edge (monotone box reduction)</li>
+        <li><b>P2</b>: Shrink box on the edge toward the corner</li>
+        <li><b>P3</b>: Take opposition and net the corner</li>
+        <li><b>P4</b>: Deliver mate</li>
+    </ul>
+
+    <h2>Graph Diagram (SVG)</h2>
+    <div class="viz">
+        <style>
+            .viz { background: #fafbff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px; }
+            .viz svg { width: 100%; height: 520px; display: block; }
+            .viz .node rect { fill: #ffffff; stroke: #94a3b8; stroke-width: 1.2; rx: 8; ry: 8; }
+            .viz .node.script rect { stroke: #22c55e; }
+            .viz .node.term rect { stroke: #3b82f6; }
+            .viz .node text.title { font-size: 12px; fill: #111827; font-weight: 600; }
+            .viz .node text.kind { font-size: 10px; fill: #6b7280; }
+            .viz .edge path { fill: none; stroke: #94a3b8; stroke-width: 1.2; }
+            .viz .edge.por path { stroke: #06b6d4; stroke-dasharray: 4 3; }
+            .viz .legend { margin-top: 8px; font-size: 12px; color: #6b7280; }
+            .viz .chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 3px 8px; background: #f1f5f9; border: 1px solid #e5e7eb; margin-right: 8px; }
+            .viz .dot { width: 8px; height: 8px; border-radius: 999px; }
+            .viz .dot.script { background: #22c55e; }
+            .viz .dot.term { background: #3b82f6; }
+            .viz .dot.sub { background: #94a3b8; }
+            .viz .dot.por { background: #06b6d4; }
+        </style>
+        <svg viewBox="0 0 1200 520" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"></path>
+                </marker>
+                <marker id="arrow-por" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#06b6d4"></path>
+                </marker>
+            </defs>
+            <script><![CDATA[
+                const nodes = [
+                    { id: 'krk_root', label: 'krk_root', kind: 'SCRIPT', x: 60,  y: 40,  w: 120, h: 42 },
+                    { id: 'wait_for_board_change', label: 'wait_for_board_change', kind: 'TERMINAL', x: 60,  y: 120, w: 170, h: 38 },
+
+                    { id: 'phase0_establish_cut', label: 'phase0_establish_cut', kind: 'SCRIPT', x: 300, y: 40,  w: 170, h: 42 },
+                    { id: 'choose_phase0', label: 'choose_phase0', kind: 'TERMINAL', x: 300, y: 95,  w: 130, h: 36 },
+
+                    { id: 'phase1_drive_to_edge', label: 'phase1_drive_to_edge', kind: 'SCRIPT', x: 300, y: 170, w: 180, h: 42 },
+                    { id: 'king_drive_moves', label: 'king_drive_moves', kind: 'TERMINAL', x: 300, y: 220, w: 140, h: 36 },
+                    { id: 'king_at_edge', label: 'king_at_edge', kind: 'TERMINAL', x: 300, y: 270, w: 120, h: 36 },
+
+                    { id: 'phase2_shrink_box', label: 'phase2_shrink_box', kind: 'SCRIPT', x: 560, y: 170, w: 160, h: 42 },
+                    { id: 'box_shrink_moves', label: 'box_shrink_moves', kind: 'TERMINAL', x: 560, y: 220, w: 150, h: 36 },
+                    { id: 'box_can_shrink', label: 'box_can_shrink', kind: 'TERMINAL', x: 560, y: 270, w: 140, h: 36 },
+
+                    { id: 'phase3_take_opposition', label: 'phase3_take_opposition', kind: 'SCRIPT', x: 820, y: 170, w: 200, h: 42 },
+                    { id: 'opposition_moves', label: 'opposition_moves', kind: 'TERMINAL', x: 820, y: 220, w: 160, h: 36 },
+                    { id: 'can_take_opposition', label: 'can_take_opposition', kind: 'TERMINAL', x: 820, y: 270, w: 180, h: 36 },
+
+                    { id: 'phase4_deliver_mate', label: 'phase4_deliver_mate', kind: 'SCRIPT', x: 1060, y: 170, w: 180, h: 42 },
+                    { id: 'mate_moves', label: 'mate_moves', kind: 'TERMINAL', x: 1060, y: 220, w: 120, h: 36 },
+                    { id: 'can_deliver_mate', label: 'can_deliver_mate', kind: 'TERMINAL', x: 1060, y: 270, w: 160, h: 36 },
+                ];
+
+                const edges = [
+                    // Root hierarchy (SUB)
+                    { t: 'SUB', a: 'krk_root', b: 'wait_for_board_change' },
+                    { t: 'SUB', a: 'krk_root', b: 'phase0_establish_cut' },
+                    { t: 'SUB', a: 'krk_root', b: 'phase1_drive_to_edge' },
+                    { t: 'SUB', a: 'krk_root', b: 'phase2_shrink_box' },
+                    { t: 'SUB', a: 'krk_root', b: 'phase3_take_opposition' },
+                    { t: 'SUB', a: 'krk_root', b: 'phase4_deliver_mate' },
+
+                    // Phase internals (SUB)
+                    { t: 'SUB', a: 'phase0_establish_cut', b: 'choose_phase0' },
+                    { t: 'SUB', a: 'phase1_drive_to_edge', b: 'king_drive_moves' },
+                    { t: 'SUB', a: 'phase1_drive_to_edge', b: 'king_at_edge' },
+                    { t: 'SUB', a: 'phase2_shrink_box', b: 'box_can_shrink' },
+                    { t: 'SUB', a: 'phase2_shrink_box', b: 'box_shrink_moves' },
+                    { t: 'SUB', a: 'phase3_take_opposition', b: 'can_take_opposition' },
+                    { t: 'SUB', a: 'phase3_take_opposition', b: 'opposition_moves' },
+                    { t: 'SUB', a: 'phase4_deliver_mate', b: 'can_deliver_mate' },
+                    { t: 'SUB', a: 'phase4_deliver_mate', b: 'mate_moves' },
+
+                    // POR gating
+                    { t: 'POR', a: 'wait_for_board_change', b: 'phase0_establish_cut' },
+                    { t: 'POR', a: 'wait_for_board_change', b: 'phase1_drive_to_edge' },
+                    { t: 'POR', a: 'phase1_drive_to_edge', b: 'phase2_shrink_box' },
+                    { t: 'POR', a: 'phase2_shrink_box', b: 'phase3_take_opposition' },
+                    { t: 'POR', a: 'phase3_take_opposition', b: 'phase4_deliver_mate' },
+                    { t: 'POR', a: 'king_at_edge', b: 'phase2_shrink_box' },
+                    { t: 'POR', a: 'box_can_shrink', b: 'phase3_take_opposition' },
+                    { t: 'POR', a: 'can_take_opposition', b: 'phase4_deliver_mate' },
+                ];
+
+                const svg = document.currentScript.parentElement;
+
+                function bezier(a, b) {
+                    const sx = a.x + a.w, sy = a.y + a.h/2;
+                    const tx = b.x, ty = b.y + b.h/2;
+                    const dx = Math.max(30, Math.min(120, (tx - sx) * 0.45));
+                    const c1x = sx + dx, c2x = tx - dx;
+                    return `M ${sx} ${sy} C ${c1x} ${sy}, ${c2x} ${ty}, ${tx} ${ty}`;
+                }
+
+                // draw edges first
+                edges.forEach(e => {
+                    const a = nodes.find(n => n.id === e.a), b = nodes.find(n => n.id === e.b);
+                    if (!a || !b) return;
+                    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                    g.setAttribute('class', `edge ${e.t === 'POR' ? 'por' : 'sub'}`);
+                    const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    p.setAttribute('d', bezier(a, b));
+                    p.setAttribute('stroke', e.t === 'POR' ? '#06b6d4' : '#94a3b8');
+                    p.setAttribute('marker-end', `url(#${e.t === 'POR' ? 'arrow-por' : 'arrow'})`);
+                    svg.appendChild(g);
+                    g.appendChild(p);
+                });
+
+                // draw nodes
+                nodes.forEach(n => {
+                    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                    g.setAttribute('class', `node ${n.kind === 'SCRIPT' ? 'script' : 'term'}`);
+                    const r = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                    r.setAttribute('x', n.x); r.setAttribute('y', n.y);
+                    r.setAttribute('width', n.w); r.setAttribute('height', n.h);
+                    g.appendChild(r);
+                    const kind = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    kind.setAttribute('x', n.x + 10); kind.setAttribute('y', n.y + 14);
+                    kind.setAttribute('class', 'kind'); kind.textContent = n.kind; g.appendChild(kind);
+                    const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    title.setAttribute('x', n.x + 10); title.setAttribute('y', n.y + (n.kind === 'SCRIPT' ? 30 : 28));
+                    title.setAttribute('class', 'title'); title.textContent = n.label; g.appendChild(title);
+                    svg.appendChild(g);
+                });
+            ]]></script>
+        </svg>
+        <div class="legend">
+            <span class="chip"><span class="dot script"></span> SCRIPT</span>
+            <span class="chip"><span class="dot term"></span> TERMINAL</span>
+            <span class="chip"><span class="dot sub"></span> SUB</span>
+            <span class="chip"><span class="dot por"></span> POR</span>
+        </div>
+    </div>
+
+    <h2>Shared Graph (nodes and edges)</h2>
+    <p>The shared KRK network (in <code>demos/shared/krk_network.py</code>) wires the main phases and evaluators. Key links:</p>
+    <ul>
+        <li>Root → P0..P4 via SUB</li>
+        <li>P1 → P2 → P3 → P4 via POR</li>
+        <li>Evaluators: <code>king_at_edge</code>, <code>box_can_shrink</code>, <code>can_take_opposition</code>, <code>can_deliver_mate</code></li>
+    </ul>
+
+    <div class="graph">
+        <div class="node"><div class="nt">SCRIPT</div><b>krk_root</b><br><span class="small">SUB → P0,P1,P2,P3,P4</span></div>
+        <div class="node"><div class="nt">SCRIPT</div><b>phase0_establish_cut</b><br><span class="small">SUB → choose_phase0</span></div>
+        <div class="node"><div class="nt">SCRIPT</div><b>phase1_drive_to_edge</b><br><span class="small">SUB → king_at_edge, king_drive_moves</span></div>
+        <div class="node"><div class="nt">SCRIPT</div><b>phase2_shrink_box</b><br><span class="small">SUB → box_can_shrink, box_shrink_moves</span></div>
+        <div class="node"><div class="nt">SCRIPT</div><b>phase3_take_opposition</b><br><span class="small">SUB → can_take_opposition, opposition_moves</span></div>
+        <div class="node"><div class="nt">SCRIPT</div><b>phase4_deliver_mate</b><br><span class="small">SUB → can_deliver_mate, mate_moves</span></div>
+        <div class="node"><div class="nt">TERMINAL</div><b>choose_phase0</b></div>
+        <div class="node"><div class="nt">TERMINAL</div><b>king_drive_moves</b></div>
+        <div class="node"><div class="nt">TERMINAL</div><b>box_shrink_moves</b></div>
+        <div class="node"><div class="nt">TERMINAL</div><b>opposition_moves</b></div>
+        <div class="node"><div class="nt">TERMINAL</div><b>mate_moves</b></div>
+    </div>
+
+    <h2>Deterministic Arbitration (persistent driver)</h2>
+    <p>
+        The persistent demo now computes an <span class="em">eligible phase</span> each tick from the board:
+    </p>
+    <ol>
+        <li>P4 if a mate-in-one exists</li>
+        <li>P3 if BK on rim and a move yields opposition</li>
+        <li>P2 if BK already on edge</li>
+        <li>P1 if a conservative rook cut is established</li>
+        <li>Else P0</li>
+    </ol>
+    <p>
+        Proposals are collected across a short window, but only proposals from the eligible phase are accepted for selection. If none arrive in time, the code falls back to the previous behavior to avoid stalling.
+    </p>
+
+    <h2>Where to look</h2>
+    <ul>
+        <li><code>demos/persistent/krk_persistent_demo.py</code>: main loop and deterministic arbiter</li>
+        <li><code>demos/shared/krk_network.py</code>: graph wiring (shared)</li>
+        <li><code>demos/visualization/</code>: visualization assets</li>
+    </ul>
+
+    <p class="small">This is a static document intended for quick orientation. It does not execute any code.</p>
+</body>
+</html>
+
+

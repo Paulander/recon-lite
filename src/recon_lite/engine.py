@@ -13,6 +13,12 @@ class ReConEngine:
 
     # Initialize the engine with a graph and set initial tick and log storage
     def __init__(self, graph: Graph):
+        # Validate article compliance proactively
+        try:
+            graph.validate_article_compliance()
+        except Exception:
+            # If validation utility not present or raises, continue; Graph.add_edge enforces during construction
+            pass
         self.g = graph
         self.tick = 0
         self.logs: list[Dict[str, Any]] = []
@@ -57,6 +63,13 @@ class ReConEngine:
                 cur = succ[0]
                 if cur in visited:
                     break
+            # OR semantics: if the root child script node is marked alt, accept this root
+            # as satisfied when the root script itself is CONFIRMED (i.e., its own
+            # local goal test subtree confirmed), without requiring successors.
+            if self.g.nodes[r].meta.get("alt", False):
+                if self.g.nodes[r].state in (NodeState.CONFIRMED, NodeState.TRUE):
+                    continue
+            # Default: require last in chain CONFIRMED
             if self.g.nodes[last].state != NodeState.CONFIRMED:
                 return False
         return True
@@ -72,9 +85,13 @@ class ReConEngine:
                     if node.predicate is None:
                         node.state = NodeState.TRUE
                     else:
-                        done, success = node.predicate(node, env)
-                        if done:
-                            node.state = NodeState.TRUE if success else NodeState.FAILED
+                        try:
+                            done, success = node.predicate(node, env)
+                            if done:
+                                node.state = NodeState.TRUE if success else NodeState.FAILED
+                        except Exception as e:
+                            print(f"Predicate error for {node.nid}: {e}")
+                            node.state = NodeState.FAILED
                 elif node.state == NodeState.TRUE:
                     node.state = NodeState.CONFIRMED
 

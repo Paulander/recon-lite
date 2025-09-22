@@ -10,6 +10,7 @@ Runs a single ReCoN engine instance across the whole game.
 """
 
 import argparse
+from collections import deque
 import chess
 import sys
 from pathlib import Path
@@ -32,67 +33,99 @@ from recon_lite_chess import (
     create_phase1_drive_to_edge, create_phase2_shrink_box,
     create_phase3_take_opposition, create_phase4_deliver_mate,
     create_king_drive_moves, create_box_shrink_moves,
-    create_opposition_moves, create_mate_moves
+    create_opposition_moves, create_mate_moves,
+    # New confinement-aware nodes
+    create_confinement_evaluator, create_barrier_ready_evaluator,
+    create_confinement_moves, create_barrier_placement_moves
 )
 from recon_lite_chess.krk_nodes import wire_default_krk
+from recon_lite_chess.predicates import dist_to_edge, on_rim, has_opposition_after, chebyshev
 
 
 def _build_basic_krk_graph() -> Graph:
-    g = Graph()
-    root  = create_krk_root("ROOT")
-    p0    = create_phase0_establish_cut("PHASE0")
-    ch0   = create_phase0_choose_moves("CHOOSE_P0")
-    p1    = create_phase1_drive_to_edge("PHASE1")
-    p2    = create_phase2_shrink_box("PHASE2")
-    p3    = create_phase3_take_opposition("PHASE3")
-    p4    = create_phase4_deliver_mate("PHASE4")
-    # Evaluators (no wait-for-board-change gate in basic)
-    e_edge = create_king_edge_detector("king_at_edge")
-    e_box  = create_box_shrink_evaluator("box_can_shrink")
-    e_opp  = create_opposition_evaluator("can_take_opposition")
-    e_mate = create_mate_deliver_evaluator("can_deliver_mate")
+    """
+    Legacy helper no longer used; kept for reference. Prefer build_krk_network().
+    """
+    return build_krk_network()
 
-    # Actuators
-    m_p1 = create_king_drive_moves("king_drive_moves")
-    m_p2 = create_box_shrink_moves("box_shrink_moves")
-    m_p3 = create_opposition_moves("opposition_moves")
-    m_p4 = create_mate_moves("mate_moves")
 
-    for n in [root, p0, ch0, p1, p2, p3, p4, e_edge, e_box, e_opp, e_mate, m_p1, m_p2, m_p3, m_p4]:
-        g.add_node(n)
-    wire_default_krk(g, "ROOT", {
-        "root": "ROOT",
-        "phase0": "PHASE0",
-        "choose_p0": "CHOOSE_P0",
-        "phase1": "PHASE1",
-        "phase2": "PHASE2",
-        "phase3": "PHASE3",
-        "phase4": "PHASE4",
-    })
+# ---- Deterministic arbiter helpers (demo-local, no library changes) ----
 
-    # Basic wiring to match shared semantics (minus wait gate):
-    # Phase 1
-    g.add_edge("PHASE1", "king_drive_moves", LinkType.SUB)
-    g.add_edge("PHASE1", "king_at_edge", LinkType.SUB)
+def _find_our_rook_sq(board: chess.Board) -> chess.Square | None:
+    color = board.turn
+    for sq, piece in board.piece_map().items():
+        if piece.color == color and piece.piece_type == chess.ROOK:
+            return sq
+    return None
 
-    # Phase 2 depends on king at edge
-    g.add_edge("PHASE2", "box_shrink_moves", LinkType.SUB)
-    g.add_edge("king_at_edge", "PHASE2", LinkType.POR)
+def _rook_safe_now(board: chess.Board, rook_sq: chess.Square) -> bool:
+    # Safe if enemy king cannot capture rook next move, or our king can immediately recapture
+    color = board.turn
+    enemy = not color
+    ek = board.king(enemy)
+    ok = board.king(color)
+    if ek is None or ok is None or rook_sq is None:
+        return False
+    if chebyshev(ek, rook_sq) > 1:
+        return True
+    b = board.copy(stack=False)
+    b.turn = enemy
+    cap = chess.Move(ek, rook_sq)
+    if cap in b.legal_moves:
+        return chebyshev(ok, rook_sq) <= 1
+    return True
 
-    # Phase 3 depends on box shrink possible
-    g.add_edge("PHASE3", "opposition_moves", LinkType.SUB)
-    g.add_edge("box_can_shrink", "PHASE3", LinkType.POR)
-    g.add_edge("PHASE3", "box_can_shrink", LinkType.SUB)
+def _cut_established(board: chess.Board) -> bool:
+    """
+    Conservative 'cut' heuristic: rook aligned with BK (file/rank), at least 2 away,
+    rook not droppable now, and our king is reasonably close to rook or BK.
+    """
+    color = board.turn
+    ek = board.king(not color)
+    ok = board.king(color)
+    rsq = _find_our_rook_sq(board)
+    if ek is None or ok is None or rsq is None:
+        return False
+    same_file = chess.square_file(rsq) == chess.square_file(ek)
+    same_rank = chess.square_rank(rsq) == chess.square_rank(ek)
+    aligned = same_file or same_rank
+    far_enough = chebyshev(rsq, ek) >= 2
+    safe = _rook_safe_now(board, rsq)
+    support_ok = chebyshev(ok, ek) <= 3 or chebyshev(ok, rsq) <= 3
+    return aligned and far_enough and safe and support_ok
 
-    # Phase 4 depends on opposition
-    g.add_edge("PHASE4", "mate_moves", LinkType.SUB)
-    g.add_edge("can_take_opposition", "PHASE4", LinkType.POR)
-    g.add_edge("PHASE4", "can_deliver_mate", LinkType.SUB)
-    return g
+def _can_deliver_mate_now(board: chess.Board) -> bool:
+    for mv in board.legal_moves:
+        board.push(mv)
+        mate = board.is_checkmate()
+        board.pop()
+        if mate:
+            return True
+    return False
 
+def _eligible_phase(board: chess.Board) -> str:
+    """
+    Centralized eligible phase selection from board features only.
+    Highest-to-lowest precedence: 4 → 3 → 2 → 1 → 0.
+    """
+    enemy = not board.turn
+    ek = board.king(enemy)
+    if ek is None:
+        return "phase0"
+    if _can_deliver_mate_now(board):
+        return "phase4"
+    if on_rim(ek):
+        for mv in board.legal_moves:
+            if has_opposition_after(board, mv):
+                return "phase3"
+    if dist_to_edge(ek) == 0:
+        return "phase2"
+    if _cut_established(board):
+        return "phase1"
+    return "phase0"
 
 def play_persistent_game(initial_fen: str | None = None, max_plies: int = 200,
-                         tick_watchdog: int = 300, graph: str = "shared") -> dict:
+                         tick_watchdog: int = 300) -> dict:
     logger = RunLogger()
     if initial_fen:
         board = chess.Board(initial_fen)
@@ -100,9 +133,9 @@ def play_persistent_game(initial_fen: str | None = None, max_plies: int = 200,
         # create_random_krk_board returns a FEN string; wrap into a Board
         board = chess.Board(create_random_krk_board(white_to_move=True))
 
-    g = build_krk_network() if graph == "shared" else _build_basic_krk_graph()
+    g = build_krk_network()
     engine = ReConEngine(g)
-    root_id = "krk_root" if graph == "shared" else "ROOT"
+    root_id = "krk_root"
     g.nodes[root_id].state = NodeState.REQUESTED
 
     # Attach graph edges for visualization
@@ -110,10 +143,13 @@ def play_persistent_game(initial_fen: str | None = None, max_plies: int = 200,
 
     plies = 0
     rook_lost = False
+    # Persistent env across plies to maintain fen history and pressure
+    env = {"board": board, "chosen_move": None, "fen_history": deque(maxlen=12), "pressure_steps": 0}
 
     while not board.is_game_over() and plies < max_plies:
         # One decision cycle (White/ReCoN)
-        env = {"board": board, "chosen_move": None}
+        env["board"] = board
+        env["chosen_move"] = None
         ticks = 0
         min_decision_ticks = 3  # allow parallel phases a short window to compete
         proposals: list[dict] = []
@@ -122,13 +158,29 @@ def play_persistent_game(initial_fen: str | None = None, max_plies: int = 200,
         while ticks < tick_watchdog and not board.is_game_over():
             ticks += 1
             now_req = engine.step(env)
+            # Build env payload with debug blobs if present
+            dbg = {}
+            if env.get("debug_phase1"):
+                dbg["debug_phase1"] = env["debug_phase1"]
+            if env.get("debug_phase2"):
+                dbg["debug_phase2"] = env["debug_phase2"]
+
             logger.snapshot(
                 engine=engine,
                 note=f"Persistent eval tick {ticks} (ply {plies+1})",
-                env={"fen": board.fen(), "evaluation_tick": ticks, "ply": plies+1},
+                env={
+                    "fen": board.fen(),
+                    "evaluation_tick": ticks,
+                    "ply": plies+1,
+                    "chosen_move": env.get("chosen_move"),
+                    "pressure": env.get("pressure"),
+                    "require_min_side_shrink": env.get("require_min_side_shrink"),
+                    **dbg,
+                },
                 thoughts="Persistent evaluation...",
                 new_requests=list(now_req.keys()) if now_req else [],
             )
+
             if ticks == 1:
                 logger.events[-1]["graph"] = {"edges": graph_edges}
 
@@ -151,15 +203,20 @@ def play_persistent_game(initial_fen: str | None = None, max_plies: int = 200,
                 # Clear to allow other phases to propose within the window
                 env["chosen_move"] = None
 
-            # Exit the evaluation window if we have proposals and minimum ticks elapsed
-            if proposals and ticks >= min_decision_ticks:
+            # Exit once we have any proposal after a brief window; we'll pick the highest-phase proposal
+            if ticks >= min_decision_ticks and proposals:
+                break
+            # Early break: if no proposals within a small window, leave loop to trigger fallback
+            if ticks >= 12 and not proposals and env.get("chosen_move") is None:
                 break
 
         # Choose the best proposal (prefer higher phase); fall back to any remaining choice
         move_uci = None
         if proposals:
-            proposals.sort(key=lambda p: p["rank"])  # ensure deterministic order for equal ranks
-            move_uci = max(proposals, key=lambda p: p["rank"]) ["move"]
+            # Prefer any higher-phase proposals over Phase0
+            higher = [p for p in proposals if p.get("phase") not in (None, "phase0")]
+            pick_from = higher if higher else proposals
+            move_uci = max(pick_from, key=lambda p: p["rank"]) ["move"]
         else:
             move_uci = env.get("chosen_move")
         if not move_uci:
@@ -170,8 +227,8 @@ def play_persistent_game(initial_fen: str | None = None, max_plies: int = 200,
                 move_uci = fallback
                 logger.snapshot(
                     engine=None,
-                    note=f"WATCHDOG fallback: {fallback}",
-                    env={"fen": board.fen(), "ply": plies+1},
+                    note=f"FALLBACK applied: {fallback}",
+                    env={"fen": board.fen(), "ply": plies+1, "fallback": True},
                     thoughts="No chosen_move by tick limit; applying fallback",
                     new_requests=[],
                 )
@@ -212,16 +269,28 @@ def play_persistent_game(initial_fen: str | None = None, max_plies: int = 200,
             if board.is_game_over() or plies >= max_plies:
                 break
 
-            # Reset states so the network re-evaluates this new position next cycle
-            for n in g.nodes.values():
-                n.state = NodeState.INACTIVE
-            # Re-arm wait gate to detect new FEN (if present)
-            if graph == "shared" and "wait_for_board_change" in g.nodes:
-                g.nodes["wait_for_board_change"].meta.pop("last_fen", None)
-            g.nodes[root_id].state = NodeState.REQUESTED
-        else:
-            # No move selected by watchdog/time—stop to avoid infinite loop
-            break
+    # Reset only terminals (evaluators/actuators) and preserve confirmed phase states
+    # This was overly aggressive earlier and ruined the whole graph: 
+    # Per ReCoN engine (_request_child_if_ready): A node (e.g., PHASE1) is only REQUESTED if all POR predecessors (e.g., PHASE0) are TRUE/CONFIRMED (_all_por_predecessors_true
+    phase_ids = ["ROOT", "PHASE0", "PHASE1", "PHASE2", "PHASE3", "PHASE4"]
+    for n in g.nodes.values():
+        if n.nid not in phase_ids and n.state == NodeState.CONFIRMED:
+            n.state = NodeState.INACTIVE  # Reset confirmed terminals
+        elif n.state not in (NodeState.CONFIRMED, NodeState.INACTIVE):
+            n.state = NodeState.INACTIVE  # Reset transient states of non-phase nodes
+
+    # Re-arm evaluators (clear meta for re-evaluation)
+    for eval_id in ["king_at_edge", "box_can_shrink", "can_take_opposition", "can_deliver_mate"]:
+        if eval_id in g.nodes:
+            n = g.nodes[eval_id]
+            n.meta.clear()  # Reset meta (e.g., caches) for fresh evaluation
+
+    # Re-arm wait gate to detect new FEN (if present)
+    if "wait_for_board_change" in g.nodes:
+        g.nodes["wait_for_board_change"].meta.pop("last_fen", None)
+
+    # Re-REQUEST root to trigger next cycle with persisted phase states
+    g.nodes[root_id].state = NodeState.REQUESTED
 
     result = {
         "plies": plies,
@@ -231,14 +300,14 @@ def play_persistent_game(initial_fen: str | None = None, max_plies: int = 200,
         "final_fen": board.fen(),
     }
 
-    out_path = Path("demos/krk_visualization_data.json")
+    out_path = Path("demos/outputs/krk_persistent_visualization.json")
     out_path.parent.mkdir(parents=True, exist_ok=True)
     logger.to_json(str(out_path))
 
     return result
 
 
-def run_batch(n_games: int = 10, graph: str = "shared", max_plies: int = 200) -> dict:
+def run_batch(n_games: int = 10, max_plies: int = 200) -> dict:
     stats = {
         "games": [],
         "mates": 0,
@@ -248,7 +317,7 @@ def run_batch(n_games: int = 10, graph: str = "shared", max_plies: int = 200) ->
         "avg_mate_length": None,
     }
     for i in range(n_games):
-        res = play_persistent_game(initial_fen=None, max_plies=max_plies, graph=graph)
+        res = play_persistent_game(initial_fen=None, max_plies=max_plies)
         stats["games"].append(res)
         if res.get("checkmate"):
             stats["mates"] += 1
@@ -267,15 +336,14 @@ def main():
     parser.add_argument("--fen", type=str, default="", help="Optional FEN to start from")
     parser.add_argument("--max-plies", type=int, default=200, help="Maximum plies")
     parser.add_argument("--batch", type=int, default=0, help="Run N games in batch mode")
-    parser.add_argument("--graph", type=str, choices=["shared","basic"], default="shared",
-                        help="Graph to use: shared (default) or basic (top-level wiring)")
+    # Single graph; demo uses the shared KRK network
     args = parser.parse_args()
 
     if args.batch and args.batch > 0:
-        run_batch(args.batch, graph=args.graph, max_plies=args.max_plies)
+        run_batch(args.batch, max_plies=args.max_plies)
     else:
         start_fen = args.fen if args.fen else "4k3/6K1/8/8/8/8/R7/8 w - - 0 1"
-        res = play_persistent_game(initial_fen=start_fen, max_plies=args.max_plies, graph=args.graph)
+        res = play_persistent_game(initial_fen=start_fen, max_plies=args.max_plies)
         print(res)
 
 

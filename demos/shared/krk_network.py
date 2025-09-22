@@ -7,13 +7,14 @@ across different demo types (evaluation, gameplay, testing).
 
 import chess
 from typing import Dict, Any
-from recon_lite import Graph, LinkType
+from recon_lite import Graph, LinkType, Node, NodeType
 from recon_lite.graph import NodeState
 from recon_lite_chess import (
     # Terminal evaluators
     create_king_edge_detector, create_box_shrink_evaluator,
     create_opposition_evaluator, create_mate_deliver_evaluator,
     create_stalemate_detector, create_wait_for_board_change,
+    create_cut_established_detector, create_rook_lost_detector,
 
     # Script phase nodes
     create_phase0_establish_cut, create_phase1_drive_to_edge, create_phase2_shrink_box,
@@ -22,7 +23,11 @@ from recon_lite_chess import (
 
     # Move generators (actuators)
     create_phase0_choose_moves, create_king_drive_moves, create_box_shrink_moves, create_opposition_moves,
-    create_mate_moves, create_random_legal_moves
+    create_mate_moves, create_random_legal_moves, create_no_progress_watch,
+
+    # New confinement-aware nodes
+    create_confinement_evaluator, create_barrier_ready_evaluator,
+    create_confinement_moves, create_barrier_placement_moves
 )
 from recon_lite_chess.actuators import choose_any_safe_move
 
@@ -39,6 +44,9 @@ def build_krk_network() -> Graph:
     # ===== TERMINAL NODES (Evaluators) =====
     # Phase 1: Drive king to edge
     g.add_node(create_king_edge_detector("king_at_edge"))
+    # New confinement evaluators
+    g.add_node(create_confinement_evaluator("king_confined", target_size=2))
+    g.add_node(create_barrier_ready_evaluator("barrier_ready"))
 
     # Phase 2: Shrink the box
     g.add_node(create_box_shrink_evaluator("box_can_shrink"))
@@ -49,6 +57,7 @@ def build_krk_network() -> Graph:
     # Phase 4: Deliver mate
     g.add_node(create_mate_deliver_evaluator("can_deliver_mate"))
     g.add_node(create_stalemate_detector("is_stalemate"))
+    g.add_node(create_cut_established_detector("cut_established"))
 
     # ===== SCRIPT NODES (Phase Orchestrators) =====
     # Phase 0: Establish cut / rendezvous
@@ -71,10 +80,53 @@ def build_krk_network() -> Graph:
     # ===== MOVE GENERATOR NODES (Actuators) =====
     g.add_node(create_phase0_choose_moves("choose_phase0"))
     g.add_node(create_king_drive_moves("king_drive_moves"))
+    # New confinement-aware move generators
+    g.add_node(create_confinement_moves("confinement_moves"))
+    g.add_node(create_barrier_placement_moves("barrier_placement_moves"))
     g.add_node(create_box_shrink_moves("box_shrink_moves"))
     g.add_node(create_opposition_moves("opposition_moves"))
     g.add_node(create_mate_moves("mate_moves"))
     g.add_node(create_random_legal_moves("random_legal_moves"))
+    # Supervisor / Watchdog
+    g.add_node(create_no_progress_watch("no_progress_watch"))
+
+    # ===== PER-PHASE SCRIPT SUBNODES (for article-compliant sequences) =====
+    # Phase 0: [CheckCut] -> [ChooseMove] -> [Wait]
+    p0_check = Node(nid="p0_check", ntype=NodeType.SCRIPT)
+    p0_move  = Node(nid="p0_move",  ntype=NodeType.SCRIPT)
+    p0_wait  = Node(nid="p0_wait",  ntype=NodeType.SCRIPT)
+    g.add_node(p0_check); g.add_node(p0_move); g.add_node(p0_wait)
+
+    # Phase 1: [CheckEdge] -> [DriveMoves] -> [Wait]
+    p1_check = Node(nid="p1_check", ntype=NodeType.SCRIPT)
+    p1_move  = Node(nid="p1_move",  ntype=NodeType.SCRIPT)
+    p1_wait  = Node(nid="p1_wait",  ntype=NodeType.SCRIPT)
+    g.add_node(p1_check); g.add_node(p1_move); g.add_node(p1_wait)
+
+    # Phase 2: [CheckShrink] -> [ShrinkMoves] -> [Wait]
+    p2_check = Node(nid="p2_check", ntype=NodeType.SCRIPT)
+    p2_move  = Node(nid="p2_move",  ntype=NodeType.SCRIPT)
+    p2_wait  = Node(nid="p2_wait",  ntype=NodeType.SCRIPT)
+    g.add_node(p2_check); g.add_node(p2_move); g.add_node(p2_wait)
+
+    # Phase 3: [CheckOpposition] -> [OppositionMoves] -> [Wait]
+    p3_check = Node(nid="p3_check", ntype=NodeType.SCRIPT)
+    p3_move  = Node(nid="p3_move",  ntype=NodeType.SCRIPT)
+    p3_wait  = Node(nid="p3_wait",  ntype=NodeType.SCRIPT)
+    g.add_node(p3_check); g.add_node(p3_move); g.add_node(p3_wait)
+
+    # Phase 4: [CheckMate] -> [MateMoves] -> [Wait]
+    p4_check = Node(nid="p4_check", ntype=NodeType.SCRIPT)
+    p4_move  = Node(nid="p4_move",  ntype=NodeType.SCRIPT)
+    p4_wait  = Node(nid="p4_wait",  ntype=NodeType.SCRIPT)
+    g.add_node(p4_check); g.add_node(p4_move); g.add_node(p4_wait)
+
+    # Distinct wait terminals per phase (to satisfy single-parent SUB constraint)
+    g.add_node(create_wait_for_board_change("wait_after_p0"))
+    g.add_node(create_wait_for_board_change("wait_after_p1"))
+    g.add_node(create_wait_for_board_change("wait_after_p2"))
+    g.add_node(create_wait_for_board_change("wait_after_p3"))
+    g.add_node(create_wait_for_board_change("wait_after_p4"))
 
     # ===== CONNECTIONS =====
 
@@ -84,45 +136,82 @@ def build_krk_network() -> Graph:
     g.add_edge("krk_root", "phase2_shrink_box", LinkType.SUB)
     g.add_edge("krk_root", "phase3_take_opposition", LinkType.SUB)
     g.add_edge("krk_root", "phase4_deliver_mate", LinkType.SUB)
+    # Attach supervisor under root without POR edges
+    g.add_edge("krk_root", "no_progress_watch", LinkType.SUB)
+    # Root-level sentinels (parallel, do not POR)
+    g.add_edge("krk_root", "is_stalemate", LinkType.SUB)
+    g.add_node(create_rook_lost_detector("rook_lost"))
+    g.add_edge("krk_root", "rook_lost", LinkType.SUB)
 
-    # Phase 0 connections
-    g.add_edge("phase0_establish_cut", "choose_phase0", LinkType.SUB)
+    # Phase 0 internal sequence: CheckCut -> ChooseP0 -> Wait
+    g.add_edge("phase0_establish_cut", "p0_check", LinkType.SUB)
+    g.add_edge("phase0_establish_cut", "p0_move",  LinkType.SUB)
+    g.add_edge("phase0_establish_cut", "p0_wait",  LinkType.SUB)
+    g.add_edge("p0_check", "p0_move", LinkType.POR)
+    g.add_edge("p0_move",  "p0_wait", LinkType.POR)
+    g.add_edge("p0_check", "cut_established", LinkType.SUB)
+    g.add_edge("p0_move",  "choose_phase0",   LinkType.SUB)
+    g.add_edge("p0_wait",  "wait_after_p0",   LinkType.SUB)
 
-    # Wait-for-change gating: ensure strategic phases only proceed when a new position is present
-    g.add_node(create_wait_for_board_change("wait_for_board_change"))
-    # Parent it under root so it can be requested immediately
-    g.add_edge("krk_root", "wait_for_board_change", LinkType.SUB)
-    # Gate P0 and P1 (parallel) on a board change; P2..P4 are already gated via POR from P1
-    g.add_edge("wait_for_board_change", "phase0_establish_cut", LinkType.POR)
-    g.add_edge("wait_for_board_change", "phase1_drive_to_edge", LinkType.POR)
-
-    # Phase 0 and Phase 1 run in parallel (no POR between them)
-    g.add_edge("phase1_drive_to_edge", "phase2_shrink_box", LinkType.POR)
+    # Phase sequencing P0 -> P1 -> P2 -> P3 -> P4 (scripts only)
+    g.add_edge("phase0_establish_cut", "phase1_drive_to_edge", LinkType.POR)
+    g.add_edge("phase1_drive_to_edge", "phase2_shrink_box",   LinkType.POR)
     g.add_edge("phase2_shrink_box", "phase3_take_opposition", LinkType.POR)
     g.add_edge("phase3_take_opposition", "phase4_deliver_mate", LinkType.POR)
 
-    # Phase 1 connections
-    g.add_edge("phase1_drive_to_edge", "king_at_edge", LinkType.SUB)
+    # Phase 1 internal sequence - now supports multiple approaches
+    g.add_edge("phase1_drive_to_edge", "p1_check", LinkType.SUB)
+    g.add_edge("phase1_drive_to_edge", "p1_move",  LinkType.SUB)
+    g.add_edge("phase1_drive_to_edge", "p1_wait",  LinkType.SUB)
+    # Mark OR root for immediate phase completion if already satisfied
+    g.nodes["p1_check"].meta["alt"] = True
+    g.add_edge("p1_check", "p1_move", LinkType.POR)
+    g.add_edge("p1_move",  "p1_wait", LinkType.POR)
 
-    # Phase 2 connections
-    g.add_edge("phase2_shrink_box", "box_can_shrink", LinkType.SUB)
-    # POR: Phase 2 only requestable after enemy king is at edge
-    g.add_edge("king_at_edge", "phase2_shrink_box", LinkType.POR)
+    # Phase 1 check: Multiple completion criteria
+    g.add_edge("p1_check", "king_at_edge",      LinkType.SUB)
+    g.add_edge("p1_check", "king_confined",     LinkType.SUB)  # New: confinement achieved
+    g.add_edge("p1_check", "barrier_ready",     LinkType.SUB)  # New: barrier in place
 
-    # Phase 3 connections
-    g.add_edge("phase3_take_opposition", "can_take_opposition", LinkType.SUB)
-    g.add_edge("box_can_shrink", "phase3_take_opposition", LinkType.POR)  # Precondition
+    # Phase 1 move: Multiple move generation strategies (competing alternatives)
+    g.add_edge("p1_move",  "king_drive_moves",      LinkType.SUB)  # Traditional approach
+    g.add_edge("p1_move",  "confinement_moves",     LinkType.SUB)  # New: confinement-focused
+    g.add_edge("p1_move",  "barrier_placement_moves", LinkType.SUB)  # New: barrier placement
 
-    # Phase 4 connections
-    g.add_edge("phase4_deliver_mate", "can_deliver_mate", LinkType.SUB)
-    g.add_edge("can_take_opposition", "phase4_deliver_mate", LinkType.POR)  # Precondition
-    # removed POR to is_stalemate; stalemate is enforced in move filters
+    g.add_edge("p1_wait",  "wait_after_p1",     LinkType.SUB)
 
-    # Move generator connections to phases
-    g.add_edge("phase1_drive_to_edge", "king_drive_moves", LinkType.SUB)
-    g.add_edge("phase2_shrink_box", "box_shrink_moves", LinkType.SUB)
-    g.add_edge("phase3_take_opposition", "opposition_moves", LinkType.SUB)
-    g.add_edge("phase4_deliver_mate", "mate_moves", LinkType.SUB)
+    # Phase 2 internal sequence
+    g.add_edge("phase2_shrink_box", "p2_check", LinkType.SUB)
+    g.add_edge("phase2_shrink_box", "p2_move",  LinkType.SUB)
+    g.add_edge("phase2_shrink_box", "p2_wait",  LinkType.SUB)
+    g.nodes["p2_check"].meta["alt"] = True
+    g.add_edge("p2_check", "p2_move", LinkType.POR)
+    g.add_edge("p2_move",  "p2_wait", LinkType.POR)
+    g.add_edge("p2_check", "box_can_shrink",   LinkType.SUB)
+    g.add_edge("p2_move",  "box_shrink_moves", LinkType.SUB)
+    g.add_edge("p2_wait",  "wait_after_p2",    LinkType.SUB)
+
+    # Phase 3 internal sequence
+    g.add_edge("phase3_take_opposition", "p3_check", LinkType.SUB)
+    g.add_edge("phase3_take_opposition", "p3_move",  LinkType.SUB)
+    g.add_edge("phase3_take_opposition", "p3_wait",  LinkType.SUB)
+    g.nodes["p3_check"].meta["alt"] = True
+    g.add_edge("p3_check", "p3_move", LinkType.POR)
+    g.add_edge("p3_move",  "p3_wait", LinkType.POR)
+    g.add_edge("p3_check", "can_take_opposition", LinkType.SUB)
+    g.add_edge("p3_move",  "opposition_moves",   LinkType.SUB)
+    g.add_edge("p3_wait",  "wait_after_p3",      LinkType.SUB)
+
+    # Phase 4 internal sequence (do not POR-gate on opposition; early mates allowed)
+    g.add_edge("phase4_deliver_mate", "p4_check", LinkType.SUB)
+    g.add_edge("phase4_deliver_mate", "p4_move",  LinkType.SUB)
+    g.add_edge("phase4_deliver_mate", "p4_wait",  LinkType.SUB)
+    g.nodes["p4_check"].meta["alt"] = True
+    g.add_edge("p4_check", "p4_move", LinkType.POR)
+    g.add_edge("p4_move",  "p4_wait", LinkType.POR)
+    g.add_edge("p4_check", "can_deliver_mate", LinkType.SUB)
+    g.add_edge("p4_move",  "mate_moves",       LinkType.SUB)
+    g.add_edge("p4_wait",  "wait_after_p4",    LinkType.SUB)
 
     # Root-level fallback removed to encourage strategic actions
 
@@ -131,6 +220,8 @@ def build_krk_network() -> Graph:
     # 2. Watchdog timer in gameplay demo (50 ticks)
     # No separate last resort terminal needed
 
+    # Optional: validate article compliance
+    g.validate_article_compliance()
     return g
 
 
