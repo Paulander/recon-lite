@@ -23,7 +23,11 @@ from recon_lite_chess import (
 
     # Move generators (actuators)
     create_phase0_choose_moves, create_king_drive_moves, create_box_shrink_moves, create_opposition_moves,
-    create_mate_moves, create_random_legal_moves, create_no_progress_watch
+    create_mate_moves, create_random_legal_moves, create_no_progress_watch,
+
+    # New confinement-aware nodes
+    create_confinement_evaluator, create_barrier_ready_evaluator,
+    create_confinement_moves, create_barrier_placement_moves
 )
 from recon_lite_chess.actuators import choose_any_safe_move
 
@@ -40,6 +44,9 @@ def build_krk_network() -> Graph:
     # ===== TERMINAL NODES (Evaluators) =====
     # Phase 1: Drive king to edge
     g.add_node(create_king_edge_detector("king_at_edge"))
+    # New confinement evaluators
+    g.add_node(create_confinement_evaluator("king_confined", target_size=2))
+    g.add_node(create_barrier_ready_evaluator("barrier_ready"))
 
     # Phase 2: Shrink the box
     g.add_node(create_box_shrink_evaluator("box_can_shrink"))
@@ -73,6 +80,9 @@ def build_krk_network() -> Graph:
     # ===== MOVE GENERATOR NODES (Actuators) =====
     g.add_node(create_phase0_choose_moves("choose_phase0"))
     g.add_node(create_king_drive_moves("king_drive_moves"))
+    # New confinement-aware move generators
+    g.add_node(create_confinement_moves("confinement_moves"))
+    g.add_node(create_barrier_placement_moves("barrier_placement_moves"))
     g.add_node(create_box_shrink_moves("box_shrink_moves"))
     g.add_node(create_opposition_moves("opposition_moves"))
     g.add_node(create_mate_moves("mate_moves"))
@@ -149,7 +159,7 @@ def build_krk_network() -> Graph:
     g.add_edge("phase2_shrink_box", "phase3_take_opposition", LinkType.POR)
     g.add_edge("phase3_take_opposition", "phase4_deliver_mate", LinkType.POR)
 
-    # Phase 1 internal sequence
+    # Phase 1 internal sequence - now supports multiple approaches
     g.add_edge("phase1_drive_to_edge", "p1_check", LinkType.SUB)
     g.add_edge("phase1_drive_to_edge", "p1_move",  LinkType.SUB)
     g.add_edge("phase1_drive_to_edge", "p1_wait",  LinkType.SUB)
@@ -157,8 +167,17 @@ def build_krk_network() -> Graph:
     g.nodes["p1_check"].meta["alt"] = True
     g.add_edge("p1_check", "p1_move", LinkType.POR)
     g.add_edge("p1_move",  "p1_wait", LinkType.POR)
+
+    # Phase 1 check: Multiple completion criteria
     g.add_edge("p1_check", "king_at_edge",      LinkType.SUB)
-    g.add_edge("p1_move",  "king_drive_moves",  LinkType.SUB)
+    g.add_edge("p1_check", "king_confined",     LinkType.SUB)  # New: confinement achieved
+    g.add_edge("p1_check", "barrier_ready",     LinkType.SUB)  # New: barrier in place
+
+    # Phase 1 move: Multiple move generation strategies (competing alternatives)
+    g.add_edge("p1_move",  "king_drive_moves",      LinkType.SUB)  # Traditional approach
+    g.add_edge("p1_move",  "confinement_moves",     LinkType.SUB)  # New: confinement-focused
+    g.add_edge("p1_move",  "barrier_placement_moves", LinkType.SUB)  # New: barrier placement
+
     g.add_edge("p1_wait",  "wait_after_p1",     LinkType.SUB)
 
     # Phase 2 internal sequence

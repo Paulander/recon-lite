@@ -33,7 +33,10 @@ from recon_lite_chess import (
     create_phase1_drive_to_edge, create_phase2_shrink_box,
     create_phase3_take_opposition, create_phase4_deliver_mate,
     create_king_drive_moves, create_box_shrink_moves,
-    create_opposition_moves, create_mate_moves
+    create_opposition_moves, create_mate_moves,
+    # New confinement-aware nodes
+    create_confinement_evaluator, create_barrier_ready_evaluator,
+    create_confinement_moves, create_barrier_placement_moves
 )
 from recon_lite_chess.krk_nodes import wire_default_krk
 from recon_lite_chess.predicates import dist_to_edge, on_rim, has_opposition_after, chebyshev
