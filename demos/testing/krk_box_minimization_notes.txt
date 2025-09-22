@@ -1,0 +1,5 @@
+KRK Box Minimization Harness Notes
+----------------------------------
+- Purpose: exercises the phase-2 box-shrink move generator in isolation and confirms it can always tighten the confinement box against optimal defence.
+- Setup: handcrafted KRK positions covering right/left edge, near-edge, and mirrored cases where a safe shrink move exists (rook already defended or king support provided).
+- Assertions: rejects any move that gives check, revalidates enemy-edge inference, and evaluates worst-case opponent replies to ensure box area/min-side strictly drop before reporting success.

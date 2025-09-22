@@ -39,7 +39,14 @@ from recon_lite_chess import (
     create_confinement_moves, create_barrier_placement_moves
 )
 from recon_lite_chess.krk_nodes import wire_default_krk
-from recon_lite_chess.predicates import dist_to_edge, on_rim, has_opposition_after, chebyshev
+from recon_lite_chess.predicates import (
+    dist_to_edge,
+    on_rim,
+    has_opposition_after,
+    chebyshev,
+    box_area,
+    box_min_side,
+)
 
 
 def _build_basic_krk_graph() -> Graph:
@@ -124,6 +131,174 @@ def _eligible_phase(board: chess.Board) -> str:
         return "phase1"
     return "phase0"
 
+
+# ---- Phase-aware proposal validation ----
+
+PHASE_PRIORITY = {"phase0": 0, "phase1": 1, "phase2": 2, "phase3": 3, "phase4": 4}
+
+
+def _worst_case_metrics(board: chess.Board, move: chess.Move) -> dict:
+    b_after = board.copy()
+    b_after.push(move)
+
+    initial_area = box_area(board)
+    initial_min_side = box_min_side(board)
+    new_area = box_area(b_after)
+    new_min_side = box_min_side(b_after)
+
+    worst_area = new_area
+    worst_min_side = new_min_side
+    if b_after.legal_moves:
+        for reply in b_after.legal_moves:
+            reply_board = b_after.copy()
+            reply_board.push(reply)
+            area_after_reply = box_area(reply_board)
+            min_side_after_reply = box_min_side(reply_board)
+            if area_after_reply > worst_area:
+                worst_area = area_after_reply
+            if min_side_after_reply > worst_min_side:
+                worst_min_side = min_side_after_reply
+
+    return {
+        "initial_area": initial_area,
+        "initial_min_side": initial_min_side,
+        "new_area": new_area,
+        "new_min_side": new_min_side,
+        "worst_area": worst_area,
+        "worst_min_side": worst_min_side,
+    }
+
+
+def _validate_phase2_move(board: chess.Board, move_uci: str) -> tuple[bool, dict]:
+    move = chess.Move.from_uci(move_uci)
+    metrics = _worst_case_metrics(board, move)
+
+    if board.gives_check(move):
+        metrics["failure"] = "gives_check"
+        return False, metrics
+
+    initial_min_side = metrics["initial_min_side"]
+    worst_min_side = metrics["worst_min_side"]
+    initial_area = metrics["initial_area"]
+    worst_area = metrics["worst_area"]
+
+    if worst_min_side > initial_min_side:
+        metrics["failure"] = "min_side_regresses"
+        return False, metrics
+    if initial_min_side > 1 and worst_min_side >= initial_min_side:
+        metrics["failure"] = "min_side_not_reduced"
+        return False, metrics
+    if initial_area > 1 and worst_area >= initial_area:
+        metrics["failure"] = "area_not_reduced"
+        return False, metrics
+
+    metrics["failure"] = None
+    return True, metrics
+
+
+def _detect_proposing_phase(engine: ReConEngine, move_uci: str) -> tuple[str | None, str | None]:
+    phase_name = None
+    reason = None
+    for node in engine.g.nodes.values():
+        suggested = node.meta.get("suggested_moves")
+        if suggested and move_uci in suggested:
+            phase_name = node.meta.get("phase")
+            reason = node.meta.get("reason")
+            break
+    return phase_name, reason
+
+
+def _select_candidate(board: chess.Board, proposals: list[dict], logger: RunLogger | None) -> tuple[dict | None, list[dict]]:
+    if not proposals:
+        return None, proposals
+
+    ordered = sorted(proposals, key=lambda p: p.get("rank", -1), reverse=True)
+    for candidate in ordered:
+        phase = candidate.get("phase")
+        if phase == "phase2":
+            ok, metrics = _validate_phase2_move(board, candidate["move"])
+            candidate["validation"] = metrics
+            if not ok:
+                if logger:
+                    logger.snapshot(
+                        engine=None,
+                        note=f"Rejected phase2 move {candidate['move']} (not shrinking)",
+                        env={
+                            "failure": metrics.get("failure"),
+                            "initial_min_side": metrics.get("initial_min_side"),
+                            "worst_min_side": metrics.get("worst_min_side"),
+                            "initial_area": metrics.get("initial_area"),
+                            "worst_area": metrics.get("worst_area"),
+                        },
+                        thoughts="Phase2 validation failed",
+                        new_requests=[],
+                    )
+                continue
+        return candidate, ordered
+
+    return None, ordered
+
+
+def _decision_cycle(engine: ReConEngine,
+                    board: chess.Board,
+                    env: dict,
+                    *,
+                    tick_watchdog: int,
+                    min_decision_ticks: int,
+                    logger: RunLogger | None,
+                    plies: int) -> tuple[dict | None, list[dict], int]:
+    env["board"] = board
+    env["chosen_move"] = None
+    proposals: list[dict] = []
+    ticks = 0
+
+    while ticks < tick_watchdog and not board.is_game_over():
+        ticks += 1
+        now_req = engine.step(env)
+
+        if logger is not None:
+            dbg = {}
+            if env.get("debug_phase1"):
+                dbg["debug_phase1"] = env["debug_phase1"]
+            if env.get("debug_phase2"):
+                dbg["debug_phase2"] = env["debug_phase2"]
+
+            logger.snapshot(
+                engine=engine,
+                note=f"Persistent eval tick {ticks} (ply {plies+1})",
+                env={
+                    "fen": board.fen(),
+                    "evaluation_tick": ticks,
+                    "ply": plies + 1,
+                    "chosen_move": env.get("chosen_move"),
+                    "pressure": env.get("pressure"),
+                    "require_min_side_shrink": env.get("require_min_side_shrink"),
+                    **dbg,
+                },
+                thoughts="Persistent evaluation...",
+                new_requests=list(now_req.keys()) if now_req else [],
+            )
+
+            if ticks == 1 and logger.events:
+                logger.events[-1]["graph"] = {"edges": [{"src": e.src, "dst": e.dst, "type": e.ltype.name} for e in engine.g.edges]}
+
+        proposed_move = env.get("chosen_move")
+        if proposed_move:
+            phase_name, reason = _detect_proposing_phase(engine, proposed_move)
+            proposals.append({
+                "move": proposed_move,
+                "phase": phase_name or "unknown",
+                "rank": PHASE_PRIORITY.get(phase_name or "", -1),
+                "reason": reason or env.get("last_reason"),
+            })
+            env["chosen_move"] = None
+
+        if ticks >= min_decision_ticks and proposals:
+            break
+
+    selected, ordered = _select_candidate(board, proposals, logger)
+    return selected, ordered, ticks
+
 def play_persistent_game(initial_fen: str | None = None, max_plies: int = 200,
                          tick_watchdog: int = 300) -> dict:
     logger = RunLogger()
@@ -139,97 +314,41 @@ def play_persistent_game(initial_fen: str | None = None, max_plies: int = 200,
     g.nodes[root_id].state = NodeState.REQUESTED
 
     # Attach graph edges for visualization
-    graph_edges = [{"src": e.src, "dst": e.dst, "type": e.ltype.name} for e in g.edges]
-
     plies = 0
     rook_lost = False
     # Persistent env across plies to maintain fen history and pressure
     env = {"board": board, "chosen_move": None, "fen_history": deque(maxlen=12), "pressure_steps": 0}
 
     while not board.is_game_over() and plies < max_plies:
-        # One decision cycle (White/ReCoN)
-        env["board"] = board
-        env["chosen_move"] = None
-        ticks = 0
-        min_decision_ticks = 3  # allow parallel phases a short window to compete
-        proposals: list[dict] = []
-        phase_rank = {"phase0": 0, "phase1": 1, "phase2": 2, "phase3": 3, "phase4": 4}
+        selected, ordered, ticks = _decision_cycle(
+            engine,
+            board,
+            env,
+            tick_watchdog=tick_watchdog,
+            min_decision_ticks=3,
+            logger=logger,
+            plies=plies,
+        )
 
-        while ticks < tick_watchdog and not board.is_game_over():
-            ticks += 1
-            now_req = engine.step(env)
-            # Build env payload with debug blobs if present
-            dbg = {}
-            if env.get("debug_phase1"):
-                dbg["debug_phase1"] = env["debug_phase1"]
-            if env.get("debug_phase2"):
-                dbg["debug_phase2"] = env["debug_phase2"]
+        move_record = selected
+        move_uci = move_record["move"] if move_record else None
 
-            logger.snapshot(
-                engine=engine,
-                note=f"Persistent eval tick {ticks} (ply {plies+1})",
-                env={
-                    "fen": board.fen(),
-                    "evaluation_tick": ticks,
-                    "ply": plies+1,
-                    "chosen_move": env.get("chosen_move"),
-                    "pressure": env.get("pressure"),
-                    "require_min_side_shrink": env.get("require_min_side_shrink"),
-                    **dbg,
-                },
-                thoughts="Persistent evaluation...",
-                new_requests=list(now_req.keys()) if now_req else [],
-            )
-
-            if ticks == 1:
-                logger.events[-1]["graph"] = {"edges": graph_edges}
-
-            # If any terminal proposed a move this tick, record its phase and keep evaluating briefly
-            if env.get("chosen_move"):
-                proposed = env["chosen_move"]
-                # Try to identify which phase proposed this move
-                phase_name = None
-                for nid, node in engine.g.nodes.items():
-                    ph = node.meta.get("phase")
-                    sugg = node.meta.get("suggested_moves")
-                    if ph and sugg and proposed in sugg:
-                        phase_name = ph
-                        break
-                proposals.append({
-                    "move": proposed,
-                    "phase": phase_name or "unknown",
-                    "rank": phase_rank.get(phase_name or "", -1)
-                })
-                # Clear to allow other phases to propose within the window
-                env["chosen_move"] = None
-
-            # Exit once we have any proposal after a brief window; we'll pick the highest-phase proposal
-            if ticks >= min_decision_ticks and proposals:
-                break
-            # Early break: if no proposals within a small window, leave loop to trigger fallback
-            if ticks >= 12 and not proposals and env.get("chosen_move") is None:
-                break
-
-        # Choose the best proposal (prefer higher phase); fall back to any remaining choice
-        move_uci = None
-        if proposals:
-            # Prefer any higher-phase proposals over Phase0
-            higher = [p for p in proposals if p.get("phase") not in (None, "phase0")]
-            pick_from = higher if higher else proposals
-            move_uci = max(pick_from, key=lambda p: p["rank"]) ["move"]
-        else:
-            move_uci = env.get("chosen_move")
         if not move_uci:
-            # Watchdog: pick a safe fallback to avoid failing fast
             from recon_lite_chess.actuators import choose_any_safe_move
             fallback = choose_any_safe_move(board)
             if fallback:
+                move_record = {
+                    "move": fallback,
+                    "phase": "fallback",
+                    "rank": -1,
+                    "reason": "safety fallback",
+                }
                 move_uci = fallback
                 logger.snapshot(
                     engine=None,
                     note=f"FALLBACK applied: {fallback}",
-                    env={"fen": board.fen(), "ply": plies+1, "fallback": True},
-                    thoughts="No chosen_move by tick limit; applying fallback",
+                    env={"fen": board.fen(), "ply": plies + 1, "fallback": True},
+                    thoughts="No acceptable proposal; applying fallback",
                     new_requests=[],
                 )
 
@@ -239,6 +358,15 @@ def play_persistent_game(initial_fen: str | None = None, max_plies: int = 200,
             except Exception:
                 break
             plies += 1
+
+            if move_record and move_record.get("validation"):
+                logger.snapshot(
+                    engine=None,
+                    note=f"Phase2 validation for {move_uci}",
+                    env={**move_record["validation"], "ply": plies},
+                    thoughts="Recorded shrink metrics",
+                    new_requests=[],
+                )
 
             if not any(p.piece_type == chess.ROOK and p.color == chess.WHITE for p in board.piece_map().values()):
                 rook_lost = True
@@ -305,6 +433,42 @@ def play_persistent_game(initial_fen: str | None = None, max_plies: int = 200,
     logger.to_json(str(out_path))
 
     return result
+
+
+def preview_decision(board: chess.Board,
+                     *,
+                     tick_watchdog: int = 60,
+                     min_decision_ticks: int = 3,
+                     assume_phase2_ready: bool = True) -> dict:
+    """Run a single decision cycle without applying the move (test helper)."""
+    g = build_krk_network()
+    engine = ReConEngine(g)
+    root_id = "krk_root"
+    g.nodes[root_id].state = NodeState.REQUESTED
+
+    if assume_phase2_ready:
+        for nid in ["phase0_establish_cut", "phase1_drive_to_edge"]:
+            if nid in g.nodes:
+                g.nodes[nid].state = NodeState.CONFIRMED
+        for nid, node in g.nodes.items():
+            if nid.startswith("p0_") or nid.startswith("p1_"):
+                node.state = NodeState.CONFIRMED
+        if "phase2_shrink_box" in g.nodes:
+            g.nodes["phase2_shrink_box"].state = NodeState.REQUESTED
+        if "p2_move" in g.nodes:
+            g.nodes["p2_move"].state = NodeState.REQUESTED
+
+    env = {"board": board, "chosen_move": None, "fen_history": deque(maxlen=12), "pressure_steps": 0}
+    decision, proposals, ticks = _decision_cycle(
+        engine,
+        board,
+        env,
+        tick_watchdog=tick_watchdog,
+        min_decision_ticks=min_decision_ticks,
+        logger=None,
+        plies=0,
+    )
+    return {"decision": decision, "proposals": proposals, "ticks": ticks}
 
 
 def run_batch(n_games: int = 10, max_plies: int = 200) -> dict:
