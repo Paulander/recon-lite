@@ -19,11 +19,95 @@ from typing import List, Tuple, Optional, Dict, Any
 from .predicates import (
     is_stalemate_after, rook_safe_after, box_area, box_area_after,
     shrinks_or_preserves_box, our_king_progress, gives_safe_check,
-    has_opposition_after, creates_stable_cut,
+    chebyshev, dist_to_edge, has_opposition, has_opposition_after, creates_stable_cut,
     enemy_king_mobility_after, repetition_penalty, would_cause_threefold,
     fifty_move_pressure, box_min_side, box_min_side_after, enemy_at_edge, king_outside_rook_cut_after, has_stable_cut,
     enemy_nearest_edge_info, rook_distance_to_target_fence, rook_distance_to_target_fence_after, rook_on_target_fence_after
 )
+
+_FORCE_MATE_CACHE: Dict[Tuple[str, bool, int, int], bool] = {}
+
+
+def _force_mate_cache_key(board: chess.Board, depth: int) -> Tuple[str, bool, int, int]:
+    return (board.board_fen(), board.turn, board.ep_square or -1, depth)
+
+
+def _can_force_mate(board: chess.Board,
+                    depth: int,
+                    us_color: bool) -> bool:
+    key = _force_mate_cache_key(board, depth)
+    if key in _FORCE_MATE_CACHE:
+        return _FORCE_MATE_CACHE[key]
+
+    if board.is_checkmate():
+        # If it's the opponent's turn and they are checkmated, we succeeded.
+        result = (board.turn != us_color)
+        _FORCE_MATE_CACHE[key] = result
+        return result
+    if board.is_stalemate() or board.can_claim_fifty_moves() or depth == 0:
+        _FORCE_MATE_CACHE[key] = False
+        return False
+
+    if board.turn == us_color:
+        for move in board.legal_moves:
+            piece = board.piece_at(move.from_square)
+            if piece and piece.piece_type == chess.KING and piece.color == us_color:
+                if has_opposition_after(board, move):
+                    continue
+            board.push(move)
+            if _can_force_mate(board, depth - 1, us_color):
+                board.pop()
+                _FORCE_MATE_CACHE[key] = True
+                return True
+            board.pop()
+        _FORCE_MATE_CACHE[key] = False
+        return False
+    else:
+        for move in board.legal_moves:
+            board.push(move)
+            if not _can_force_mate(board, depth - 1, us_color):
+                board.pop()
+                _FORCE_MATE_CACHE[key] = False
+                return False
+            board.pop()
+        _FORCE_MATE_CACHE[key] = True
+        return True
+
+
+def _find_forced_mate_move(board: chess.Board,
+                           max_depth: int = 24,
+                           *,
+                           forbid_opposition: bool = True) -> Optional[chess.Move]:
+    us_color = board.turn
+    legal_moves = list(board.legal_moves)
+    if not legal_moves:
+        return None
+
+    filtered: List[chess.Move] = []
+    for move in legal_moves:
+        if is_stalemate_after(board, move):
+            continue
+        if not rook_safe_after(board, move):
+            continue
+        if _enemy_edge_metric(board, move) > 0:
+            continue
+        piece = board.piece_at(move.from_square)
+        if forbid_opposition and piece and piece.piece_type == chess.KING and piece.color == us_color:
+            if has_opposition_after(board, move):
+                continue
+        filtered.append(move)
+
+    if not filtered:
+        return None
+
+    for depth in range(2, max_depth + 1, 2):
+        for move in filtered:
+            board.push(move)
+            if _can_force_mate(board, depth - 1, us_color):
+                board.pop()
+                return move
+            board.pop()
+    return None
 
 
 def _find_mate_in_one(board: chess.Board) -> Optional[str]:
@@ -40,6 +124,84 @@ def _rook_distance_travel(move: chess.Move) -> float:
     f1, r1 = chess.square_file(move.from_square), chess.square_rank(move.from_square)
     f2, r2 = chess.square_file(move.to_square), chess.square_rank(move.to_square)
     return float(abs(f1 - f2) + abs(r1 - r2))
+
+
+def _our_rook_square(board: chess.Board) -> Optional[int]:
+    color = board.turn
+    for sq, piece in board.piece_map().items():
+        if piece.color == color and piece.piece_type == chess.ROOK:
+            return sq
+    return None
+
+
+def _target_corner(enemy_sq: Optional[int], rook_sq: Optional[int]) -> Optional[int]:
+    if enemy_sq is None:
+        return None
+    ef, er = chess.square_file(enemy_sq), chess.square_rank(enemy_sq)
+    corners = [chess.A1, chess.H1, chess.A8, chess.H8]
+    candidates: List[Tuple[float, int]] = []
+    for corner in corners:
+        cf, cr = chess.square_file(corner), chess.square_rank(corner)
+        if cf != ef and cr != er:
+            continue
+        score = 0.0
+        if rook_sq is not None:
+            score += float(chebyshev(rook_sq, corner))
+        score += float(chebyshev(enemy_sq, corner)) * 0.1
+        candidates.append((score, corner))
+    if not candidates:
+        return None
+    candidates.sort(key=lambda x: x[0])
+    return candidates[0][1]
+
+
+def _enemy_corner_metric(board: chess.Board, move: chess.Move, corner_sq: Optional[int]) -> float:
+    if corner_sq is None:
+        return 0.0
+    b = board.copy(stack=False)
+    b.push(move)
+    enemy_color = b.turn
+    enemy_king = b.king(enemy_color)
+    if enemy_king is None:
+        return 0.0
+    replies = list(b.legal_moves)
+    if not replies:
+        return -1.0
+    worst = float('-inf')
+    for reply in replies:
+        piece = b.piece_at(reply.from_square)
+        if piece and piece.piece_type == chess.KING and piece.color == enemy_color:
+            b.push(reply)
+            next_sq = b.king(enemy_color)
+            if next_sq is None:
+                dist = 0.0
+            else:
+                dist = float(chebyshev(next_sq, corner_sq))
+            if dist > worst:
+                worst = dist
+            b.pop()
+    if worst == float('-inf'):
+        # No king replies recorded (should not happen), fall back to current distance
+        return float(chebyshev(enemy_king, corner_sq))
+    return worst
+
+
+def _enemy_edge_metric(board: chess.Board, move: chess.Move) -> int:
+    b = board.copy(stack=False)
+    b.push(move)
+    enemy_color = b.turn
+    worst = 0
+    for reply in b.legal_moves:
+        piece = b.piece_at(reply.from_square)
+        if piece and piece.piece_type == chess.KING and piece.color == enemy_color:
+            b.push(reply)
+            sq = b.king(enemy_color)
+            if sq is not None:
+                dist = dist_to_edge(sq)
+                if dist > worst:
+                    worst = dist
+            b.pop()
+    return worst
 
 
 def king_to_rook_distance(board: chess.Board) -> float:
@@ -207,6 +369,8 @@ def choose_any_safe_move(board: chess.Board) -> Optional[str]:
     mate = _find_mate_in_one(board)
     if mate:
         return mate
+    if box_min_side(board) <= 1:
+        return None
     legal = list(board.legal_moves)
     if not legal:
         return None
@@ -227,6 +391,8 @@ def choose_move_phase0(board: chess.Board, env: Optional[Dict[str, Any]] = None)
     mate = _find_mate_in_one(board)
     if mate:
         return mate
+    if box_min_side(board) <= 1:
+        return None
     legal_moves = list(board.legal_moves)
     # Disable P0 proposals if a stable cut already exists now or enemy is already at edge
     try:
@@ -344,7 +510,7 @@ def choose_move_phase1(board: chess.Board, env: Optional[Dict[str, Any]] = None)
             continue
         # Allow equality only if we create a stable cut or we get positive edge-driving bonus
         if new_a == old_a:
-            if not (creates_stable_cut(board, move) or edge_driving_bonus(board, move) > 0):
+            if not (creates_stable_cut(board, move) or edge_driving_bonus(board, move) > 0 or our_king_progress(board, move) > 0):
                 continue
         # Threefold guard
         if env is not None and would_cause_threefold(board, move, env.get("fen_history")):
@@ -420,6 +586,9 @@ def choose_move_phase2(board: chess.Board, env: Optional[Dict[str, Any]] = None)
     mate = _find_mate_in_one(board)
     if mate:
         return mate
+    from .predicates import box_min_side
+    if box_min_side(board) <= 1:
+        return None
     legal_moves = list(board.legal_moves)
     candidates: List[Tuple[Tuple, chess.Move]] = []
     dbg: Dict[str, Any] = {}
@@ -515,15 +684,28 @@ def choose_move_phase2(board: chess.Board, env: Optional[Dict[str, Any]] = None)
 
 
 def choose_move_phase3(board: chess.Board, env: Optional[Dict[str, Any]] = None) -> Optional[str]:
-    """
-    Phase 3: Take opposition.
-    Enhanced with opposition detection and P4 promotion.
-    """
-    # Mate-in-one override
+    """Phase 3: maintain zugzwang and steer the defender toward the mating corner."""
     mate = _find_mate_in_one(board)
     if mate:
         return mate
+
+    forced = _find_forced_mate_move(board, max_depth=24, forbid_opposition=True)
+    if forced:
+        return forced.uci()
+
     legal_moves = list(board.legal_moves)
+    if not legal_moves:
+        return None
+
+    enemy_sq = board.king(not board.turn)
+    our_sq = board.king(board.turn)
+    if enemy_sq is None or our_sq is None:
+        return choose_any_safe_move(board)
+
+    rook_sq = _our_rook_square(board)
+    corner_sq = _target_corner(enemy_sq, rook_sq)
+    base_min_side = box_min_side(board)
+
     candidates: List[Tuple[Tuple, chess.Move]] = []
 
     for move in legal_moves:
@@ -531,89 +713,134 @@ def choose_move_phase3(board: chess.Board, env: Optional[Dict[str, Any]] = None)
             continue
         if not rook_safe_after(board, move):
             continue
-        # Strict P3: if enemy on rim, require opposition; otherwise require strict mobility drop or safe check
-        enemy_sq = board.king(not board.turn)
-        on_rim_now = False
-        try:
-            file = chess.square_file(enemy_sq); rank = chess.square_rank(enemy_sq)
-            on_rim_now = (file in (0,7) or rank in (0,7))
-        except Exception:
-            pass
-        if on_rim_now:
-            if not has_opposition_after(board, move):
+
+        piece = board.piece_at(move.from_square)
+        if piece is None:
+            continue
+
+        if piece.piece_type == chess.KING:
+            if has_opposition_after(board, move):
                 continue
-        else:
-            try:
-                bcur = board
-                cur_cnt = 0
-                enemy = not bcur.turn
-                for mv2 in bcur.legal_moves:
-                    p = bcur.piece_at(mv2.from_square)
-                    if p and p.piece_type == chess.KING and p.color == enemy:
-                        cur_cnt += 1
-                reduce_mob = enemy_king_mobility_after(board, move) < cur_cnt
-            except Exception:
-                reduce_mob = False
-            if not (reduce_mob or gives_safe_check(board, move)):
+            if enemy_sq is not None and chebyshev(move.to_square, enemy_sq) <= 1:
                 continue
-        if env is not None and would_cause_threefold(board, move, env.get("fen_history")):
-            b = board.copy(stack=False)
-            b.push(move)
-            if not b.is_checkmate():
+            if box_min_side_after(board, move) > base_min_side:
                 continue
-        if env is not None and env.get("forbid_zero_progress"):
-            base = box_area(board)
-            if (box_area_after(board, move) == base and
-                box_min_side_after(board, move) == box_min_side(board) and
-                our_king_progress(board, move) <= 0 and
-                not gives_safe_check(board, move)):
+            if _enemy_edge_metric(board, move) > 0:
                 continue
-        if env is not None and env.get("require_min_side_shrink"):
-            if box_min_side_after(board, move) >= box_min_side(board):
+            corner_metric = _enemy_corner_metric(board, move, corner_sq)
+            our_corner = float(chebyshev(move.to_square, corner_sq)) if corner_sq is not None else 0.0
+            mobility = float(enemy_king_mobility_after(board, move))
+            dist_enemy = float(chebyshev(move.to_square, enemy_sq)) if enemy_sq is not None else 0.0
+            key = (0, corner_metric, our_corner, mobility, dist_enemy)
+            candidates.append((key, move))
+        elif piece.piece_type == chess.ROOK:
+            if box_min_side_after(board, move) > base_min_side:
                 continue
-        candidates.append((_candidate_key(board, move, 3, env), move))
+            if _enemy_edge_metric(board, move) > 0:
+                continue
+            corner_metric = _enemy_corner_metric(board, move, corner_sq)
+            rook_corner = float(chebyshev(move.to_square, corner_sq)) if corner_sq is not None else 0.0
+            travel = _rook_distance_travel(move)
+            key = (1, corner_metric, rook_corner, travel)
+            candidates.append((key, move))
 
     if candidates:
         candidates.sort(key=lambda x: x[0])
         return candidates[0][1].uci()
 
-    # Fallback: any safe move
+    fallback = choose_move_phase1(board, env)
+    if fallback:
+        return fallback
+
     return choose_any_safe_move(board)
 
 
 def choose_move_phase4(board: chess.Board, env: Optional[Dict[str, Any]] = None) -> Optional[str]:
-    """
-    Phase 4: Deliver mate.
-    Enhanced with mate detection.
-    """
+    """Phase 4: finish once the defender is forced into the mating corner."""
+    mate = _find_mate_in_one(board)
+    if mate:
+        return mate
+
+    forced = _find_forced_mate_move(board, max_depth=24, forbid_opposition=False)
+    if forced:
+        return forced.uci()
+
+    enemy_sq = board.king(not board.turn)
+    if enemy_sq is None:
+        return None
+    our_sq = board.king(board.turn)
+    if our_sq is None:
+        return None
+
+    enemy_file = chess.square_file(enemy_sq)
+    enemy_rank = chess.square_rank(enemy_sq)
+    if enemy_file not in (0, 7) and enemy_rank not in (0, 7):
+        return None
+
+    rook_sq = _our_rook_square(board)
+    corner_sq = _target_corner(enemy_sq, rook_sq)
+
     legal_moves = list(board.legal_moves)
-    candidates: List[Tuple[Tuple, chess.Move]] = []
+    if not legal_moves:
+        return None
+
+    mate_candidates: List[Tuple[Tuple, chess.Move]] = []
+    lift_candidates: List[Tuple[Tuple, chess.Move]] = []
+    progress_candidates: List[Tuple[Tuple, chess.Move]] = []
 
     for move in legal_moves:
         if is_stalemate_after(board, move):
             continue
         if not rook_safe_after(board, move):
             continue
-        # Threefold guard — irrelevant if mate
+        if _enemy_edge_metric(board, move) > 0:
+            continue
+
+        piece = board.piece_at(move.from_square)
+        if piece is None or piece.piece_type != chess.ROOK:
+            continue
+
+        after = board.copy(stack=False)
+        after.push(move)
+
         if env is not None and would_cause_threefold(board, move, env.get("fen_history")):
-            btmp = board.copy(stack=False)
-            btmp.push(move)
-            if not btmp.is_checkmate():
+            if not after.is_checkmate():
                 continue
 
-        # Mate bonus by skewing the key strongly to top
-        b = board.copy(stack=False)
-        b.push(move)
         key = _candidate_key(board, move, 4, env)
-        if b.is_checkmate():
-            key = (key[0] - 5.0, *key[1:])  # strong boost (since key[0] is -score)
-        candidates.append((key, move))
 
-    if candidates:
-        candidates.sort(key=lambda x: x[0])
-        return candidates[0][1].uci()
+        if after.is_checkmate():
+            mate_candidates.append((key, move))
+            continue
 
-    # Fallback: any safe move
+        if corner_sq is not None and move.to_square == corner_sq:
+            lift_key = (
+                0,
+                _enemy_corner_metric(board, move, corner_sq),
+                _rook_distance_travel(move),
+            )
+            lift_candidates.append((lift_key, move))
+            continue
+
+        if corner_sq is not None:
+            corner_metric = _enemy_corner_metric(board, move, corner_sq)
+            rook_corner = float(chebyshev(move.to_square, corner_sq))
+        else:
+            corner_metric = 0.0
+            rook_corner = 0.0
+        progress_key = (1, corner_metric, rook_corner, _rook_distance_travel(move))
+        progress_candidates.append((progress_key, move))
+
+    if mate_candidates:
+        mate_candidates.sort(key=lambda x: x[0])
+        return mate_candidates[0][1].uci()
+    if lift_candidates:
+        lift_candidates.sort(key=lambda x: x[0])
+        return lift_candidates[0][1].uci()
+    if progress_candidates:
+        progress_candidates.sort(key=lambda x: x[0])
+        return progress_candidates[0][1].uci()
+
     return choose_any_safe_move(board)
     """
     legal = list(board.legal_moves)

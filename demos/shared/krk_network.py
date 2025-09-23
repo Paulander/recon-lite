@@ -170,8 +170,6 @@ def build_krk_network() -> Graph:
 
     # Phase 1 check: Multiple completion criteria
     g.add_edge("p1_check", "king_at_edge",      LinkType.SUB)
-    g.add_edge("p1_check", "king_confined",     LinkType.SUB)  # New: confinement achieved
-    g.add_edge("p1_check", "barrier_ready",     LinkType.SUB)  # New: barrier in place
 
     # Phase 1 move: Multiple move generation strategies (competing alternatives)
     g.add_edge("p1_move",  "king_drive_moves",      LinkType.SUB)  # Traditional approach

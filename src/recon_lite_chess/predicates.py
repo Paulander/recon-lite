@@ -113,6 +113,8 @@ def has_stable_cut(board: chess.Board) -> bool:
     rsq = _find_our_rook_square_now(board, color)
     if rsq is None or ek is None:
         return False
+    if on_rim(ek):
+        return True
     same_file = chess.square_file(rsq) == chess.square_file(ek)
     same_rank = chess.square_rank(rsq) == chess.square_rank(ek)
     aligned = same_file or same_rank

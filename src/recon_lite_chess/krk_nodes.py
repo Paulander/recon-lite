@@ -84,6 +84,13 @@ class BoxShrinkEvaluator(Node):
         enemy_king = board.king(not board.turn)
         our_king = board.king(board.turn)
 
+        try:
+            from .predicates import box_min_side
+            if box_min_side(board) <= 1:
+                return True, True
+        except Exception:
+            pass
+
         our_rook = None
         for sq in chess.SQUARES:
             p = board.piece_at(sq)
@@ -284,7 +291,10 @@ class Phase0ChooseMoves(Node):
             return False, []
         mv = choose_move_phase0(board, env)
         if mv is None:
-            mv = choose_any_safe_move(board)
+            reason = "P0 rendezvous satisfied (no move required)"
+            node.meta["reason"] = reason
+            env["last_reason"] = reason
+            return True, True
         if mv:
             env["chosen_move"] = mv
             node.meta["suggested_moves"] = [mv]
@@ -424,7 +434,7 @@ class ConfinementMoves(Node):
         if mv:
             env["chosen_move"] = mv
             node.meta["suggested_moves"] = [mv]
-            node.meta["phase"] = "confinement"
+            node.meta["phase"] = "phase1"
             try:
                 mobj = chess.Move.from_uci(mv)
                 feats = move_features(board, mobj)
@@ -452,7 +462,7 @@ class BarrierPlacementMoves(Node):
         if mv:
             env["chosen_move"] = mv
             node.meta["suggested_moves"] = [mv]
-            node.meta["phase"] = "barrier"
+            node.meta["phase"] = "phase1"
             try:
                 mobj = chess.Move.from_uci(mv)
                 from .predicates import rook_distance_to_target_fence_after
