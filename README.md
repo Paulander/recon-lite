@@ -5,7 +5,9 @@ down in this document).
 
 ### TL;DR for the review
 - **Persistent KRK demo**: `uv run python demos/persistent/krk_persistent_demo.py --max-plies 40 --seed 0 --output-basename krk_persistent_review`
-- **Ready-made logs**: `demos/outputs/krk_persistent_review_viz.json` (+ `_debug.json`) capture the full forced-mate run with node states.
+- **Full-state logging for animation** (captures node states every frame):
+  `uv run python demos/persistent/krk_persistent_demo.py --max-plies 40 --seed 0 --log-full-state --output-basename krk_fulltrace`
+- **Ready-made logs**: `demos/outputs/krk_persistent_review_viz.json` (+ `_debug.json`) capture the full forced-mate run. For per-frame node colors, use `krk_fulltrace_viz.json` produced with `--log-full-state`.
 - **Visualization entry point**: open `demos/visualization/chessboard_view.html` (or `onepage_view.html`) and click “Load JSON” to replay any `_viz.json`, including the bundled run above.
 - **Regression harness**: `uv run python demos/testing/test_krk_persistent_integration.py` now passes (≤4 plies) using the stabilized leg‑2 choreography.
 

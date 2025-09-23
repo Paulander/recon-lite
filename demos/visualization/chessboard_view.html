@@ -308,9 +308,14 @@
                     document.getElementById('thoughts-text').textContent = frame.thoughts;
                 }
 
-                // Update network visualization with transition detection
-                this.networkVis.updateTransitionSet(frame.nodes || {});
-                this.networkVis.draw(frame, new Set((frame && frame.new_requests) ? frame.new_requests : []));
+                // Ensure we always have node state data
+                const nodeStates = (frame.nodes && Object.keys(frame.nodes).length)
+                    ? frame.nodes
+                    : this.networkVis.lastNodesState;
+
+                this.networkVis.updateTransitionSet(nodeStates || {});
+                const frameWithNodes = Object.assign({}, frame, nodeStates ? { nodes: nodeStates } : {});
+                this.networkVis.draw(frameWithNodes, new Set((frame && frame.new_requests) ? frame.new_requests : []));
 
                 // Build or update move index (once)
                 if (!this.moveSteps.length) {
@@ -323,7 +328,7 @@
                 }
 
                 // Update phase states
-                this.updatePhaseStates(frame.nodes || {});
+                this.updatePhaseStates(nodeStates || {});
 
                 // Update controls
                 this.updateControls();

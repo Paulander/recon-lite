@@ -498,7 +498,8 @@ def play_persistent_game(initial_fen: str | None = None,
                          single_phase: Optional[str] = None,
                          seed: Optional[int] = None,
                          step_mode: bool = False,
-                         opponent_policy: Optional[Callable[[chess.Board], Optional[chess.Move]]] = None) -> dict:
+                         opponent_policy: Optional[Callable[[chess.Board], Optional[chess.Move]]] = None,
+                         log_full_state: bool = False) -> dict:
     if split_logs:
         viz_logger = RunLogger()
         debug_logger = RunLogger()
@@ -596,8 +597,13 @@ def play_persistent_game(initial_fen: str | None = None,
                 }
                 move_uci = fallback
                 if viz_logger is not None:
+                    if log_full_state:
+                        try:
+                            engine.step(env)
+                        except Exception:
+                            pass
                     viz_logger.snapshot(
-                        engine=None,
+                        engine=engine if log_full_state else None,
                         note=f"FALLBACK applied: {fallback}",
                         env={"fen": board.fen(), "ply": plies + 1, "fallback": True},
                         thoughts="No acceptable proposal; applying fallback",
@@ -632,8 +638,13 @@ def play_persistent_game(initial_fen: str | None = None,
                 rook_lost = True
 
             if viz_logger is not None:
+                if log_full_state:
+                    try:
+                        engine.step(env)
+                    except Exception:
+                        pass
                 viz_logger.snapshot(
-                    engine=None,
+                    engine=engine if log_full_state else None,
                     note=f"Applied move {plies}: {move_uci}",
                     env={"fen": board.fen(), "ply": plies, "recons_move": move_uci},
                     thoughts=f"Applied {move_uci} (persistent)",
@@ -673,8 +684,13 @@ def play_persistent_game(initial_fen: str | None = None,
                     board.push(opp_move_obj)
                     opp_uci = opp_move_obj.uci()
                     if viz_logger is not None:
+                        if log_full_state:
+                            try:
+                                engine.step(env)
+                            except Exception:
+                                pass
                         viz_logger.snapshot(
-                            engine=None,
+                            engine=engine if log_full_state else None,
                             note=f"Opponent ply {plies}: {opp_uci}",
                             env={"fen": board.fen(), "ply": plies, "opponents_move": opp_uci},
                             thoughts="Opponent move (persistent)",
@@ -810,6 +826,7 @@ def main():
     parser.add_argument("--single-phase", choices=PHASE_SEQUENCE, help="Lock the network to a single phase")
     parser.add_argument("--seed", type=int, default=None, help="Seed RNG for reproducible runs")
     parser.add_argument("--step-mode", action="store_true", help="Stop after each ReCoN move without opponent response")
+    parser.add_argument("--log-full-state", action="store_true", help="Include node states on every snapshot (slower, best for visualization)")
     # Single graph; demo uses the shared KRK network
     args = parser.parse_args()
 
@@ -835,6 +852,7 @@ def main():
             single_phase=args.single_phase,
             seed=args.seed,
             step_mode=args.step_mode,
+            log_full_state=args.log_full_state,
         )
         print(res)
 
