@@ -544,6 +544,18 @@ def play_persistent_game(initial_fen: str | None = None,
             ticks = 1 if ordered else 0
             move_record = selected
             move_uci = selected["move"] if selected else None
+            if viz_logger is not None and selected:
+                viz_logger.snapshot(
+                    engine=engine,
+                    note="Leg2 proposal",
+                    env={
+                        "fen": board.fen(),
+                        "ply": plies + 1,
+                        "leg2": True,
+                    },
+                    thoughts="Leg2 direct proposal",
+                    new_requests=[],
+                )
             if debug_logger is not None and ordered:
                 debug_logger.snapshot(
                     engine=None,

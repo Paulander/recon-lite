@@ -5,8 +5,8 @@ down in this document).
 
 ### TL;DR for the review
 - **Persistent KRK demo**: `uv run python demos/persistent/krk_persistent_demo.py --max-plies 40 --seed 0 --output-basename krk_persistent_review`
-- **Ready-made logs**: `demos/outputs/krk_persistent_phasefix_viz.json` (+ `_debug.json`) capture a single forced mate run end-to-end.
-- **Visualization entry point**: open `demos/visualization/enhanced_visualization.html` (or `chessboard_view.html`) and click “Load JSON” to replay any `_viz.json`, including the bundled run above.
+- **Ready-made logs**: `demos/outputs/krk_persistent_review_viz.json` (+ `_debug.json`) capture the full forced-mate run with node states.
+- **Visualization entry point**: open `demos/visualization/chessboard_view.html` (or `onepage_view.html`) and click “Load JSON” to replay any `_viz.json`, including the bundled run above.
 - **Regression harness**: `uv run python demos/testing/test_krk_persistent_integration.py` now passes (≤4 plies) using the stabilized leg‑2 choreography.
 
 ## Intro/Background
@@ -110,7 +110,7 @@ This demonstrates the hierarchical KRK strategy:
 - **Phase 3**: Take opposition
 - **Phase 4**: Deliver checkmate
 
-To replay the execution, open `demos/visualization/enhanced_visualization.html` (double-click the file) or `demos/visualization/chessboard_view.html` and use the “Load JSON” button to select any `_viz.json` produced by the demo.
+To replay the execution, open `demos/visualization/chessboard_view.html` (double-click the file) or the compact `demos/visualization/onepage_view.html`, then use the “Load JSON” button to select any `_viz.json` produced by the demo.
 
 ### Persistent deterministic leg 2 demo
 
