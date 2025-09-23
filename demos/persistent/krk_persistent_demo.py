@@ -47,6 +47,7 @@ from recon_lite_chess.predicates import (
     chebyshev,
     box_area,
     box_min_side,
+    would_cause_threefold,
 )
 
 PHASE_SEQUENCE = ["phase0", "phase1", "phase2", "phase3", "phase4"]
@@ -411,21 +412,81 @@ def _update_stage(env: dict, board: chess.Board) -> int:
     return stage
 
 
-def _leg2_choose(board: chess.Board, env: dict) -> Optional[str]:
+def _leg2_choose(board: chess.Board, env: dict) -> tuple[Optional[dict], list[dict]]:
+    """Prefer phase4/phase3 moves once the rim is secured and log candidates."""
     from recon_lite_chess.actuators import (
         choose_move_phase4,
         choose_move_phase3,
         choose_move_phase1,
     )
 
-    for chooser in (choose_move_phase4, choose_move_phase3, choose_move_phase1):
+    proposals: list[dict] = []
+    selected: Optional[dict] = None
+    seen: set[str] = set()
+
+    def run_chooser(phase_name: str, chooser, *, reason: str, alias_phase: Optional[str] = None) -> None:
+        nonlocal selected
         try:
-            mv = chooser(board, env)
+            move_uci = chooser(board, env)
         except Exception:
-            mv = None
-        if mv:
-            return mv
-    return None
+            move_uci = None
+        if not move_uci or move_uci in seen:
+            return
+        seen.add(move_uci)
+        phase_tag = alias_phase or phase_name
+        rank = PHASE_PRIORITY.get(phase_tag, PHASE_PRIORITY.get(phase_name, 0))
+        record = {
+            "move": move_uci,
+            "phase": phase_tag,
+            "rank": rank,
+            "reason": reason,
+        }
+        proposals.append(record)
+        if selected is None:
+            selected = record
+
+    run_chooser(
+        "phase4",
+        choose_move_phase4,
+        reason="Leg2: mate execution attempt",
+    )
+    if selected:
+        return selected, proposals
+
+    run_chooser(
+        "phase3",
+        choose_move_phase3,
+        reason="Leg2: opposition tightening",
+    )
+    if selected:
+        return selected, proposals
+
+    # Last resort: reuse phase1 heuristics to maintain tempo but keep us in phase3.
+    fen_hist = env.get("fen_history") if isinstance(env, dict) else None
+
+    def append_tempo_from_phase1() -> None:
+        try:
+            tempo_move = choose_move_phase1(board, env)
+        except Exception:
+            tempo_move = None
+        if not tempo_move:
+            return
+        if env.get("leg2_last_move") == tempo_move:
+            return
+        if fen_hist and would_cause_threefold(board, chess.Move.from_uci(tempo_move), fen_hist):
+            return
+        run_chooser(
+            "phase1",
+            lambda _board, _env: tempo_move,
+            reason="Leg2: tempo assist via phase1 heuristics",
+            alias_phase="phase3",
+        )
+
+    append_tempo_from_phase1()
+    if selected and isinstance(env, dict):
+        env["leg2_last_move"] = selected["move"]
+
+    return selected, proposals
 
 def play_persistent_game(initial_fen: str | None = None,
                          max_plies: int = 200,
@@ -475,16 +536,22 @@ def play_persistent_game(initial_fen: str | None = None,
         min_index = 3 if stage >= 1 else 0
         leg2_mode = (stage >= 1 and not single_phase)
         if leg2_mode:
-            phase_tag = PHASE_SEQUENCE[min_index]
+            selected, ordered = _leg2_choose(board, env)
+            phase_tag = selected["phase"] if selected else PHASE_SEQUENCE[min_index]
+            if phase_tag not in PHASE_SEQUENCE:
+                phase_tag = PHASE_SEQUENCE[min_index]
             _prime_phase(g, phase_tag, min_index=min_index)
-            move_uci = _leg2_choose(board, env)
-            ordered = []
-            ticks = 0
-            if move_uci:
-                reason = env.get("last_reason", "Leg2 heuristic")
-                move_record = {"move": move_uci, "phase": "leg2", "rank": 3, "reason": reason}
-            else:
-                move_record = None
+            ticks = 1 if ordered else 0
+            move_record = selected
+            move_uci = selected["move"] if selected else None
+            if debug_logger is not None and ordered:
+                debug_logger.snapshot(
+                    engine=None,
+                    note="decision_proposals",
+                    env={"ply": plies + 1, "proposals": ordered},
+                    thoughts="Collected leg2 proposals",
+                    new_requests=[],
+                )
         else:
             phase_tag = single_phase or _eligible_phase(board)
             target_index = PHASE_PRIORITY.get(phase_tag, 0)

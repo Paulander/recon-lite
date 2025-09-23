@@ -19,7 +19,7 @@ from typing import List, Tuple, Optional, Dict, Any
 from .predicates import (
     is_stalemate_after, rook_safe_after, box_area, box_area_after,
     shrinks_or_preserves_box, our_king_progress, gives_safe_check,
-    has_opposition_after, creates_stable_cut,
+    chebyshev, has_opposition, has_opposition_after, creates_stable_cut,
     enemy_king_mobility_after, repetition_penalty, would_cause_threefold,
     fifty_move_pressure, box_min_side, box_min_side_after, enemy_at_edge, king_outside_rook_cut_after, has_stable_cut,
     enemy_nearest_edge_info, rook_distance_to_target_fence, rook_distance_to_target_fence_after, rook_on_target_fence_after
@@ -522,47 +522,74 @@ def choose_move_phase2(board: chess.Board, env: Optional[Dict[str, Any]] = None)
 
 
 def choose_move_phase3(board: chess.Board, env: Optional[Dict[str, Any]] = None) -> Optional[str]:
-    """
-    Phase 3: Take opposition.
-    Enhanced with opposition detection and P4 promotion.
-    """
-    # Mate-in-one override
+    """Phase 3: secure or maintain opposition once the enemy king hits the rim."""
     mate = _find_mate_in_one(board)
     if mate:
         return mate
+
+    if has_opposition(board):
+        return None
+
     legal_moves = list(board.legal_moves)
     candidates: List[Tuple[Tuple, chess.Move]] = []
+    if not has_opposition(board):
+        return None
+
+    enemy_sq = board.king(not board.turn)
+    enemy_on_rim = False
+    if enemy_sq is not None:
+        file = chess.square_file(enemy_sq)
+        rank = chess.square_rank(enemy_sq)
+        enemy_on_rim = file in (0, 7) or rank in (0, 7)
+
+    enemy_mobility_now = 0
+    if not enemy_on_rim:
+        try:
+            probe = board.copy(stack=False)
+            probe.turn = not board.turn
+            enemy_color = probe.turn
+            for reply in probe.legal_moves:
+                piece = probe.piece_at(reply.from_square)
+                if piece and piece.piece_type == chess.KING and piece.color == enemy_color:
+                    enemy_mobility_now += 1
+        except Exception:
+            enemy_mobility_now = 0
 
     for move in legal_moves:
         if is_stalemate_after(board, move):
             continue
         if not rook_safe_after(board, move):
             continue
-        # Strict P3: if enemy on rim, require opposition; otherwise require strict mobility drop or safe check
-        enemy_sq = board.king(not board.turn)
-        on_rim_now = False
-        try:
-            file = chess.square_file(enemy_sq); rank = chess.square_rank(enemy_sq)
-            on_rim_now = (file in (0,7) or rank in (0,7))
-        except Exception:
-            pass
-        if on_rim_now:
-            if not has_opposition_after(board, move):
-                continue
+
+        tempo_priority = 0
+        if enemy_on_rim and enemy_sq is not None:
+            if has_opposition_after(board, move):
+                tempo_priority = 0
+            else:
+                piece = board.piece_at(move.from_square)
+                tempo_ok = False
+                if piece and piece.piece_type == chess.KING:
+                    cur_sq = move.from_square
+                    new_sq = move.to_square
+                    dist_now = chebyshev(cur_sq, enemy_sq)
+                    dist_after = chebyshev(new_sq, enemy_sq)
+                    if dist_after == 2 or dist_after < dist_now:
+                        tempo_ok = True
+                elif piece and piece.piece_type == chess.ROOK:
+                    if box_min_side_after(board, move) <= box_min_side(board) and _rook_distance_travel(move) <= 1.0:
+                        tempo_ok = True
+                if not tempo_ok:
+                    continue
+                tempo_priority = 1
         else:
+            reduce_mob = False
             try:
-                bcur = board
-                cur_cnt = 0
-                enemy = not bcur.turn
-                for mv2 in bcur.legal_moves:
-                    p = bcur.piece_at(mv2.from_square)
-                    if p and p.piece_type == chess.KING and p.color == enemy:
-                        cur_cnt += 1
-                reduce_mob = enemy_king_mobility_after(board, move) < cur_cnt
+                reduce_mob = enemy_king_mobility_after(board, move) < enemy_mobility_now
             except Exception:
                 reduce_mob = False
             if not (reduce_mob or gives_safe_check(board, move)):
                 continue
+
         if env is not None and would_cause_threefold(board, move, env.get("fen_history")):
             b = board.copy(stack=False)
             b.push(move)
@@ -570,57 +597,102 @@ def choose_move_phase3(board: chess.Board, env: Optional[Dict[str, Any]] = None)
                 continue
         if env is not None and env.get("forbid_zero_progress"):
             base = box_area(board)
-            if (box_area_after(board, move) == base and
-                box_min_side_after(board, move) == box_min_side(board) and
-                our_king_progress(board, move) <= 0 and
-                not gives_safe_check(board, move)):
+            if (
+                box_area_after(board, move) == base
+                and box_min_side_after(board, move) == box_min_side(board)
+                and our_king_progress(board, move) <= 0
+                and not gives_safe_check(board, move)
+            ):
                 continue
         if env is not None and env.get("require_min_side_shrink"):
             if box_min_side_after(board, move) >= box_min_side(board):
                 continue
-        candidates.append((_candidate_key(board, move, 3, env), move))
 
-    if candidates:
-        candidates.sort(key=lambda x: x[0])
-        return candidates[0][1].uci()
-
-    # Fallback: any safe move
-    return choose_any_safe_move(board)
-
-
-def choose_move_phase4(board: chess.Board, env: Optional[Dict[str, Any]] = None) -> Optional[str]:
-    """
-    Phase 4: Deliver mate.
-    Enhanced with mate detection.
-    """
-    legal_moves = list(board.legal_moves)
-    candidates: List[Tuple[Tuple, chess.Move]] = []
-
-    for move in legal_moves:
-        if is_stalemate_after(board, move):
-            continue
-        if not rook_safe_after(board, move):
-            continue
-        # Threefold guard — irrelevant if mate
-        if env is not None and would_cause_threefold(board, move, env.get("fen_history")):
-            btmp = board.copy(stack=False)
-            btmp.push(move)
-            if not btmp.is_checkmate():
-                continue
-
-        # Mate bonus by skewing the key strongly to top
-        b = board.copy(stack=False)
-        b.push(move)
-        key = _candidate_key(board, move, 4, env)
-        if b.is_checkmate():
-            key = (key[0] - 5.0, *key[1:])  # strong boost (since key[0] is -score)
+        base_key = _candidate_key(board, move, 3, env)
+        key = (tempo_priority, *base_key)
         candidates.append((key, move))
 
     if candidates:
         candidates.sort(key=lambda x: x[0])
         return candidates[0][1].uci()
 
-    # Fallback: any safe move
+    fallback = choose_move_phase1(board, env)
+    if fallback:
+        return fallback
+
+    return choose_any_safe_move(board)
+
+
+def choose_move_phase4(board: chess.Board, env: Optional[Dict[str, Any]] = None) -> Optional[str]:
+    """Phase 4: close the game once opposition is locked on the rim."""
+    mate = _find_mate_in_one(board)
+    if mate:
+        return mate
+
+    enemy_sq = board.king(not board.turn)
+    if enemy_sq is None:
+        return None
+    our_sq = board.king(board.turn)
+    if our_sq is None:
+        return None
+    enemy_file = chess.square_file(enemy_sq)
+    enemy_rank = chess.square_rank(enemy_sq)
+    if enemy_file not in (0, 7) and enemy_rank not in (0, 7):
+        # We only script the mate when the enemy king is already on the rim.
+        return None
+    if not has_opposition(board) and chebyshev(our_sq, enemy_sq) > 2:
+        return None
+
+    legal_moves = list(board.legal_moves)
+    mate_targets: set[int] = set()
+    if enemy_file == 0 and enemy_file + 1 <= 7:
+        mate_targets.add(chess.square(enemy_file + 1, enemy_rank))
+    if enemy_file == 7 and enemy_file - 1 >= 0:
+        mate_targets.add(chess.square(enemy_file - 1, enemy_rank))
+    if enemy_rank == 0 and enemy_rank + 1 <= 7:
+        mate_targets.add(chess.square(enemy_file, enemy_rank + 1))
+    if enemy_rank == 7 and enemy_rank - 1 >= 0:
+        mate_targets.add(chess.square(enemy_file, enemy_rank - 1))
+
+    mate_candidates: List[Tuple[Tuple, chess.Move]] = []
+    prep_candidates: List[Tuple[Tuple, chess.Move]] = []
+    general_candidates: List[Tuple[Tuple, chess.Move]] = []
+
+    for move in legal_moves:
+        if is_stalemate_after(board, move):
+            continue
+        if not rook_safe_after(board, move):
+            continue
+
+        piece = board.piece_at(move.from_square)
+        if piece is None:
+            continue
+
+        after = board.copy(stack=False)
+        after.push(move)
+
+        if env is not None and would_cause_threefold(board, move, env.get("fen_history")):
+            if not after.is_checkmate() and not (piece.piece_type == chess.ROOK and move.to_square in mate_targets):
+                continue
+
+        key = _candidate_key(board, move, 4, env)
+
+        if after.is_checkmate():
+            mate_candidates.append((key, move))
+            continue
+
+        if piece.piece_type == chess.ROOK and move.to_square in mate_targets:
+            # Classic lift toward the mating square (one file/rank inward).
+            prep_candidates.append((key, move))
+            continue
+
+        general_candidates.append((key, move))
+
+    for bucket in (mate_candidates, prep_candidates, general_candidates):
+        if bucket:
+            bucket.sort(key=lambda x: x[0])
+            return bucket[0][1].uci()
+
     return choose_any_safe_move(board)
     """
     legal = list(board.legal_moves)
