@@ -8,7 +8,7 @@ class NetworkVisualization {
         this.externalEdges = null; // from JSON graph.edges if provided
         this.lastNodesState = {};  // for transition detection
         this.transitionSet = new Set(); // nodes that changed state this frame
-        this.compact = true; // render without wrapper script nodes by default
+        this.compact = false; // render full network with wrapper script nodes by default
     }
 
     normalizeId(id) {
@@ -34,63 +34,114 @@ class NetworkVisualization {
 
     // Node positions for network visualization (simplified)
     static get nodePositions() {
-        return {
-            // Root and gating
-            'krk_root': { x: 400, y: 70 },
-            'wait_for_board_change': { x: 400, y: 150 },
-
-            // Phases (scripts)
-            'phase0_establish_cut': { x: 220, y: 240 },
-            'phase1_drive_to_edge': { x: 580, y: 240 },
-            'phase2_shrink_box': { x: 220, y: 330 },
-            'phase3_take_opposition': { x: 400, y: 330 },
-            'phase4_deliver_mate': { x: 580, y: 330 },
-
-            // Move generators (actuators)
-            'choose_phase0': { x: 220, y: 290 },
-            'king_drive_moves': { x: 580, y: 290 },
-            'box_shrink_moves': { x: 220, y: 380 },
-            'opposition_moves': { x: 400, y: 380 },
-            'mate_moves': { x: 580, y: 380 },
-            'random_legal_moves': { x: 400, y: 430 },
-
-            // Evaluators/sensors
-            'king_at_edge': { x: 120, y: 480 },
-            'box_can_shrink': { x: 300, y: 480 },
-            'can_take_opposition': { x: 500, y: 480 },
-            'can_deliver_mate': { x: 680, y: 480 },
-            'is_stalemate': { x: 720, y: 150 },
-
-            // New article-compliant per-phase scripts and wait gates
-            'p0_check': { x: 180, y: 200 },
-            'p0_move':  { x: 220, y: 260 },
-            'p0_wait':  { x: 260, y: 320 },
-            'wait_after_p0': { x: 220, y: 360 },
-            'cut_established': { x: 120, y: 200 },
-
-            'p1_check': { x: 540, y: 200 },
-            'p1_move':  { x: 580, y: 260 },
-            'p1_wait':  { x: 620, y: 320 },
-            'wait_after_p1': { x: 580, y: 360 },
-
-            'p2_check': { x: 180, y: 290 },
-            'p2_move':  { x: 220, y: 350 },
-            'p2_wait':  { x: 260, y: 410 },
-            'wait_after_p2': { x: 220, y: 450 },
-
-            'p3_check': { x: 360, y: 290 },
-            'p3_move':  { x: 400, y: 350 },
-            'p3_wait':  { x: 440, y: 410 },
-            'wait_after_p3': { x: 400, y: 450 },
-
-            'p4_check': { x: 540, y: 290 },
-            'p4_move':  { x: 580, y: 350 },
-            'p4_wait':  { x: 620, y: 410 },
-            'wait_after_p4': { x: 580, y: 450 },
-
-            // Root sentinels
-            'rook_lost': { x: 760, y: 150 }
+        const baseX = 160;
+        const colSpacing = 150;
+        const colX = (idx) => baseX + idx * colSpacing;
+        const levels = {
+            root: 80,
+            watchers: 160,
+            check: 250,
+            phase: 340,
+            move: 430,
+            actuator: 520,
+            waitGate: 610,
+            sensor: 690,
+            sentinelLow: 750
         };
+
+        const positions = {
+            // Root and global sentinels
+            'krk_root': { x: colX(2), y: levels.root },
+            'wait_for_board_change': { x: colX(2), y: levels.watchers },
+            'no_progress_watch': { x: colX(1), y: levels.watchers },
+            'is_stalemate': { x: colX(4.6), y: levels.watchers },
+            'rook_lost': { x: colX(4.6), y: levels.sentinelLow },
+
+            // Fallback actuator
+            'random_legal_moves': { x: colX(2) + 80, y: levels.actuator + 40 }
+        };
+
+        const phaseConfigs = [
+            {
+                idx: 0,
+                phase: 'phase0_establish_cut',
+                prefix: 'p0',
+                actuators: [
+                    { id: 'choose_phase0', dx: -40 }
+                ],
+                sensors: [
+                    { id: 'cut_established', dx: -50 }
+                ]
+            },
+            {
+                idx: 1,
+                phase: 'phase1_drive_to_edge',
+                prefix: 'p1',
+                actuators: [
+                    { id: 'king_drive_moves', dx: -60 },
+                    { id: 'confinement_moves', dx: 0 },
+                    { id: 'barrier_placement_moves', dx: 60 }
+                ],
+                sensors: [
+                    { id: 'king_at_edge', dx: -70 },
+                    { id: 'king_confined', dx: -10 },
+                    { id: 'barrier_ready', dx: 60 }
+                ]
+            },
+            {
+                idx: 2,
+                phase: 'phase2_shrink_box',
+                prefix: 'p2',
+                actuators: [
+                    { id: 'box_shrink_moves', dx: 0 }
+                ],
+                sensors: [
+                    { id: 'box_can_shrink', dx: 0 }
+                ]
+            },
+            {
+                idx: 3,
+                phase: 'phase3_take_opposition',
+                prefix: 'p3',
+                actuators: [
+                    { id: 'opposition_moves', dx: 0 }
+                ],
+                sensors: [
+                    { id: 'can_take_opposition', dx: 0 }
+                ]
+            },
+            {
+                idx: 4,
+                phase: 'phase4_deliver_mate',
+                prefix: 'p4',
+                actuators: [
+                    { id: 'mate_moves', dx: 0 }
+                ],
+                sensors: [
+                    { id: 'can_deliver_mate', dx: 0 }
+                ]
+            }
+        ];
+
+        phaseConfigs.forEach(({ idx, phase, prefix, actuators = [], sensors = [] }) => {
+            const base = colX(idx);
+            positions[phase] = { x: base, y: levels.phase };
+            positions[`${prefix}_check`] = { x: base, y: levels.check };
+            positions[`${prefix}_move`] = { x: base, y: levels.move };
+            positions[`${prefix}_wait`] = { x: base + 70, y: levels.actuator };
+            positions[`wait_after_${prefix}`] = { x: base + 70, y: levels.waitGate };
+
+            actuators.forEach(({ id, dx = 0 }) => {
+                positions[id] = { x: base + dx, y: levels.actuator };
+            });
+
+            sensors.forEach(({ id, dx = 0, level = 'sensor' }) => {
+                const targetLevel = level === 'sensor' ? levels.sensor : levels[level] || levels.sensor;
+                positions[id] = { x: base + dx, y: targetLevel };
+            });
+        });
+
+        return positions;
     }
 
     // Edges between nodes
@@ -125,9 +176,9 @@ class NetworkVisualization {
     // Node categories
     static get sensorNodes() {
         return new Set([
-            'wait_for_board_change',
+            'wait_for_board_change', 'no_progress_watch',
             'king_at_edge', 'box_can_shrink', 'can_take_opposition', 'can_deliver_mate', 'is_stalemate',
-            'cut_established',
+            'cut_established', 'king_confined', 'barrier_ready',
             'wait_after_p0','wait_after_p1','wait_after_p2','wait_after_p3','wait_after_p4',
             'rook_lost'
         ]);
@@ -136,27 +187,27 @@ class NetworkVisualization {
     // State colors
     static get stateColors() {
         return {
-            'INACTIVE': '#cfd8dc',
-            'REQUESTED': '#64b5f6',
-            'ACTIVE': '#90caf9',
-            'SUPPRESSED': '#b0bec5',
-            'WAITING': '#ffd54f',
-            'TRUE': '#81c784',
-            'CONFIRMED': '#4dd0e1',
-            'FAILED': '#e57373'
+            'INACTIVE': '#d8dee6',
+            'REQUESTED': '#2563eb',
+            'ACTIVE': '#0ea5e9',
+            'SUPPRESSED': '#94a3b8',
+            'WAITING': '#f59e0b',
+            'TRUE': '#22c55e',
+            'CONFIRMED': '#0d9488',
+            'FAILED': '#ef4444'
         };
     }
 
     static get stateBorderColors() {
         return {
-            'INACTIVE': '#90a4ae',
-            'REQUESTED': '#1e88e5',
-            'ACTIVE': '#1976d2',
-            'SUPPRESSED': '#607d8b',
-            'WAITING': '#f9a825',
-            'TRUE': '#2e7d32',
-            'CONFIRMED': '#00838f',
-            'FAILED': '#b71c1c'
+            'INACTIVE': '#94a3b8',
+            'REQUESTED': '#1d4ed8',
+            'ACTIVE': '#0284c7',
+            'SUPPRESSED': '#64748b',
+            'WAITING': '#b45309',
+            'TRUE': '#15803d',
+            'CONFIRMED': '#0f766e',
+            'FAILED': '#b91c1c'
         };
     }
 
@@ -179,7 +230,7 @@ class NetworkVisualization {
     }
 
     static textColorFor(bgHex) {
-        return NetworkVisualization.luminance(bgHex) > 0.55 ? '#1f2937' : '#ffffff';
+        return NetworkVisualization.luminance(bgHex) > 0.48 ? '#0f172a' : '#ffffff';
     }
 
     init() {
@@ -215,13 +266,15 @@ class NetworkVisualization {
             this.externalEdges.map(e => [this.normalizeId(e.src), this.normalizeId(e.dst), e.type]) :
             NetworkVisualization.edges.map(([a,b]) => [a,b,'SUB']);
 
+        let hiddenNodes = new Set();
+
         // --- Compact mode: hide wrapper script nodes and rewire edges visually ---
         if (this.compact) {
             const hiddenRe = /^(p[0-4]_(check|move|wait)|wait_after_p[0-4])$/;
-            const hidden = new Set();
+            hiddenNodes = new Set();
             edgesToDraw.forEach(([src, dst]) => {
-                if (hiddenRe.test(src)) hidden.add(src);
-                if (hiddenRe.test(dst)) hidden.add(dst);
+                if (hiddenRe.test(src)) hiddenNodes.add(src);
+                if (hiddenRe.test(dst)) hiddenNodes.add(dst);
             });
 
             // Build SUB adjacency to synthesize phase->terminal edges when wrapper is hidden
@@ -242,16 +295,16 @@ class NetworkVisualization {
             );
 
             // Filter out edges touching hidden nodes
-            let filtered = edgesToDraw.filter(([src, dst]) => !hidden.has(src) && !hidden.has(dst));
+            let filtered = edgesToDraw.filter(([src, dst]) => !hiddenNodes.has(src) && !hiddenNodes.has(dst));
 
             // For each hidden wrapper, add synthetic edges: (phase -> terminal) for each terminal child
-            hidden.forEach((w) => {
+            hiddenNodes.forEach((w) => {
                 const parents = subIn.get(w) || [];
                 const phaseParent = parents.find(isPhase);
                 if (!phaseParent) return;
                 const children = subOut.get(w) || [];
                 children.forEach((c) => {
-                    if (hidden.has(c)) return; // don't show hidden wait terminals
+                    if (hiddenNodes.has(c)) return; // don't show hidden wait terminals
                     // Avoid duplicates
                     const exists = filtered.some(([s,d,t]) => s===phaseParent && d===c && t==='SUB');
                     if (!exists) filtered.push([phaseParent, c, 'SUB']);
@@ -288,11 +341,17 @@ class NetworkVisualization {
 
         // Determine which nodes are actually present (avoid drawing unused)
         const presentNodes = new Set();
-        Object.keys(nodesState).forEach((id) => presentNodes.add(id));
-        edgesToDraw.forEach(([src, dst]) => { presentNodes.add(src); presentNodes.add(dst); });
+        Object.keys(nodesState).forEach((id) => {
+            if (!hiddenNodes.has(id)) presentNodes.add(id);
+        });
+        edgesToDraw.forEach(([src, dst]) => {
+            if (!hiddenNodes.has(src)) presentNodes.add(src);
+            if (!hiddenNodes.has(dst)) presentNodes.add(dst);
+        });
 
         // Draw nodes
         presentNodes.forEach((nodeId) => {
+            if (hiddenNodes.has(nodeId)) return;
             const pos = NetworkVisualization.nodePositions[nodeId];
             if (!pos) return;
             const state = nodesState[nodeId] || 'INACTIVE';
@@ -344,13 +403,33 @@ class NetworkVisualization {
                 this.ctx.restore();
             }
 
-            // Label
-            this.ctx.fillStyle = NetworkVisualization.textColorFor(fill);
-            this.ctx.font = '12px Segoe UI, Arial';
+            // Label (with contrasting backdrop for readability)
+            const labelColor = NetworkVisualization.textColorFor(fill);
+            const label = nodeId.replace(/_/g, ' ').toUpperCase();
+            const labelFont = '12px Segoe UI, Arial';
+            const labelY = pos.y + radius + 6;
+
+            this.ctx.font = labelFont;
             this.ctx.textAlign = 'center';
             this.ctx.textBaseline = 'top';
-            const label = nodeId.replace(/_/g, ' ').toUpperCase();
-            this.ctx.fillText(label, pos.x, pos.y + 26);
+
+            const metrics = this.ctx.measureText(label);
+            const textHeight = (metrics.actualBoundingBoxAscent !== undefined && metrics.actualBoundingBoxDescent !== undefined)
+                ? metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent
+                : 12;
+            const paddingX = 6;
+            const paddingY = 3;
+            const bgWidth = metrics.width + paddingX * 2;
+            const bgHeight = textHeight + paddingY * 2;
+            const bgX = pos.x - bgWidth / 2;
+            const bgY = labelY - paddingY;
+            const bgColor = labelColor === '#ffffff' ? 'rgba(15,23,42,0.65)' : 'rgba(255,255,255,0.85)';
+
+            this.ctx.fillStyle = bgColor;
+            this.ctx.fillRect(bgX, bgY, bgWidth, bgHeight);
+
+            this.ctx.fillStyle = labelColor;
+            this.ctx.fillText(label, pos.x, labelY);
         });
     }
 

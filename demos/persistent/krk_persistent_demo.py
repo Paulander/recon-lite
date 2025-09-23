@@ -527,12 +527,65 @@ def play_persistent_game(initial_fen: str | None = None,
         single_phase = phase_key
 
     # Attach graph edges for visualization
+    our_color = board.turn
     plies = 0
     rook_lost = False
     # Persistent env across plies to maintain fen history and pressure
     env = {"board": board, "chosen_move": None, "fen_history": deque(maxlen=12), "pressure_steps": 0, "stage": 0}
 
+    def _log_snapshot(*, note: str, env_payload: dict, thoughts: str = "", new_requests=None, include_engine: bool = False):
+        if viz_logger is None:
+            return
+        viz_logger.snapshot(
+            engine=engine if include_engine else None,
+            note=note,
+            env=env_payload,
+            thoughts=thoughts,
+            new_requests=new_requests or [],
+        )
+
     while not board.is_game_over() and plies < max_plies:
+        if board.turn != our_color:
+            if skip_opponent:
+                board.turn = our_color
+                continue
+            opp_move_obj = None
+            if opponent_policy is not None:
+                candidate = opponent_policy(board.copy())
+                if isinstance(candidate, chess.Move):
+                    opp_move_obj = candidate
+                elif isinstance(candidate, str):
+                    try:
+                        opp_move_obj = chess.Move.from_uci(candidate)
+                    except ValueError:
+                        opp_move_obj = None
+            if opp_move_obj is None:
+                opp_candidates = list(board.legal_moves)
+                if opp_candidates:
+                    opp_move_obj = random.choice(opp_candidates)
+            if opp_move_obj is not None and opp_move_obj in board.legal_moves:
+                board.push(opp_move_obj)
+                opp_uci = opp_move_obj.uci()
+                _log_snapshot(
+                    note=f"Opponent ply {plies}: {opp_uci}",
+                    env_payload={"fen": board.fen(), "ply": plies, "opponents_move": opp_uci},
+                    thoughts="Opponent move (persistent)",
+                    include_engine=log_full_state,
+                )
+                if debug_logger is not None and debug_logger is not viz_logger:
+                    debug_logger.snapshot(
+                        engine=None,
+                        note=f"Opponent ply {plies}: {opp_uci}",
+                        env={"fen": board.fen(), "ply": plies, "opponents_move": opp_uci},
+                        thoughts="Opponent move (persistent)",
+                        new_requests=[],
+                    )
+            else:
+                # No legal opponent move; treat as finished
+                break
+            if board.is_game_over():
+                break
+            continue
         stage = _update_stage(env, board)
         min_index = 3 if stage >= 1 else 0
         leg2_mode = (stage >= 1 and not single_phase)
@@ -546,16 +599,11 @@ def play_persistent_game(initial_fen: str | None = None,
             move_record = selected
             move_uci = selected["move"] if selected else None
             if viz_logger is not None and selected:
-                viz_logger.snapshot(
-                    engine=engine,
+                _log_snapshot(
                     note="Leg2 proposal",
-                    env={
-                        "fen": board.fen(),
-                        "ply": plies + 1,
-                        "leg2": True,
-                    },
+                    env_payload={"fen": board.fen(), "ply": plies + 1, "leg2": True},
                     thoughts="Leg2 direct proposal",
-                    new_requests=[],
+                    include_engine=True,
                 )
             if debug_logger is not None and ordered:
                 debug_logger.snapshot(
@@ -596,19 +644,12 @@ def play_persistent_game(initial_fen: str | None = None,
                     "reason": "safety fallback",
                 }
                 move_uci = fallback
-                if viz_logger is not None:
-                    if log_full_state:
-                        try:
-                            engine.step(env)
-                        except Exception:
-                            pass
-                    viz_logger.snapshot(
-                        engine=engine if log_full_state else None,
-                        note=f"FALLBACK applied: {fallback}",
-                        env={"fen": board.fen(), "ply": plies + 1, "fallback": True},
-                        thoughts="No acceptable proposal; applying fallback",
-                        new_requests=[],
-                    )
+                _log_snapshot(
+                    note=f"FALLBACK applied: {fallback}",
+                    env_payload={"fen": board.fen(), "ply": plies + 1, "fallback": True},
+                    thoughts="No acceptable proposal; applying fallback",
+                    include_engine=log_full_state,
+                )
                 if debug_logger is not None and debug_logger is not viz_logger:
                     debug_logger.snapshot(
                         engine=None,
@@ -637,19 +678,12 @@ def play_persistent_game(initial_fen: str | None = None,
             if not any(p.piece_type == chess.ROOK and p.color == chess.WHITE for p in board.piece_map().values()):
                 rook_lost = True
 
-            if viz_logger is not None:
-                if log_full_state:
-                    try:
-                        engine.step(env)
-                    except Exception:
-                        pass
-                viz_logger.snapshot(
-                    engine=engine if log_full_state else None,
-                    note=f"Applied move {plies}: {move_uci}",
-                    env={"fen": board.fen(), "ply": plies, "recons_move": move_uci},
-                    thoughts=f"Applied {move_uci} (persistent)",
-                    new_requests=[],
-                )
+            _log_snapshot(
+                note=f"Applied move {plies}: {move_uci}",
+                env_payload={"fen": board.fen(), "ply": plies, "recons_move": move_uci},
+                thoughts=f"Applied {move_uci} (persistent)",
+                include_engine=log_full_state,
+            )
             if debug_logger is not None and debug_logger is not viz_logger:
                 debug_logger.snapshot(
                     engine=None,
@@ -659,51 +693,6 @@ def play_persistent_game(initial_fen: str | None = None,
                     new_requests=[],
                 )
 
-            if board.is_game_over() or plies >= max_plies:
-                break
-
-            if step_mode:
-                break
-
-            if not skip_opponent and not board.is_game_over():
-                opp_move_obj = None
-                if opponent_policy is not None:
-                    candidate = opponent_policy(board.copy())
-                    if isinstance(candidate, chess.Move):
-                        opp_move_obj = candidate
-                    elif isinstance(candidate, str):
-                        try:
-                            opp_move_obj = chess.Move.from_uci(candidate)
-                        except ValueError:
-                            opp_move_obj = None
-                if opp_move_obj is None:
-                    opp_candidates = list(board.legal_moves)
-                    if opp_candidates:
-                        opp_move_obj = random.choice(opp_candidates)
-                if opp_move_obj is not None and opp_move_obj in board.legal_moves:
-                    board.push(opp_move_obj)
-                    opp_uci = opp_move_obj.uci()
-                    if viz_logger is not None:
-                        if log_full_state:
-                            try:
-                                engine.step(env)
-                            except Exception:
-                                pass
-                        viz_logger.snapshot(
-                            engine=engine if log_full_state else None,
-                            note=f"Opponent ply {plies}: {opp_uci}",
-                            env={"fen": board.fen(), "ply": plies, "opponents_move": opp_uci},
-                            thoughts="Opponent move (persistent)",
-                            new_requests=[],
-                        )
-                    if debug_logger is not None and debug_logger is not viz_logger:
-                        debug_logger.snapshot(
-                            engine=None,
-                            note=f"Opponent ply {plies}: {opp_uci}",
-                            env={"fen": board.fen(), "ply": plies, "opponents_move": opp_uci},
-                            thoughts="Opponent move (persistent)",
-                            new_requests=[],
-                        )
             if board.is_game_over() or plies >= max_plies:
                 break
 

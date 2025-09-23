@@ -26,6 +26,13 @@ This directory contains multiple visualization approaches for ReCoN networks:
 - **Same 3D features**: As modular version but standalone
 - **Perfect for sharing**: Single file, works without server
 
+### 4. **Neuro MRI View** (`neuro_mri/index.html`)
+**Purpose**: Futuristic “brain” rendering of node activity
+- **Three.js brainspace**: Nodes grouped into lobes with glowing pulses
+- **Per-frame fades**: Requires logs generated with `--log-full-state`
+- **Minimal UI**: Load JSON, play/pause, scrub speed
+- **Best for showcase**: Works offline (double-click)
+
 
 ## 🚀 Quick Start Guide
 
@@ -57,6 +64,18 @@ http://localhost:8000/index.html
 ```bash
 # Just double-click:
 standalone_html_example.html
+```
+
+### Option 4: Neuro MRI View (No Server)
+**Best for cinematic presentations**
+```bash
+# Generate log with full node states
+uv run python demos/persistent/krk_persistent_demo.py \
+  --max-plies 40 --seed 0 --log-full-state \
+  --output-basename krk_fulltrace
+
+# Double-click to open
+neuro_mri/index.html
 ```
 
 ## 📋 Prerequisites
