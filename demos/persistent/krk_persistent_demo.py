@@ -311,6 +311,7 @@ def _decision_cycle(engine: ReConEngine,
     env["chosen_move"] = None
     proposals: list[dict] = []
     ticks = 0
+    min_index = 3 if env.get("stage", 0) >= 1 else 0
 
     while ticks < tick_watchdog and not board.is_game_over():
         ticks += 1
@@ -363,10 +364,14 @@ def _decision_cycle(engine: ReConEngine,
         proposed_move = env.get("chosen_move")
         if proposed_move:
             phase_name, reason = _detect_proposing_phase(engine, proposed_move)
+            rank = PHASE_PRIORITY.get(phase_name or "", -1)
+            if rank < min_index:
+                env["chosen_move"] = None
+                continue
             proposals.append({
                 "move": proposed_move,
                 "phase": phase_name or "unknown",
-                "rank": PHASE_PRIORITY.get(phase_name or "", -1),
+                "rank": rank,
                 "reason": reason or env.get("last_reason"),
             })
             env["chosen_move"] = None
@@ -404,6 +409,23 @@ def _update_stage(env: dict, board: chess.Board) -> int:
         pass
     env["stage"] = stage
     return stage
+
+
+def _leg2_choose(board: chess.Board, env: dict) -> Optional[str]:
+    from recon_lite_chess.actuators import (
+        choose_move_phase4,
+        choose_move_phase3,
+        choose_move_phase1,
+    )
+
+    for chooser in (choose_move_phase4, choose_move_phase3, choose_move_phase1):
+        try:
+            mv = chooser(board, env)
+        except Exception:
+            mv = None
+        if mv:
+            return mv
+    return None
 
 def play_persistent_game(initial_fen: str | None = None,
                          max_plies: int = 200,
@@ -451,24 +473,37 @@ def play_persistent_game(initial_fen: str | None = None,
     while not board.is_game_over() and plies < max_plies:
         stage = _update_stage(env, board)
         min_index = 3 if stage >= 1 else 0
-        phase_tag = single_phase or _eligible_phase(board)
-        target_index = PHASE_PRIORITY.get(phase_tag, 0)
-        if target_index < min_index:
+        leg2_mode = (stage >= 1 and not single_phase)
+        if leg2_mode:
             phase_tag = PHASE_SEQUENCE[min_index]
-        _prime_phase(g, phase_tag, min_index=min_index)
-        selected, ordered, ticks = _decision_cycle(
-            engine,
-            board,
-            env,
-            tick_watchdog=tick_watchdog,
-            min_decision_ticks=3,
-            viz_logger=viz_logger,
-            debug_logger=debug_logger,
-            plies=plies,
-        )
-
-        move_record = selected
-        move_uci = move_record["move"] if move_record else None
+            _prime_phase(g, phase_tag, min_index=min_index)
+            move_uci = _leg2_choose(board, env)
+            ordered = []
+            ticks = 0
+            if move_uci:
+                reason = env.get("last_reason", "Leg2 heuristic")
+                move_record = {"move": move_uci, "phase": "leg2", "rank": 3, "reason": reason}
+            else:
+                move_record = None
+        else:
+            phase_tag = single_phase or _eligible_phase(board)
+            target_index = PHASE_PRIORITY.get(phase_tag, 0)
+            if target_index < min_index:
+                phase_tag = PHASE_SEQUENCE[min_index]
+            _prime_phase(g, phase_tag, min_index=min_index)
+            local_watchdog = min(tick_watchdog, 60)
+            selected, ordered, ticks = _decision_cycle(
+                engine,
+                board,
+                env,
+                tick_watchdog=local_watchdog,
+                min_decision_ticks=3,
+                viz_logger=viz_logger,
+                debug_logger=debug_logger,
+                plies=plies,
+            )
+            move_record = selected
+            move_uci = move_record["move"] if move_record else None
 
         if not move_uci:
             from recon_lite_chess.actuators import choose_any_safe_move
