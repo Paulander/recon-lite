@@ -39,14 +39,14 @@ class NetworkVisualization {
         const colX = (idx) => baseX + idx * colSpacing;
         const levels = {
             root: 80,
-            watchers: 150,
-            check: 230,
-            phase: 320,
-            move: 400,
-            actuator: 480,
-            waitGate: 530,
-            sensor: 580,
-            sentinelLow: 640
+            watchers: 160,
+            check: 250,
+            phase: 340,
+            move: 430,
+            actuator: 520,
+            waitGate: 610,
+            sensor: 690,
+            sentinelLow: 750
         };
 
         const positions = {
@@ -58,7 +58,7 @@ class NetworkVisualization {
             'rook_lost': { x: colX(4.6), y: levels.sentinelLow },
 
             // Fallback actuator
-            'random_legal_moves': { x: colX(2) + 80, y: levels.actuator + 50 }
+            'random_legal_moves': { x: colX(2) + 80, y: levels.actuator + 40 }
         };
 
         const phaseConfigs = [

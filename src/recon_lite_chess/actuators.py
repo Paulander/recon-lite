@@ -369,8 +369,6 @@ def choose_any_safe_move(board: chess.Board) -> Optional[str]:
     mate = _find_mate_in_one(board)
     if mate:
         return mate
-    if box_min_side(board) <= 1:
-        return None
     legal = list(board.legal_moves)
     if not legal:
         return None
