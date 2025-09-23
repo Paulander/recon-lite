@@ -3,6 +3,12 @@
 Quick summary and background for CIMC. This will be moved after initial review (regular README further
 down in this document).
 
+### TL;DR for the review
+- **Persistent KRK demo**: `uv run python demos/persistent/krk_persistent_demo.py --max-plies 40 --seed 0 --output-basename krk_persistent_review`
+- **Ready-made logs**: `demos/outputs/krk_persistent_phasefix_viz.json` (+ `_debug.json`) capture a single forced mate run end-to-end.
+- **Visualization entry point**: open `demos/visualization/enhanced_visualization.html` (or `chessboard_view.html`) and click “Load JSON” to replay any `_viz.json`, including the bundled run above.
+- **Regression harness**: `uv run python demos/testing/test_krk_persistent_integration.py` now passes (≤4 plies) using the stabilized leg‑2 choreography.
+
 ## Intro/Background
 This repo is my one-week exploration of Request Confirmation Networks (ReCoNs), a cognitive architecture proposed for hierarchical, sequential control and feature detection.
 
@@ -12,8 +18,7 @@ Core Engine: a modular ReCoN class with node types, message passing, and logging
 
 Abstract Demo: a “toy” ReCoN animation that shows requests, confirmations, POR/RET gating and the message dynamics.
 
-Chess Endgame Demo: a heuristic solver for King + Rook vs King built as a ReCoN graph, demonstrating sequential scripts and terminal conditions without external chess engines. Obviously this is nowhere near as good as actual chess engines 
-at playing chess, but I thought it was a good example to try ReCoN on. Furthermore it would be quite straight forward to "hook up" a SOTA chess engine (like Stockfish) to my ReCoN implementation; the heuristics subtree boils down to recommend a "next move" to its parent node. One could replace this whole subtree with one node (a wrapper around an API call to e.g. Stockfish) and leave the rest of the network untouched. Terminal nodes would still communicate with the game environment and other parts would facilitate updating the board state. Herein lies one of the strengths of ReCoN. 
+Chess Endgame Demo: a persistent King + Rook vs King solver built as a ReCoN graph, now handling the full leg‑2 choreography: keep the defender boxed, force zugzwang, and deliver the mate without re-entering shrink phases. Obviously this is nowhere near as strong as modern chess engines, but it demonstrates how ReCoN orchestrates sequential scripts. Plugging in Stockfish would simply mean swapping the heuristic actuator subtree for one node that queries the engine while the rest of the network keeps handling state and terminals—one of ReCoN’s strengths.
 
 ## What I learned
 
@@ -105,13 +110,17 @@ This demonstrates the hierarchical KRK strategy:
 - **Phase 3**: Take opposition
 - **Phase 4**: Deliver checkmate
 
-To view it, start a server (e.g)
+To replay the execution, open `demos/visualization/enhanced_visualization.html` (double-click the file) or `demos/visualization/chessboard_view.html` and use the “Load JSON” button to select any `_viz.json` produced by the demo.
+
+### Persistent deterministic leg 2 demo
 
 ```bash
-uv run python -m http.server 8000
+uv run python demos/persistent/krk_persistent_demo.py --max-plies 40 --seed 0 --output-basename krk_persistent_review
 ```
 
-And open http://localhost:8000/visualization/chessboard_view.html
+- Produces `demos/outputs/krk_persistent_review_viz.json` and `_debug.json` (matched pair).
+- A pre-generated example (`krk_persistent_phasefix_viz.json`) is already in `demos/outputs` if you just want to load data immediately.
+- Visualization workflow is identical: open the HTML viewer of choice and load the `_viz.json` file.
 
 ## Some comments and outlook:
 

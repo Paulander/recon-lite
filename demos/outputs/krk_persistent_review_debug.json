@@ -1,0 +1,303 @@
+[
+  {
+    "type": "snapshot",
+    "note": "decision_proposals",
+    "new_requests": [],
+    "env": {
+      "ply": 1,
+      "proposals": [
+        {
+          "move": "a2a7",
+          "phase": "phase4",
+          "rank": 4,
+          "reason": "Leg2: mate execution attempt"
+        }
+      ]
+    },
+    "thoughts": "Collected leg2 proposals"
+  },
+  {
+    "type": "snapshot",
+    "note": "Applied move 1: a2a7",
+    "new_requests": [],
+    "env": {
+      "fen": "4k3/R5K1/8/8/8/8/8/8 b - - 1 1",
+      "ply": 1,
+      "recons_move": "a2a7"
+    },
+    "thoughts": "Applied a2a7 (persistent)"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 1: e8d8",
+    "new_requests": [],
+    "env": {
+      "fen": "3k4/R5K1/8/8/8/8/8/8 w - - 2 2",
+      "ply": 1,
+      "opponents_move": "e8d8"
+    },
+    "thoughts": "Opponent move (persistent)"
+  },
+  {
+    "type": "snapshot",
+    "note": "decision_proposals",
+    "new_requests": [],
+    "env": {
+      "ply": 2,
+      "proposals": [
+        {
+          "move": "g7f7",
+          "phase": "phase4",
+          "rank": 4,
+          "reason": "Leg2: mate execution attempt"
+        }
+      ]
+    },
+    "thoughts": "Collected leg2 proposals"
+  },
+  {
+    "type": "snapshot",
+    "note": "Applied move 2: g7f7",
+    "new_requests": [],
+    "env": {
+      "fen": "3k4/R4K2/8/8/8/8/8/8 b - - 3 2",
+      "ply": 2,
+      "recons_move": "g7f7"
+    },
+    "thoughts": "Applied g7f7 (persistent)"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 2: d8c8",
+    "new_requests": [],
+    "env": {
+      "fen": "2k5/R4K2/8/8/8/8/8/8 w - - 4 3",
+      "ply": 2,
+      "opponents_move": "d8c8"
+    },
+    "thoughts": "Opponent move (persistent)"
+  },
+  {
+    "type": "snapshot",
+    "note": "decision_proposals",
+    "new_requests": [],
+    "env": {
+      "ply": 3,
+      "proposals": [
+        {
+          "move": "f7e6",
+          "phase": "phase4",
+          "rank": 4,
+          "reason": "Leg2: mate execution attempt"
+        }
+      ]
+    },
+    "thoughts": "Collected leg2 proposals"
+  },
+  {
+    "type": "snapshot",
+    "note": "Applied move 3: f7e6",
+    "new_requests": [],
+    "env": {
+      "fen": "2k5/R7/4K3/8/8/8/8/8 b - - 5 3",
+      "ply": 3,
+      "recons_move": "f7e6"
+    },
+    "thoughts": "Applied f7e6 (persistent)"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 3: c8d8",
+    "new_requests": [],
+    "env": {
+      "fen": "3k4/R7/4K3/8/8/8/8/8 w - - 6 4",
+      "ply": 3,
+      "opponents_move": "c8d8"
+    },
+    "thoughts": "Opponent move (persistent)"
+  },
+  {
+    "type": "snapshot",
+    "note": "decision_proposals",
+    "new_requests": [],
+    "env": {
+      "ply": 4,
+      "proposals": [
+        {
+          "move": "a7h7",
+          "phase": "phase4",
+          "rank": 4,
+          "reason": "Leg2: mate execution attempt"
+        }
+      ]
+    },
+    "thoughts": "Collected leg2 proposals"
+  },
+  {
+    "type": "snapshot",
+    "note": "Applied move 4: a7h7",
+    "new_requests": [],
+    "env": {
+      "fen": "3k4/7R/4K3/8/8/8/8/8 b - - 7 4",
+      "ply": 4,
+      "recons_move": "a7h7"
+    },
+    "thoughts": "Applied a7h7 (persistent)"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 4: d8c8",
+    "new_requests": [],
+    "env": {
+      "fen": "2k5/7R/4K3/8/8/8/8/8 w - - 8 5",
+      "ply": 4,
+      "opponents_move": "d8c8"
+    },
+    "thoughts": "Opponent move (persistent)"
+  },
+  {
+    "type": "snapshot",
+    "note": "decision_proposals",
+    "new_requests": [],
+    "env": {
+      "ply": 5,
+      "proposals": [
+        {
+          "move": "e6d6",
+          "phase": "phase4",
+          "rank": 4,
+          "reason": "Leg2: mate execution attempt"
+        }
+      ]
+    },
+    "thoughts": "Collected leg2 proposals"
+  },
+  {
+    "type": "snapshot",
+    "note": "Applied move 5: e6d6",
+    "new_requests": [],
+    "env": {
+      "fen": "2k5/7R/3K4/8/8/8/8/8 b - - 9 5",
+      "ply": 5,
+      "recons_move": "e6d6"
+    },
+    "thoughts": "Applied e6d6 (persistent)"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 5: c8b8",
+    "new_requests": [],
+    "env": {
+      "fen": "1k6/7R/3K4/8/8/8/8/8 w - - 10 6",
+      "ply": 5,
+      "opponents_move": "c8b8"
+    },
+    "thoughts": "Opponent move (persistent)"
+  },
+  {
+    "type": "snapshot",
+    "note": "decision_proposals",
+    "new_requests": [],
+    "env": {
+      "ply": 6,
+      "proposals": [
+        {
+          "move": "d6c6",
+          "phase": "phase4",
+          "rank": 4,
+          "reason": "Leg2: mate execution attempt"
+        }
+      ]
+    },
+    "thoughts": "Collected leg2 proposals"
+  },
+  {
+    "type": "snapshot",
+    "note": "Applied move 6: d6c6",
+    "new_requests": [],
+    "env": {
+      "fen": "1k6/7R/2K5/8/8/8/8/8 b - - 11 6",
+      "ply": 6,
+      "recons_move": "d6c6"
+    },
+    "thoughts": "Applied d6c6 (persistent)"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 6: b8a8",
+    "new_requests": [],
+    "env": {
+      "fen": "k7/7R/2K5/8/8/8/8/8 w - - 12 7",
+      "ply": 6,
+      "opponents_move": "b8a8"
+    },
+    "thoughts": "Opponent move (persistent)"
+  },
+  {
+    "type": "snapshot",
+    "note": "decision_proposals",
+    "new_requests": [],
+    "env": {
+      "ply": 7,
+      "proposals": [
+        {
+          "move": "c6b6",
+          "phase": "phase4",
+          "rank": 4,
+          "reason": "Leg2: mate execution attempt"
+        }
+      ]
+    },
+    "thoughts": "Collected leg2 proposals"
+  },
+  {
+    "type": "snapshot",
+    "note": "Applied move 7: c6b6",
+    "new_requests": [],
+    "env": {
+      "fen": "k7/7R/1K6/8/8/8/8/8 b - - 13 7",
+      "ply": 7,
+      "recons_move": "c6b6"
+    },
+    "thoughts": "Applied c6b6 (persistent)"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 7: a8b8",
+    "new_requests": [],
+    "env": {
+      "fen": "1k6/7R/1K6/8/8/8/8/8 w - - 14 8",
+      "ply": 7,
+      "opponents_move": "a8b8"
+    },
+    "thoughts": "Opponent move (persistent)"
+  },
+  {
+    "type": "snapshot",
+    "note": "decision_proposals",
+    "new_requests": [],
+    "env": {
+      "ply": 8,
+      "proposals": [
+        {
+          "move": "h7h8",
+          "phase": "phase4",
+          "rank": 4,
+          "reason": "Leg2: mate execution attempt"
+        }
+      ]
+    },
+    "thoughts": "Collected leg2 proposals"
+  },
+  {
+    "type": "snapshot",
+    "note": "Applied move 8: h7h8",
+    "new_requests": [],
+    "env": {
+      "fen": "1k5R/8/1K6/8/8/8/8/8 b - - 15 8",
+      "ply": 8,
+      "recons_move": "h7h8"
+    },
+    "thoughts": "Applied h7h8 (persistent)"
+  }
+]
