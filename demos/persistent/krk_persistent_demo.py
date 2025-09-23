@@ -158,15 +158,22 @@ def _eligible_phase(board: chess.Board) -> str:
 
 # ---- Phase-aware proposal validation ----
 
-def _prime_phase(graph: Graph, target_phase: str) -> None:
+def _prime_phase(graph: Graph, target_phase: str, min_index: int = 0) -> None:
     target_phase = target_phase.lower()
     encountered_target = False
-    for phase in PHASE_SEQUENCE:
+    for idx, phase in enumerate(PHASE_SEQUENCE):
         script_id = PHASE_SCRIPT_IDS.get(phase)
         if script_id not in graph.nodes:
             continue
         prefix = PHASE_PREFIXES.get(phase, "")
         script_node = graph.nodes[script_id]
+
+        if idx < min_index:
+            script_node.state = NodeState.CONFIRMED
+            for nid, node in graph.nodes.items():
+                if prefix and nid.startswith(prefix):
+                    node.state = NodeState.CONFIRMED
+            continue
 
         if phase == target_phase:
             encountered_target = True
@@ -383,6 +390,21 @@ def _decision_cycle(engine: ReConEngine,
         )
     return selected, ordered, ticks
 
+
+def _update_stage(env: dict, board: chess.Board) -> int:
+    stage = env.get("stage", 0)
+    try:
+        if stage < 1:
+            enemy_sq = board.king(not board.turn)
+            if enemy_sq is not None and on_rim(enemy_sq):
+                stage = 1
+            elif box_min_side(board) <= 1:
+                stage = 1
+    except Exception:
+        pass
+    env["stage"] = stage
+    return stage
+
 def play_persistent_game(initial_fen: str | None = None,
                          max_plies: int = 200,
                          tick_watchdog: int = 300,
@@ -424,11 +446,16 @@ def play_persistent_game(initial_fen: str | None = None,
     plies = 0
     rook_lost = False
     # Persistent env across plies to maintain fen history and pressure
-    env = {"board": board, "chosen_move": None, "fen_history": deque(maxlen=12), "pressure_steps": 0}
+    env = {"board": board, "chosen_move": None, "fen_history": deque(maxlen=12), "pressure_steps": 0, "stage": 0}
 
     while not board.is_game_over() and plies < max_plies:
+        stage = _update_stage(env, board)
+        min_index = 3 if stage >= 1 else 0
         phase_tag = single_phase or _eligible_phase(board)
-        _prime_phase(g, phase_tag)
+        target_index = PHASE_PRIORITY.get(phase_tag, 0)
+        if target_index < min_index:
+            phase_tag = PHASE_SEQUENCE[min_index]
+        _prime_phase(g, phase_tag, min_index=min_index)
         selected, ordered, ticks = _decision_cycle(
             engine,
             board,
@@ -609,10 +636,18 @@ def preview_decision(board: chess.Board,
     root_id = "krk_root"
     g.nodes[root_id].state = NodeState.REQUESTED
 
+    env = {"board": board, "chosen_move": None, "fen_history": deque(maxlen=12), "pressure_steps": 0, "stage": 0}
     if target_phase:
-        _prime_phase(g, target_phase)
+        _prime_phase(g, target_phase, min_index=0)
+    else:
+        stage = _update_stage(env, board)
+        min_index = 3 if stage >= 1 else 0
+        phase_tag = _eligible_phase(board)
+        phase_idx = PHASE_PRIORITY.get(phase_tag, 0)
+        if phase_idx < min_index:
+            phase_tag = PHASE_SEQUENCE[min_index]
+        _prime_phase(g, phase_tag, min_index=min_index)
 
-    env = {"board": board, "chosen_move": None, "fen_history": deque(maxlen=12), "pressure_steps": 0}
     decision, proposals, ticks = _decision_cycle(
         engine,
         board,
