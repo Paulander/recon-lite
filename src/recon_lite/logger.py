@@ -23,6 +23,8 @@ class RunLogger:
         self.events: List[Dict[str, Any]] = []
         self._graph_payload: Optional[Dict[str, Any]] = None
         self._graph_emitted = False
+        self._last_nodes: Optional[Dict[str, str]] = None
+        self._last_tick: Optional[int] = None
 
     def attach_graph(self, edges: List[Dict[str, Any]]):
         """Provide a static graph description to emit on the next snapshot."""
@@ -46,10 +48,17 @@ class RunLogger:
         # Only include engine-dependent fields if engine is provided
         if engine is not None:
             frame["tick"] = engine.tick
-            frame["nodes"] = {nid: n.state.name for nid, n in engine.g.nodes.items()}
+            nodes_snapshot = {nid: n.state.name for nid, n in engine.g.nodes.items()}
+            frame["nodes"] = nodes_snapshot
+            self._last_nodes = dict(nodes_snapshot)
+            self._last_tick = engine.tick
             if self._graph_payload and not self._graph_emitted:
                 frame["graph"] = self._graph_payload
                 self._graph_emitted = True
+        elif self._last_nodes is not None:
+            frame["nodes"] = dict(self._last_nodes)
+            if self._last_tick is not None:
+                frame["tick"] = self._last_tick
 
         if new_requests is not None:
             frame["new_requests"] = list(new_requests)

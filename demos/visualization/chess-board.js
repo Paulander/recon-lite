@@ -5,6 +5,7 @@ class ChessBoard {
     constructor() {
         this.boardElement = null;
         this.chess = null; // Will hold Chess.js instance
+        this.lastEnv = null; // Cache the last env that had position info
     }
 
     init() {
@@ -16,14 +17,42 @@ class ChessBoard {
     render(env) {
         const boardElement = this.boardElement;
 
+        const hasPositionData = (candidate) => {
+            if (!candidate) return false;
+            if (candidate.moves && candidate.moves.length > 0) return true;
+            if (typeof candidate.fen === 'string' && candidate.fen.length > 0) return true;
+            if (typeof candidate.initial_fen === 'string' && candidate.initial_fen.length > 0) return true;
+            return false;
+        };
+
+        let renderEnv = env;
+        if (hasPositionData(renderEnv)) {
+            this.lastEnv = {
+                fen: renderEnv.fen,
+                initial_fen: renderEnv.initial_fen,
+                moves: Array.isArray(renderEnv.moves) ? [...renderEnv.moves] : undefined,
+            };
+        } else if (this.lastEnv) {
+            renderEnv = {
+                fen: this.lastEnv.fen,
+                initial_fen: this.lastEnv.initial_fen,
+                moves: this.lastEnv.moves ? [...this.lastEnv.moves] : undefined,
+            };
+        }
+
+        if (!hasPositionData(renderEnv)) {
+            boardElement.innerHTML = '<div class="chess-info">No position data available</div>';
+            return;
+        }
+
         // Create chess instance
         this.chess = null;
 
-        if (env.moves && env.moves.length > 0) {
+        if (renderEnv.moves && renderEnv.moves.length > 0) {
             // Use move-based format for efficiency
-            this.chess = new Chess(env.initial_fen || env.fen || undefined);
+            this.chess = new Chess(renderEnv.initial_fen || renderEnv.fen || undefined);
             // Apply all moves to get current position (UCI parsing)
-            env.moves.forEach(moveUci => {
+            renderEnv.moves.forEach(moveUci => {
                 if (typeof moveUci !== 'string' || moveUci.length < 4) {
                     console.warn(`Invalid move string:`, moveUci);
                     return;
@@ -37,9 +66,9 @@ class ChessBoard {
                     console.warn(`Invalid UCI move for chess.js: ${moveUci}`);
                 }
             });
-        } else if (env.fen) {
+        } else if (renderEnv.fen || renderEnv.initial_fen) {
             // Fallback to FEN format
-            this.chess = new Chess(env.fen);
+            this.chess = new Chess(renderEnv.fen || renderEnv.initial_fen);
         } else {
             // No position data available
             boardElement.innerHTML = '<div class="chess-info">No position data available</div>';

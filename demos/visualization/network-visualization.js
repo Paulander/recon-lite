@@ -35,6 +35,18 @@ class NetworkVisualization {
         return out;
     }
 
+    static cloneDeep(obj) {
+        if (obj === null || obj === undefined) return obj;
+        if (typeof structuredClone === 'function') {
+            try {
+                return structuredClone(obj);
+            } catch (err) {
+                // Fall through to JSON fallback
+            }
+        }
+        return JSON.parse(JSON.stringify(obj));
+    }
+
     // Base layout definition used for computing responsive positions
     static get layoutConfig() {
         return {
@@ -299,30 +311,38 @@ class NetworkVisualization {
     }
 
     draw(frame = null, newReqSet = new Set()) {
-        const frameProvided = arguments.length > 0 && frame !== null;
-        const newReqProvided = arguments.length > 1;
+        let drawFrame = frame;
+        let requestSet = newReqSet;
+        const hasFramePayload = drawFrame && typeof drawFrame === 'object';
+        const hasRequestPayload = arguments.length > 1;
 
-        if (frameProvided) {
-            this.lastFrame = frame;
-        } else if (!frame && this.lastFrame) {
-            frame = this.lastFrame;
+        if (!hasFramePayload) {
+            drawFrame = this.lastFrame ? NetworkVisualization.cloneDeep(this.lastFrame) : { nodes: {} };
         }
 
-        if (newReqProvided) {
-            this.lastNewRequests = new Set(newReqSet);
+        if (hasRequestPayload) {
+            this.lastNewRequests = new Set(requestSet || []);
+        } else if (this.lastNewRequests) {
+            requestSet = new Set(this.lastNewRequests);
         } else {
-            newReqSet = this.lastNewRequests;
+            requestSet = new Set();
         }
 
-        if (!frame) {
-            frame = { nodes: {} };
+        const rawNodes = (drawFrame && drawFrame.nodes) ? drawFrame.nodes : {};
+        let nodesState = this.normalizeNodes(rawNodes);
+        const nodeCount = Object.keys(nodesState).length;
+
+        if (nodeCount > 1) {
+            this.lastFrame = NetworkVisualization.cloneDeep(drawFrame);
+        } else if (this.lastFrame) {
+            drawFrame = NetworkVisualization.cloneDeep(this.lastFrame);
+            nodesState = this.normalizeNodes(drawFrame.nodes || {});
         }
+
         const canvas = this.ctx.canvas;
 
         // Clear canvas
         this.ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        const nodesState = (frame && frame.nodes) ? this.normalizeNodes(frame.nodes) : {};
 
         // Determine edges to draw: JSON-provided else fallback static
         let edgesToDraw = this.externalEdges ?
@@ -384,7 +404,7 @@ class NetworkVisualization {
             const toPos = positions[dst];
             if (!fromPos || !toPos) return;
             const dstState = nodesState[dst] || 'INACTIVE';
-            const isNewReq = newReqSet.has(dst);
+            const isNewReq = requestSet.has(dst);
             const colorMap = { SUB: '#94a3b8', POR: '#1e88e5', RET: '#8e24aa', SUR: '#90a4ae' };
             this.ctx.strokeStyle = isNewReq ? '#1e88e5' : (dstState === 'TRUE' || dstState === 'CONFIRMED') ? '#2e7d32' : (colorMap[etype] || '#cbd5e1');
             this.ctx.lineWidth = isNewReq ? layout.emphasisEdgeWidth : layout.baseEdgeWidth;
@@ -498,7 +518,9 @@ class NetworkVisualization {
 
     setShowLabels(show) {
         this.showLabels = !!show;
-        this.draw();
+        if (this.lastFrame) {
+            this.draw();
+        }
     }
 
     updateTransitionSet(currentNodes) {

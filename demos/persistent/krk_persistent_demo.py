@@ -383,17 +383,27 @@ def _decision_cycle(engine: ReConEngine,
             break
 
     selected, ordered = _select_candidate(board, proposals, debug_logger)
-    if debug_logger is not None and proposals:
-        debug_logger.snapshot(
-            engine=None,
-            note="decision_proposals",
-            env={
-                "ply": plies + 1,
-                "proposals": proposals,
-            },
-            thoughts="Collected proposals",
-            new_requests=[],
-        )
+    if proposals:
+        env_payload = {
+            "ply": plies + 1,
+            "proposals": proposals,
+        }
+        if viz_logger is not None:
+            viz_logger.snapshot(
+                engine=engine,
+                note="decision_proposals",
+                env=dict(env_payload),
+                thoughts="Collected proposals",
+                new_requests=[],
+            )
+        if debug_logger is not None and debug_logger is not viz_logger:
+            debug_logger.snapshot(
+                engine=None,
+                note="decision_proposals",
+                env=env_payload,
+                thoughts="Collected proposals",
+                new_requests=[],
+            )
     return selected, ordered, ticks
 
 
@@ -503,7 +513,8 @@ def play_persistent_game(initial_fen: str | None = None,
                          seed: Optional[int] = None,
                          step_mode: bool = False,
                          opponent_policy: Optional[Callable[[chess.Board], Optional[chess.Move]]] = None,
-                         log_full_state: bool = False) -> dict:
+                         log_full_state: bool = False,
+                         disable_leg2: bool = False) -> dict:
     if split_logs:
         viz_logger = RunLogger()
         debug_logger = RunLogger()
@@ -545,7 +556,7 @@ def play_persistent_game(initial_fen: str | None = None,
     while not board.is_game_over() and plies < max_plies:
         stage = _update_stage(env, board)
         min_index = 3 if stage >= 1 else 0
-        leg2_mode = (stage >= 1 and not single_phase)
+        leg2_mode = (stage >= 1 and not single_phase and not disable_leg2)
         if leg2_mode:
             selected, ordered = _leg2_choose(board, env)
             phase_tag = selected["phase"] if selected else PHASE_SEQUENCE[min_index]
@@ -613,7 +624,7 @@ def play_persistent_game(initial_fen: str | None = None,
                         except Exception:
                             pass
                     viz_logger.snapshot(
-                        engine=engine if log_full_state else None,
+                        engine=engine,
                         note=f"FALLBACK applied: {fallback}",
                         env={"fen": board.fen(), "ply": plies + 1, "fallback": True},
                         thoughts="No acceptable proposal; applying fallback",
@@ -654,7 +665,7 @@ def play_persistent_game(initial_fen: str | None = None,
                     except Exception:
                         pass
                 viz_logger.snapshot(
-                    engine=engine if log_full_state else None,
+                    engine=engine,
                     note=f"Applied move {plies}: {move_uci}",
                     env={"fen": board.fen(), "ply": plies, "recons_move": move_uci},
                     thoughts=f"Applied {move_uci} (persistent)",
@@ -700,7 +711,7 @@ def play_persistent_game(initial_fen: str | None = None,
                             except Exception:
                                 pass
                         viz_logger.snapshot(
-                            engine=engine if log_full_state else None,
+                            engine=engine,
                             note=f"Opponent ply {plies}: {opp_uci}",
                             env={"fen": board.fen(), "ply": plies, "opponents_move": opp_uci},
                             thoughts="Opponent move (persistent)",
@@ -829,6 +840,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--fen", type=str, default="", help="Optional FEN to start from")
     parser.add_argument("--max-plies", type=int, default=200, help="Maximum plies")
+    parser.add_argument("--tick-watchdog", type=int, default=300, help="Maximum ticks per decision cycle")
     parser.add_argument("--batch", type=int, default=0, help="Run N games in batch mode")
     parser.add_argument("--combined-log", action="store_true", help="Write a single combined visualization log")
     parser.add_argument("--output-basename", type=str, default="krk_persistent", help="Base name for output logs")
@@ -837,6 +849,7 @@ def main():
     parser.add_argument("--seed", type=int, default=None, help="Seed RNG for reproducible runs")
     parser.add_argument("--step-mode", action="store_true", help="Stop after each ReCoN move without opponent response")
     parser.add_argument("--log-full-state", action="store_true", help="Include node states on every snapshot (slower, best for visualization)")
+    parser.add_argument("--disable-leg2", action="store_true", help="Force full decision cycles even in late-game leg2 situations")
     # Single graph; demo uses the shared KRK network
     args = parser.parse_args()
 
@@ -844,18 +857,7 @@ def main():
         run_batch(
             args.batch,
             max_plies=args.max_plies,
-            split_logs=not args.combined_log,
-            output_basename=args.output_basename,
-            skip_opponent=args.skip_opponent,
-            single_phase=args.single_phase,
-            seed=args.seed,
-            step_mode=args.step_mode,
-        )
-    else:
-        start_fen = args.fen if args.fen else "4k3/6K1/8/8/8/8/R7/8 w - - 0 1"
-        res = play_persistent_game(
-            initial_fen=start_fen,
-            max_plies=args.max_plies,
+            tick_watchdog=args.tick_watchdog,
             split_logs=not args.combined_log,
             output_basename=args.output_basename,
             skip_opponent=args.skip_opponent,
@@ -863,6 +865,22 @@ def main():
             seed=args.seed,
             step_mode=args.step_mode,
             log_full_state=args.log_full_state,
+            disable_leg2=args.disable_leg2,
+        )
+    else:
+        start_fen = args.fen if args.fen else "4k3/6K1/8/8/8/8/R7/8 w - - 0 1"
+        res = play_persistent_game(
+            initial_fen=start_fen,
+            max_plies=args.max_plies,
+            tick_watchdog=args.tick_watchdog,
+            split_logs=not args.combined_log,
+            output_basename=args.output_basename,
+            skip_opponent=args.skip_opponent,
+            single_phase=args.single_phase,
+            seed=args.seed,
+            step_mode=args.step_mode,
+            log_full_state=args.log_full_state,
+            disable_leg2=args.disable_leg2,
         )
         print(res)
 
