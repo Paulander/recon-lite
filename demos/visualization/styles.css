@@ -214,13 +214,15 @@
             color: #333;
         }
 
-        /* Node states */
-        .state-inactive { background: #e9ecef; color: #6c757d; }
-        .state-requested { background: #cce5ff; color: #0066cc; }
-        .state-waiting { background: #fff3cd; color: #856404; }
-        .state-true { background: #d4edda; color: #155724; }
-        .state-confirmed { background: #d1ecf1; color: #0c5460; }
-        .state-failed { background: #f8d7da; color: #721c24; }
+        /* Node states – keep in sync with NetworkVisualization.stateColors */
+        .state-inactive   { background: #cfd8dc; color: #2f3a44; }
+        .state-requested  { background: #64b5f6; color: #0f3666; }
+        .state-active     { background: #90caf9; color: #0d3e72; }
+        .state-suppressed { background: #b0bec5; color: #24303a; }
+        .state-waiting    { background: #ffd54f; color: #664200; }
+        .state-true       { background: #81c784; color: #1f5a1f; }
+        .state-confirmed  { background: #4dd0e1; color: #004c58; }
+        .state-failed     { background: #e57373; color: #5f1111; }
 
         /* Chess board styling */
         .square {
