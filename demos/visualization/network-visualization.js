@@ -32,65 +32,158 @@ class NetworkVisualization {
         return out;
     }
 
-    // Node positions for network visualization (simplified)
-    static get nodePositions() {
+    // Base layout definition used for computing responsive positions
+    static get layoutConfig() {
         return {
-            // Root and gating
-            'krk_root': { x: 400, y: 70 },
-            'wait_for_board_change': { x: 400, y: 150 },
+            baseWidth: 1280,
+            baseHeight: 900,
+            nodeRadius: 28,
+            positions: {
+                // Root and gating
+                'krk_root': { x: 640, y: 90 },
+                'wait_for_board_change': { x: 640, y: 210 },
 
-            // Phases (scripts)
-            'phase0_establish_cut': { x: 220, y: 240 },
-            'phase1_drive_to_edge': { x: 580, y: 240 },
-            'phase2_shrink_box': { x: 220, y: 330 },
-            'phase3_take_opposition': { x: 400, y: 330 },
-            'phase4_deliver_mate': { x: 580, y: 330 },
+                // Phases (scripts)
+                'phase0_establish_cut': { x: 320, y: 360 },
+                'phase1_drive_to_edge': { x: 640, y: 360 },
+                'phase2_shrink_box': { x: 320, y: 520 },
+                'phase3_take_opposition': { x: 640, y: 520 },
+                'phase4_deliver_mate': { x: 960, y: 520 },
 
-            // Move generators (actuators)
-            'choose_phase0': { x: 220, y: 290 },
-            'king_drive_moves': { x: 580, y: 290 },
-            'box_shrink_moves': { x: 220, y: 380 },
-            'opposition_moves': { x: 400, y: 380 },
-            'mate_moves': { x: 580, y: 380 },
-            'random_legal_moves': { x: 400, y: 430 },
+                // Move generators (actuators)
+                'choose_phase0': { x: 320, y: 440 },
+                'king_drive_moves': { x: 640, y: 440 },
+                'box_shrink_moves': { x: 320, y: 620 },
+                'opposition_moves': { x: 640, y: 620 },
+                'mate_moves': { x: 960, y: 620 },
+                'random_legal_moves': { x: 640, y: 720 },
 
-            // Evaluators/sensors
-            'king_at_edge': { x: 120, y: 480 },
-            'box_can_shrink': { x: 300, y: 480 },
-            'can_take_opposition': { x: 500, y: 480 },
-            'can_deliver_mate': { x: 680, y: 480 },
-            'is_stalemate': { x: 720, y: 150 },
+                // Evaluators/sensors
+                'box_can_shrink': { x: 320, y: 780 },
+                'king_at_edge': { x: 640, y: 780 },
+                'can_take_opposition': { x: 640, y: 840 },
+                'can_deliver_mate': { x: 960, y: 780 },
+                'is_stalemate': { x: 1040, y: 360 },
 
-            // New article-compliant per-phase scripts and wait gates
-            'p0_check': { x: 180, y: 200 },
-            'p0_move':  { x: 220, y: 260 },
-            'p0_wait':  { x: 260, y: 320 },
-            'wait_after_p0': { x: 220, y: 360 },
-            'cut_established': { x: 120, y: 200 },
+                // New article-compliant per-phase scripts and wait gates
+                'p0_check': { x: 240, y: 320 },
+                'p0_move':  { x: 320, y: 380 },
+                'p0_wait':  { x: 400, y: 440 },
+                'wait_after_p0': { x: 320, y: 500 },
+                'cut_established': { x: 200, y: 260 },
 
-            'p1_check': { x: 540, y: 200 },
-            'p1_move':  { x: 580, y: 260 },
-            'p1_wait':  { x: 620, y: 320 },
-            'wait_after_p1': { x: 580, y: 360 },
+                'p1_check': { x: 560, y: 320 },
+                'p1_move':  { x: 640, y: 380 },
+                'p1_wait':  { x: 720, y: 440 },
+                'wait_after_p1': { x: 640, y: 500 },
 
-            'p2_check': { x: 180, y: 290 },
-            'p2_move':  { x: 220, y: 350 },
-            'p2_wait':  { x: 260, y: 410 },
-            'wait_after_p2': { x: 220, y: 450 },
+                'p2_check': { x: 240, y: 560 },
+                'p2_move':  { x: 320, y: 600 },
+                'p2_wait':  { x: 400, y: 660 },
+                'wait_after_p2': { x: 320, y: 700 },
 
-            'p3_check': { x: 360, y: 290 },
-            'p3_move':  { x: 400, y: 350 },
-            'p3_wait':  { x: 440, y: 410 },
-            'wait_after_p3': { x: 400, y: 450 },
+                'p3_check': { x: 560, y: 560 },
+                'p3_move':  { x: 640, y: 600 },
+                'p3_wait':  { x: 720, y: 660 },
+                'wait_after_p3': { x: 640, y: 700 },
 
-            'p4_check': { x: 540, y: 290 },
-            'p4_move':  { x: 580, y: 350 },
-            'p4_wait':  { x: 620, y: 410 },
-            'wait_after_p4': { x: 580, y: 450 },
+                'p4_check': { x: 880, y: 560 },
+                'p4_move':  { x: 960, y: 600 },
+                'p4_wait':  { x: 1040, y: 660 },
+                'wait_after_p4': { x: 960, y: 700 },
 
-            // Root sentinels
-            'rook_lost': { x: 760, y: 150 }
+                // Root sentinels
+                'rook_lost': { x: 1120, y: 200 }
+            }
         };
+    }
+
+    static computeLayout(width, height) {
+        const { baseWidth, baseHeight, nodeRadius, positions } = NetworkVisualization.layoutConfig;
+        const scaleX = width / baseWidth;
+        const scaleY = height / baseHeight;
+        const scale = Math.min(scaleX, scaleY);
+        const radius = Math.max(18, Math.round(nodeRadius * scale));
+        const labelMargin = Math.max(radius * 0.55, 18 * scale);
+        const labelFontSize = Math.round(Math.max(12, 14 * scale));
+        const labelLineHeight = Math.round(labelFontSize + Math.max(2, 4 * scale));
+        const labelPaddingX = Math.max(6, 10 * scale);
+        const labelPaddingY = Math.max(4, 8 * scale);
+        const labelMaxWidth = radius * 3.4;
+        const edgeFontSize = Math.round(Math.max(9, 11 * scale));
+        const edgeLabelOffset = Math.max(6, 12 * scale);
+        const baseStrokeWidth = Math.max(1.5, 2.4 * scale);
+        const emphasisStrokeWidth = Math.max(baseStrokeWidth + 1.5, 4 * scale);
+        const baseEdgeWidth = Math.max(1.5, 2.2 * scale);
+        const emphasisEdgeWidth = Math.max(baseEdgeWidth + 1, 3.4 * scale);
+        const glowBlur = Math.max(8, 14 * scale);
+        const glowLineWidth = Math.max(1.5, 2.4 * scale);
+        const glowRadiusOffset = Math.max(4, 6 * scale);
+
+        const scaledPositions = {};
+        Object.entries(positions).forEach(([id, pos]) => {
+            scaledPositions[id] = {
+                x: pos.x * scaleX,
+                y: pos.y * scaleY
+            };
+        });
+
+        return {
+            positions: scaledPositions,
+            radius,
+            scale,
+            labelMargin,
+            labelFontSize,
+            labelLineHeight,
+            labelPaddingX,
+            labelPaddingY,
+            labelMaxWidth,
+            edgeFontSize,
+            edgeLabelOffset,
+            baseStrokeWidth,
+            emphasisStrokeWidth,
+            baseEdgeWidth,
+            emphasisEdgeWidth,
+            glowBlur,
+            glowLineWidth,
+            glowRadiusOffset
+        };
+    }
+
+    static wrapLabel(ctx, text, maxWidth) {
+        const words = text.split(' ');
+        if (words.length === 0) return [''];
+        const lines = [];
+        let current = words.shift();
+
+        words.forEach((word) => {
+            const testLine = `${current} ${word}`;
+            if (ctx.measureText(testLine).width <= maxWidth) {
+                current = testLine;
+            } else {
+                lines.push(current);
+                current = word;
+            }
+        });
+
+        if (current) {
+            lines.push(current);
+        }
+
+        return lines;
+    }
+
+    static formatLabel(nodeId) {
+        return nodeId
+            .replace(/_/g, ' ')
+            .split(' ')
+            .map((segment) => {
+                if (segment.length <= 2) {
+                    return segment.toUpperCase();
+                }
+                return segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase();
+            })
+            .join(' ');
     }
 
     // Edges between nodes
@@ -261,16 +354,20 @@ class NetworkVisualization {
             edgesToDraw = filtered;
         }
 
+        const layout = NetworkVisualization.computeLayout(canvas.width, canvas.height);
+        const positions = layout.positions;
+
         // Draw edges with labels
         edgesToDraw.forEach(([src, dst, etype]) => {
-            const fromPos = NetworkVisualization.nodePositions[src];
-            const toPos = NetworkVisualization.nodePositions[dst];
+            const fromPos = positions[src];
+            const toPos = positions[dst];
             if (!fromPos || !toPos) return;
             const dstState = nodesState[dst] || 'INACTIVE';
             const isNewReq = newReqSet.has(dst);
             const colorMap = { SUB: '#94a3b8', POR: '#1e88e5', RET: '#8e24aa', SUR: '#90a4ae' };
             this.ctx.strokeStyle = isNewReq ? '#1e88e5' : (dstState === 'TRUE' || dstState === 'CONFIRMED') ? '#2e7d32' : (colorMap[etype] || '#cbd5e1');
-            this.ctx.lineWidth = isNewReq ? 3 : 2;
+            this.ctx.lineWidth = isNewReq ? layout.emphasisEdgeWidth : layout.baseEdgeWidth;
+            this.ctx.lineCap = 'round';
             this.ctx.beginPath();
             this.ctx.moveTo(fromPos.x, fromPos.y);
             this.ctx.lineTo(toPos.x, toPos.y);
@@ -280,10 +377,10 @@ class NetworkVisualization {
             const mx = (fromPos.x + toPos.x) / 2;
             const my = (fromPos.y + toPos.y) / 2;
             this.ctx.fillStyle = '#374151';
-            this.ctx.font = '10px Segoe UI, Arial';
+            this.ctx.font = `${layout.edgeFontSize}px Segoe UI, Arial`;
             this.ctx.textAlign = 'center';
             this.ctx.textBaseline = 'bottom';
-            this.ctx.fillText(etype, mx, my - 4);
+            this.ctx.fillText(etype, mx, my - layout.edgeLabelOffset);
         });
 
         // Determine which nodes are actually present (avoid drawing unused)
@@ -293,17 +390,17 @@ class NetworkVisualization {
 
         // Draw nodes
         presentNodes.forEach((nodeId) => {
-            const pos = NetworkVisualization.nodePositions[nodeId];
+            const pos = positions[nodeId];
             if (!pos) return;
             const state = nodesState[nodeId] || 'INACTIVE';
             const fill = NetworkVisualization.stateColors[state] || NetworkVisualization.stateColors['INACTIVE'];
             const border = NetworkVisualization.stateBorderColors[state] || '#607d8b';
 
             // Node circle
-            const radius = 22;
+            const radius = layout.radius;
             this.ctx.fillStyle = fill;
             this.ctx.strokeStyle = border;
-            this.ctx.lineWidth = (state === 'REQUESTED' || state === 'WAITING' || state === 'ACTIVE') ? 4 : 2;
+            this.ctx.lineWidth = (state === 'REQUESTED' || state === 'WAITING' || state === 'ACTIVE') ? layout.emphasisStrokeWidth : layout.baseStrokeWidth;
 
             if (NetworkVisualization.sensorNodes.has(nodeId)) {
                 // Diamond for sensors
@@ -327,30 +424,52 @@ class NetworkVisualization {
             if (this.transitionSet.has(nodeId)) {
                 this.ctx.save();
                 this.ctx.shadowColor = 'rgba(255,255,255,0.8)';
-                this.ctx.shadowBlur = 12;
+                this.ctx.shadowBlur = layout.glowBlur;
                 this.ctx.beginPath();
                 if (NetworkVisualization.sensorNodes.has(nodeId)) {
-                    this.ctx.moveTo(pos.x, pos.y - (radius + 4));
-                    this.ctx.lineTo(pos.x + (radius + 4), pos.y);
-                    this.ctx.lineTo(pos.x, pos.y + (radius + 4));
-                    this.ctx.lineTo(pos.x - (radius + 4), pos.y);
+                    this.ctx.moveTo(pos.x, pos.y - (radius + layout.glowRadiusOffset));
+                    this.ctx.lineTo(pos.x + (radius + layout.glowRadiusOffset), pos.y);
+                    this.ctx.lineTo(pos.x, pos.y + (radius + layout.glowRadiusOffset));
+                    this.ctx.lineTo(pos.x - (radius + layout.glowRadiusOffset), pos.y);
                     this.ctx.closePath();
                 } else {
-                    this.ctx.arc(pos.x, pos.y, radius + 4, 0, 2 * Math.PI);
+                    this.ctx.arc(pos.x, pos.y, radius + layout.glowRadiusOffset, 0, 2 * Math.PI);
                 }
-                this.ctx.lineWidth = 2;
+                this.ctx.lineWidth = layout.glowLineWidth;
                 this.ctx.strokeStyle = '#ffffff';
                 this.ctx.stroke();
                 this.ctx.restore();
             }
 
             // Label
-            this.ctx.fillStyle = NetworkVisualization.textColorFor(fill);
-            this.ctx.font = '12px Segoe UI, Arial';
+            const label = NetworkVisualization.formatLabel(nodeId);
+            const labelFont = `${layout.labelFontSize}px Segoe UI, Arial`;
+            this.ctx.font = labelFont;
             this.ctx.textAlign = 'center';
             this.ctx.textBaseline = 'top';
-            const label = nodeId.replace(/_/g, ' ').toUpperCase();
-            this.ctx.fillText(label, pos.x, pos.y + 26);
+            const wrapped = NetworkVisualization.wrapLabel(this.ctx, label, layout.labelMaxWidth);
+            const labelHeight = wrapped.length * layout.labelLineHeight;
+            let labelTop = pos.y + radius + layout.labelMargin;
+            if (labelTop + labelHeight > canvas.height - layout.labelMargin) {
+                labelTop = pos.y - radius - layout.labelMargin - labelHeight;
+            }
+            const labelWidths = wrapped.map((line) => this.ctx.measureText(line).width);
+            const labelWidth = labelWidths.length ? Math.max(...labelWidths) : 0;
+            const bgLeft = pos.x - (labelWidth / 2) - layout.labelPaddingX;
+            const bgTop = labelTop - layout.labelPaddingY;
+            const bgWidth = labelWidth + layout.labelPaddingX * 2;
+            const bgHeight = labelHeight + layout.labelPaddingY * 2;
+
+            this.ctx.fillStyle = 'rgba(255,255,255,0.88)';
+            this.ctx.fillRect(bgLeft, bgTop, bgWidth, bgHeight);
+            this.ctx.strokeStyle = 'rgba(148, 163, 184, 0.6)';
+            this.ctx.lineWidth = Math.max(1, layout.scale);
+            this.ctx.strokeRect(bgLeft, bgTop, bgWidth, bgHeight);
+
+            this.ctx.fillStyle = '#0f172a';
+            wrapped.forEach((line, idx) => {
+                this.ctx.fillText(line, pos.x, labelTop + (idx * layout.labelLineHeight));
+            });
         });
     }
 

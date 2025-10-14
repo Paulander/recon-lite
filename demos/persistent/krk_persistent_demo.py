@@ -488,6 +488,10 @@ def _leg2_choose(board: chess.Board, env: dict) -> tuple[Optional[dict], list[di
 
     return selected, proposals
 
+"""
+Main function for playing a persistent game. This is where we start and "run" the network. 
+"""
+
 def play_persistent_game(initial_fen: str | None = None,
                          max_plies: int = 200,
                          tick_watchdog: int = 300,
@@ -514,6 +518,8 @@ def play_persistent_game(initial_fen: str | None = None,
         # create_random_krk_board returns a FEN string; wrap into a Board
         board = chess.Board(create_random_krk_board(white_to_move=True))
 
+    # Arguments done, construct the graph. Basically use the preset krk_network (moved to separate file)
+    # and use it to create an engine. Set the root node to REQUESTED. And we are ready to roll.. 
     g = build_krk_network()
     engine = ReConEngine(g)
     root_id = "krk_root"
@@ -530,6 +536,10 @@ def play_persistent_game(initial_fen: str | None = None,
     plies = 0
     rook_lost = False
     # Persistent env across plies to maintain fen history and pressure
+
+    # Note: Obviously it's a "smarter" solution to just keep the whole board inside the nodes; it's trivial
+    # However as for the case with humans, and other more complex environments - the agent/ReCoN has limited 
+    # information available to it; the internal world model doesn't always model the whole environment/underlying reality.
     env = {"board": board, "chosen_move": None, "fen_history": deque(maxlen=12), "pressure_steps": 0, "stage": 0}
 
     while not board.is_game_over() and plies < max_plies:
@@ -741,7 +751,7 @@ def play_persistent_game(initial_fen: str | None = None,
         "final_fen": board.fen(),
     }
 
-    out_dir = Path("demos/outputs")
+    out_dir = Path("demos/outputs/persistent")
     out_dir.mkdir(parents=True, exist_ok=True)
     if split_logs and debug_logger is not viz_logger:
         viz_path = out_dir / f"{output_basename}_viz.json"
