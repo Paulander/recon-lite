@@ -9,6 +9,9 @@ class NetworkVisualization {
         this.lastNodesState = {};  // for transition detection
         this.transitionSet = new Set(); // nodes that changed state this frame
         this.compact = true; // render without wrapper script nodes by default
+        this.showLabels = true;
+        this.lastFrame = null;
+        this.lastNewRequests = new Set();
     }
 
     normalizeId(id) {
@@ -296,6 +299,24 @@ class NetworkVisualization {
     }
 
     draw(frame = null, newReqSet = new Set()) {
+        const frameProvided = arguments.length > 0 && frame !== null;
+        const newReqProvided = arguments.length > 1;
+
+        if (frameProvided) {
+            this.lastFrame = frame;
+        } else if (!frame && this.lastFrame) {
+            frame = this.lastFrame;
+        }
+
+        if (newReqProvided) {
+            this.lastNewRequests = new Set(newReqSet);
+        } else {
+            newReqSet = this.lastNewRequests;
+        }
+
+        if (!frame) {
+            frame = { nodes: {} };
+        }
         const canvas = this.ctx.canvas;
 
         // Clear canvas
@@ -442,35 +463,42 @@ class NetworkVisualization {
             }
 
             // Label
-            const label = NetworkVisualization.formatLabel(nodeId);
-            const labelFont = `${layout.labelFontSize}px Segoe UI, Arial`;
-            this.ctx.font = labelFont;
-            this.ctx.textAlign = 'center';
-            this.ctx.textBaseline = 'top';
-            const wrapped = NetworkVisualization.wrapLabel(this.ctx, label, layout.labelMaxWidth);
-            const labelHeight = wrapped.length * layout.labelLineHeight;
-            let labelTop = pos.y + radius + layout.labelMargin;
-            if (labelTop + labelHeight > canvas.height - layout.labelMargin) {
-                labelTop = pos.y - radius - layout.labelMargin - labelHeight;
+            if (this.showLabels) {
+                const label = NetworkVisualization.formatLabel(nodeId);
+                const labelFont = `${layout.labelFontSize}px Segoe UI, Arial`;
+                this.ctx.font = labelFont;
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'top';
+                const wrapped = NetworkVisualization.wrapLabel(this.ctx, label, layout.labelMaxWidth);
+                const labelHeight = wrapped.length * layout.labelLineHeight;
+                let labelTop = pos.y + radius + layout.labelMargin;
+                if (labelTop + labelHeight > canvas.height - layout.labelMargin) {
+                    labelTop = pos.y - radius - layout.labelMargin - labelHeight;
+                }
+                const labelWidths = wrapped.map((line) => this.ctx.measureText(line).width);
+                const labelWidth = labelWidths.length ? Math.max(...labelWidths) : 0;
+                const bgLeft = pos.x - (labelWidth / 2) - layout.labelPaddingX;
+                const bgTop = labelTop - layout.labelPaddingY;
+                const bgWidth = labelWidth + layout.labelPaddingX * 2;
+                const bgHeight = labelHeight + layout.labelPaddingY * 2;
+
+                this.ctx.fillStyle = 'rgba(255,255,255,0.88)';
+                this.ctx.fillRect(bgLeft, bgTop, bgWidth, bgHeight);
+                this.ctx.strokeStyle = 'rgba(148, 163, 184, 0.6)';
+                this.ctx.lineWidth = Math.max(1, layout.scale);
+                this.ctx.strokeRect(bgLeft, bgTop, bgWidth, bgHeight);
+
+                this.ctx.fillStyle = '#0f172a';
+                wrapped.forEach((line, idx) => {
+                    this.ctx.fillText(line, pos.x, labelTop + (idx * layout.labelLineHeight));
+                });
             }
-            const labelWidths = wrapped.map((line) => this.ctx.measureText(line).width);
-            const labelWidth = labelWidths.length ? Math.max(...labelWidths) : 0;
-            const bgLeft = pos.x - (labelWidth / 2) - layout.labelPaddingX;
-            const bgTop = labelTop - layout.labelPaddingY;
-            const bgWidth = labelWidth + layout.labelPaddingX * 2;
-            const bgHeight = labelHeight + layout.labelPaddingY * 2;
-
-            this.ctx.fillStyle = 'rgba(255,255,255,0.88)';
-            this.ctx.fillRect(bgLeft, bgTop, bgWidth, bgHeight);
-            this.ctx.strokeStyle = 'rgba(148, 163, 184, 0.6)';
-            this.ctx.lineWidth = Math.max(1, layout.scale);
-            this.ctx.strokeRect(bgLeft, bgTop, bgWidth, bgHeight);
-
-            this.ctx.fillStyle = '#0f172a';
-            wrapped.forEach((line, idx) => {
-                this.ctx.fillText(line, pos.x, labelTop + (idx * layout.labelLineHeight));
-            });
         });
+    }
+
+    setShowLabels(show) {
+        this.showLabels = !!show;
+        this.draw();
     }
 
     updateTransitionSet(currentNodes) {
