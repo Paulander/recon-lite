@@ -49,67 +49,139 @@ class NetworkVisualization {
 
     // Base layout definition used for computing responsive positions
     static get layoutConfig() {
-        return {
-            baseWidth: 1280,
+        const profile = (typeof window !== 'undefined' && window.__RECON_PROFILE__) || 'generic';
+
+        const base = {
+            baseWidth: 1400,
             baseHeight: 900,
-            nodeRadius: 28,
-            positions: {
-                // Root and gating
-                'krk_root': { x: 640, y: 90 },
-                'wait_for_board_change': { x: 640, y: 210 },
+            nodeRadius: 28
+        };
 
-                // Phases (scripts)
-                'phase0_establish_cut': { x: 320, y: 360 },
-                'phase1_drive_to_edge': { x: 640, y: 360 },
-                'phase2_shrink_box': { x: 320, y: 520 },
-                'phase3_take_opposition': { x: 640, y: 520 },
-                'phase4_deliver_mate': { x: 960, y: 520 },
+        const genericPositions = {
+            // Root and gating
+            'krk_root': { x: 640, y: 90 },
+            'wait_for_board_change': { x: 640, y: 210 },
 
-                // Move generators (actuators)
-                'choose_phase0': { x: 320, y: 440 },
-                'king_drive_moves': { x: 640, y: 440 },
-                'box_shrink_moves': { x: 320, y: 620 },
-                'opposition_moves': { x: 640, y: 620 },
-                'mate_moves': { x: 960, y: 620 },
-                'random_legal_moves': { x: 640, y: 720 },
+            // Phases (scripts)
+            'phase0_establish_cut': { x: 320, y: 360 },
+            'phase1_drive_to_edge': { x: 640, y: 360 },
+            'phase2_shrink_box': { x: 320, y: 520 },
+            'phase3_take_opposition': { x: 640, y: 520 },
+            'phase4_deliver_mate': { x: 960, y: 520 },
 
-                // Evaluators/sensors
-                'box_can_shrink': { x: 320, y: 780 },
-                'king_at_edge': { x: 640, y: 780 },
-                'can_take_opposition': { x: 640, y: 840 },
-                'can_deliver_mate': { x: 960, y: 780 },
-                'is_stalemate': { x: 1040, y: 360 },
+            // Move generators (actuators)
+            'choose_phase0': { x: 320, y: 440 },
+            'king_drive_moves': { x: 640, y: 440 },
+            'confinement_moves': { x: 600, y: 492 },
+            'barrier_placement_moves': { x: 680, y: 492 },
+            'box_shrink_moves': { x: 320, y: 620 },
+            'opposition_moves': { x: 640, y: 620 },
+            'mate_moves': { x: 960, y: 620 },
+            'random_legal_moves': { x: 640, y: 720 },
 
-                // New article-compliant per-phase scripts and wait gates
-                'p0_check': { x: 240, y: 320 },
-                'p0_move':  { x: 320, y: 380 },
-                'p0_wait':  { x: 400, y: 440 },
-                'wait_after_p0': { x: 320, y: 500 },
-                'cut_established': { x: 200, y: 260 },
+            // Evaluators/sensors
+            'box_can_shrink': { x: 320, y: 780 },
+            'king_at_edge': { x: 640, y: 780 },
+            'king_confined': { x: 560, y: 830 },
+            'barrier_ready': { x: 720, y: 830 },
+            'can_take_opposition': { x: 640, y: 840 },
+            'can_deliver_mate': { x: 960, y: 780 },
+            'is_stalemate': { x: 1040, y: 360 },
 
-                'p1_check': { x: 560, y: 320 },
-                'p1_move':  { x: 640, y: 380 },
-                'p1_wait':  { x: 720, y: 440 },
-                'wait_after_p1': { x: 640, y: 500 },
+            // Per-phase scripts and wait gates
+            'p0_check': { x: 240, y: 320 },
+            'p0_move': { x: 320, y: 380 },
+            'p0_wait': { x: 400, y: 440 },
+            'wait_after_p0': { x: 320, y: 500 },
+            'cut_established': { x: 200, y: 260 },
 
-                'p2_check': { x: 240, y: 560 },
-                'p2_move':  { x: 320, y: 600 },
-                'p2_wait':  { x: 400, y: 660 },
-                'wait_after_p2': { x: 320, y: 700 },
+            'p1_check': { x: 560, y: 320 },
+            'p1_move': { x: 640, y: 380 },
+            'p1_wait': { x: 720, y: 440 },
+            'wait_after_p1': { x: 640, y: 500 },
 
-                'p3_check': { x: 560, y: 560 },
-                'p3_move':  { x: 640, y: 600 },
-                'p3_wait':  { x: 720, y: 660 },
-                'wait_after_p3': { x: 640, y: 700 },
+            'p2_check': { x: 240, y: 560 },
+            'p2_move': { x: 320, y: 600 },
+            'p2_wait': { x: 400, y: 660 },
+            'wait_after_p2': { x: 320, y: 700 },
 
-                'p4_check': { x: 880, y: 560 },
-                'p4_move':  { x: 960, y: 600 },
-                'p4_wait':  { x: 1040, y: 660 },
-                'wait_after_p4': { x: 960, y: 700 },
+            'p3_check': { x: 560, y: 560 },
+            'p3_move': { x: 640, y: 600 },
+            'p3_wait': { x: 720, y: 660 },
+            'wait_after_p3': { x: 640, y: 700 },
 
-                // Root sentinels
-                'rook_lost': { x: 1120, y: 200 }
-            }
+            'p4_check': { x: 880, y: 560 },
+            'p4_move': { x: 960, y: 600 },
+            'p4_wait': { x: 1040, y: 660 },
+            'wait_after_p4': { x: 960, y: 700 },
+
+            // Root sentinels / monitors
+            'rook_lost': { x: 1120, y: 200 },
+            'no_progress_watch': { x: 1120, y: 260 }
+        };
+
+        const krkOverrides = {
+            'krk_root': { x: 700, y: 90 },
+            'wait_for_board_change': { x: 700, y: 200 },
+
+            'phase0_establish_cut': { x: 300, y: 340 },
+            'phase1_drive_to_edge': { x: 700, y: 340 },
+            'phase2_shrink_box': { x: 300, y: 520 },
+            'phase3_take_opposition': { x: 700, y: 520 },
+            'phase4_deliver_mate': { x: 1080, y: 520 },
+
+            'p0_check': { x: 220, y: 300 },
+            'p0_move': { x: 300, y: 380 },
+            'p0_wait': { x: 380, y: 440 },
+            'wait_after_p0': { x: 300, y: 500 },
+            'cut_established': { x: 180, y: 250 },
+            'choose_phase0': { x: 300, y: 430 },
+
+            'p1_check': { x: 620, y: 300 },
+            'p1_move': { x: 700, y: 380 },
+            'p1_wait': { x: 780, y: 440 },
+            'wait_after_p1': { x: 700, y: 500 },
+            'king_drive_moves': { x: 700, y: 430 },
+            'confinement_moves': { x: 640, y: 430 },
+            'barrier_placement_moves': { x: 760, y: 430 },
+
+            'p2_check': { x: 220, y: 560 },
+            'p2_move': { x: 300, y: 600 },
+            'p2_wait': { x: 380, y: 660 },
+            'wait_after_p2': { x: 300, y: 700 },
+            'box_shrink_moves': { x: 300, y: 630 },
+
+            'p3_check': { x: 620, y: 560 },
+            'p3_move': { x: 700, y: 600 },
+            'p3_wait': { x: 780, y: 660 },
+            'wait_after_p3': { x: 700, y: 700 },
+            'opposition_moves': { x: 700, y: 630 },
+
+            'p4_check': { x: 1000, y: 560 },
+            'p4_move': { x: 1080, y: 600 },
+            'p4_wait': { x: 1160, y: 660 },
+            'wait_after_p4': { x: 1080, y: 700 },
+            'mate_moves': { x: 1080, y: 630 },
+
+            'box_can_shrink': { x: 300, y: 780 },
+            'king_at_edge': { x: 700, y: 780 },
+            'king_confined': { x: 620, y: 820 },
+            'barrier_ready': { x: 780, y: 820 },
+            'can_take_opposition': { x: 700, y: 860 },
+            'can_deliver_mate': { x: 1080, y: 780 },
+            'is_stalemate': { x: 1180, y: 380 },
+            'random_legal_moves': { x: 700, y: 740 },
+            'no_progress_watch': { x: 1240, y: 260 },
+            'rook_lost': { x: 1240, y: 200 }
+        };
+
+        const positions = profile === 'krk'
+            ? { ...genericPositions, ...krkOverrides }
+            : genericPositions;
+
+        return {
+            ...base,
+            positions
         };
     }
 

@@ -536,6 +536,12 @@ def play_persistent_game(initial_fen: str | None = None,
     root_id = "krk_root"
     g.nodes[root_id].state = NodeState.REQUESTED
 
+    if viz_logger is not None:
+        viz_logger.attach_graph([
+            {"src": e.src, "dst": e.dst, "type": e.ltype.name}
+            for e in engine.g.edges
+        ])
+
     if single_phase:
         phase_key = single_phase.lower()
         if phase_key not in PHASE_SEQUENCE:
