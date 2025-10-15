@@ -276,29 +276,73 @@ class NetworkVisualization {
     // Edges between nodes
     static get edges() {
         return [
-            // Root and gating
-            ['krk_root', 'wait_for_board_change'],
-            ['wait_for_board_change', 'phase0_establish_cut'],
-            ['wait_for_board_change', 'phase1_drive_to_edge'],
+            // Root hierarchy
+            ['krk_root', 'phase0_establish_cut', 'SUB'],
+            ['krk_root', 'phase1_drive_to_edge', 'SUB'],
+            ['krk_root', 'phase2_shrink_box', 'SUB'],
+            ['krk_root', 'phase3_take_opposition', 'SUB'],
+            ['krk_root', 'phase4_deliver_mate', 'SUB'],
+            ['krk_root', 'is_stalemate', 'SUB'],
+            ['krk_root', 'no_progress_watch', 'SUB'],
+            ['krk_root', 'rook_lost', 'SUB'],
 
-            // Root subs
-            ['krk_root', 'phase2_shrink_box'],
-            ['krk_root', 'phase3_take_opposition'],
-            ['krk_root', 'phase4_deliver_mate'],
+            // Phase sequencing
+            ['phase0_establish_cut', 'phase1_drive_to_edge', 'POR'],
+            ['phase1_drive_to_edge', 'phase2_shrink_box', 'POR'],
+            ['phase2_shrink_box', 'phase3_take_opposition', 'POR'],
+            ['phase3_take_opposition', 'phase4_deliver_mate', 'POR'],
 
-            // Phase internals
-            ['phase0_establish_cut', 'choose_phase0'],
-            ['phase1_drive_to_edge', 'king_drive_moves'],
-            ['phase2_shrink_box', 'box_shrink_moves'],
-            ['phase3_take_opposition', 'opposition_moves'],
-            ['phase4_deliver_mate', 'mate_moves'],
+            // Phase 0 internals
+            ['phase0_establish_cut', 'p0_check', 'SUB'],
+            ['phase0_establish_cut', 'p0_move', 'SUB'],
+            ['phase0_establish_cut', 'p0_wait', 'SUB'],
+            ['p0_check', 'p0_move', 'POR'],
+            ['p0_move', 'p0_wait', 'POR'],
+            ['p0_check', 'cut_established', 'SUB'],
+            ['p0_move', 'choose_phase0', 'SUB'],
+            ['p0_wait', 'wait_after_p0', 'SUB'],
 
-            // Evaluators
-            ['phase1_drive_to_edge', 'king_at_edge'],
-            ['phase2_shrink_box', 'box_can_shrink'],
-            ['phase3_take_opposition', 'can_take_opposition'],
-            ['phase4_deliver_mate', 'can_deliver_mate'],
-            ['phase4_deliver_mate', 'is_stalemate']
+            // Phase 1 internals
+            ['phase1_drive_to_edge', 'p1_check', 'SUB'],
+            ['phase1_drive_to_edge', 'p1_move', 'SUB'],
+            ['phase1_drive_to_edge', 'p1_wait', 'SUB'],
+            ['p1_check', 'p1_move', 'POR'],
+            ['p1_move', 'p1_wait', 'POR'],
+            ['p1_check', 'king_at_edge', 'SUB'],
+            ['p1_move', 'king_drive_moves', 'SUB'],
+            ['p1_move', 'confinement_moves', 'SUB'],
+            ['p1_move', 'barrier_placement_moves', 'SUB'],
+            ['p1_wait', 'wait_after_p1', 'SUB'],
+
+            // Phase 2 internals
+            ['phase2_shrink_box', 'p2_check', 'SUB'],
+            ['phase2_shrink_box', 'p2_move', 'SUB'],
+            ['phase2_shrink_box', 'p2_wait', 'SUB'],
+            ['p2_check', 'p2_move', 'POR'],
+            ['p2_move', 'p2_wait', 'POR'],
+            ['p2_check', 'box_can_shrink', 'SUB'],
+            ['p2_move', 'box_shrink_moves', 'SUB'],
+            ['p2_wait', 'wait_after_p2', 'SUB'],
+
+            // Phase 3 internals
+            ['phase3_take_opposition', 'p3_check', 'SUB'],
+            ['phase3_take_opposition', 'p3_move', 'SUB'],
+            ['phase3_take_opposition', 'p3_wait', 'SUB'],
+            ['p3_check', 'p3_move', 'POR'],
+            ['p3_move', 'p3_wait', 'POR'],
+            ['p3_check', 'can_take_opposition', 'SUB'],
+            ['p3_move', 'opposition_moves', 'SUB'],
+            ['p3_wait', 'wait_after_p3', 'SUB'],
+
+            // Phase 4 internals
+            ['phase4_deliver_mate', 'p4_check', 'SUB'],
+            ['phase4_deliver_mate', 'p4_move', 'SUB'],
+            ['phase4_deliver_mate', 'p4_wait', 'SUB'],
+            ['p4_check', 'p4_move', 'POR'],
+            ['p4_move', 'p4_wait', 'POR'],
+            ['p4_check', 'can_deliver_mate', 'SUB'],
+            ['p4_move', 'mate_moves', 'SUB'],
+            ['p4_wait', 'wait_after_p4', 'SUB']
         ];
     }
 
@@ -307,9 +351,11 @@ class NetworkVisualization {
         return new Set([
             'wait_for_board_change',
             'king_at_edge', 'box_can_shrink', 'can_take_opposition', 'can_deliver_mate', 'is_stalemate',
+            'king_confined', 'barrier_ready',
             'cut_established',
             'wait_after_p0','wait_after_p1','wait_after_p2','wait_after_p3','wait_after_p4',
-            'rook_lost'
+            'rook_lost',
+            'no_progress_watch'
         ]);
     }
 

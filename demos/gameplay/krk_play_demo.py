@@ -242,7 +242,7 @@ def play_single_game(initial_fen: str | None = None, max_plies: int = 200, *, lo
     }
 
     # Save a compact log that your visualizer can read
-    logger.to_json("demos/krk_visualization_data.json")
+    logger.to_json("demos/outputs/gameplay/krk_visualization_data.json")
     print("\n💾 Log saved to demos/krk_visualization_data.json")
     print(f"🏁 Result: mate={mate}, stalls={stalls}, rook_lost={rook_lost}, plies={ply}")
     return result
