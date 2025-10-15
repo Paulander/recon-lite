@@ -154,3 +154,44 @@ class Graph:
                     raise ValueError(
                         f"Article violation: script node '{nid}' has no SUB children."
                     )
+
+    # --- Helper utilities for policy configuration ---
+    def set_por_policy(self, nid: str, *, policy: str, k: Optional[int] = None, theta: Optional[float] = None) -> None:
+        """
+        Configure predecessor gating policy for the given node (POR incoming edges):
+          policy ∈ {"and","or","xor","k_of_n","weighted"}
+          k      : integer threshold for k_of_n
+          theta  : float threshold for weighted (sum of satisfied predecessor weights)
+        """
+        if nid not in self.nodes:
+            raise KeyError(f"Unknown node id: {nid}")
+        node = self.nodes[nid]
+        node.meta["por_policy"] = str(policy).lower()
+        if k is not None:
+            node.meta["por_k"] = int(k)
+        if theta is not None:
+            node.meta["por_theta"] = float(theta)
+
+    def set_confirm_policy(self, nid: str, *, policy: str, k: Optional[int] = None) -> None:
+        """
+        Configure confirmation aggregation across root child chains for a parent script:
+          policy ∈ {"and","or","xor","k_of_n"}
+          k      : integer threshold for k_of_n
+        """
+        if nid not in self.nodes:
+            raise KeyError(f"Unknown node id: {nid}")
+        node = self.nodes[nid]
+        node.meta["confirm_policy"] = str(policy).lower()
+        if k is not None:
+            node.meta["confirm_k"] = int(k)
+
+    def set_por_weight(self, src: str, dst: str, weight: float) -> None:
+        """Set the weight on a POR edge (src -> dst). Creates no edges; raises if edge missing."""
+        found = False
+        for e in self.edges:
+            if e.src == src and e.dst == dst and e.ltype == LinkType.POR:
+                e.w = np.array([float(weight)])
+                found = True
+                break
+        if not found:
+            raise KeyError(f"No POR edge {src} -> {dst} to set weight on")
