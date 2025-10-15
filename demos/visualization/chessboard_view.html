@@ -112,6 +112,11 @@
         <button class="control-btn" id="next-move-btn" disabled>
             Next Move <i class="fas fa-forward"></i>
         </button>
+        <div class="jump-container">
+            <label for="step-input">Step</label>
+            <input id="step-input" class="jump-input" type="number" min="1" value="1">
+            <button class="control-btn jump-btn" id="jump-btn">Go</button>
+        </div>
         <div class="step-counter" id="step-counter">Step 0 / 0</div>
     </div>
 
@@ -129,6 +134,8 @@
                 this.playInterval = null;
                 this.speedFactor = 1;
                 this.moveSteps = []; // indices where a move was applied/logged
+                this.stepInput = null;
+                this.jumpButton = null;
 
                 // Initialize modules
                 this.dataManager = new DataManager();
@@ -175,6 +182,11 @@
                 const prevMoveBtn = document.getElementById('prev-move-btn');
                 const nextMoveBtn = document.getElementById('next-move-btn');
                 const labelToggle = document.getElementById('toggle-labels');
+                const stepInput = document.getElementById('step-input');
+                const jumpBtn = document.getElementById('jump-btn');
+
+                this.stepInput = stepInput;
+                this.jumpButton = jumpBtn;
 
                 prevBtn.addEventListener('click', () => {
                     if (this.currentStep > 0) {
@@ -215,6 +227,29 @@
                     });
                 }
 
+                const handleJump = () => {
+                    if (!this.stepInput) return;
+                    const target = parseInt(this.stepInput.value, 10);
+                    if (Number.isNaN(target)) return;
+                    this.jumpToStep(target - 1);
+                };
+
+                if (stepInput) {
+                    stepInput.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleJump();
+                        }
+                    });
+                }
+
+                if (jumpBtn) {
+                    jumpBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        handleJump();
+                    });
+                }
+
                 prevMoveBtn.addEventListener('click', () => {
                     if (!this.moveSteps.length) return;
                     // find the previous move index strictly less than currentStep
@@ -236,6 +271,15 @@
                 });
 
                 this.updateControls();
+            }
+
+            jumpToStep(stepIndex) {
+                const data = this.dataManager.getData();
+                if (!data || !data.length) return;
+                const clamped = Math.max(0, Math.min(stepIndex, data.length - 1));
+                this.pausePlayback();
+                this.currentStep = clamped;
+                this.updateVisualization(this.currentStep);
             }
 
             // Start playback
@@ -281,6 +325,21 @@
 
                 const total = data.length;
                 stepCounter.textContent = `Step ${this.currentStep + 1} / ${total}`;
+
+                if (this.stepInput) {
+                    if (total > 0) {
+                        this.stepInput.disabled = false;
+                        this.stepInput.min = 1;
+                        this.stepInput.max = total;
+                        this.stepInput.value = this.currentStep + 1;
+                    } else {
+                        this.stepInput.disabled = true;
+                        this.stepInput.value = '';
+                    }
+                }
+                if (this.jumpButton) {
+                    this.jumpButton.disabled = total === 0;
+                }
             }
 
             // Update visualization for given step

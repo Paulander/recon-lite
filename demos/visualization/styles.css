@@ -211,6 +211,30 @@
             color: #333;
         }
 
+        .jump-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85em;
+            color: #333;
+        }
+
+        .jump-container label {
+            font-weight: 600;
+        }
+
+        .jump-input {
+            width: 80px;
+            padding: 6px 8px;
+            border: 1px solid #d0d5dd;
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+
+        .jump-btn {
+            padding: 8px 14px;
+        }
+
         .label-toggle {
             display: inline-flex;
             align-items: center;
@@ -232,7 +256,7 @@
         .state-suppressed { background: #b0bec5; color: #24303a; }
         .state-waiting    { background: #ffd54f; color: #664200; }
         .state-true       { background: #81c784; color: #1f5a1f; }
-        .state-confirmed  { background: #4dd0e1; color: #004c58; }
+        .state-confirmed  { background: #34d399; color: #064e3b; }
         .state-failed     { background: #e57373; color: #5f1111; }
 
         /* Chess board styling */
