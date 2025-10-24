@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mock V2 Topology Viewer</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div id="viewer"></div>
+      <aside id="sidebar">
+        <header>
+          <h1>Mock V2 Viewer</h1>
+          <p id="statusMessage">Loading demo dataset…</p>
+        </header>
+        <section class="control-block">
+          <label class="file-input">
+            <span>Load dataset (.json)</span>
+            <input id="fileInput" type="file" accept=".json" />
+          </label>
+          <div class="button-row">
+            <button id="playPause">Play</button>
+            <button id="resetView">Reset View</button>
+          </div>
+          <label class="slider-label">
+            <span id="tickLabel">Tick 0</span>
+            <input id="timelineSlider" type="range" min="0" max="0" value="0" step="1" />
+          </label>
+          <label class="checkbox">
+            <input id="toggleLabels" type="checkbox" />
+            <span>Show labels (slower on 1k+ nodes)</span>
+          </label>
+          <button id="toggleAdvanced" class="ghost">Advanced View</button>
+        </section>
+        <section id="frameMeta" class="frame-meta">
+          <h2>Frame Details</h2>
+          <div class="meta-group">
+            <h3>Note</h3>
+            <p id="frameNote">—</p>
+          </div>
+          <div class="meta-group advancedOnly">
+            <h3>Thoughts</h3>
+            <p id="frameThoughts">—</p>
+          </div>
+          <div class="meta-group">
+            <h3>Environment</h3>
+            <div class="env-grid">
+              <div>
+                <span class="env-label">Style</span>
+                <span id="envStyle" class="env-value">—</span>
+              </div>
+              <div>
+                <span class="env-label">Risk</span>
+                <span id="envRisk" class="env-value">—</span>
+              </div>
+            </div>
+            <div class="advancedOnly">
+              <h4>Phase Weights</h4>
+              <ul id="phaseWeights"></ul>
+            </div>
+          </div>
+          <div class="meta-group advancedOnly">
+            <h3>State Counts</h3>
+            <ul id="stateCounts"></ul>
+          </div>
+        </section>
+      </aside>
+    </div>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

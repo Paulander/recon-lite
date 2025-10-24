@@ -1,0 +1,934 @@
+{
+  "nodes": [
+    {
+      "id": "script.root",
+      "label": "ROOT",
+      "type": "SCRIPT",
+      "pos": [
+        -30.077,
+        0.0,
+        9.938
+      ]
+    },
+    {
+      "id": "script.phase_router",
+      "label": "PHASE_ROUTER",
+      "type": "SCRIPT",
+      "pos": [
+        -18.746,
+        0.0,
+        -25.534
+      ]
+    },
+    {
+      "id": "script.expert_switch",
+      "label": "EXPERT_SWITCH",
+      "type": "SCRIPT",
+      "pos": [
+        18.491,
+        0.0,
+        -25.719
+      ]
+    },
+    {
+      "id": "script.arbiter",
+      "label": "ARBITER",
+      "type": "SCRIPT",
+      "pos": [
+        30.174,
+        0.0,
+        9.639
+      ]
+    },
+    {
+      "id": "script.wait_loop",
+      "label": "WAIT_LOOP",
+      "type": "SCRIPT",
+      "pos": [
+        0.157,
+        0.0,
+        31.676
+      ]
+    },
+    {
+      "id": "script.phase.opening",
+      "label": "PHASE_OPENING",
+      "type": "SCRIPT",
+      "pos": [
+        -8.436,
+        12.0,
+        47.128
+      ]
+    },
+    {
+      "id": "script.phase.middlegame",
+      "label": "PHASE_MIDDLEGAME",
+      "type": "SCRIPT",
+      "pos": [
+        -47.128,
+        12.0,
+        -8.436
+      ]
+    },
+    {
+      "id": "script.phase.endgame",
+      "label": "PHASE_ENDGAME",
+      "type": "SCRIPT",
+      "pos": [
+        8.436,
+        12.0,
+        -47.128
+      ]
+    },
+    {
+      "id": "script.phase.critical",
+      "label": "PHASE_CRITICAL",
+      "type": "SCRIPT",
+      "pos": [
+        47.128,
+        12.0,
+        8.436
+      ]
+    },
+    {
+      "id": "script.expert.book.01",
+      "label": "BOOK_EXPERT_1",
+      "type": "SCRIPT",
+      "pos": [
+        47.146,
+        24.0,
+        -50.65
+      ]
+    },
+    {
+      "id": "script.expert.tactics.01",
+      "label": "TACTICS_EXPERT_1",
+      "type": "SCRIPT",
+      "pos": [
+        67.437,
+        24.0,
+        15.505
+      ]
+    },
+    {
+      "id": "script.expert.positional.01",
+      "label": "POSITIONAL_EXPERT_1",
+      "type": "SCRIPT",
+      "pos": [
+        20.291,
+        24.0,
+        66.155
+      ]
+    },
+    {
+      "id": "script.expert.search_lite.01",
+      "label": "SEARCH_LITE_EXPERT_1",
+      "type": "SCRIPT",
+      "pos": [
+        -47.146,
+        24.0,
+        50.65
+      ]
+    },
+    {
+      "id": "script.expert.endgame_tb.01",
+      "label": "ENDGAME_TB_EXPERT_1",
+      "type": "SCRIPT",
+      "pos": [
+        -67.437,
+        24.0,
+        -15.505
+      ]
+    },
+    {
+      "id": "script.expert.mixture.01",
+      "label": "MIXTURE_EXPERT_1",
+      "type": "SCRIPT",
+      "pos": [
+        -20.291,
+        24.0,
+        -66.155
+      ]
+    },
+    {
+      "id": "terminal.watcher.repetition",
+      "label": "WATCH_REPETITION",
+      "type": "TERMINAL",
+      "pos": [
+        4.96,
+        36.0,
+        -89.539
+      ]
+    },
+    {
+      "id": "terminal.watcher.fifty_move",
+      "label": "WATCH_FIFTY_MOVE",
+      "type": "TERMINAL",
+      "pos": [
+        66.821,
+        36.0,
+        -59.806
+      ]
+    },
+    {
+      "id": "terminal.watcher.risk_budget",
+      "label": "WATCH_RISK_BUDGET",
+      "type": "TERMINAL",
+      "pos": [
+        89.539,
+        36.0,
+        4.96
+      ]
+    },
+    {
+      "id": "terminal.watcher.plan_commit",
+      "label": "WATCH_PLAN_COMMIT",
+      "type": "TERMINAL",
+      "pos": [
+        59.806,
+        36.0,
+        66.821
+      ]
+    },
+    {
+      "id": "terminal.watcher.style_profile",
+      "label": "WATCH_STYLE_PROFILE",
+      "type": "TERMINAL",
+      "pos": [
+        -4.96,
+        36.0,
+        89.539
+      ]
+    },
+    {
+      "id": "terminal.safety.safety_guard",
+      "label": "SAFETY_GUARD",
+      "type": "TERMINAL",
+      "pos": [
+        -66.821,
+        36.0,
+        59.806
+      ]
+    },
+    {
+      "id": "terminal.safety.sanity_check",
+      "label": "SANITY_CHECK",
+      "type": "TERMINAL",
+      "pos": [
+        -89.539,
+        36.0,
+        -4.96
+      ]
+    },
+    {
+      "id": "terminal.safety.failsafe",
+      "label": "FAILSAFE",
+      "type": "TERMINAL",
+      "pos": [
+        -59.806,
+        36.0,
+        -66.821
+      ]
+    },
+    {
+      "id": "terminal.endgame.zugzwang",
+      "label": "ENDGAME_ZUGZWANG",
+      "type": "TERMINAL",
+      "pos": [
+        56.557,
+        48.0,
+        88.7
+      ]
+    },
+    {
+      "id": "terminal.endgame.opposition",
+      "label": "ENDGAME_OPPOSITION",
+      "type": "TERMINAL",
+      "pos": [
+        -48.538,
+        48.0,
+        93.33
+      ]
+    },
+    {
+      "id": "terminal.endgame.triangulation",
+      "label": "ENDGAME_TRIANGULATION",
+      "type": "TERMINAL",
+      "pos": [
+        -105.095,
+        48.0,
+        4.63
+      ]
+    },
+    {
+      "id": "terminal.endgame.bridge",
+      "label": "ENDGAME_BRIDGE",
+      "type": "TERMINAL",
+      "pos": [
+        -56.557,
+        48.0,
+        -88.7
+      ]
+    },
+    {
+      "id": "terminal.endgame.lucena",
+      "label": "ENDGAME_LUCENA",
+      "type": "TERMINAL",
+      "pos": [
+        48.538,
+        48.0,
+        -93.33
+      ]
+    },
+    {
+      "id": "terminal.endgame.philidor",
+      "label": "ENDGAME_PHILIDOR",
+      "type": "TERMINAL",
+      "pos": [
+        105.095,
+        48.0,
+        -4.63
+      ]
+    },
+    {
+      "id": "terminal.tactic.fork.001",
+      "label": "FORK_001",
+      "type": "TERMINAL",
+      "pos": [
+        -120.692,
+        60.0,
+        63.792
+      ]
+    },
+    {
+      "id": "terminal.tactic.fork.002",
+      "label": "FORK_002",
+      "type": "TERMINAL",
+      "pos": [
+        -132.452,
+        60.0,
+        33.055
+      ]
+    },
+    {
+      "id": "terminal.tactic.pin.001",
+      "label": "PIN_001",
+      "type": "TERMINAL",
+      "pos": [
+        -136.514,
+        60.0,
+        0.397
+      ]
+    },
+    {
+      "id": "terminal.tactic.pin.002",
+      "label": "PIN_002",
+      "type": "TERMINAL",
+      "pos": [
+        -132.642,
+        60.0,
+        -32.285
+      ]
+    },
+    {
+      "id": "terminal.tactic.skewer.001",
+      "label": "SKEWER_001",
+      "type": "TERMINAL",
+      "pos": [
+        -121.061,
+        60.0,
+        -63.09
+      ]
+    },
+    {
+      "id": "terminal.tactic.skewer.002",
+      "label": "SKEWER_002",
+      "type": "TERMINAL",
+      "pos": [
+        -102.445,
+        60.0,
+        -90.228
+      ]
+    },
+    {
+      "id": "terminal.tactic.xray.001",
+      "label": "XRAY_001",
+      "type": "TERMINAL",
+      "pos": [
+        -77.875,
+        60.0,
+        -112.123
+      ]
+    },
+    {
+      "id": "terminal.tactic.xray.002",
+      "label": "XRAY_002",
+      "type": "TERMINAL",
+      "pos": [
+        -48.779,
+        60.0,
+        -127.502
+      ]
+    },
+    {
+      "id": "terminal.tactic.overload.001",
+      "label": "OVERLOAD_001",
+      "type": "TERMINAL",
+      "pos": [
+        -16.849,
+        60.0,
+        -135.47
+      ]
+    },
+    {
+      "id": "terminal.tactic.overload.002",
+      "label": "OVERLOAD_002",
+      "type": "TERMINAL",
+      "pos": [
+        16.061,
+        60.0,
+        -135.566
+      ]
+    },
+    {
+      "id": "terminal.tactic.deflection.001",
+      "label": "DEFLECTION_001",
+      "type": "TERMINAL",
+      "pos": [
+        48.037,
+        60.0,
+        -127.783
+      ]
+    },
+    {
+      "id": "terminal.tactic.deflection.002",
+      "label": "DEFLECTION_002",
+      "type": "TERMINAL",
+      "pos": [
+        77.222,
+        60.0,
+        -112.574
+      ]
+    },
+    {
+      "id": "terminal.tactic.discovered.001",
+      "label": "DISCOVERED_001",
+      "type": "TERMINAL",
+      "pos": [
+        101.919,
+        60.0,
+        -90.822
+      ]
+    },
+    {
+      "id": "terminal.tactic.discovered.002",
+      "label": "DISCOVERED_002",
+      "type": "TERMINAL",
+      "pos": [
+        120.692,
+        60.0,
+        -63.792
+      ]
+    },
+    {
+      "id": "terminal.tactic.zwischenzug.001",
+      "label": "ZWISCHENZUG_001",
+      "type": "TERMINAL",
+      "pos": [
+        132.452,
+        60.0,
+        -33.055
+      ]
+    },
+    {
+      "id": "terminal.tactic.zwischenzug.002",
+      "label": "ZWISCHENZUG_002",
+      "type": "TERMINAL",
+      "pos": [
+        136.514,
+        60.0,
+        -0.397
+      ]
+    },
+    {
+      "id": "terminal.tactic.trapped_piece.001",
+      "label": "TRAPPED_PIECE_001",
+      "type": "TERMINAL",
+      "pos": [
+        132.642,
+        60.0,
+        32.285
+      ]
+    },
+    {
+      "id": "terminal.tactic.trapped_piece.002",
+      "label": "TRAPPED_PIECE_002",
+      "type": "TERMINAL",
+      "pos": [
+        121.061,
+        60.0,
+        63.09
+      ]
+    },
+    {
+      "id": "terminal.tactic.back_rank.001",
+      "label": "BACK_RANK_001",
+      "type": "TERMINAL",
+      "pos": [
+        102.445,
+        60.0,
+        90.228
+      ]
+    },
+    {
+      "id": "terminal.tactic.back_rank.002",
+      "label": "BACK_RANK_002",
+      "type": "TERMINAL",
+      "pos": [
+        77.875,
+        60.0,
+        112.123
+      ]
+    },
+    {
+      "id": "terminal.tactic.smothered.001",
+      "label": "SMOTHERED_001",
+      "type": "TERMINAL",
+      "pos": [
+        48.779,
+        60.0,
+        127.502
+      ]
+    },
+    {
+      "id": "terminal.tactic.smothered.002",
+      "label": "SMOTHERED_002",
+      "type": "TERMINAL",
+      "pos": [
+        16.849,
+        60.0,
+        135.47
+      ]
+    },
+    {
+      "id": "terminal.tactic.double_attack.001",
+      "label": "DOUBLE_ATTACK_001",
+      "type": "TERMINAL",
+      "pos": [
+        -16.061,
+        60.0,
+        135.566
+      ]
+    },
+    {
+      "id": "terminal.tactic.double_attack.002",
+      "label": "DOUBLE_ATTACK_002",
+      "type": "TERMINAL",
+      "pos": [
+        -48.037,
+        60.0,
+        127.783
+      ]
+    },
+    {
+      "id": "terminal.tactic.attraction.001",
+      "label": "ATTRACTION_001",
+      "type": "TERMINAL",
+      "pos": [
+        -77.222,
+        60.0,
+        112.574
+      ]
+    },
+    {
+      "id": "terminal.tactic.attraction.002",
+      "label": "ATTRACTION_002",
+      "type": "TERMINAL",
+      "pos": [
+        -101.919,
+        60.0,
+        90.822
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "script.root",
+      "to": "script.phase_router",
+      "type": "sub"
+    },
+    {
+      "from": "script.phase_router",
+      "to": "script.expert_switch",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert_switch",
+      "to": "script.arbiter",
+      "type": "sub"
+    },
+    {
+      "from": "script.arbiter",
+      "to": "script.wait_loop",
+      "type": "sub"
+    },
+    {
+      "from": "script.phase_router",
+      "to": "script.phase.opening",
+      "type": "por"
+    },
+    {
+      "from": "script.phase.opening",
+      "to": "script.expert_switch",
+      "type": "sub",
+      "label": "handoff"
+    },
+    {
+      "from": "script.phase_router",
+      "to": "script.phase.middlegame",
+      "type": "por"
+    },
+    {
+      "from": "script.phase.middlegame",
+      "to": "script.expert_switch",
+      "type": "sub",
+      "label": "handoff"
+    },
+    {
+      "from": "script.phase_router",
+      "to": "script.phase.endgame",
+      "type": "por"
+    },
+    {
+      "from": "script.phase.endgame",
+      "to": "script.expert_switch",
+      "type": "sub",
+      "label": "handoff"
+    },
+    {
+      "from": "script.phase_router",
+      "to": "script.phase.critical",
+      "type": "por"
+    },
+    {
+      "from": "script.phase.critical",
+      "to": "script.expert_switch",
+      "type": "sub",
+      "label": "handoff"
+    },
+    {
+      "from": "script.expert_switch",
+      "to": "script.expert.book.01",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.book.01",
+      "to": "script.arbiter",
+      "type": "sub",
+      "label": "proposal"
+    },
+    {
+      "from": "script.expert_switch",
+      "to": "script.expert.tactics.01",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.tactics.01",
+      "to": "script.arbiter",
+      "type": "sub",
+      "label": "proposal"
+    },
+    {
+      "from": "script.expert_switch",
+      "to": "script.expert.positional.01",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.positional.01",
+      "to": "script.arbiter",
+      "type": "sub",
+      "label": "proposal"
+    },
+    {
+      "from": "script.expert_switch",
+      "to": "script.expert.search_lite.01",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.search_lite.01",
+      "to": "script.arbiter",
+      "type": "sub",
+      "label": "proposal"
+    },
+    {
+      "from": "script.expert_switch",
+      "to": "script.expert.endgame_tb.01",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.endgame_tb.01",
+      "to": "script.arbiter",
+      "type": "sub",
+      "label": "proposal"
+    },
+    {
+      "from": "script.expert_switch",
+      "to": "script.expert.mixture.01",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.mixture.01",
+      "to": "script.arbiter",
+      "type": "sub",
+      "label": "proposal"
+    },
+    {
+      "from": "script.wait_loop",
+      "to": "terminal.watcher.repetition",
+      "type": "sub"
+    },
+    {
+      "from": "terminal.watcher.repetition",
+      "to": "script.phase_router",
+      "type": "por",
+      "label": "feedback"
+    },
+    {
+      "from": "script.wait_loop",
+      "to": "terminal.watcher.fifty_move",
+      "type": "sub"
+    },
+    {
+      "from": "terminal.watcher.fifty_move",
+      "to": "script.phase_router",
+      "type": "por",
+      "label": "feedback"
+    },
+    {
+      "from": "script.wait_loop",
+      "to": "terminal.watcher.risk_budget",
+      "type": "sub"
+    },
+    {
+      "from": "terminal.watcher.risk_budget",
+      "to": "script.phase_router",
+      "type": "por",
+      "label": "feedback"
+    },
+    {
+      "from": "script.wait_loop",
+      "to": "terminal.watcher.plan_commit",
+      "type": "sub"
+    },
+    {
+      "from": "terminal.watcher.plan_commit",
+      "to": "script.phase_router",
+      "type": "por",
+      "label": "feedback"
+    },
+    {
+      "from": "script.wait_loop",
+      "to": "terminal.watcher.style_profile",
+      "type": "sub"
+    },
+    {
+      "from": "terminal.watcher.style_profile",
+      "to": "script.phase_router",
+      "type": "por",
+      "label": "feedback"
+    },
+    {
+      "from": "script.arbiter",
+      "to": "terminal.safety.safety_guard",
+      "type": "sub"
+    },
+    {
+      "from": "terminal.safety.safety_guard",
+      "to": "script.wait_loop",
+      "type": "sub",
+      "label": "reset"
+    },
+    {
+      "from": "script.arbiter",
+      "to": "terminal.safety.sanity_check",
+      "type": "sub"
+    },
+    {
+      "from": "terminal.safety.sanity_check",
+      "to": "script.wait_loop",
+      "type": "sub",
+      "label": "reset"
+    },
+    {
+      "from": "script.arbiter",
+      "to": "terminal.safety.failsafe",
+      "type": "sub"
+    },
+    {
+      "from": "terminal.safety.failsafe",
+      "to": "script.wait_loop",
+      "type": "sub",
+      "label": "reset"
+    },
+    {
+      "from": "script.expert.mixture.01",
+      "to": "terminal.endgame.zugzwang",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.book.01",
+      "to": "terminal.endgame.opposition",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.book.01",
+      "to": "terminal.endgame.triangulation",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.mixture.01",
+      "to": "terminal.endgame.bridge",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.positional.01",
+      "to": "terminal.endgame.lucena",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.tactics.01",
+      "to": "terminal.endgame.philidor",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.tactics.01",
+      "to": "terminal.tactic.fork.001",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.tactics.01",
+      "to": "terminal.tactic.fork.002",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.mixture.01",
+      "to": "terminal.tactic.pin.001",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.book.01",
+      "to": "terminal.tactic.pin.002",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.mixture.01",
+      "to": "terminal.tactic.skewer.001",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.mixture.01",
+      "to": "terminal.tactic.skewer.002",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.endgame_tb.01",
+      "to": "terminal.tactic.xray.001",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.book.01",
+      "to": "terminal.tactic.xray.002",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.endgame_tb.01",
+      "to": "terminal.tactic.overload.001",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.search_lite.01",
+      "to": "terminal.tactic.overload.002",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.book.01",
+      "to": "terminal.tactic.deflection.001",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.book.01",
+      "to": "terminal.tactic.deflection.002",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.book.01",
+      "to": "terminal.tactic.discovered.001",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.tactics.01",
+      "to": "terminal.tactic.discovered.002",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.tactics.01",
+      "to": "terminal.tactic.zwischenzug.001",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.endgame_tb.01",
+      "to": "terminal.tactic.zwischenzug.002",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.endgame_tb.01",
+      "to": "terminal.tactic.trapped_piece.001",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.book.01",
+      "to": "terminal.tactic.trapped_piece.002",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.endgame_tb.01",
+      "to": "terminal.tactic.back_rank.001",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.tactics.01",
+      "to": "terminal.tactic.back_rank.002",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.mixture.01",
+      "to": "terminal.tactic.smothered.001",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.mixture.01",
+      "to": "terminal.tactic.smothered.002",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.mixture.01",
+      "to": "terminal.tactic.double_attack.001",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.endgame_tb.01",
+      "to": "terminal.tactic.double_attack.002",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.search_lite.01",
+      "to": "terminal.tactic.attraction.001",
+      "type": "sub"
+    },
+    {
+      "from": "script.expert.tactics.01",
+      "to": "terminal.tactic.attraction.002",
+      "type": "sub"
+    }
+  ]
+}

@@ -1,0 +1,2323 @@
+{
+  "topology": {
+    "nodes": [
+      {
+        "id": "script.root",
+        "label": "ROOT",
+        "type": "SCRIPT",
+        "pos": [
+          -30.077,
+          0.0,
+          9.938
+        ]
+      },
+      {
+        "id": "script.phase_router",
+        "label": "PHASE_ROUTER",
+        "type": "SCRIPT",
+        "pos": [
+          -18.746,
+          0.0,
+          -25.534
+        ]
+      },
+      {
+        "id": "script.expert_switch",
+        "label": "EXPERT_SWITCH",
+        "type": "SCRIPT",
+        "pos": [
+          18.491,
+          0.0,
+          -25.719
+        ]
+      },
+      {
+        "id": "script.arbiter",
+        "label": "ARBITER",
+        "type": "SCRIPT",
+        "pos": [
+          30.174,
+          0.0,
+          9.639
+        ]
+      },
+      {
+        "id": "script.wait_loop",
+        "label": "WAIT_LOOP",
+        "type": "SCRIPT",
+        "pos": [
+          0.157,
+          0.0,
+          31.676
+        ]
+      },
+      {
+        "id": "script.phase.opening",
+        "label": "PHASE_OPENING",
+        "type": "SCRIPT",
+        "pos": [
+          -8.436,
+          12.0,
+          47.128
+        ]
+      },
+      {
+        "id": "script.phase.middlegame",
+        "label": "PHASE_MIDDLEGAME",
+        "type": "SCRIPT",
+        "pos": [
+          -47.128,
+          12.0,
+          -8.436
+        ]
+      },
+      {
+        "id": "script.phase.endgame",
+        "label": "PHASE_ENDGAME",
+        "type": "SCRIPT",
+        "pos": [
+          8.436,
+          12.0,
+          -47.128
+        ]
+      },
+      {
+        "id": "script.phase.critical",
+        "label": "PHASE_CRITICAL",
+        "type": "SCRIPT",
+        "pos": [
+          47.128,
+          12.0,
+          8.436
+        ]
+      },
+      {
+        "id": "script.expert.book.01",
+        "label": "BOOK_EXPERT_1",
+        "type": "SCRIPT",
+        "pos": [
+          47.146,
+          24.0,
+          -50.65
+        ]
+      },
+      {
+        "id": "script.expert.tactics.01",
+        "label": "TACTICS_EXPERT_1",
+        "type": "SCRIPT",
+        "pos": [
+          67.437,
+          24.0,
+          15.505
+        ]
+      },
+      {
+        "id": "script.expert.positional.01",
+        "label": "POSITIONAL_EXPERT_1",
+        "type": "SCRIPT",
+        "pos": [
+          20.291,
+          24.0,
+          66.155
+        ]
+      },
+      {
+        "id": "script.expert.search_lite.01",
+        "label": "SEARCH_LITE_EXPERT_1",
+        "type": "SCRIPT",
+        "pos": [
+          -47.146,
+          24.0,
+          50.65
+        ]
+      },
+      {
+        "id": "script.expert.endgame_tb.01",
+        "label": "ENDGAME_TB_EXPERT_1",
+        "type": "SCRIPT",
+        "pos": [
+          -67.437,
+          24.0,
+          -15.505
+        ]
+      },
+      {
+        "id": "script.expert.mixture.01",
+        "label": "MIXTURE_EXPERT_1",
+        "type": "SCRIPT",
+        "pos": [
+          -20.291,
+          24.0,
+          -66.155
+        ]
+      },
+      {
+        "id": "terminal.watcher.repetition",
+        "label": "WATCH_REPETITION",
+        "type": "TERMINAL",
+        "pos": [
+          4.96,
+          36.0,
+          -89.539
+        ]
+      },
+      {
+        "id": "terminal.watcher.fifty_move",
+        "label": "WATCH_FIFTY_MOVE",
+        "type": "TERMINAL",
+        "pos": [
+          66.821,
+          36.0,
+          -59.806
+        ]
+      },
+      {
+        "id": "terminal.watcher.risk_budget",
+        "label": "WATCH_RISK_BUDGET",
+        "type": "TERMINAL",
+        "pos": [
+          89.539,
+          36.0,
+          4.96
+        ]
+      },
+      {
+        "id": "terminal.watcher.plan_commit",
+        "label": "WATCH_PLAN_COMMIT",
+        "type": "TERMINAL",
+        "pos": [
+          59.806,
+          36.0,
+          66.821
+        ]
+      },
+      {
+        "id": "terminal.watcher.style_profile",
+        "label": "WATCH_STYLE_PROFILE",
+        "type": "TERMINAL",
+        "pos": [
+          -4.96,
+          36.0,
+          89.539
+        ]
+      },
+      {
+        "id": "terminal.safety.safety_guard",
+        "label": "SAFETY_GUARD",
+        "type": "TERMINAL",
+        "pos": [
+          -66.821,
+          36.0,
+          59.806
+        ]
+      },
+      {
+        "id": "terminal.safety.sanity_check",
+        "label": "SANITY_CHECK",
+        "type": "TERMINAL",
+        "pos": [
+          -89.539,
+          36.0,
+          -4.96
+        ]
+      },
+      {
+        "id": "terminal.safety.failsafe",
+        "label": "FAILSAFE",
+        "type": "TERMINAL",
+        "pos": [
+          -59.806,
+          36.0,
+          -66.821
+        ]
+      },
+      {
+        "id": "terminal.endgame.zugzwang",
+        "label": "ENDGAME_ZUGZWANG",
+        "type": "TERMINAL",
+        "pos": [
+          56.557,
+          48.0,
+          88.7
+        ]
+      },
+      {
+        "id": "terminal.endgame.opposition",
+        "label": "ENDGAME_OPPOSITION",
+        "type": "TERMINAL",
+        "pos": [
+          -48.538,
+          48.0,
+          93.33
+        ]
+      },
+      {
+        "id": "terminal.endgame.triangulation",
+        "label": "ENDGAME_TRIANGULATION",
+        "type": "TERMINAL",
+        "pos": [
+          -105.095,
+          48.0,
+          4.63
+        ]
+      },
+      {
+        "id": "terminal.endgame.bridge",
+        "label": "ENDGAME_BRIDGE",
+        "type": "TERMINAL",
+        "pos": [
+          -56.557,
+          48.0,
+          -88.7
+        ]
+      },
+      {
+        "id": "terminal.endgame.lucena",
+        "label": "ENDGAME_LUCENA",
+        "type": "TERMINAL",
+        "pos": [
+          48.538,
+          48.0,
+          -93.33
+        ]
+      },
+      {
+        "id": "terminal.endgame.philidor",
+        "label": "ENDGAME_PHILIDOR",
+        "type": "TERMINAL",
+        "pos": [
+          105.095,
+          48.0,
+          -4.63
+        ]
+      },
+      {
+        "id": "terminal.tactic.fork.001",
+        "label": "FORK_001",
+        "type": "TERMINAL",
+        "pos": [
+          -120.692,
+          60.0,
+          63.792
+        ]
+      },
+      {
+        "id": "terminal.tactic.fork.002",
+        "label": "FORK_002",
+        "type": "TERMINAL",
+        "pos": [
+          -132.452,
+          60.0,
+          33.055
+        ]
+      },
+      {
+        "id": "terminal.tactic.pin.001",
+        "label": "PIN_001",
+        "type": "TERMINAL",
+        "pos": [
+          -136.514,
+          60.0,
+          0.397
+        ]
+      },
+      {
+        "id": "terminal.tactic.pin.002",
+        "label": "PIN_002",
+        "type": "TERMINAL",
+        "pos": [
+          -132.642,
+          60.0,
+          -32.285
+        ]
+      },
+      {
+        "id": "terminal.tactic.skewer.001",
+        "label": "SKEWER_001",
+        "type": "TERMINAL",
+        "pos": [
+          -121.061,
+          60.0,
+          -63.09
+        ]
+      },
+      {
+        "id": "terminal.tactic.skewer.002",
+        "label": "SKEWER_002",
+        "type": "TERMINAL",
+        "pos": [
+          -102.445,
+          60.0,
+          -90.228
+        ]
+      },
+      {
+        "id": "terminal.tactic.xray.001",
+        "label": "XRAY_001",
+        "type": "TERMINAL",
+        "pos": [
+          -77.875,
+          60.0,
+          -112.123
+        ]
+      },
+      {
+        "id": "terminal.tactic.xray.002",
+        "label": "XRAY_002",
+        "type": "TERMINAL",
+        "pos": [
+          -48.779,
+          60.0,
+          -127.502
+        ]
+      },
+      {
+        "id": "terminal.tactic.overload.001",
+        "label": "OVERLOAD_001",
+        "type": "TERMINAL",
+        "pos": [
+          -16.849,
+          60.0,
+          -135.47
+        ]
+      },
+      {
+        "id": "terminal.tactic.overload.002",
+        "label": "OVERLOAD_002",
+        "type": "TERMINAL",
+        "pos": [
+          16.061,
+          60.0,
+          -135.566
+        ]
+      },
+      {
+        "id": "terminal.tactic.deflection.001",
+        "label": "DEFLECTION_001",
+        "type": "TERMINAL",
+        "pos": [
+          48.037,
+          60.0,
+          -127.783
+        ]
+      },
+      {
+        "id": "terminal.tactic.deflection.002",
+        "label": "DEFLECTION_002",
+        "type": "TERMINAL",
+        "pos": [
+          77.222,
+          60.0,
+          -112.574
+        ]
+      },
+      {
+        "id": "terminal.tactic.discovered.001",
+        "label": "DISCOVERED_001",
+        "type": "TERMINAL",
+        "pos": [
+          101.919,
+          60.0,
+          -90.822
+        ]
+      },
+      {
+        "id": "terminal.tactic.discovered.002",
+        "label": "DISCOVERED_002",
+        "type": "TERMINAL",
+        "pos": [
+          120.692,
+          60.0,
+          -63.792
+        ]
+      },
+      {
+        "id": "terminal.tactic.zwischenzug.001",
+        "label": "ZWISCHENZUG_001",
+        "type": "TERMINAL",
+        "pos": [
+          132.452,
+          60.0,
+          -33.055
+        ]
+      },
+      {
+        "id": "terminal.tactic.zwischenzug.002",
+        "label": "ZWISCHENZUG_002",
+        "type": "TERMINAL",
+        "pos": [
+          136.514,
+          60.0,
+          -0.397
+        ]
+      },
+      {
+        "id": "terminal.tactic.trapped_piece.001",
+        "label": "TRAPPED_PIECE_001",
+        "type": "TERMINAL",
+        "pos": [
+          132.642,
+          60.0,
+          32.285
+        ]
+      },
+      {
+        "id": "terminal.tactic.trapped_piece.002",
+        "label": "TRAPPED_PIECE_002",
+        "type": "TERMINAL",
+        "pos": [
+          121.061,
+          60.0,
+          63.09
+        ]
+      },
+      {
+        "id": "terminal.tactic.back_rank.001",
+        "label": "BACK_RANK_001",
+        "type": "TERMINAL",
+        "pos": [
+          102.445,
+          60.0,
+          90.228
+        ]
+      },
+      {
+        "id": "terminal.tactic.back_rank.002",
+        "label": "BACK_RANK_002",
+        "type": "TERMINAL",
+        "pos": [
+          77.875,
+          60.0,
+          112.123
+        ]
+      },
+      {
+        "id": "terminal.tactic.smothered.001",
+        "label": "SMOTHERED_001",
+        "type": "TERMINAL",
+        "pos": [
+          48.779,
+          60.0,
+          127.502
+        ]
+      },
+      {
+        "id": "terminal.tactic.smothered.002",
+        "label": "SMOTHERED_002",
+        "type": "TERMINAL",
+        "pos": [
+          16.849,
+          60.0,
+          135.47
+        ]
+      },
+      {
+        "id": "terminal.tactic.double_attack.001",
+        "label": "DOUBLE_ATTACK_001",
+        "type": "TERMINAL",
+        "pos": [
+          -16.061,
+          60.0,
+          135.566
+        ]
+      },
+      {
+        "id": "terminal.tactic.double_attack.002",
+        "label": "DOUBLE_ATTACK_002",
+        "type": "TERMINAL",
+        "pos": [
+          -48.037,
+          60.0,
+          127.783
+        ]
+      },
+      {
+        "id": "terminal.tactic.attraction.001",
+        "label": "ATTRACTION_001",
+        "type": "TERMINAL",
+        "pos": [
+          -77.222,
+          60.0,
+          112.574
+        ]
+      },
+      {
+        "id": "terminal.tactic.attraction.002",
+        "label": "ATTRACTION_002",
+        "type": "TERMINAL",
+        "pos": [
+          -101.919,
+          60.0,
+          90.822
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "from": "script.root",
+        "to": "script.phase_router",
+        "type": "sub"
+      },
+      {
+        "from": "script.phase_router",
+        "to": "script.expert_switch",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert_switch",
+        "to": "script.arbiter",
+        "type": "sub"
+      },
+      {
+        "from": "script.arbiter",
+        "to": "script.wait_loop",
+        "type": "sub"
+      },
+      {
+        "from": "script.phase_router",
+        "to": "script.phase.opening",
+        "type": "por"
+      },
+      {
+        "from": "script.phase.opening",
+        "to": "script.expert_switch",
+        "type": "sub",
+        "label": "handoff"
+      },
+      {
+        "from": "script.phase_router",
+        "to": "script.phase.middlegame",
+        "type": "por"
+      },
+      {
+        "from": "script.phase.middlegame",
+        "to": "script.expert_switch",
+        "type": "sub",
+        "label": "handoff"
+      },
+      {
+        "from": "script.phase_router",
+        "to": "script.phase.endgame",
+        "type": "por"
+      },
+      {
+        "from": "script.phase.endgame",
+        "to": "script.expert_switch",
+        "type": "sub",
+        "label": "handoff"
+      },
+      {
+        "from": "script.phase_router",
+        "to": "script.phase.critical",
+        "type": "por"
+      },
+      {
+        "from": "script.phase.critical",
+        "to": "script.expert_switch",
+        "type": "sub",
+        "label": "handoff"
+      },
+      {
+        "from": "script.expert_switch",
+        "to": "script.expert.book.01",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.book.01",
+        "to": "script.arbiter",
+        "type": "sub",
+        "label": "proposal"
+      },
+      {
+        "from": "script.expert_switch",
+        "to": "script.expert.tactics.01",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.tactics.01",
+        "to": "script.arbiter",
+        "type": "sub",
+        "label": "proposal"
+      },
+      {
+        "from": "script.expert_switch",
+        "to": "script.expert.positional.01",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.positional.01",
+        "to": "script.arbiter",
+        "type": "sub",
+        "label": "proposal"
+      },
+      {
+        "from": "script.expert_switch",
+        "to": "script.expert.search_lite.01",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.search_lite.01",
+        "to": "script.arbiter",
+        "type": "sub",
+        "label": "proposal"
+      },
+      {
+        "from": "script.expert_switch",
+        "to": "script.expert.endgame_tb.01",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.endgame_tb.01",
+        "to": "script.arbiter",
+        "type": "sub",
+        "label": "proposal"
+      },
+      {
+        "from": "script.expert_switch",
+        "to": "script.expert.mixture.01",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.mixture.01",
+        "to": "script.arbiter",
+        "type": "sub",
+        "label": "proposal"
+      },
+      {
+        "from": "script.wait_loop",
+        "to": "terminal.watcher.repetition",
+        "type": "sub"
+      },
+      {
+        "from": "terminal.watcher.repetition",
+        "to": "script.phase_router",
+        "type": "por",
+        "label": "feedback"
+      },
+      {
+        "from": "script.wait_loop",
+        "to": "terminal.watcher.fifty_move",
+        "type": "sub"
+      },
+      {
+        "from": "terminal.watcher.fifty_move",
+        "to": "script.phase_router",
+        "type": "por",
+        "label": "feedback"
+      },
+      {
+        "from": "script.wait_loop",
+        "to": "terminal.watcher.risk_budget",
+        "type": "sub"
+      },
+      {
+        "from": "terminal.watcher.risk_budget",
+        "to": "script.phase_router",
+        "type": "por",
+        "label": "feedback"
+      },
+      {
+        "from": "script.wait_loop",
+        "to": "terminal.watcher.plan_commit",
+        "type": "sub"
+      },
+      {
+        "from": "terminal.watcher.plan_commit",
+        "to": "script.phase_router",
+        "type": "por",
+        "label": "feedback"
+      },
+      {
+        "from": "script.wait_loop",
+        "to": "terminal.watcher.style_profile",
+        "type": "sub"
+      },
+      {
+        "from": "terminal.watcher.style_profile",
+        "to": "script.phase_router",
+        "type": "por",
+        "label": "feedback"
+      },
+      {
+        "from": "script.arbiter",
+        "to": "terminal.safety.safety_guard",
+        "type": "sub"
+      },
+      {
+        "from": "terminal.safety.safety_guard",
+        "to": "script.wait_loop",
+        "type": "sub",
+        "label": "reset"
+      },
+      {
+        "from": "script.arbiter",
+        "to": "terminal.safety.sanity_check",
+        "type": "sub"
+      },
+      {
+        "from": "terminal.safety.sanity_check",
+        "to": "script.wait_loop",
+        "type": "sub",
+        "label": "reset"
+      },
+      {
+        "from": "script.arbiter",
+        "to": "terminal.safety.failsafe",
+        "type": "sub"
+      },
+      {
+        "from": "terminal.safety.failsafe",
+        "to": "script.wait_loop",
+        "type": "sub",
+        "label": "reset"
+      },
+      {
+        "from": "script.expert.mixture.01",
+        "to": "terminal.endgame.zugzwang",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.book.01",
+        "to": "terminal.endgame.opposition",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.book.01",
+        "to": "terminal.endgame.triangulation",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.mixture.01",
+        "to": "terminal.endgame.bridge",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.positional.01",
+        "to": "terminal.endgame.lucena",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.tactics.01",
+        "to": "terminal.endgame.philidor",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.tactics.01",
+        "to": "terminal.tactic.fork.001",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.tactics.01",
+        "to": "terminal.tactic.fork.002",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.mixture.01",
+        "to": "terminal.tactic.pin.001",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.book.01",
+        "to": "terminal.tactic.pin.002",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.mixture.01",
+        "to": "terminal.tactic.skewer.001",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.mixture.01",
+        "to": "terminal.tactic.skewer.002",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.endgame_tb.01",
+        "to": "terminal.tactic.xray.001",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.book.01",
+        "to": "terminal.tactic.xray.002",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.endgame_tb.01",
+        "to": "terminal.tactic.overload.001",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.search_lite.01",
+        "to": "terminal.tactic.overload.002",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.book.01",
+        "to": "terminal.tactic.deflection.001",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.book.01",
+        "to": "terminal.tactic.deflection.002",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.book.01",
+        "to": "terminal.tactic.discovered.001",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.tactics.01",
+        "to": "terminal.tactic.discovered.002",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.tactics.01",
+        "to": "terminal.tactic.zwischenzug.001",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.endgame_tb.01",
+        "to": "terminal.tactic.zwischenzug.002",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.endgame_tb.01",
+        "to": "terminal.tactic.trapped_piece.001",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.book.01",
+        "to": "terminal.tactic.trapped_piece.002",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.endgame_tb.01",
+        "to": "terminal.tactic.back_rank.001",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.tactics.01",
+        "to": "terminal.tactic.back_rank.002",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.mixture.01",
+        "to": "terminal.tactic.smothered.001",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.mixture.01",
+        "to": "terminal.tactic.smothered.002",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.mixture.01",
+        "to": "terminal.tactic.double_attack.001",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.endgame_tb.01",
+        "to": "terminal.tactic.double_attack.002",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.search_lite.01",
+        "to": "terminal.tactic.attraction.001",
+        "type": "sub"
+      },
+      {
+        "from": "script.expert.tactics.01",
+        "to": "terminal.tactic.attraction.002",
+        "type": "sub"
+      }
+    ]
+  },
+  "frames": [
+    {
+      "tick": 0,
+      "note": "Routing aggressive tactic burst against defender.",
+      "thoughts": "Need fresher tactical ideas.",
+      "env": {
+        "style": "BALANCED",
+        "risk": 0.625,
+        "phase_weights": {
+          "opening": 0.21,
+          "middlegame": 0.335,
+          "endgame": 0.388,
+          "critical": 0.068
+        }
+      },
+      "states": {
+        "script.root": "INACTIVE",
+        "script.phase_router": "INACTIVE",
+        "script.expert_switch": "INACTIVE",
+        "script.arbiter": "INACTIVE",
+        "script.wait_loop": "INACTIVE",
+        "script.phase.opening": "INACTIVE",
+        "script.phase.middlegame": "WAITING",
+        "script.phase.endgame": "INACTIVE",
+        "script.phase.critical": "INACTIVE",
+        "script.expert.book.01": "INACTIVE",
+        "script.expert.tactics.01": "INACTIVE",
+        "script.expert.positional.01": "INACTIVE",
+        "script.expert.search_lite.01": "INACTIVE",
+        "script.expert.endgame_tb.01": "INACTIVE",
+        "script.expert.mixture.01": "INACTIVE",
+        "terminal.watcher.repetition": "INACTIVE",
+        "terminal.watcher.fifty_move": "CONFIRMED",
+        "terminal.watcher.risk_budget": "INACTIVE",
+        "terminal.watcher.plan_commit": "INACTIVE",
+        "terminal.watcher.style_profile": "INACTIVE",
+        "terminal.safety.safety_guard": "INACTIVE",
+        "terminal.safety.sanity_check": "INACTIVE",
+        "terminal.safety.failsafe": "REQUESTED",
+        "terminal.endgame.zugzwang": "INACTIVE",
+        "terminal.endgame.opposition": "REQUESTED",
+        "terminal.endgame.triangulation": "INACTIVE",
+        "terminal.endgame.bridge": "INACTIVE",
+        "terminal.endgame.lucena": "INACTIVE",
+        "terminal.endgame.philidor": "INACTIVE",
+        "terminal.tactic.fork.001": "INACTIVE",
+        "terminal.tactic.fork.002": "INACTIVE",
+        "terminal.tactic.pin.001": "INACTIVE",
+        "terminal.tactic.pin.002": "INACTIVE",
+        "terminal.tactic.skewer.001": "INACTIVE",
+        "terminal.tactic.skewer.002": "INACTIVE",
+        "terminal.tactic.xray.001": "INACTIVE",
+        "terminal.tactic.xray.002": "INACTIVE",
+        "terminal.tactic.overload.001": "INACTIVE",
+        "terminal.tactic.overload.002": "REQUESTED",
+        "terminal.tactic.deflection.001": "INACTIVE",
+        "terminal.tactic.deflection.002": "INACTIVE",
+        "terminal.tactic.discovered.001": "INACTIVE",
+        "terminal.tactic.discovered.002": "INACTIVE",
+        "terminal.tactic.zwischenzug.001": "INACTIVE",
+        "terminal.tactic.zwischenzug.002": "INACTIVE",
+        "terminal.tactic.trapped_piece.001": "INACTIVE",
+        "terminal.tactic.trapped_piece.002": "INACTIVE",
+        "terminal.tactic.back_rank.001": "INACTIVE",
+        "terminal.tactic.back_rank.002": "INACTIVE",
+        "terminal.tactic.smothered.001": "INACTIVE",
+        "terminal.tactic.smothered.002": "INACTIVE",
+        "terminal.tactic.double_attack.001": "INACTIVE",
+        "terminal.tactic.double_attack.002": "INACTIVE",
+        "terminal.tactic.attraction.001": "INACTIVE",
+        "terminal.tactic.attraction.002": "FAILED"
+      },
+      "new_requests": [
+        "terminal.endgame.opposition",
+        "script.phase.middlegame",
+        "terminal.safety.failsafe",
+        "terminal.tactic.attraction.002",
+        "terminal.tactic.overload.002"
+      ]
+    },
+    {
+      "tick": 1,
+      "note": "Leaning on positional heuristics for stability.",
+      "thoughts": "Arbiter sync smooth across experts.",
+      "env": {
+        "style": "GAMBIT",
+        "risk": 0.402,
+        "phase_weights": {
+          "opening": 0.104,
+          "middlegame": 0.174,
+          "endgame": 0.258,
+          "critical": 0.464
+        }
+      },
+      "states": {
+        "script.root": "INACTIVE",
+        "script.phase_router": "INACTIVE",
+        "script.expert_switch": "INACTIVE",
+        "script.arbiter": "INACTIVE",
+        "script.wait_loop": "INACTIVE",
+        "script.phase.opening": "INACTIVE",
+        "script.phase.middlegame": "TRUE",
+        "script.phase.endgame": "INACTIVE",
+        "script.phase.critical": "INACTIVE",
+        "script.expert.book.01": "INACTIVE",
+        "script.expert.tactics.01": "INACTIVE",
+        "script.expert.positional.01": "INACTIVE",
+        "script.expert.search_lite.01": "INACTIVE",
+        "script.expert.endgame_tb.01": "INACTIVE",
+        "script.expert.mixture.01": "INACTIVE",
+        "terminal.watcher.repetition": "INACTIVE",
+        "terminal.watcher.fifty_move": "CONFIRMED",
+        "terminal.watcher.risk_budget": "INACTIVE",
+        "terminal.watcher.plan_commit": "WAITING",
+        "terminal.watcher.style_profile": "INACTIVE",
+        "terminal.safety.safety_guard": "INACTIVE",
+        "terminal.safety.sanity_check": "INACTIVE",
+        "terminal.safety.failsafe": "REQUESTED",
+        "terminal.endgame.zugzwang": "INACTIVE",
+        "terminal.endgame.opposition": "REQUESTED",
+        "terminal.endgame.triangulation": "INACTIVE",
+        "terminal.endgame.bridge": "INACTIVE",
+        "terminal.endgame.lucena": "INACTIVE",
+        "terminal.endgame.philidor": "WAITING",
+        "terminal.tactic.fork.001": "INACTIVE",
+        "terminal.tactic.fork.002": "INACTIVE",
+        "terminal.tactic.pin.001": "INACTIVE",
+        "terminal.tactic.pin.002": "INACTIVE",
+        "terminal.tactic.skewer.001": "WAITING",
+        "terminal.tactic.skewer.002": "INACTIVE",
+        "terminal.tactic.xray.001": "INACTIVE",
+        "terminal.tactic.xray.002": "INACTIVE",
+        "terminal.tactic.overload.001": "WAITING",
+        "terminal.tactic.overload.002": "WAITING",
+        "terminal.tactic.deflection.001": "INACTIVE",
+        "terminal.tactic.deflection.002": "INACTIVE",
+        "terminal.tactic.discovered.001": "INACTIVE",
+        "terminal.tactic.discovered.002": "INACTIVE",
+        "terminal.tactic.zwischenzug.001": "FAILED",
+        "terminal.tactic.zwischenzug.002": "INACTIVE",
+        "terminal.tactic.trapped_piece.001": "INACTIVE",
+        "terminal.tactic.trapped_piece.002": "INACTIVE",
+        "terminal.tactic.back_rank.001": "INACTIVE",
+        "terminal.tactic.back_rank.002": "INACTIVE",
+        "terminal.tactic.smothered.001": "INACTIVE",
+        "terminal.tactic.smothered.002": "INACTIVE",
+        "terminal.tactic.double_attack.001": "INACTIVE",
+        "terminal.tactic.double_attack.002": "INACTIVE",
+        "terminal.tactic.attraction.001": "INACTIVE",
+        "terminal.tactic.attraction.002": "INACTIVE"
+      },
+      "new_requests": [
+        "terminal.endgame.philidor",
+        "terminal.tactic.zwischenzug.001",
+        "terminal.tactic.skewer.001",
+        "terminal.tactic.overload.001",
+        "terminal.watcher.plan_commit"
+      ]
+    },
+    {
+      "tick": 2,
+      "note": "Conferring with endgame tablebase expert.",
+      "thoughts": "True confirmations stalling, revisit plan.",
+      "env": {
+        "style": "BALANCED",
+        "risk": 0.763,
+        "phase_weights": {
+          "opening": 0.294,
+          "middlegame": 0.273,
+          "endgame": 0.39,
+          "critical": 0.042
+        }
+      },
+      "states": {
+        "script.root": "INACTIVE",
+        "script.phase_router": "INACTIVE",
+        "script.expert_switch": "REQUESTED",
+        "script.arbiter": "INACTIVE",
+        "script.wait_loop": "WAITING",
+        "script.phase.opening": "INACTIVE",
+        "script.phase.middlegame": "TRUE",
+        "script.phase.endgame": "INACTIVE",
+        "script.phase.critical": "INACTIVE",
+        "script.expert.book.01": "INACTIVE",
+        "script.expert.tactics.01": "INACTIVE",
+        "script.expert.positional.01": "INACTIVE",
+        "script.expert.search_lite.01": "INACTIVE",
+        "script.expert.endgame_tb.01": "INACTIVE",
+        "script.expert.mixture.01": "INACTIVE",
+        "terminal.watcher.repetition": "REQUESTED",
+        "terminal.watcher.fifty_move": "CONFIRMED",
+        "terminal.watcher.risk_budget": "INACTIVE",
+        "terminal.watcher.plan_commit": "TRUE",
+        "terminal.watcher.style_profile": "INACTIVE",
+        "terminal.safety.safety_guard": "INACTIVE",
+        "terminal.safety.sanity_check": "INACTIVE",
+        "terminal.safety.failsafe": "WAITING",
+        "terminal.endgame.zugzwang": "INACTIVE",
+        "terminal.endgame.opposition": "WAITING",
+        "terminal.endgame.triangulation": "INACTIVE",
+        "terminal.endgame.bridge": "WAITING",
+        "terminal.endgame.lucena": "INACTIVE",
+        "terminal.endgame.philidor": "WAITING",
+        "terminal.tactic.fork.001": "INACTIVE",
+        "terminal.tactic.fork.002": "INACTIVE",
+        "terminal.tactic.pin.001": "INACTIVE",
+        "terminal.tactic.pin.002": "INACTIVE",
+        "terminal.tactic.skewer.001": "WAITING",
+        "terminal.tactic.skewer.002": "INACTIVE",
+        "terminal.tactic.xray.001": "INACTIVE",
+        "terminal.tactic.xray.002": "INACTIVE",
+        "terminal.tactic.overload.001": "WAITING",
+        "terminal.tactic.overload.002": "TRUE",
+        "terminal.tactic.deflection.001": "INACTIVE",
+        "terminal.tactic.deflection.002": "INACTIVE",
+        "terminal.tactic.discovered.001": "INACTIVE",
+        "terminal.tactic.discovered.002": "INACTIVE",
+        "terminal.tactic.zwischenzug.001": "INACTIVE",
+        "terminal.tactic.zwischenzug.002": "INACTIVE",
+        "terminal.tactic.trapped_piece.001": "INACTIVE",
+        "terminal.tactic.trapped_piece.002": "INACTIVE",
+        "terminal.tactic.back_rank.001": "INACTIVE",
+        "terminal.tactic.back_rank.002": "INACTIVE",
+        "terminal.tactic.smothered.001": "INACTIVE",
+        "terminal.tactic.smothered.002": "INACTIVE",
+        "terminal.tactic.double_attack.001": "INACTIVE",
+        "terminal.tactic.double_attack.002": "INACTIVE",
+        "terminal.tactic.attraction.001": "INACTIVE",
+        "terminal.tactic.attraction.002": "INACTIVE"
+      },
+      "new_requests": [
+        "terminal.watcher.repetition",
+        "script.wait_loop",
+        "script.expert_switch",
+        "terminal.endgame.bridge"
+      ]
+    },
+    {
+      "tick": 3,
+      "note": "Tracking new request saturation for this phase.",
+      "thoughts": "True confirmations stalling, revisit plan.",
+      "env": {
+        "style": "RESOURCEFUL",
+        "risk": 0.464,
+        "phase_weights": {
+          "opening": 0.153,
+          "middlegame": 0.03,
+          "endgame": 0.452,
+          "critical": 0.366
+        }
+      },
+      "states": {
+        "script.root": "INACTIVE",
+        "script.phase_router": "INACTIVE",
+        "script.expert_switch": "WAITING",
+        "script.arbiter": "INACTIVE",
+        "script.wait_loop": "TRUE",
+        "script.phase.opening": "FAILED",
+        "script.phase.middlegame": "TRUE",
+        "script.phase.endgame": "WAITING",
+        "script.phase.critical": "FAILED",
+        "script.expert.book.01": "INACTIVE",
+        "script.expert.tactics.01": "INACTIVE",
+        "script.expert.positional.01": "INACTIVE",
+        "script.expert.search_lite.01": "INACTIVE",
+        "script.expert.endgame_tb.01": "INACTIVE",
+        "script.expert.mixture.01": "WAITING",
+        "terminal.watcher.repetition": "REQUESTED",
+        "terminal.watcher.fifty_move": "CONFIRMED",
+        "terminal.watcher.risk_budget": "INACTIVE",
+        "terminal.watcher.plan_commit": "TRUE",
+        "terminal.watcher.style_profile": "INACTIVE",
+        "terminal.safety.safety_guard": "INACTIVE",
+        "terminal.safety.sanity_check": "INACTIVE",
+        "terminal.safety.failsafe": "WAITING",
+        "terminal.endgame.zugzwang": "INACTIVE",
+        "terminal.endgame.opposition": "TRUE",
+        "terminal.endgame.triangulation": "INACTIVE",
+        "terminal.endgame.bridge": "WAITING",
+        "terminal.endgame.lucena": "INACTIVE",
+        "terminal.endgame.philidor": "WAITING",
+        "terminal.tactic.fork.001": "INACTIVE",
+        "terminal.tactic.fork.002": "INACTIVE",
+        "terminal.tactic.pin.001": "INACTIVE",
+        "terminal.tactic.pin.002": "INACTIVE",
+        "terminal.tactic.skewer.001": "WAITING",
+        "terminal.tactic.skewer.002": "INACTIVE",
+        "terminal.tactic.xray.001": "INACTIVE",
+        "terminal.tactic.xray.002": "INACTIVE",
+        "terminal.tactic.overload.001": "WAITING",
+        "terminal.tactic.overload.002": "CONFIRMED",
+        "terminal.tactic.deflection.001": "INACTIVE",
+        "terminal.tactic.deflection.002": "INACTIVE",
+        "terminal.tactic.discovered.001": "INACTIVE",
+        "terminal.tactic.discovered.002": "INACTIVE",
+        "terminal.tactic.zwischenzug.001": "INACTIVE",
+        "terminal.tactic.zwischenzug.002": "INACTIVE",
+        "terminal.tactic.trapped_piece.001": "WAITING",
+        "terminal.tactic.trapped_piece.002": "INACTIVE",
+        "terminal.tactic.back_rank.001": "INACTIVE",
+        "terminal.tactic.back_rank.002": "INACTIVE",
+        "terminal.tactic.smothered.001": "INACTIVE",
+        "terminal.tactic.smothered.002": "WAITING",
+        "terminal.tactic.double_attack.001": "INACTIVE",
+        "terminal.tactic.double_attack.002": "INACTIVE",
+        "terminal.tactic.attraction.001": "INACTIVE",
+        "terminal.tactic.attraction.002": "INACTIVE"
+      },
+      "new_requests": [
+        "script.phase.opening",
+        "terminal.tactic.trapped_piece.001",
+        "script.phase.critical",
+        "script.expert.mixture.01",
+        "script.phase.endgame",
+        "terminal.tactic.smothered.002"
+      ]
+    },
+    {
+      "tick": 4,
+      "note": "Routing aggressive tactic burst against defender.",
+      "thoughts": "Need fresher tactical ideas.",
+      "env": {
+        "style": "TECHNICAL",
+        "risk": 0.158,
+        "phase_weights": {
+          "opening": 0.167,
+          "middlegame": 0.411,
+          "endgame": 0.05,
+          "critical": 0.371
+        }
+      },
+      "states": {
+        "script.root": "WAITING",
+        "script.phase_router": "INACTIVE",
+        "script.expert_switch": "WAITING",
+        "script.arbiter": "REQUESTED",
+        "script.wait_loop": "CONFIRMED",
+        "script.phase.opening": "INACTIVE",
+        "script.phase.middlegame": "TRUE",
+        "script.phase.endgame": "WAITING",
+        "script.phase.critical": "INACTIVE",
+        "script.expert.book.01": "INACTIVE",
+        "script.expert.tactics.01": "REQUESTED",
+        "script.expert.positional.01": "INACTIVE",
+        "script.expert.search_lite.01": "INACTIVE",
+        "script.expert.endgame_tb.01": "REQUESTED",
+        "script.expert.mixture.01": "TRUE",
+        "terminal.watcher.repetition": "WAITING",
+        "terminal.watcher.fifty_move": "CONFIRMED",
+        "terminal.watcher.risk_budget": "INACTIVE",
+        "terminal.watcher.plan_commit": "CONFIRMED",
+        "terminal.watcher.style_profile": "WAITING",
+        "terminal.safety.safety_guard": "INACTIVE",
+        "terminal.safety.sanity_check": "REQUESTED",
+        "terminal.safety.failsafe": "FAILED",
+        "terminal.endgame.zugzwang": "INACTIVE",
+        "terminal.endgame.opposition": "TRUE",
+        "terminal.endgame.triangulation": "WAITING",
+        "terminal.endgame.bridge": "TRUE",
+        "terminal.endgame.lucena": "INACTIVE",
+        "terminal.endgame.philidor": "TRUE",
+        "terminal.tactic.fork.001": "INACTIVE",
+        "terminal.tactic.fork.002": "INACTIVE",
+        "terminal.tactic.pin.001": "WAITING",
+        "terminal.tactic.pin.002": "REQUESTED",
+        "terminal.tactic.skewer.001": "TRUE",
+        "terminal.tactic.skewer.002": "INACTIVE",
+        "terminal.tactic.xray.001": "INACTIVE",
+        "terminal.tactic.xray.002": "INACTIVE",
+        "terminal.tactic.overload.001": "WAITING",
+        "terminal.tactic.overload.002": "CONFIRMED",
+        "terminal.tactic.deflection.001": "INACTIVE",
+        "terminal.tactic.deflection.002": "INACTIVE",
+        "terminal.tactic.discovered.001": "INACTIVE",
+        "terminal.tactic.discovered.002": "INACTIVE",
+        "terminal.tactic.zwischenzug.001": "FAILED",
+        "terminal.tactic.zwischenzug.002": "INACTIVE",
+        "terminal.tactic.trapped_piece.001": "WAITING",
+        "terminal.tactic.trapped_piece.002": "INACTIVE",
+        "terminal.tactic.back_rank.001": "INACTIVE",
+        "terminal.tactic.back_rank.002": "REQUESTED",
+        "terminal.tactic.smothered.001": "INACTIVE",
+        "terminal.tactic.smothered.002": "WAITING",
+        "terminal.tactic.double_attack.001": "INACTIVE",
+        "terminal.tactic.double_attack.002": "WAITING",
+        "terminal.tactic.attraction.001": "INACTIVE",
+        "terminal.tactic.attraction.002": "INACTIVE"
+      },
+      "new_requests": [
+        "script.root",
+        "script.expert.endgame_tb.01",
+        "script.expert.tactics.01",
+        "terminal.watcher.style_profile",
+        "script.arbiter",
+        "terminal.tactic.zwischenzug.001",
+        "terminal.safety.sanity_check",
+        "terminal.tactic.pin.002",
+        "terminal.tactic.pin.001",
+        "terminal.tactic.double_attack.002",
+        "terminal.endgame.triangulation",
+        "terminal.tactic.back_rank.002"
+      ]
+    },
+    {
+      "tick": 5,
+      "note": "Conferring with endgame tablebase expert.",
+      "thoughts": "Watcher flagged elevated risk budget.",
+      "env": {
+        "style": "SHARP",
+        "risk": 0.562,
+        "phase_weights": {
+          "opening": 0.264,
+          "middlegame": 0.17,
+          "endgame": 0.207,
+          "critical": 0.36
+        }
+      },
+      "states": {
+        "script.root": "WAITING",
+        "script.phase_router": "REQUESTED",
+        "script.expert_switch": "TRUE",
+        "script.arbiter": "REQUESTED",
+        "script.wait_loop": "CONFIRMED",
+        "script.phase.opening": "INACTIVE",
+        "script.phase.middlegame": "CONFIRMED",
+        "script.phase.endgame": "WAITING",
+        "script.phase.critical": "FAILED",
+        "script.expert.book.01": "INACTIVE",
+        "script.expert.tactics.01": "REQUESTED",
+        "script.expert.positional.01": "INACTIVE",
+        "script.expert.search_lite.01": "INACTIVE",
+        "script.expert.endgame_tb.01": "WAITING",
+        "script.expert.mixture.01": "TRUE",
+        "terminal.watcher.repetition": "FAILED",
+        "terminal.watcher.fifty_move": "CONFIRMED",
+        "terminal.watcher.risk_budget": "WAITING",
+        "terminal.watcher.plan_commit": "CONFIRMED",
+        "terminal.watcher.style_profile": "WAITING",
+        "terminal.safety.safety_guard": "INACTIVE",
+        "terminal.safety.sanity_check": "WAITING",
+        "terminal.safety.failsafe": "INACTIVE",
+        "terminal.endgame.zugzwang": "INACTIVE",
+        "terminal.endgame.opposition": "FAILED",
+        "terminal.endgame.triangulation": "WAITING",
+        "terminal.endgame.bridge": "TRUE",
+        "terminal.endgame.lucena": "INACTIVE",
+        "terminal.endgame.philidor": "TRUE",
+        "terminal.tactic.fork.001": "WAITING",
+        "terminal.tactic.fork.002": "REQUESTED",
+        "terminal.tactic.pin.001": "WAITING",
+        "terminal.tactic.pin.002": "WAITING",
+        "terminal.tactic.skewer.001": "TRUE",
+        "terminal.tactic.skewer.002": "INACTIVE",
+        "terminal.tactic.xray.001": "WAITING",
+        "terminal.tactic.xray.002": "INACTIVE",
+        "terminal.tactic.overload.001": "TRUE",
+        "terminal.tactic.overload.002": "INACTIVE",
+        "terminal.tactic.deflection.001": "INACTIVE",
+        "terminal.tactic.deflection.002": "REQUESTED",
+        "terminal.tactic.discovered.001": "REQUESTED",
+        "terminal.tactic.discovered.002": "INACTIVE",
+        "terminal.tactic.zwischenzug.001": "FAILED",
+        "terminal.tactic.zwischenzug.002": "INACTIVE",
+        "terminal.tactic.trapped_piece.001": "WAITING",
+        "terminal.tactic.trapped_piece.002": "INACTIVE",
+        "terminal.tactic.back_rank.001": "WAITING",
+        "terminal.tactic.back_rank.002": "WAITING",
+        "terminal.tactic.smothered.001": "REQUESTED",
+        "terminal.tactic.smothered.002": "WAITING",
+        "terminal.tactic.double_attack.001": "INACTIVE",
+        "terminal.tactic.double_attack.002": "WAITING",
+        "terminal.tactic.attraction.001": "INACTIVE",
+        "terminal.tactic.attraction.002": "INACTIVE"
+      },
+      "new_requests": [
+        "script.phase_router",
+        "terminal.tactic.deflection.002",
+        "terminal.tactic.discovered.001",
+        "terminal.tactic.back_rank.001",
+        "terminal.tactic.smothered.001",
+        "terminal.watcher.risk_budget",
+        "terminal.tactic.fork.002",
+        "terminal.tactic.xray.001",
+        "script.phase.critical",
+        "terminal.tactic.fork.001"
+      ]
+    },
+    {
+      "tick": 6,
+      "note": "Reinforcing safety rails before escalation.",
+      "thoughts": "Terminal backlog within tolerance.",
+      "env": {
+        "style": "BALANCED",
+        "risk": 0.544,
+        "phase_weights": {
+          "opening": 0.281,
+          "middlegame": 0.132,
+          "endgame": 0.277,
+          "critical": 0.31
+        }
+      },
+      "states": {
+        "script.root": "WAITING",
+        "script.phase_router": "REQUESTED",
+        "script.expert_switch": "FAILED",
+        "script.arbiter": "REQUESTED",
+        "script.wait_loop": "CONFIRMED",
+        "script.phase.opening": "INACTIVE",
+        "script.phase.middlegame": "CONFIRMED",
+        "script.phase.endgame": "TRUE",
+        "script.phase.critical": "INACTIVE",
+        "script.expert.book.01": "INACTIVE",
+        "script.expert.tactics.01": "WAITING",
+        "script.expert.positional.01": "WAITING",
+        "script.expert.search_lite.01": "REQUESTED",
+        "script.expert.endgame_tb.01": "WAITING",
+        "script.expert.mixture.01": "CONFIRMED",
+        "terminal.watcher.repetition": "INACTIVE",
+        "terminal.watcher.fifty_move": "CONFIRMED",
+        "terminal.watcher.risk_budget": "TRUE",
+        "terminal.watcher.plan_commit": "CONFIRMED",
+        "terminal.watcher.style_profile": "FAILED",
+        "terminal.safety.safety_guard": "REQUESTED",
+        "terminal.safety.sanity_check": "WAITING",
+        "terminal.safety.failsafe": "INACTIVE",
+        "terminal.endgame.zugzwang": "REQUESTED",
+        "terminal.endgame.opposition": "FAILED",
+        "terminal.endgame.triangulation": "TRUE",
+        "terminal.endgame.bridge": "CONFIRMED",
+        "terminal.endgame.lucena": "WAITING",
+        "terminal.endgame.philidor": "TRUE",
+        "terminal.tactic.fork.001": "WAITING",
+        "terminal.tactic.fork.002": "REQUESTED",
+        "terminal.tactic.pin.001": "FAILED",
+        "terminal.tactic.pin.002": "WAITING",
+        "terminal.tactic.skewer.001": "FAILED",
+        "terminal.tactic.skewer.002": "REQUESTED",
+        "terminal.tactic.xray.001": "TRUE",
+        "terminal.tactic.xray.002": "INACTIVE",
+        "terminal.tactic.overload.001": "CONFIRMED",
+        "terminal.tactic.overload.002": "WAITING",
+        "terminal.tactic.deflection.001": "INACTIVE",
+        "terminal.tactic.deflection.002": "REQUESTED",
+        "terminal.tactic.discovered.001": "WAITING",
+        "terminal.tactic.discovered.002": "WAITING",
+        "terminal.tactic.zwischenzug.001": "INACTIVE",
+        "terminal.tactic.zwischenzug.002": "WAITING",
+        "terminal.tactic.trapped_piece.001": "WAITING",
+        "terminal.tactic.trapped_piece.002": "WAITING",
+        "terminal.tactic.back_rank.001": "TRUE",
+        "terminal.tactic.back_rank.002": "WAITING",
+        "terminal.tactic.smothered.001": "WAITING",
+        "terminal.tactic.smothered.002": "WAITING",
+        "terminal.tactic.double_attack.001": "WAITING",
+        "terminal.tactic.double_attack.002": "FAILED",
+        "terminal.tactic.attraction.001": "INACTIVE",
+        "terminal.tactic.attraction.002": "WAITING"
+      },
+      "new_requests": [
+        "terminal.tactic.overload.002",
+        "terminal.tactic.trapped_piece.002",
+        "terminal.tactic.zwischenzug.002",
+        "terminal.tactic.double_attack.001",
+        "terminal.tactic.skewer.002",
+        "terminal.endgame.lucena",
+        "script.expert.positional.01",
+        "terminal.tactic.discovered.002",
+        "terminal.tactic.attraction.002",
+        "terminal.safety.safety_guard",
+        "script.expert.search_lite.01",
+        "terminal.endgame.zugzwang"
+      ]
+    },
+    {
+      "tick": 7,
+      "note": "Routing aggressive tactic burst against defender.",
+      "thoughts": "Phase blend feels healthy.",
+      "env": {
+        "style": "GAMBIT",
+        "risk": 0.169,
+        "phase_weights": {
+          "opening": 0.183,
+          "middlegame": 0.322,
+          "endgame": 0.112,
+          "critical": 0.383
+        }
+      },
+      "states": {
+        "script.root": "WAITING",
+        "script.phase_router": "REQUESTED",
+        "script.expert_switch": "FAILED",
+        "script.arbiter": "REQUESTED",
+        "script.wait_loop": "CONFIRMED",
+        "script.phase.opening": "WAITING",
+        "script.phase.middlegame": "INACTIVE",
+        "script.phase.endgame": "CONFIRMED",
+        "script.phase.critical": "WAITING",
+        "script.expert.book.01": "REQUESTED",
+        "script.expert.tactics.01": "WAITING",
+        "script.expert.positional.01": "TRUE",
+        "script.expert.search_lite.01": "REQUESTED",
+        "script.expert.endgame_tb.01": "WAITING",
+        "script.expert.mixture.01": "CONFIRMED",
+        "terminal.watcher.repetition": "INACTIVE",
+        "terminal.watcher.fifty_move": "CONFIRMED",
+        "terminal.watcher.risk_budget": "CONFIRMED",
+        "terminal.watcher.plan_commit": "CONFIRMED",
+        "terminal.watcher.style_profile": "FAILED",
+        "terminal.safety.safety_guard": "WAITING",
+        "terminal.safety.sanity_check": "TRUE",
+        "terminal.safety.failsafe": "INACTIVE",
+        "terminal.endgame.zugzwang": "REQUESTED",
+        "terminal.endgame.opposition": "FAILED",
+        "terminal.endgame.triangulation": "CONFIRMED",
+        "terminal.endgame.bridge": "CONFIRMED",
+        "terminal.endgame.lucena": "TRUE",
+        "terminal.endgame.philidor": "TRUE",
+        "terminal.tactic.fork.001": "WAITING",
+        "terminal.tactic.fork.002": "WAITING",
+        "terminal.tactic.pin.001": "FAILED",
+        "terminal.tactic.pin.002": "WAITING",
+        "terminal.tactic.skewer.001": "FAILED",
+        "terminal.tactic.skewer.002": "WAITING",
+        "terminal.tactic.xray.001": "TRUE",
+        "terminal.tactic.xray.002": "INACTIVE",
+        "terminal.tactic.overload.001": "CONFIRMED",
+        "terminal.tactic.overload.002": "FAILED",
+        "terminal.tactic.deflection.001": "INACTIVE",
+        "terminal.tactic.deflection.002": "FAILED",
+        "terminal.tactic.discovered.001": "TRUE",
+        "terminal.tactic.discovered.002": "WAITING",
+        "terminal.tactic.zwischenzug.001": "INACTIVE",
+        "terminal.tactic.zwischenzug.002": "TRUE",
+        "terminal.tactic.trapped_piece.001": "WAITING",
+        "terminal.tactic.trapped_piece.002": "WAITING",
+        "terminal.tactic.back_rank.001": "TRUE",
+        "terminal.tactic.back_rank.002": "WAITING",
+        "terminal.tactic.smothered.001": "FAILED",
+        "terminal.tactic.smothered.002": "WAITING",
+        "terminal.tactic.double_attack.001": "WAITING",
+        "terminal.tactic.double_attack.002": "INACTIVE",
+        "terminal.tactic.attraction.001": "REQUESTED",
+        "terminal.tactic.attraction.002": "WAITING"
+      },
+      "new_requests": [
+        "terminal.tactic.attraction.001",
+        "script.phase.opening",
+        "script.expert.book.01",
+        "script.phase.critical"
+      ]
+    },
+    {
+      "tick": 8,
+      "note": "Reinforcing safety rails before escalation.",
+      "thoughts": "Watcher flagged elevated risk budget.",
+      "env": {
+        "style": "GAMBIT",
+        "risk": 0.459,
+        "phase_weights": {
+          "opening": 0.132,
+          "middlegame": 0.41,
+          "endgame": 0.098,
+          "critical": 0.36
+        }
+      },
+      "states": {
+        "script.root": "TRUE",
+        "script.phase_router": "WAITING",
+        "script.expert_switch": "INACTIVE",
+        "script.arbiter": "FAILED",
+        "script.wait_loop": "CONFIRMED",
+        "script.phase.opening": "WAITING",
+        "script.phase.middlegame": "FAILED",
+        "script.phase.endgame": "CONFIRMED",
+        "script.phase.critical": "TRUE",
+        "script.expert.book.01": "WAITING",
+        "script.expert.tactics.01": "WAITING",
+        "script.expert.positional.01": "CONFIRMED",
+        "script.expert.search_lite.01": "WAITING",
+        "script.expert.endgame_tb.01": "WAITING",
+        "script.expert.mixture.01": "CONFIRMED",
+        "terminal.watcher.repetition": "WAITING",
+        "terminal.watcher.fifty_move": "CONFIRMED",
+        "terminal.watcher.risk_budget": "CONFIRMED",
+        "terminal.watcher.plan_commit": "TRUE",
+        "terminal.watcher.style_profile": "FAILED",
+        "terminal.safety.safety_guard": "TRUE",
+        "terminal.safety.sanity_check": "TRUE",
+        "terminal.safety.failsafe": "WAITING",
+        "terminal.endgame.zugzwang": "REQUESTED",
+        "terminal.endgame.opposition": "INACTIVE",
+        "terminal.endgame.triangulation": "CONFIRMED",
+        "terminal.endgame.bridge": "CONFIRMED",
+        "terminal.endgame.lucena": "CONFIRMED",
+        "terminal.endgame.philidor": "CONFIRMED",
+        "terminal.tactic.fork.001": "WAITING",
+        "terminal.tactic.fork.002": "TRUE",
+        "terminal.tactic.pin.001": "FAILED",
+        "terminal.tactic.pin.002": "WAITING",
+        "terminal.tactic.skewer.001": "FAILED",
+        "terminal.tactic.skewer.002": "TRUE",
+        "terminal.tactic.xray.001": "TRUE",
+        "terminal.tactic.xray.002": "WAITING",
+        "terminal.tactic.overload.001": "CONFIRMED",
+        "terminal.tactic.overload.002": "FAILED",
+        "terminal.tactic.deflection.001": "FAILED",
+        "terminal.tactic.deflection.002": "FAILED",
+        "terminal.tactic.discovered.001": "TRUE",
+        "terminal.tactic.discovered.002": "TRUE",
+        "terminal.tactic.zwischenzug.001": "WAITING",
+        "terminal.tactic.zwischenzug.002": "CONFIRMED",
+        "terminal.tactic.trapped_piece.001": "WAITING",
+        "terminal.tactic.trapped_piece.002": "TRUE",
+        "terminal.tactic.back_rank.001": "CONFIRMED",
+        "terminal.tactic.back_rank.002": "TRUE",
+        "terminal.tactic.smothered.001": "INACTIVE",
+        "terminal.tactic.smothered.002": "WAITING",
+        "terminal.tactic.double_attack.001": "WAITING",
+        "terminal.tactic.double_attack.002": "REQUESTED",
+        "terminal.tactic.attraction.001": "WAITING",
+        "terminal.tactic.attraction.002": "TRUE"
+      },
+      "new_requests": [
+        "terminal.safety.failsafe",
+        "script.phase.middlegame",
+        "terminal.tactic.xray.002",
+        "terminal.tactic.double_attack.002",
+        "terminal.tactic.zwischenzug.001",
+        "terminal.watcher.repetition",
+        "terminal.tactic.deflection.001"
+      ]
+    },
+    {
+      "tick": 9,
+      "note": "Reinforcing safety rails before escalation.",
+      "thoughts": "Phase blend feels healthy.",
+      "env": {
+        "style": "GAMBIT",
+        "risk": 0.673,
+        "phase_weights": {
+          "opening": 0.111,
+          "middlegame": 0.08,
+          "endgame": 0.466,
+          "critical": 0.344
+        }
+      },
+      "states": {
+        "script.root": "CONFIRMED",
+        "script.phase_router": "WAITING",
+        "script.expert_switch": "WAITING",
+        "script.arbiter": "FAILED",
+        "script.wait_loop": "INACTIVE",
+        "script.phase.opening": "WAITING",
+        "script.phase.middlegame": "FAILED",
+        "script.phase.endgame": "CONFIRMED",
+        "script.phase.critical": "CONFIRMED",
+        "script.expert.book.01": "WAITING",
+        "script.expert.tactics.01": "FAILED",
+        "script.expert.positional.01": "CONFIRMED",
+        "script.expert.search_lite.01": "WAITING",
+        "script.expert.endgame_tb.01": "WAITING",
+        "script.expert.mixture.01": "CONFIRMED",
+        "terminal.watcher.repetition": "WAITING",
+        "terminal.watcher.fifty_move": "CONFIRMED",
+        "terminal.watcher.risk_budget": "CONFIRMED",
+        "terminal.watcher.plan_commit": "TRUE",
+        "terminal.watcher.style_profile": "INACTIVE",
+        "terminal.safety.safety_guard": "CONFIRMED",
+        "terminal.safety.sanity_check": "TRUE",
+        "terminal.safety.failsafe": "TRUE",
+        "terminal.endgame.zugzwang": "WAITING",
+        "terminal.endgame.opposition": "WAITING",
+        "terminal.endgame.triangulation": "INACTIVE",
+        "terminal.endgame.bridge": "CONFIRMED",
+        "terminal.endgame.lucena": "CONFIRMED",
+        "terminal.endgame.philidor": "CONFIRMED",
+        "terminal.tactic.fork.001": "TRUE",
+        "terminal.tactic.fork.002": "TRUE",
+        "terminal.tactic.pin.001": "FAILED",
+        "terminal.tactic.pin.002": "FAILED",
+        "terminal.tactic.skewer.001": "FAILED",
+        "terminal.tactic.skewer.002": "TRUE",
+        "terminal.tactic.xray.001": "TRUE",
+        "terminal.tactic.xray.002": "WAITING",
+        "terminal.tactic.overload.001": "CONFIRMED",
+        "terminal.tactic.overload.002": "FAILED",
+        "terminal.tactic.deflection.001": "INACTIVE",
+        "terminal.tactic.deflection.002": "INACTIVE",
+        "terminal.tactic.discovered.001": "TRUE",
+        "terminal.tactic.discovered.002": "TRUE",
+        "terminal.tactic.zwischenzug.001": "WAITING",
+        "terminal.tactic.zwischenzug.002": "INACTIVE",
+        "terminal.tactic.trapped_piece.001": "TRUE",
+        "terminal.tactic.trapped_piece.002": "CONFIRMED",
+        "terminal.tactic.back_rank.001": "CONFIRMED",
+        "terminal.tactic.back_rank.002": "TRUE",
+        "terminal.tactic.smothered.001": "WAITING",
+        "terminal.tactic.smothered.002": "TRUE",
+        "terminal.tactic.double_attack.001": "WAITING",
+        "terminal.tactic.double_attack.002": "REQUESTED",
+        "terminal.tactic.attraction.001": "WAITING",
+        "terminal.tactic.attraction.002": "FAILED"
+      },
+      "new_requests": [
+        "script.expert_switch",
+        "terminal.tactic.smothered.001",
+        "terminal.endgame.opposition"
+      ]
+    },
+    {
+      "tick": 10,
+      "note": "Routing aggressive tactic burst against defender.",
+      "thoughts": "Phase blend feels healthy.",
+      "env": {
+        "style": "SHARP",
+        "risk": 0.49,
+        "phase_weights": {
+          "opening": 0.474,
+          "middlegame": 0.108,
+          "endgame": 0.249,
+          "critical": 0.169
+        }
+      },
+      "states": {
+        "script.root": "CONFIRMED",
+        "script.phase_router": "WAITING",
+        "script.expert_switch": "WAITING",
+        "script.arbiter": "INACTIVE",
+        "script.wait_loop": "FAILED",
+        "script.phase.opening": "WAITING",
+        "script.phase.middlegame": "INACTIVE",
+        "script.phase.endgame": "INACTIVE",
+        "script.phase.critical": "CONFIRMED",
+        "script.expert.book.01": "TRUE",
+        "script.expert.tactics.01": "FAILED",
+        "script.expert.positional.01": "CONFIRMED",
+        "script.expert.search_lite.01": "TRUE",
+        "script.expert.endgame_tb.01": "WAITING",
+        "script.expert.mixture.01": "CONFIRMED",
+        "terminal.watcher.repetition": "WAITING",
+        "terminal.watcher.fifty_move": "CONFIRMED",
+        "terminal.watcher.risk_budget": "CONFIRMED",
+        "terminal.watcher.plan_commit": "CONFIRMED",
+        "terminal.watcher.style_profile": "INACTIVE",
+        "terminal.safety.safety_guard": "CONFIRMED",
+        "terminal.safety.sanity_check": "TRUE",
+        "terminal.safety.failsafe": "CONFIRMED",
+        "terminal.endgame.zugzwang": "WAITING",
+        "terminal.endgame.opposition": "WAITING",
+        "terminal.endgame.triangulation": "REQUESTED",
+        "terminal.endgame.bridge": "CONFIRMED",
+        "terminal.endgame.lucena": "CONFIRMED",
+        "terminal.endgame.philidor": "CONFIRMED",
+        "terminal.tactic.fork.001": "CONFIRMED",
+        "terminal.tactic.fork.002": "TRUE",
+        "terminal.tactic.pin.001": "FAILED",
+        "terminal.tactic.pin.002": "FAILED",
+        "terminal.tactic.skewer.001": "INACTIVE",
+        "terminal.tactic.skewer.002": "FAILED",
+        "terminal.tactic.xray.001": "TRUE",
+        "terminal.tactic.xray.002": "FAILED",
+        "terminal.tactic.overload.001": "CONFIRMED",
+        "terminal.tactic.overload.002": "INACTIVE",
+        "terminal.tactic.deflection.001": "REQUESTED",
+        "terminal.tactic.deflection.002": "INACTIVE",
+        "terminal.tactic.discovered.001": "CONFIRMED",
+        "terminal.tactic.discovered.002": "CONFIRMED",
+        "terminal.tactic.zwischenzug.001": "WAITING",
+        "terminal.tactic.zwischenzug.002": "FAILED",
+        "terminal.tactic.trapped_piece.001": "CONFIRMED",
+        "terminal.tactic.trapped_piece.002": "CONFIRMED",
+        "terminal.tactic.back_rank.001": "CONFIRMED",
+        "terminal.tactic.back_rank.002": "CONFIRMED",
+        "terminal.tactic.smothered.001": "TRUE",
+        "terminal.tactic.smothered.002": "TRUE",
+        "terminal.tactic.double_attack.001": "FAILED",
+        "terminal.tactic.double_attack.002": "REQUESTED",
+        "terminal.tactic.attraction.001": "WAITING",
+        "terminal.tactic.attraction.002": "INACTIVE"
+      },
+      "new_requests": [
+        "terminal.tactic.zwischenzug.002",
+        "terminal.endgame.triangulation",
+        "script.wait_loop",
+        "terminal.tactic.deflection.001"
+      ]
+    },
+    {
+      "tick": 11,
+      "note": "Leaning on positional heuristics for stability.",
+      "thoughts": "Phase blend feels healthy.",
+      "env": {
+        "style": "SOLID",
+        "risk": 0.747,
+        "phase_weights": {
+          "opening": 0.18,
+          "middlegame": 0.264,
+          "endgame": 0.453,
+          "critical": 0.102
+        }
+      },
+      "states": {
+        "script.root": "CONFIRMED",
+        "script.phase_router": "FAILED",
+        "script.expert_switch": "FAILED",
+        "script.arbiter": "WAITING",
+        "script.wait_loop": "FAILED",
+        "script.phase.opening": "TRUE",
+        "script.phase.middlegame": "REQUESTED",
+        "script.phase.endgame": "REQUESTED",
+        "script.phase.critical": "CONFIRMED",
+        "script.expert.book.01": "CONFIRMED",
+        "script.expert.tactics.01": "INACTIVE",
+        "script.expert.positional.01": "CONFIRMED",
+        "script.expert.search_lite.01": "CONFIRMED",
+        "script.expert.endgame_tb.01": "TRUE",
+        "script.expert.mixture.01": "CONFIRMED",
+        "terminal.watcher.repetition": "WAITING",
+        "terminal.watcher.fifty_move": "CONFIRMED",
+        "terminal.watcher.risk_budget": "CONFIRMED",
+        "terminal.watcher.plan_commit": "CONFIRMED",
+        "terminal.watcher.style_profile": "REQUESTED",
+        "terminal.safety.safety_guard": "CONFIRMED",
+        "terminal.safety.sanity_check": "TRUE",
+        "terminal.safety.failsafe": "INACTIVE",
+        "terminal.endgame.zugzwang": "WAITING",
+        "terminal.endgame.opposition": "TRUE",
+        "terminal.endgame.triangulation": "WAITING",
+        "terminal.endgame.bridge": "CONFIRMED",
+        "terminal.endgame.lucena": "INACTIVE",
+        "terminal.endgame.philidor": "CONFIRMED",
+        "terminal.tactic.fork.001": "INACTIVE",
+        "terminal.tactic.fork.002": "CONFIRMED",
+        "terminal.tactic.pin.001": "FAILED",
+        "terminal.tactic.pin.002": "FAILED",
+        "terminal.tactic.skewer.001": "WAITING",
+        "terminal.tactic.skewer.002": "FAILED",
+        "terminal.tactic.xray.001": "CONFIRMED",
+        "terminal.tactic.xray.002": "FAILED",
+        "terminal.tactic.overload.001": "CONFIRMED",
+        "terminal.tactic.overload.002": "WAITING",
+        "terminal.tactic.deflection.001": "WAITING",
+        "terminal.tactic.deflection.002": "REQUESTED",
+        "terminal.tactic.discovered.001": "CONFIRMED",
+        "terminal.tactic.discovered.002": "CONFIRMED",
+        "terminal.tactic.zwischenzug.001": "WAITING",
+        "terminal.tactic.zwischenzug.002": "FAILED",
+        "terminal.tactic.trapped_piece.001": "CONFIRMED",
+        "terminal.tactic.trapped_piece.002": "CONFIRMED",
+        "terminal.tactic.back_rank.001": "CONFIRMED",
+        "terminal.tactic.back_rank.002": "CONFIRMED",
+        "terminal.tactic.smothered.001": "TRUE",
+        "terminal.tactic.smothered.002": "CONFIRMED",
+        "terminal.tactic.double_attack.001": "INACTIVE",
+        "terminal.tactic.double_attack.002": "WAITING",
+        "terminal.tactic.attraction.001": "WAITING",
+        "terminal.tactic.attraction.002": "REQUESTED"
+      },
+      "new_requests": [
+        "terminal.tactic.overload.002",
+        "terminal.tactic.deflection.002",
+        "terminal.tactic.skewer.001",
+        "script.phase.endgame",
+        "script.arbiter",
+        "script.phase.middlegame",
+        "terminal.tactic.attraction.002",
+        "terminal.watcher.style_profile"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "tick": 0,
+      "changes": {
+        "script.phase.middlegame": "WAITING",
+        "terminal.watcher.fifty_move": "CONFIRMED",
+        "terminal.safety.failsafe": "REQUESTED",
+        "terminal.endgame.opposition": "REQUESTED",
+        "terminal.tactic.overload.002": "REQUESTED",
+        "terminal.tactic.attraction.002": "FAILED"
+      },
+      "new_requests": [
+        "terminal.endgame.opposition",
+        "script.phase.middlegame",
+        "terminal.safety.failsafe",
+        "terminal.tactic.attraction.002",
+        "terminal.tactic.overload.002"
+      ],
+      "note": "Routing aggressive tactic burst against defender.",
+      "thoughts": "Need fresher tactical ideas."
+    },
+    {
+      "tick": 1,
+      "changes": {
+        "script.phase.middlegame": "TRUE",
+        "terminal.watcher.plan_commit": "WAITING",
+        "terminal.endgame.philidor": "WAITING",
+        "terminal.tactic.skewer.001": "WAITING",
+        "terminal.tactic.overload.001": "WAITING",
+        "terminal.tactic.overload.002": "WAITING",
+        "terminal.tactic.zwischenzug.001": "FAILED",
+        "terminal.tactic.attraction.002": "INACTIVE"
+      },
+      "new_requests": [
+        "terminal.endgame.philidor",
+        "terminal.tactic.zwischenzug.001",
+        "terminal.tactic.skewer.001",
+        "terminal.tactic.overload.001",
+        "terminal.watcher.plan_commit"
+      ],
+      "note": "Leaning on positional heuristics for stability.",
+      "thoughts": "Arbiter sync smooth across experts."
+    },
+    {
+      "tick": 2,
+      "changes": {
+        "script.expert_switch": "REQUESTED",
+        "script.wait_loop": "WAITING",
+        "terminal.watcher.repetition": "REQUESTED",
+        "terminal.watcher.plan_commit": "TRUE",
+        "terminal.safety.failsafe": "WAITING",
+        "terminal.endgame.opposition": "WAITING",
+        "terminal.endgame.bridge": "WAITING",
+        "terminal.tactic.overload.002": "TRUE",
+        "terminal.tactic.zwischenzug.001": "INACTIVE"
+      },
+      "new_requests": [
+        "terminal.watcher.repetition",
+        "script.wait_loop",
+        "script.expert_switch",
+        "terminal.endgame.bridge"
+      ],
+      "note": "Conferring with endgame tablebase expert.",
+      "thoughts": "True confirmations stalling, revisit plan."
+    },
+    {
+      "tick": 3,
+      "changes": {
+        "script.expert_switch": "WAITING",
+        "script.wait_loop": "TRUE",
+        "script.phase.opening": "FAILED",
+        "script.phase.endgame": "WAITING",
+        "script.phase.critical": "FAILED",
+        "script.expert.mixture.01": "WAITING",
+        "terminal.endgame.opposition": "TRUE",
+        "terminal.tactic.overload.002": "CONFIRMED",
+        "terminal.tactic.trapped_piece.001": "WAITING",
+        "terminal.tactic.smothered.002": "WAITING"
+      },
+      "new_requests": [
+        "script.phase.opening",
+        "terminal.tactic.trapped_piece.001",
+        "script.phase.critical",
+        "script.expert.mixture.01",
+        "script.phase.endgame",
+        "terminal.tactic.smothered.002"
+      ],
+      "note": "Tracking new request saturation for this phase.",
+      "thoughts": "True confirmations stalling, revisit plan."
+    },
+    {
+      "tick": 4,
+      "changes": {
+        "script.root": "WAITING",
+        "script.arbiter": "REQUESTED",
+        "script.wait_loop": "CONFIRMED",
+        "script.phase.opening": "INACTIVE",
+        "script.phase.critical": "INACTIVE",
+        "script.expert.tactics.01": "REQUESTED",
+        "script.expert.endgame_tb.01": "REQUESTED",
+        "script.expert.mixture.01": "TRUE",
+        "terminal.watcher.repetition": "WAITING",
+        "terminal.watcher.plan_commit": "CONFIRMED",
+        "terminal.watcher.style_profile": "WAITING",
+        "terminal.safety.sanity_check": "REQUESTED",
+        "terminal.safety.failsafe": "FAILED",
+        "terminal.endgame.triangulation": "WAITING",
+        "terminal.endgame.bridge": "TRUE",
+        "terminal.endgame.philidor": "TRUE",
+        "terminal.tactic.pin.001": "WAITING",
+        "terminal.tactic.pin.002": "REQUESTED",
+        "terminal.tactic.skewer.001": "TRUE",
+        "terminal.tactic.zwischenzug.001": "FAILED",
+        "terminal.tactic.back_rank.002": "REQUESTED",
+        "terminal.tactic.double_attack.002": "WAITING"
+      },
+      "new_requests": [
+        "script.root",
+        "script.expert.endgame_tb.01",
+        "script.expert.tactics.01",
+        "terminal.watcher.style_profile",
+        "script.arbiter",
+        "terminal.tactic.zwischenzug.001",
+        "terminal.safety.sanity_check",
+        "terminal.tactic.pin.002",
+        "terminal.tactic.pin.001",
+        "terminal.tactic.double_attack.002",
+        "terminal.endgame.triangulation",
+        "terminal.tactic.back_rank.002"
+      ],
+      "note": "Routing aggressive tactic burst against defender.",
+      "thoughts": "Need fresher tactical ideas."
+    },
+    {
+      "tick": 5,
+      "changes": {
+        "script.phase_router": "REQUESTED",
+        "script.expert_switch": "TRUE",
+        "script.phase.middlegame": "CONFIRMED",
+        "script.phase.critical": "FAILED",
+        "script.expert.endgame_tb.01": "WAITING",
+        "terminal.watcher.repetition": "FAILED",
+        "terminal.watcher.risk_budget": "WAITING",
+        "terminal.safety.sanity_check": "WAITING",
+        "terminal.safety.failsafe": "INACTIVE",
+        "terminal.endgame.opposition": "FAILED",
+        "terminal.tactic.fork.001": "WAITING",
+        "terminal.tactic.fork.002": "REQUESTED",
+        "terminal.tactic.pin.002": "WAITING",
+        "terminal.tactic.xray.001": "WAITING",
+        "terminal.tactic.overload.001": "TRUE",
+        "terminal.tactic.overload.002": "INACTIVE",
+        "terminal.tactic.deflection.002": "REQUESTED",
+        "terminal.tactic.discovered.001": "REQUESTED",
+        "terminal.tactic.back_rank.001": "WAITING",
+        "terminal.tactic.back_rank.002": "WAITING",
+        "terminal.tactic.smothered.001": "REQUESTED"
+      },
+      "new_requests": [
+        "script.phase_router",
+        "terminal.tactic.deflection.002",
+        "terminal.tactic.discovered.001",
+        "terminal.tactic.back_rank.001",
+        "terminal.tactic.smothered.001",
+        "terminal.watcher.risk_budget",
+        "terminal.tactic.fork.002",
+        "terminal.tactic.xray.001",
+        "script.phase.critical",
+        "terminal.tactic.fork.001"
+      ],
+      "note": "Conferring with endgame tablebase expert.",
+      "thoughts": "Watcher flagged elevated risk budget."
+    },
+    {
+      "tick": 6,
+      "changes": {
+        "script.expert_switch": "FAILED",
+        "script.phase.endgame": "TRUE",
+        "script.phase.critical": "INACTIVE",
+        "script.expert.tactics.01": "WAITING",
+        "script.expert.positional.01": "WAITING",
+        "script.expert.search_lite.01": "REQUESTED",
+        "script.expert.mixture.01": "CONFIRMED",
+        "terminal.watcher.repetition": "INACTIVE",
+        "terminal.watcher.risk_budget": "TRUE",
+        "terminal.watcher.style_profile": "FAILED",
+        "terminal.safety.safety_guard": "REQUESTED",
+        "terminal.endgame.zugzwang": "REQUESTED",
+        "terminal.endgame.triangulation": "TRUE",
+        "terminal.endgame.bridge": "CONFIRMED",
+        "terminal.endgame.lucena": "WAITING",
+        "terminal.tactic.pin.001": "FAILED",
+        "terminal.tactic.skewer.001": "FAILED",
+        "terminal.tactic.skewer.002": "REQUESTED",
+        "terminal.tactic.xray.001": "TRUE",
+        "terminal.tactic.overload.001": "CONFIRMED",
+        "terminal.tactic.overload.002": "WAITING",
+        "terminal.tactic.discovered.001": "WAITING",
+        "terminal.tactic.discovered.002": "WAITING",
+        "terminal.tactic.zwischenzug.001": "INACTIVE",
+        "terminal.tactic.zwischenzug.002": "WAITING",
+        "terminal.tactic.trapped_piece.002": "WAITING",
+        "terminal.tactic.back_rank.001": "TRUE",
+        "terminal.tactic.smothered.001": "WAITING",
+        "terminal.tactic.double_attack.001": "WAITING",
+        "terminal.tactic.double_attack.002": "FAILED",
+        "terminal.tactic.attraction.002": "WAITING"
+      },
+      "new_requests": [
+        "terminal.tactic.overload.002",
+        "terminal.tactic.trapped_piece.002",
+        "terminal.tactic.zwischenzug.002",
+        "terminal.tactic.double_attack.001",
+        "terminal.tactic.skewer.002",
+        "terminal.endgame.lucena",
+        "script.expert.positional.01",
+        "terminal.tactic.discovered.002",
+        "terminal.tactic.attraction.002",
+        "terminal.safety.safety_guard",
+        "script.expert.search_lite.01",
+        "terminal.endgame.zugzwang"
+      ],
+      "note": "Reinforcing safety rails before escalation.",
+      "thoughts": "Terminal backlog within tolerance."
+    },
+    {
+      "tick": 7,
+      "changes": {
+        "script.phase.opening": "WAITING",
+        "script.phase.middlegame": "INACTIVE",
+        "script.phase.endgame": "CONFIRMED",
+        "script.phase.critical": "WAITING",
+        "script.expert.book.01": "REQUESTED",
+        "script.expert.positional.01": "TRUE",
+        "terminal.watcher.risk_budget": "CONFIRMED",
+        "terminal.safety.safety_guard": "WAITING",
+        "terminal.safety.sanity_check": "TRUE",
+        "terminal.endgame.triangulation": "CONFIRMED",
+        "terminal.endgame.lucena": "TRUE",
+        "terminal.tactic.fork.002": "WAITING",
+        "terminal.tactic.skewer.002": "WAITING",
+        "terminal.tactic.overload.002": "FAILED",
+        "terminal.tactic.deflection.002": "FAILED",
+        "terminal.tactic.discovered.001": "TRUE",
+        "terminal.tactic.zwischenzug.002": "TRUE",
+        "terminal.tactic.smothered.001": "FAILED",
+        "terminal.tactic.double_attack.002": "INACTIVE",
+        "terminal.tactic.attraction.001": "REQUESTED"
+      },
+      "new_requests": [
+        "terminal.tactic.attraction.001",
+        "script.phase.opening",
+        "script.expert.book.01",
+        "script.phase.critical"
+      ],
+      "note": "Routing aggressive tactic burst against defender.",
+      "thoughts": "Phase blend feels healthy."
+    },
+    {
+      "tick": 8,
+      "changes": {
+        "script.root": "TRUE",
+        "script.phase_router": "WAITING",
+        "script.expert_switch": "INACTIVE",
+        "script.arbiter": "FAILED",
+        "script.phase.middlegame": "FAILED",
+        "script.phase.critical": "TRUE",
+        "script.expert.book.01": "WAITING",
+        "script.expert.positional.01": "CONFIRMED",
+        "script.expert.search_lite.01": "WAITING",
+        "terminal.watcher.repetition": "WAITING",
+        "terminal.watcher.plan_commit": "TRUE",
+        "terminal.safety.safety_guard": "TRUE",
+        "terminal.safety.failsafe": "WAITING",
+        "terminal.endgame.opposition": "INACTIVE",
+        "terminal.endgame.lucena": "CONFIRMED",
+        "terminal.endgame.philidor": "CONFIRMED",
+        "terminal.tactic.fork.002": "TRUE",
+        "terminal.tactic.skewer.002": "TRUE",
+        "terminal.tactic.xray.002": "WAITING",
+        "terminal.tactic.deflection.001": "FAILED",
+        "terminal.tactic.discovered.002": "TRUE",
+        "terminal.tactic.zwischenzug.001": "WAITING",
+        "terminal.tactic.zwischenzug.002": "CONFIRMED",
+        "terminal.tactic.trapped_piece.002": "TRUE",
+        "terminal.tactic.back_rank.001": "CONFIRMED",
+        "terminal.tactic.back_rank.002": "TRUE",
+        "terminal.tactic.smothered.001": "INACTIVE",
+        "terminal.tactic.double_attack.002": "REQUESTED",
+        "terminal.tactic.attraction.001": "WAITING",
+        "terminal.tactic.attraction.002": "TRUE"
+      },
+      "new_requests": [
+        "terminal.safety.failsafe",
+        "script.phase.middlegame",
+        "terminal.tactic.xray.002",
+        "terminal.tactic.double_attack.002",
+        "terminal.tactic.zwischenzug.001",
+        "terminal.watcher.repetition",
+        "terminal.tactic.deflection.001"
+      ],
+      "note": "Reinforcing safety rails before escalation.",
+      "thoughts": "Watcher flagged elevated risk budget."
+    },
+    {
+      "tick": 9,
+      "changes": {
+        "script.root": "CONFIRMED",
+        "script.expert_switch": "WAITING",
+        "script.wait_loop": "INACTIVE",
+        "script.phase.critical": "CONFIRMED",
+        "script.expert.tactics.01": "FAILED",
+        "terminal.watcher.style_profile": "INACTIVE",
+        "terminal.safety.safety_guard": "CONFIRMED",
+        "terminal.safety.failsafe": "TRUE",
+        "terminal.endgame.zugzwang": "WAITING",
+        "terminal.endgame.opposition": "WAITING",
+        "terminal.endgame.triangulation": "INACTIVE",
+        "terminal.tactic.fork.001": "TRUE",
+        "terminal.tactic.pin.002": "FAILED",
+        "terminal.tactic.deflection.001": "INACTIVE",
+        "terminal.tactic.deflection.002": "INACTIVE",
+        "terminal.tactic.zwischenzug.002": "INACTIVE",
+        "terminal.tactic.trapped_piece.001": "TRUE",
+        "terminal.tactic.trapped_piece.002": "CONFIRMED",
+        "terminal.tactic.smothered.001": "WAITING",
+        "terminal.tactic.smothered.002": "TRUE",
+        "terminal.tactic.attraction.002": "FAILED"
+      },
+      "new_requests": [
+        "script.expert_switch",
+        "terminal.tactic.smothered.001",
+        "terminal.endgame.opposition"
+      ],
+      "note": "Reinforcing safety rails before escalation.",
+      "thoughts": "Phase blend feels healthy."
+    },
+    {
+      "tick": 10,
+      "changes": {
+        "script.arbiter": "INACTIVE",
+        "script.wait_loop": "FAILED",
+        "script.phase.middlegame": "INACTIVE",
+        "script.phase.endgame": "INACTIVE",
+        "script.expert.book.01": "TRUE",
+        "script.expert.search_lite.01": "TRUE",
+        "terminal.watcher.plan_commit": "CONFIRMED",
+        "terminal.safety.failsafe": "CONFIRMED",
+        "terminal.endgame.triangulation": "REQUESTED",
+        "terminal.tactic.fork.001": "CONFIRMED",
+        "terminal.tactic.skewer.001": "INACTIVE",
+        "terminal.tactic.skewer.002": "FAILED",
+        "terminal.tactic.xray.002": "FAILED",
+        "terminal.tactic.overload.002": "INACTIVE",
+        "terminal.tactic.deflection.001": "REQUESTED",
+        "terminal.tactic.discovered.001": "CONFIRMED",
+        "terminal.tactic.discovered.002": "CONFIRMED",
+        "terminal.tactic.zwischenzug.002": "FAILED",
+        "terminal.tactic.trapped_piece.001": "CONFIRMED",
+        "terminal.tactic.back_rank.002": "CONFIRMED",
+        "terminal.tactic.smothered.001": "TRUE",
+        "terminal.tactic.double_attack.001": "FAILED",
+        "terminal.tactic.attraction.002": "INACTIVE"
+      },
+      "new_requests": [
+        "terminal.tactic.zwischenzug.002",
+        "terminal.endgame.triangulation",
+        "script.wait_loop",
+        "terminal.tactic.deflection.001"
+      ],
+      "note": "Routing aggressive tactic burst against defender.",
+      "thoughts": "Phase blend feels healthy."
+    },
+    {
+      "tick": 11,
+      "changes": {
+        "script.phase_router": "FAILED",
+        "script.expert_switch": "FAILED",
+        "script.arbiter": "WAITING",
+        "script.phase.opening": "TRUE",
+        "script.phase.middlegame": "REQUESTED",
+        "script.phase.endgame": "REQUESTED",
+        "script.expert.book.01": "CONFIRMED",
+        "script.expert.tactics.01": "INACTIVE",
+        "script.expert.search_lite.01": "CONFIRMED",
+        "script.expert.endgame_tb.01": "TRUE",
+        "terminal.watcher.style_profile": "REQUESTED",
+        "terminal.safety.failsafe": "INACTIVE",
+        "terminal.endgame.opposition": "TRUE",
+        "terminal.endgame.triangulation": "WAITING",
+        "terminal.endgame.lucena": "INACTIVE",
+        "terminal.tactic.fork.001": "INACTIVE",
+        "terminal.tactic.fork.002": "CONFIRMED",
+        "terminal.tactic.skewer.001": "WAITING",
+        "terminal.tactic.xray.001": "CONFIRMED",
+        "terminal.tactic.overload.002": "WAITING",
+        "terminal.tactic.deflection.001": "WAITING",
+        "terminal.tactic.deflection.002": "REQUESTED",
+        "terminal.tactic.smothered.002": "CONFIRMED",
+        "terminal.tactic.double_attack.001": "INACTIVE",
+        "terminal.tactic.double_attack.002": "WAITING",
+        "terminal.tactic.attraction.002": "REQUESTED"
+      },
+      "new_requests": [
+        "terminal.tactic.overload.002",
+        "terminal.tactic.deflection.002",
+        "terminal.tactic.skewer.001",
+        "script.phase.endgame",
+        "script.arbiter",
+        "script.phase.middlegame",
+        "terminal.tactic.attraction.002",
+        "terminal.watcher.style_profile"
+      ],
+      "note": "Leaning on positional heuristics for stability.",
+      "thoughts": "Phase blend feels healthy."
+    }
+  ]
+}
