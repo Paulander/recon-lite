@@ -37,6 +37,7 @@
                 <div class="thoughts-container">
                     <div class="thoughts-label">AI Thoughts:</div>
                     <div class="thoughts-text" id="thoughts-text">Initializing ReCoN network...</div>
+                    <div class="rationale-ribbon" id="rationale-ribbon" style="display:none;"></div>
                 </div>
             </div>
 
@@ -88,6 +89,10 @@
                     <label for="toggle-labels" class="label-toggle">
                         <input type="checkbox" id="toggle-labels" checked>
                         <span>Show labels</span>
+                    </label>
+                    <label for="toggle-compact" class="label-toggle">
+                        <input type="checkbox" id="toggle-compact" checked>
+                        <span>Collapse wrappers</span>
                     </label>
                 </div>
                 <canvas id="network-canvas" style="flex: 1; border-radius: 8px; background: #f8f9fa;"></canvas>
@@ -224,6 +229,14 @@
                     this.networkVis.setShowLabels(labelToggle.checked);
                     labelToggle.addEventListener('change', (e) => {
                         this.networkVis.setShowLabels(e.target.checked);
+                    });
+                }
+
+                const compactToggle = document.getElementById('toggle-compact');
+                if (compactToggle) {
+                    this.networkVis.setCompact(compactToggle.checked);
+                    compactToggle.addEventListener('change', (e) => {
+                        this.networkVis.setCompact(e.target.checked);
                     });
                 }
 
@@ -382,6 +395,18 @@
                 // Update thoughts
                 if (frame.thoughts) {
                     document.getElementById('thoughts-text').textContent = frame.thoughts;
+                }
+
+                const rationaleEl = document.getElementById('rationale-ribbon');
+                if (rationaleEl) {
+                    const reason = frame.env && (frame.env.last_reason || frame.env.reason);
+                    if (reason) {
+                        rationaleEl.textContent = `Rationale: ${reason}`;
+                        rationaleEl.style.display = 'block';
+                    } else {
+                        rationaleEl.textContent = '';
+                        rationaleEl.style.display = 'none';
+                    }
                 }
 
                 // Ensure we always have node state data

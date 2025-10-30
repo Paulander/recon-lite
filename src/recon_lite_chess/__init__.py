@@ -43,6 +43,8 @@ from .krk_nodes import wire_default_krk
 # Import predicates/actuators submodules so callers can use them if needed
 from . import predicates
 from . import actuators
+from . import strategy
+from . import actuators_blend
 
 __all__ = [
     # Terminal evaluators
@@ -77,5 +79,5 @@ __all__ = [
     "wire_default_krk",
 
     # Submodules
-    "predicates", "actuators",
+    "predicates", "actuators", "strategy", "actuators_blend",
 ]

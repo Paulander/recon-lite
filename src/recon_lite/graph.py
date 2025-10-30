@@ -1,7 +1,8 @@
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Dict, List, Tuple, Optional, Callable, Any
-import numpy as np  # For activations
+
+from .core.activations import ActivationState
 
 
 # This file defines the graph data structure and the core node and edge types.
@@ -43,7 +44,7 @@ class Node:
     nid: str
     ntype: NodeType
     state: NodeState = NodeState.INACTIVE
-    activation: np.ndarray = field(default_factory=lambda: np.array([0.0]))  # a ∈ R^n - activation function. Can implement boolean AND/OR or continuous functions.
+    activation: ActivationState = field(default_factory=ActivationState)  # Continuous activation per node (scalar for now).
     predicate: Optional[Callable[['Node', Any], Tuple[bool, bool]]] = None
     tick_entered: int = 0
     meta: Dict[str, Any] = field(default_factory=dict)
@@ -54,7 +55,7 @@ class Edge:
     src: str
     dst: str
     ltype: LinkType
-    w: np.ndarray = field(default_factory=lambda: np.array([1.0]))  # Weights \in R^n; default scalar 1.0. 
+    w: Any = field(default_factory=lambda: 1.0)  # Allow scalar weight without forcing numpy.
 
 class Graph:
     def __init__(self):

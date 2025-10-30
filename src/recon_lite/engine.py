@@ -1,6 +1,7 @@
 # recon_lite/engine.py
 from typing import Dict, Any, Optional
 from .graph import Graph, NodeType, NodeState, LinkType
+from .time.microtick import MicrotickConfig, run_microticks
 
 class ReConEngine:
     """
@@ -191,6 +192,30 @@ class ReConEngine:
         """Execute one discrete time step of the ReCon network."""
         self.tick += 1
         env = env or {}
+        micro_cfg = env.get("microticks")
+        micro_history = None
+
+        if isinstance(micro_cfg, MicrotickConfig):
+            micro_history = run_microticks(micro_cfg)
+        elif isinstance(micro_cfg, dict):
+            states = micro_cfg.get("states")
+            compute_targets = micro_cfg.get("compute_targets")
+            steps = micro_cfg.get("steps", 0)
+            eta = micro_cfg.get("eta", 0.3)
+            history_flag = bool(micro_cfg.get("history", False))
+            if states is not None and compute_targets is not None and steps:
+                cfg = MicrotickConfig(
+                    states=states,
+                    compute_targets=compute_targets,
+                    steps=int(steps),
+                    eta=float(eta),
+                    history=history_flag,
+                )
+                micro_history = run_microticks(cfg)
+
+        if micro_history is not None:
+            env["microtick_history"] = micro_history
+
         now_requested: Dict[str, bool] = {}
 
         self._update_terminals(env, now_requested)

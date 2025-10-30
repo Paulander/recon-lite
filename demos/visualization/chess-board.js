@@ -6,6 +6,8 @@ class ChessBoard {
         this.boardElement = null;
         this.chess = null; // Will hold Chess.js instance
         this.lastEnv = null; // Cache the last env that had position info
+        this.bindingColors = {};
+        this.bindingPalette = ['#0ea5e9', '#f97316', '#22c55e', '#a855f7', '#ef4444', '#14b8a6'];
     }
 
     init() {
@@ -31,12 +33,14 @@ class ChessBoard {
                 fen: renderEnv.fen,
                 initial_fen: renderEnv.initial_fen,
                 moves: Array.isArray(renderEnv.moves) ? [...renderEnv.moves] : undefined,
+                binding: renderEnv.binding,
             };
         } else if (this.lastEnv) {
             renderEnv = {
                 fen: this.lastEnv.fen,
                 initial_fen: this.lastEnv.initial_fen,
                 moves: this.lastEnv.moves ? [...this.lastEnv.moves] : undefined,
+                binding: this.lastEnv.binding,
             };
         }
 
@@ -77,12 +81,18 @@ class ChessBoard {
 
         let boardHtml = '';
         const board = this.chess.board();
+        const bindingMap = this.computeBindingMap(renderEnv.binding);
 
         for (let row = 0; row < 8; row++) {
             for (let col = 0; col < 8; col++) {
                 const square = board[row][col];
                 const isLight = (row + col) % 2 === 0;
                 const squareClass = isLight ? 'white' : 'black';
+
+                const file = 'abcdefgh'[col];
+                const rank = 8 - row;
+                const squareName = `${file}${rank}`;
+                const bindings = bindingMap[squareName];
 
                 boardHtml += `<div class="square ${squareClass}">`;
 
@@ -93,11 +103,58 @@ class ChessBoard {
                     boardHtml += `<div class="piece ${color}">${pieceSymbol}</div>`;
                 }
 
+                if (bindings && bindings.length) {
+                    boardHtml += '<div class="binding-overlay">';
+                    bindings.slice(0, 3).forEach((info) => {
+                        const abbrev = info.feature ? info.feature.split(/[\s_]+/)[0] : '•';
+                        const label = abbrev.length > 4 ? abbrev.slice(0, 4) : abbrev;
+                        const title = `${info.namespace}: ${info.feature}`;
+                        boardHtml += `<span class="binding-chip" style="background:${info.color}" title="${title}">${label}</span>`;
+                    });
+                    boardHtml += '</div>';
+                }
+
                 boardHtml += '</div>';
             }
         }
 
         boardElement.innerHTML = boardHtml;
+    }
+
+    colorForNamespace(namespace) {
+        if (!namespace) return '#64748b';
+        if (!this.bindingColors[namespace]) {
+            const palette = this.bindingPalette;
+            const index = Object.keys(this.bindingColors).length % palette.length;
+            this.bindingColors[namespace] = palette[index];
+        }
+        return this.bindingColors[namespace];
+    }
+
+    computeBindingMap(bindingPayload) {
+        const mapping = {};
+        if (!bindingPayload || typeof bindingPayload !== 'object') {
+            return mapping;
+        }
+        Object.entries(bindingPayload).forEach(([namespace, instances]) => {
+            if (!Array.isArray(instances)) return;
+            instances.forEach((instance) => {
+                if (!instance || !Array.isArray(instance.items)) return;
+                const feature = instance.feature || instance.id || namespace;
+                const color = this.colorForNamespace(namespace);
+                instance.items.forEach((item) => {
+                    if (typeof item !== 'string') return;
+                    const [kind, value] = item.split(':');
+                    if (kind !== 'square' || !value) return;
+                    const square = value.toLowerCase();
+                    if (!mapping[square]) {
+                        mapping[square] = [];
+                    }
+                    mapping[square].push({ namespace, feature, color });
+                });
+            });
+        });
+        return mapping;
     }
 
     // Get chess piece symbol

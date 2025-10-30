@@ -12,6 +12,8 @@ class NetworkVisualization {
         this.showLabels = true;
         this.lastFrame = null;
         this.lastNewRequests = new Set();
+        this.lastLatents = {};
+        this.pulseStrength = {};
     }
 
     normalizeId(id) {
@@ -342,6 +344,12 @@ class NetworkVisualization {
         } : { r: 255, g: 255, b: 255 };
     }
 
+    static applyAlpha(hex, alpha) {
+        const { r, g, b } = NetworkVisualization.hexToRgb(hex);
+        const a = Math.max(0, Math.min(1, Number.isFinite(alpha) ? alpha : 1));
+        return `rgba(${r}, ${g}, ${b}, ${a.toFixed(3)})`;
+    }
+
     static luminance(hex) {
         const { r, g, b } = NetworkVisualization.hexToRgb(hex);
         const a = [r, g, b].map(v => {
@@ -403,6 +411,37 @@ class NetworkVisualization {
             drawFrame = NetworkVisualization.cloneDeep(this.lastFrame);
             nodesState = this.normalizeNodes(drawFrame.nodes || {});
         }
+
+        const rawLatents = (drawFrame && drawFrame.latents) ? drawFrame.latents : {};
+        const latents = {};
+        Object.entries(rawLatents).forEach(([key, value]) => {
+            const nid = this.normalizeId(key);
+            if (Array.isArray(value)) {
+                latents[nid] = typeof value[0] === 'number' ? value[0] : 0;
+            } else if (typeof value === 'number') {
+                latents[nid] = value;
+            }
+        });
+
+        const pulseStrength = { ...this.pulseStrength };
+        Object.entries(latents).forEach(([nid, value]) => {
+            const prev = (this.lastLatents && typeof this.lastLatents[nid] === 'number') ? this.lastLatents[nid] : 0;
+            if (value > prev + 1e-3) {
+                pulseStrength[nid] = 1.0;
+            } else {
+                pulseStrength[nid] = (pulseStrength[nid] ?? 0) * 0.85;
+            }
+        });
+        Object.keys(pulseStrength).forEach((nid) => {
+            if (!(nid in latents)) {
+                pulseStrength[nid] = (pulseStrength[nid] ?? 0) * 0.8;
+                if (pulseStrength[nid] < 0.02) {
+                    delete pulseStrength[nid];
+                }
+            }
+        });
+        this.pulseStrength = pulseStrength;
+        this.lastLatents = { ...latents };
 
         const canvas = this.ctx.canvas;
 
@@ -499,8 +538,10 @@ class NetworkVisualization {
             const pos = positions[nodeId];
             if (!pos) return;
             const state = nodesState[nodeId] || 'INACTIVE';
-            const fill = NetworkVisualization.stateColors[state] || NetworkVisualization.stateColors['INACTIVE'];
+            const baseFill = NetworkVisualization.stateColors[state] || NetworkVisualization.stateColors['INACTIVE'];
             const border = NetworkVisualization.stateBorderColors[state] || '#607d8b';
+            const latentVal = typeof latents[nodeId] === 'number' ? Math.max(0, Math.min(1, latents[nodeId])) : null;
+            const fill = (latentVal !== null) ? NetworkVisualization.applyAlpha(baseFill, 0.25 + 0.75 * latentVal) : baseFill;
 
             // Node circle
             const radius = layout.radius;
@@ -524,6 +565,35 @@ class NetworkVisualization {
                 this.ctx.arc(pos.x, pos.y, radius, 0, 2 * Math.PI);
                 this.ctx.fill();
                 this.ctx.stroke();
+            }
+
+            const pulse = this.pulseStrength[nodeId] || 0;
+            if (pulse > 0.05) {
+                const glowRadius = radius + layout.glowRadiusOffset * (1 + pulse * 0.5);
+                this.ctx.save();
+                this.ctx.lineWidth = layout.glowLineWidth * (1 + pulse);
+                this.ctx.strokeStyle = NetworkVisualization.applyAlpha('#38bdf8', Math.min(0.6, pulse));
+                this.ctx.beginPath();
+                if (NetworkVisualization.sensorNodes.has(nodeId)) {
+                    this.ctx.moveTo(pos.x, pos.y - glowRadius);
+                    this.ctx.lineTo(pos.x + glowRadius, pos.y);
+                    this.ctx.lineTo(pos.x, pos.y + glowRadius);
+                    this.ctx.lineTo(pos.x - glowRadius, pos.y);
+                    this.ctx.closePath();
+                } else {
+                    this.ctx.arc(pos.x, pos.y, glowRadius, 0, 2 * Math.PI);
+                }
+                this.ctx.stroke();
+                this.ctx.restore();
+                this.pulseStrength[nodeId] = pulse * 0.82;
+                if (this.pulseStrength[nodeId] < 0.02) {
+                    delete this.pulseStrength[nodeId];
+                }
+            } else if (pulse) {
+                this.pulseStrength[nodeId] = pulse * 0.82;
+                if (this.pulseStrength[nodeId] < 0.02) {
+                    delete this.pulseStrength[nodeId];
+                }
             }
 
             // Transition glow for nodes that changed state this frame
@@ -583,6 +653,13 @@ class NetworkVisualization {
 
     setShowLabels(show) {
         this.showLabels = !!show;
+        if (this.lastFrame) {
+            this.draw();
+        }
+    }
+
+    setCompact(compact) {
+        this.compact = !!compact;
         if (this.lastFrame) {
             this.draw();
         }
