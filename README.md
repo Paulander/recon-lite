@@ -1,21 +1,8 @@
 # Request Confirmation Networks – Implementation & Demos
 
-Quick summary and background for CIMC. This will be moved after initial review (regular README further
-down in this document).
-
-### TL;DR for the review (latest updated 23 Sep, more below since earlier version)
-- **Persistent KRK demo**: `uv run python demos/persistent/krk_persistent_demo.py --max-plies 40 --seed 0 --output-basename krk_persistent_review`
-- **Full-state logging for animation** (captures node states every frame):
-  `uv run python demos/persistent/krk_persistent_demo.py --max-plies 40 --seed 0 --log-full-state --output-basename krk_fulltrace`
-- **Ready-made logs**: `demos/outputs/krk_persistent_review_viz.json` (+ `_debug.json`) capture the full forced-mate run. For per-frame node colors, use `krk_fulltrace_viz.json` produced with `--log-full-state`.
-   - also check `demos/outputs/krk_c3_start_viz.json` where we see the Recon get "stuck" in Phase 2 (due to bad implementation), once the opponent makes a mistake and moves their king to the edge of the board, 
-   we see the recon activating phase 3 (and 4) to go for the throat. From there the heuristics are in place and mate is achieved. **This example clearly shows how different parts of the ReCoN graph are responsible 
-   for different sub-features/decisions.** Here based on the terminal nodes detecting that the opposing king is at the edge of the board. 
-
-- **Visualization entry point**: open `demos/visualization/chessboard_view.html` (or `onepage_view.html`) and click “Load JSON” to replay any `_viz.json`, including the bundled run above.
-
 ## Intro/Background
-This repo is my one-week exploration of Request Confirmation Networks (ReCoNs), a cognitive architecture proposed for hierarchical, sequential control and feature detection.
+This repo started as my one-week exploration of Request Confirmation Networks (ReCoNs), a cognitive architecture proposed for hierarchical, sequential control and feature detection. I have kept working on it and the current goal is to have a Chess playing demo 
+that can play a full game of chess at at least 1900 ELO (which falls short of top chess engines, but is better than general LLMs such as GPT-5 or Grok 4). One core design philosophy is that the internal state of the graph should always be visibile/accesible.
 
 ## What I built
 
