@@ -104,11 +104,9 @@ def opponent_random_move(board: chess.Board) -> str | None:
 # -------- engine stepper --------
 
 def choose_move_with_graph(board: chess.Board, logger: RunLogger, move_no: int,
-                           max_ticks: int = 200) -> str | None:
-    """
-    Build a fresh KRK graph, request ROOT, tick until env["chosen_move"] is set
-    or until max_ticks. Returns UCI string or None.
-    """
+                           max_ticks: int = 200,
+                           log_every_tick: bool = False,
+                           linger_ticks_after_choice: int = 0) -> str | None:
     env = {"board": board, "chosen_move": None}
 
     g = build_krk_graph()
@@ -120,13 +118,32 @@ def choose_move_with_graph(board: chess.Board, logger: RunLogger, move_no: int,
         ticks += 1
         now_req = eng.step(env)
 
-        # snapshot periodically to inspect why the graph might be idle
-        if ticks % 10 == 0:
+        if log_every_tick or ticks % 10 == 0:
             logger.snapshot(
                 engine=eng,
                 note=f"Eval tick {ticks} (move {move_no})",
                 env={"fen": board.fen(), "move_number": move_no, "evaluation_tick": ticks},
-                thoughts=f"Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move'].",
+                thoughts="Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move'].",
+                new_requests=list(now_req.keys()) if now_req else []
+            )
+
+    if env.get("chosen_move") is not None:
+        logger.snapshot(
+            engine=eng,
+            note=f"Decision at tick {ticks} (move {move_no})",
+            env={"fen": board.fen(), "move_number": move_no, "evaluation_tick": ticks, "chosen_move": env.get("chosen_move")},
+            thoughts="Decision made; capturing final node states.",
+            new_requests=[]
+        )
+        linger = max(0, int(linger_ticks_after_choice))
+        for i in range(linger):
+            ticks += 1
+            now_req = eng.step(env)
+            logger.snapshot(
+                engine=eng,
+                note=f"Post-decision linger tick {i+1}/{linger} (move {move_no})",
+                env={"fen": board.fen(), "move_number": move_no, "evaluation_tick": ticks, "chosen_move": env.get("chosen_move")},
+                thoughts="Linger after choice to visualize downstream phase activation.",
                 new_requests=list(now_req.keys()) if now_req else []
             )
 
@@ -135,7 +152,7 @@ def choose_move_with_graph(board: chess.Board, logger: RunLogger, move_no: int,
 
 # -------- single game loop --------
 
-def play_single_game(initial_fen: str | None = None, max_plies: int = 200) -> dict:
+def play_single_game(initial_fen: str | None = None, max_plies: int = 200, *, log_every_tick: bool = False, linger: int = 0) -> dict:
     """
     Plays a single KRK game: White (ReCoN) vs Black (random).
     Returns summary dict with details for later aggregation.
@@ -155,8 +172,7 @@ def play_single_game(initial_fen: str | None = None, max_plies: int = 200) -> di
         ply += 1
 
         # ---- White / ReCoN ----
-        chosen_uci = choose_move_with_graph(board, logger, ply)
-
+        chosen_uci = choose_move_with_graph(board, logger, ply, log_every_tick=log_every_tick, linger_ticks_after_choice=linger)
         if not chosen_uci:
             stalls += 1
             print(f"❌ Stall on ply {ply}: no chosen move, aborting.")
@@ -226,7 +242,7 @@ def play_single_game(initial_fen: str | None = None, max_plies: int = 200) -> di
     }
 
     # Save a compact log that your visualizer can read
-    logger.to_json("demos/krk_visualization_data.json")
+    logger.to_json("demos/outputs/gameplay/krk_visualization_data.json")
     print("\n💾 Log saved to demos/krk_visualization_data.json")
     print(f"🏁 Result: mate={mate}, stalls={stalls}, rook_lost={rook_lost}, plies={ply}")
     return result

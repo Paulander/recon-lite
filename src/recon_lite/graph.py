@@ -1,7 +1,8 @@
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Dict, List, Tuple, Optional, Callable, Any
-import numpy as np  # For activations
+
+from .core.activations import ActivationState
 
 
 # This file defines the graph data structure and the core node and edge types.
@@ -43,7 +44,7 @@ class Node:
     nid: str
     ntype: NodeType
     state: NodeState = NodeState.INACTIVE
-    activation: np.ndarray = field(default_factory=lambda: np.array([0.0]))  # a ∈ R^n - activation function. Can implement boolean AND/OR or continuous functions.
+    activation: ActivationState = field(default_factory=ActivationState)  # Continuous activation per node (scalar for now).
     predicate: Optional[Callable[['Node', Any], Tuple[bool, bool]]] = None
     tick_entered: int = 0
     meta: Dict[str, Any] = field(default_factory=dict)
@@ -54,7 +55,7 @@ class Edge:
     src: str
     dst: str
     ltype: LinkType
-    w: np.ndarray = field(default_factory=lambda: np.array([1.0]))  # Weights \in R^n; default scalar 1.0. 
+    w: Any = field(default_factory=lambda: 1.0)  # Allow scalar weight without forcing numpy.
 
 class Graph:
     def __init__(self):
@@ -154,3 +155,44 @@ class Graph:
                     raise ValueError(
                         f"Article violation: script node '{nid}' has no SUB children."
                     )
+
+    # --- Helper utilities for policy configuration ---
+    def set_por_policy(self, nid: str, *, policy: str, k: Optional[int] = None, theta: Optional[float] = None) -> None:
+        """
+        Configure predecessor gating policy for the given node (POR incoming edges):
+          policy ∈ {"and","or","xor","k_of_n","weighted"}
+          k      : integer threshold for k_of_n
+          theta  : float threshold for weighted (sum of satisfied predecessor weights)
+        """
+        if nid not in self.nodes:
+            raise KeyError(f"Unknown node id: {nid}")
+        node = self.nodes[nid]
+        node.meta["por_policy"] = str(policy).lower()
+        if k is not None:
+            node.meta["por_k"] = int(k)
+        if theta is not None:
+            node.meta["por_theta"] = float(theta)
+
+    def set_confirm_policy(self, nid: str, *, policy: str, k: Optional[int] = None) -> None:
+        """
+        Configure confirmation aggregation across root child chains for a parent script:
+          policy ∈ {"and","or","xor","k_of_n"}
+          k      : integer threshold for k_of_n
+        """
+        if nid not in self.nodes:
+            raise KeyError(f"Unknown node id: {nid}")
+        node = self.nodes[nid]
+        node.meta["confirm_policy"] = str(policy).lower()
+        if k is not None:
+            node.meta["confirm_k"] = int(k)
+
+    def set_por_weight(self, src: str, dst: str, weight: float) -> None:
+        """Set the weight on a POR edge (src -> dst). Creates no edges; raises if edge missing."""
+        found = False
+        for e in self.edges:
+            if e.src == src and e.dst == dst and e.ltype == LinkType.POR:
+                e.w = np.array([float(weight)])
+                found = True
+                break
+        if not found:
+            raise KeyError(f"No POR edge {src} -> {dst} to set weight on")

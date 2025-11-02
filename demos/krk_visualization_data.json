@@ -1,345 +1,604 @@
 [
   {
     "type": "snapshot",
-    "note": "Persistent eval tick 1 (ply 1)",
-    "tick": 1,
-    "nodes": {
-      "king_at_edge": "INACTIVE",
-      "box_can_shrink": "INACTIVE",
-      "can_take_opposition": "INACTIVE",
-      "can_deliver_mate": "INACTIVE",
-      "is_stalemate": "INACTIVE",
-      "phase0_establish_cut": "INACTIVE",
-      "phase1_drive_to_edge": "INACTIVE",
-      "phase2_shrink_box": "INACTIVE",
-      "phase3_take_opposition": "INACTIVE",
-      "phase4_deliver_mate": "INACTIVE",
-      "krk_root": "WAITING",
-      "choose_phase0": "INACTIVE",
-      "king_drive_moves": "INACTIVE",
-      "box_shrink_moves": "INACTIVE",
-      "opposition_moves": "INACTIVE",
-      "mate_moves": "INACTIVE",
-      "random_legal_moves": "INACTIVE",
-      "no_progress_watch": "REQUESTED",
-      "wait_for_board_change": "REQUESTED"
-    },
-    "new_requests": [
-      "no_progress_watch",
-      "wait_for_board_change"
-    ],
-    "env": {
-      "fen": "7K/8/8/8/8/8/1R6/1k6 w - - 0 1",
-      "evaluation_tick": 1,
-      "ply": 1
-    },
-    "thoughts": "Persistent evaluation...",
-    "graph": {
-      "edges": [
-        {
-          "src": "krk_root",
-          "dst": "phase0_establish_cut",
-          "type": "SUB"
-        },
-        {
-          "src": "krk_root",
-          "dst": "phase1_drive_to_edge",
-          "type": "SUB"
-        },
-        {
-          "src": "krk_root",
-          "dst": "phase2_shrink_box",
-          "type": "SUB"
-        },
-        {
-          "src": "krk_root",
-          "dst": "phase3_take_opposition",
-          "type": "SUB"
-        },
-        {
-          "src": "krk_root",
-          "dst": "phase4_deliver_mate",
-          "type": "SUB"
-        },
-        {
-          "src": "krk_root",
-          "dst": "no_progress_watch",
-          "type": "SUB"
-        },
-        {
-          "src": "phase0_establish_cut",
-          "dst": "choose_phase0",
-          "type": "SUB"
-        },
-        {
-          "src": "krk_root",
-          "dst": "wait_for_board_change",
-          "type": "SUB"
-        },
-        {
-          "src": "wait_for_board_change",
-          "dst": "phase0_establish_cut",
-          "type": "POR"
-        },
-        {
-          "src": "wait_for_board_change",
-          "dst": "phase1_drive_to_edge",
-          "type": "POR"
-        },
-        {
-          "src": "phase1_drive_to_edge",
-          "dst": "phase2_shrink_box",
-          "type": "POR"
-        },
-        {
-          "src": "phase2_shrink_box",
-          "dst": "phase3_take_opposition",
-          "type": "POR"
-        },
-        {
-          "src": "phase3_take_opposition",
-          "dst": "phase4_deliver_mate",
-          "type": "POR"
-        },
-        {
-          "src": "phase1_drive_to_edge",
-          "dst": "king_at_edge",
-          "type": "SUB"
-        },
-        {
-          "src": "phase2_shrink_box",
-          "dst": "box_can_shrink",
-          "type": "SUB"
-        },
-        {
-          "src": "king_at_edge",
-          "dst": "phase2_shrink_box",
-          "type": "POR"
-        },
-        {
-          "src": "phase3_take_opposition",
-          "dst": "can_take_opposition",
-          "type": "SUB"
-        },
-        {
-          "src": "box_can_shrink",
-          "dst": "phase3_take_opposition",
-          "type": "POR"
-        },
-        {
-          "src": "can_take_opposition",
-          "dst": "phase3_take_opposition",
-          "type": "POR"
-        },
-        {
-          "src": "phase4_deliver_mate",
-          "dst": "can_deliver_mate",
-          "type": "SUB"
-        },
-        {
-          "src": "phase1_drive_to_edge",
-          "dst": "king_drive_moves",
-          "type": "SUB"
-        },
-        {
-          "src": "phase2_shrink_box",
-          "dst": "box_shrink_moves",
-          "type": "SUB"
-        },
-        {
-          "src": "phase3_take_opposition",
-          "dst": "opposition_moves",
-          "type": "SUB"
-        },
-        {
-          "src": "phase4_deliver_mate",
-          "dst": "mate_moves",
-          "type": "SUB"
-        }
-      ]
-    }
-  },
-  {
-    "type": "snapshot",
-    "note": "Persistent eval tick 2 (ply 1)",
-    "tick": 2,
-    "nodes": {
-      "king_at_edge": "INACTIVE",
-      "box_can_shrink": "INACTIVE",
-      "can_take_opposition": "INACTIVE",
-      "can_deliver_mate": "INACTIVE",
-      "is_stalemate": "INACTIVE",
-      "phase0_establish_cut": "INACTIVE",
-      "phase1_drive_to_edge": "INACTIVE",
-      "phase2_shrink_box": "INACTIVE",
-      "phase3_take_opposition": "INACTIVE",
-      "phase4_deliver_mate": "INACTIVE",
-      "krk_root": "WAITING",
-      "choose_phase0": "INACTIVE",
-      "king_drive_moves": "INACTIVE",
-      "box_shrink_moves": "INACTIVE",
-      "opposition_moves": "INACTIVE",
-      "mate_moves": "INACTIVE",
-      "random_legal_moves": "INACTIVE",
-      "no_progress_watch": "WAITING",
-      "wait_for_board_change": "WAITING"
-    },
+    "note": "ReCoN ply 1: a2a7",
     "new_requests": [],
     "env": {
-      "fen": "7K/8/8/8/8/8/1R6/1k6 w - - 0 1",
-      "evaluation_tick": 2,
-      "ply": 1
-    },
-    "thoughts": "Persistent evaluation..."
-  },
-  {
-    "type": "snapshot",
-    "note": "Persistent eval tick 3 (ply 1)",
-    "tick": 3,
-    "nodes": {
-      "king_at_edge": "INACTIVE",
-      "box_can_shrink": "INACTIVE",
-      "can_take_opposition": "INACTIVE",
-      "can_deliver_mate": "INACTIVE",
-      "is_stalemate": "INACTIVE",
-      "phase0_establish_cut": "REQUESTED",
-      "phase1_drive_to_edge": "REQUESTED",
-      "phase2_shrink_box": "INACTIVE",
-      "phase3_take_opposition": "INACTIVE",
-      "phase4_deliver_mate": "INACTIVE",
-      "krk_root": "WAITING",
-      "choose_phase0": "INACTIVE",
-      "king_drive_moves": "INACTIVE",
-      "box_shrink_moves": "INACTIVE",
-      "opposition_moves": "INACTIVE",
-      "mate_moves": "INACTIVE",
-      "random_legal_moves": "INACTIVE",
-      "no_progress_watch": "TRUE",
-      "wait_for_board_change": "TRUE"
-    },
-    "new_requests": [
-      "phase0_establish_cut",
-      "phase1_drive_to_edge"
-    ],
-    "env": {
-      "fen": "7K/8/8/8/8/8/1R6/1k6 w - - 0 1",
-      "evaluation_tick": 3,
-      "ply": 1
-    },
-    "thoughts": "Persistent evaluation..."
-  },
-  {
-    "type": "snapshot",
-    "note": "Persistent eval tick 4 (ply 1)",
-    "tick": 4,
-    "nodes": {
-      "king_at_edge": "REQUESTED",
-      "box_can_shrink": "INACTIVE",
-      "can_take_opposition": "INACTIVE",
-      "can_deliver_mate": "INACTIVE",
-      "is_stalemate": "INACTIVE",
-      "phase0_establish_cut": "WAITING",
-      "phase1_drive_to_edge": "WAITING",
-      "phase2_shrink_box": "INACTIVE",
-      "phase3_take_opposition": "INACTIVE",
-      "phase4_deliver_mate": "INACTIVE",
-      "krk_root": "WAITING",
-      "choose_phase0": "REQUESTED",
-      "king_drive_moves": "REQUESTED",
-      "box_shrink_moves": "INACTIVE",
-      "opposition_moves": "INACTIVE",
-      "mate_moves": "INACTIVE",
-      "random_legal_moves": "INACTIVE",
-      "no_progress_watch": "CONFIRMED",
-      "wait_for_board_change": "CONFIRMED"
-    },
-    "new_requests": [
-      "choose_phase0",
-      "king_at_edge",
-      "king_drive_moves"
-    ],
-    "env": {
-      "fen": "7K/8/8/8/8/8/1R6/1k6 w - - 0 1",
-      "evaluation_tick": 4,
-      "ply": 1
-    },
-    "thoughts": "Persistent evaluation..."
-  },
-  {
-    "type": "snapshot",
-    "note": "Persistent eval tick 5 (ply 1)",
-    "tick": 5,
-    "nodes": {
-      "king_at_edge": "WAITING",
-      "box_can_shrink": "INACTIVE",
-      "can_take_opposition": "INACTIVE",
-      "can_deliver_mate": "INACTIVE",
-      "is_stalemate": "INACTIVE",
-      "phase0_establish_cut": "WAITING",
-      "phase1_drive_to_edge": "WAITING",
-      "phase2_shrink_box": "INACTIVE",
-      "phase3_take_opposition": "INACTIVE",
-      "phase4_deliver_mate": "INACTIVE",
-      "krk_root": "WAITING",
-      "choose_phase0": "WAITING",
-      "king_drive_moves": "WAITING",
-      "box_shrink_moves": "INACTIVE",
-      "opposition_moves": "INACTIVE",
-      "mate_moves": "INACTIVE",
-      "random_legal_moves": "INACTIVE",
-      "no_progress_watch": "CONFIRMED",
-      "wait_for_board_change": "CONFIRMED"
-    },
-    "new_requests": [],
-    "env": {
-      "fen": "7K/8/8/8/8/8/1R6/1k6 w - - 0 1",
-      "evaluation_tick": 5,
-      "ply": 1
-    },
-    "thoughts": "Persistent evaluation..."
-  },
-  {
-    "type": "snapshot",
-    "note": "Persistent eval tick 6 (ply 1)",
-    "tick": 6,
-    "nodes": {
-      "king_at_edge": "TRUE",
-      "box_can_shrink": "INACTIVE",
-      "can_take_opposition": "INACTIVE",
-      "can_deliver_mate": "INACTIVE",
-      "is_stalemate": "INACTIVE",
-      "phase0_establish_cut": "WAITING",
-      "phase1_drive_to_edge": "WAITING",
-      "phase2_shrink_box": "INACTIVE",
-      "phase3_take_opposition": "INACTIVE",
-      "phase4_deliver_mate": "INACTIVE",
-      "krk_root": "WAITING",
-      "choose_phase0": "TRUE",
-      "king_drive_moves": "TRUE",
-      "box_shrink_moves": "INACTIVE",
-      "opposition_moves": "INACTIVE",
-      "mate_moves": "INACTIVE",
-      "random_legal_moves": "INACTIVE",
-      "no_progress_watch": "CONFIRMED",
-      "wait_for_board_change": "CONFIRMED"
-    },
-    "new_requests": [],
-    "env": {
-      "fen": "7K/8/8/8/8/8/1R6/1k6 w - - 0 1",
-      "evaluation_tick": 6,
-      "ply": 1
-    },
-    "thoughts": "Persistent evaluation..."
-  },
-  {
-    "type": "snapshot",
-    "note": "Applied move 1: b2b1",
-    "new_requests": [],
-    "env": {
-      "fen": "7K/8/8/8/8/8/8/1R6 b - - 0 1",
+      "fen": "4k3/R5K1/8/8/8/8/8/8 b - - 1 1",
       "ply": 1,
-      "recons_move": "b2b1"
+      "chosen_move": "a2a7",
+      "recons_move": "a2a7",
+      "features": {
+        "box_area_before": 64,
+        "box_area_after": 8,
+        "min_side_before": 8,
+        "min_side_after": 1,
+        "king_progress": 0.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": -56
     },
-    "thoughts": "Applied b2b1 (persistent)"
+    "thoughts": "Chose a2a7 | \u0394box=-56 | king_progress=0.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 1: e8d8",
+    "new_requests": [],
+    "env": {
+      "fen": "3k4/R5K1/8/8/8/8/8/8 w - - 2 2",
+      "ply": 1,
+      "opponent_move": "e8d8",
+      "opponents_move": "e8d8"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 2: g7f7",
+    "new_requests": [],
+    "env": {
+      "fen": "3k4/R4K2/8/8/8/8/8/8 b - - 3 2",
+      "ply": 2,
+      "chosen_move": "g7f7",
+      "recons_move": "g7f7",
+      "features": {
+        "box_area_before": 8,
+        "box_area_after": 8,
+        "min_side_before": 1,
+        "min_side_after": 1,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 0
+    },
+    "thoughts": "Chose g7f7 | \u0394box=0 | king_progress=1.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 2: d8c8",
+    "new_requests": [],
+    "env": {
+      "fen": "2k5/R4K2/8/8/8/8/8/8 w - - 4 3",
+      "ply": 2,
+      "opponent_move": "d8c8",
+      "opponents_move": "d8c8"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "ReCoN ply 3: f7e7",
+    "new_requests": [],
+    "env": {
+      "fen": "2k5/R3K3/8/8/8/8/8/8 b - - 5 3",
+      "ply": 3,
+      "chosen_move": "f7e7",
+      "recons_move": "f7e7",
+      "features": {
+        "box_area_before": 8,
+        "box_area_after": 8,
+        "min_side_before": 1,
+        "min_side_after": 1,
+        "king_progress": 1.0,
+        "rook_safe_after": true,
+        "gives_safe_check": false
+      },
+      "box_area_delta": 0
+    },
+    "thoughts": "Chose f7e7 | \u0394box=0 | king_progress=1.0 | safe_check=False | rook_safe=True"
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 3: c8b8",
+    "new_requests": [],
+    "env": {
+      "fen": "1k6/R3K3/8/8/8/8/8/8 w - - 6 4",
+      "ply": 3,
+      "opponent_move": "c8b8",
+      "opponents_move": "c8b8"
+    },
+    "thoughts": "Random defense."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 10 (move 4)",
+    "tick": 10,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "WAITING",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE",
+      "KING_DRIVE_MOVES": "WAITING",
+      "BOX_SHRINK_MOVES": "INACTIVE",
+      "OPPOSITION_MOVES": "INACTIVE",
+      "MATE_MOVES": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1k6/R3K3/8/8/8/8/8/8 w - - 6 4",
+      "move_number": 4,
+      "evaluation_tick": 10
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 20 (move 4)",
+    "tick": 20,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "WAITING",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE",
+      "KING_DRIVE_MOVES": "WAITING",
+      "BOX_SHRINK_MOVES": "INACTIVE",
+      "OPPOSITION_MOVES": "INACTIVE",
+      "MATE_MOVES": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1k6/R3K3/8/8/8/8/8/8 w - - 6 4",
+      "move_number": 4,
+      "evaluation_tick": 20
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 30 (move 4)",
+    "tick": 30,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "WAITING",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE",
+      "KING_DRIVE_MOVES": "WAITING",
+      "BOX_SHRINK_MOVES": "INACTIVE",
+      "OPPOSITION_MOVES": "INACTIVE",
+      "MATE_MOVES": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1k6/R3K3/8/8/8/8/8/8 w - - 6 4",
+      "move_number": 4,
+      "evaluation_tick": 30
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 40 (move 4)",
+    "tick": 40,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "WAITING",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE",
+      "KING_DRIVE_MOVES": "WAITING",
+      "BOX_SHRINK_MOVES": "INACTIVE",
+      "OPPOSITION_MOVES": "INACTIVE",
+      "MATE_MOVES": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1k6/R3K3/8/8/8/8/8/8 w - - 6 4",
+      "move_number": 4,
+      "evaluation_tick": 40
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 50 (move 4)",
+    "tick": 50,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "WAITING",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE",
+      "KING_DRIVE_MOVES": "WAITING",
+      "BOX_SHRINK_MOVES": "INACTIVE",
+      "OPPOSITION_MOVES": "INACTIVE",
+      "MATE_MOVES": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1k6/R3K3/8/8/8/8/8/8 w - - 6 4",
+      "move_number": 4,
+      "evaluation_tick": 50
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 60 (move 4)",
+    "tick": 60,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "WAITING",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE",
+      "KING_DRIVE_MOVES": "WAITING",
+      "BOX_SHRINK_MOVES": "INACTIVE",
+      "OPPOSITION_MOVES": "INACTIVE",
+      "MATE_MOVES": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1k6/R3K3/8/8/8/8/8/8 w - - 6 4",
+      "move_number": 4,
+      "evaluation_tick": 60
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 70 (move 4)",
+    "tick": 70,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "WAITING",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE",
+      "KING_DRIVE_MOVES": "WAITING",
+      "BOX_SHRINK_MOVES": "INACTIVE",
+      "OPPOSITION_MOVES": "INACTIVE",
+      "MATE_MOVES": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1k6/R3K3/8/8/8/8/8/8 w - - 6 4",
+      "move_number": 4,
+      "evaluation_tick": 70
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 80 (move 4)",
+    "tick": 80,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "WAITING",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE",
+      "KING_DRIVE_MOVES": "WAITING",
+      "BOX_SHRINK_MOVES": "INACTIVE",
+      "OPPOSITION_MOVES": "INACTIVE",
+      "MATE_MOVES": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1k6/R3K3/8/8/8/8/8/8 w - - 6 4",
+      "move_number": 4,
+      "evaluation_tick": 80
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 90 (move 4)",
+    "tick": 90,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "WAITING",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE",
+      "KING_DRIVE_MOVES": "WAITING",
+      "BOX_SHRINK_MOVES": "INACTIVE",
+      "OPPOSITION_MOVES": "INACTIVE",
+      "MATE_MOVES": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1k6/R3K3/8/8/8/8/8/8 w - - 6 4",
+      "move_number": 4,
+      "evaluation_tick": 90
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 100 (move 4)",
+    "tick": 100,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "WAITING",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE",
+      "KING_DRIVE_MOVES": "WAITING",
+      "BOX_SHRINK_MOVES": "INACTIVE",
+      "OPPOSITION_MOVES": "INACTIVE",
+      "MATE_MOVES": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1k6/R3K3/8/8/8/8/8/8 w - - 6 4",
+      "move_number": 4,
+      "evaluation_tick": 100
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 110 (move 4)",
+    "tick": 110,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "WAITING",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE",
+      "KING_DRIVE_MOVES": "WAITING",
+      "BOX_SHRINK_MOVES": "INACTIVE",
+      "OPPOSITION_MOVES": "INACTIVE",
+      "MATE_MOVES": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1k6/R3K3/8/8/8/8/8/8 w - - 6 4",
+      "move_number": 4,
+      "evaluation_tick": 110
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 120 (move 4)",
+    "tick": 120,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "WAITING",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE",
+      "KING_DRIVE_MOVES": "WAITING",
+      "BOX_SHRINK_MOVES": "INACTIVE",
+      "OPPOSITION_MOVES": "INACTIVE",
+      "MATE_MOVES": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1k6/R3K3/8/8/8/8/8/8 w - - 6 4",
+      "move_number": 4,
+      "evaluation_tick": 120
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 130 (move 4)",
+    "tick": 130,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "WAITING",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE",
+      "KING_DRIVE_MOVES": "WAITING",
+      "BOX_SHRINK_MOVES": "INACTIVE",
+      "OPPOSITION_MOVES": "INACTIVE",
+      "MATE_MOVES": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1k6/R3K3/8/8/8/8/8/8 w - - 6 4",
+      "move_number": 4,
+      "evaluation_tick": 130
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 140 (move 4)",
+    "tick": 140,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "WAITING",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE",
+      "KING_DRIVE_MOVES": "WAITING",
+      "BOX_SHRINK_MOVES": "INACTIVE",
+      "OPPOSITION_MOVES": "INACTIVE",
+      "MATE_MOVES": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1k6/R3K3/8/8/8/8/8/8 w - - 6 4",
+      "move_number": 4,
+      "evaluation_tick": 140
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 150 (move 4)",
+    "tick": 150,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "WAITING",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE",
+      "KING_DRIVE_MOVES": "WAITING",
+      "BOX_SHRINK_MOVES": "INACTIVE",
+      "OPPOSITION_MOVES": "INACTIVE",
+      "MATE_MOVES": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1k6/R3K3/8/8/8/8/8/8 w - - 6 4",
+      "move_number": 4,
+      "evaluation_tick": 150
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 160 (move 4)",
+    "tick": 160,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "WAITING",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE",
+      "KING_DRIVE_MOVES": "WAITING",
+      "BOX_SHRINK_MOVES": "INACTIVE",
+      "OPPOSITION_MOVES": "INACTIVE",
+      "MATE_MOVES": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1k6/R3K3/8/8/8/8/8/8 w - - 6 4",
+      "move_number": 4,
+      "evaluation_tick": 160
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 170 (move 4)",
+    "tick": 170,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "WAITING",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE",
+      "KING_DRIVE_MOVES": "WAITING",
+      "BOX_SHRINK_MOVES": "INACTIVE",
+      "OPPOSITION_MOVES": "INACTIVE",
+      "MATE_MOVES": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1k6/R3K3/8/8/8/8/8/8 w - - 6 4",
+      "move_number": 4,
+      "evaluation_tick": 170
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 180 (move 4)",
+    "tick": 180,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "WAITING",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE",
+      "KING_DRIVE_MOVES": "WAITING",
+      "BOX_SHRINK_MOVES": "INACTIVE",
+      "OPPOSITION_MOVES": "INACTIVE",
+      "MATE_MOVES": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1k6/R3K3/8/8/8/8/8/8 w - - 6 4",
+      "move_number": 4,
+      "evaluation_tick": 180
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 190 (move 4)",
+    "tick": 190,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "WAITING",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE",
+      "KING_DRIVE_MOVES": "WAITING",
+      "BOX_SHRINK_MOVES": "INACTIVE",
+      "OPPOSITION_MOVES": "INACTIVE",
+      "MATE_MOVES": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1k6/R3K3/8/8/8/8/8/8 w - - 6 4",
+      "move_number": 4,
+      "evaluation_tick": 190
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
+  },
+  {
+    "type": "snapshot",
+    "note": "Eval tick 200 (move 4)",
+    "tick": 200,
+    "nodes": {
+      "ROOT": "WAITING",
+      "PHASE0": "CONFIRMED",
+      "CHOOSE_P0": "CONFIRMED",
+      "PHASE1": "WAITING",
+      "PHASE2": "INACTIVE",
+      "PHASE3": "INACTIVE",
+      "PHASE4": "INACTIVE",
+      "KING_DRIVE_MOVES": "WAITING",
+      "BOX_SHRINK_MOVES": "INACTIVE",
+      "OPPOSITION_MOVES": "INACTIVE",
+      "MATE_MOVES": "INACTIVE"
+    },
+    "new_requests": [],
+    "env": {
+      "fen": "1k6/R3K3/8/8/8/8/8/8 w - - 6 4",
+      "move_number": 4,
+      "evaluation_tick": 200
+    },
+    "thoughts": "Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move']."
   }
 ]

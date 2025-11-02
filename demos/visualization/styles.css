@@ -30,13 +30,13 @@
         .main-content {
             flex: 1;
             display: flex;
-            gap: 20px;
-            padding: 20px;
+            gap: 24px;
+            padding: 20px 24px;
         }
 
         /* Left side - Chess board */
         .left-panel {
-            flex: 1;
+            flex: 0 0 38%;
             display: flex;
             flex-direction: column;
             gap: 20px;
@@ -54,7 +54,7 @@
 
         .chess-board {
             width: 100%;
-            max-width: 400px;
+            max-width: 480px;
             margin: 0 auto;
             border-radius: 8px;
             overflow: hidden;
@@ -77,7 +77,6 @@
             display: flex;
             align-items: center;
             gap: 20px;
-            height: 200px;
         }
 
         .ai-portrait {
@@ -112,18 +111,28 @@
             color: #333;
         }
 
+        .rationale-ribbon {
+            margin-top: 10px;
+            background: linear-gradient(90deg, rgba(59,130,246,0.18), rgba(59,130,246,0.05));
+            border-left: 4px solid #3b82f6;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            color: #1f2937;
+            display: none;
+        }
+
         /* Right side - ReCoN Network */
         .right-panel {
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 20px;
         }
 
         .network-container {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 15px;
-            padding: 20px;
+            padding: 24px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             flex: 1;
             display: flex;
@@ -148,7 +157,6 @@
             border-radius: 15px;
             padding: 20px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            height: 250px;
         }
 
         .phase-title {
@@ -214,13 +222,53 @@
             color: #333;
         }
 
-        /* Node states */
-        .state-inactive { background: #e9ecef; color: #6c757d; }
-        .state-requested { background: #cce5ff; color: #0066cc; }
-        .state-waiting { background: #fff3cd; color: #856404; }
-        .state-true { background: #d4edda; color: #155724; }
-        .state-confirmed { background: #d1ecf1; color: #0c5460; }
-        .state-failed { background: #f8d7da; color: #721c24; }
+        .jump-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85em;
+            color: #333;
+        }
+
+        .jump-container label {
+            font-weight: 600;
+        }
+
+        .jump-input {
+            width: 80px;
+            padding: 6px 8px;
+            border: 1px solid #d0d5dd;
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+
+        .jump-btn {
+            padding: 8px 14px;
+        }
+
+        .label-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #555;
+            user-select: none;
+        }
+
+        .label-toggle input {
+            accent-color: #667eea;
+            transform: scale(1.1);
+        }
+
+        /* Node states – keep in sync with NetworkVisualization.stateColors */
+        .state-inactive   { background: #cfd8dc; color: #2f3a44; }
+        .state-requested  { background: #64b5f6; color: #0f3666; }
+        .state-active     { background: #90caf9; color: #0d3e72; }
+        .state-suppressed { background: #b0bec5; color: #24303a; }
+        .state-waiting    { background: #ffd54f; color: #664200; }
+        .state-true       { background: #81c784; color: #1f5a1f; }
+        .state-confirmed  { background: #34d399; color: #064e3b; }
+        .state-failed     { background: #e57373; color: #5f1111; }
 
         /* Chess board styling */
         .square {
@@ -244,6 +292,31 @@
             color: #333;
         }
 
+        .binding-overlay {
+            position: absolute;
+            bottom: 4px;
+            left: 4px;
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            max-width: calc(100% - 8px);
+            pointer-events: none;
+        }
+
+        .binding-chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-size: 0.55em;
+            color: #0f172a;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(15, 23, 42, 0.25);
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
         .square.white .piece.black { color: #333; }
         .square.black .piece.white { color: #f0f0f0; }
 
@@ -251,3 +324,13 @@
         canvas { display: none; }
         /* Ensure our 2D network canvas remains visible */
         #network-canvas { display: block !important; }
+
+        @media (max-width: 1180px) {
+            .main-content {
+                flex-direction: column;
+            }
+            .left-panel,
+            .right-panel {
+                flex: 1 1 auto;
+            }
+        }

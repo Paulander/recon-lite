@@ -8,6 +8,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.12.0/chess.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
+    <script>
+        window.__RECON_PROFILE__ = 'krk';
+    </script>
 </head>
 <body>
     <div class="header">
@@ -34,6 +37,22 @@
                 <div class="thoughts-container">
                     <div class="thoughts-label">AI Thoughts:</div>
                     <div class="thoughts-text" id="thoughts-text">Initializing ReCoN network...</div>
+                    <div class="rationale-ribbon" id="rationale-ribbon" style="display:none;"></div>
+                </div>
+            </div>
+
+            <!-- Phase Schematic -->
+            <div class="phase-container">
+                <div class="phase-title"><i class="fas fa-layer-group"></i> KRK Checkmate Phases</div>
+                <div class="phases-grid" id="phases-grid">
+                    <div class="phase-item state-inactive" data-phase="krk_root">ROOT: KRK Checkmate</div>
+                    <div class="phase-item state-inactive" data-phase="phase1_drive_to_edge">PHASE1: Drive to Edge</div>
+                    <div class="phase-item state-inactive" data-phase="phase2_shrink_box">PHASE2: Shrink Box</div>
+                    <div class="phase-item state-inactive" data-phase="phase3_take_opposition">PHASE3: Take Opposition</div>
+                    <div class="phase-item state-inactive" data-phase="phase4_deliver_mate">PHASE4: Deliver Mate</div>
+                    <div class="phase-item state-inactive" data-phase="king_at_edge">King at Edge?</div>
+                    <div class="phase-item state-inactive" data-phase="box_can_shrink">Box Shrink Possible?</div>
+                    <div class="phase-item state-inactive" data-phase="can_take_opposition">Has Opposition?</div>
                 </div>
             </div>
         </div>
@@ -47,6 +66,8 @@
                     <div class="network-legend">
                         <span class="state-inactive">Inactive</span>
                         <span class="state-requested">Requested</span>
+                        <span class="state-active">Active</span>
+                        <span class="state-suppressed">Suppressed</span>
                         <span class="state-waiting">Waiting</span>
                         <span class="state-true">True</span>
                         <span class="state-confirmed">Confirmed</span>
@@ -65,23 +86,16 @@
                         </select>
                     </div>
                     <div style="font-size:12px;color:#555;">Shape: sensors = ◇, others = ●</div>
+                    <label for="toggle-labels" class="label-toggle">
+                        <input type="checkbox" id="toggle-labels" checked>
+                        <span>Show labels</span>
+                    </label>
+                    <label for="toggle-compact" class="label-toggle">
+                        <input type="checkbox" id="toggle-compact" checked>
+                        <span>Collapse wrappers</span>
+                    </label>
                 </div>
                 <canvas id="network-canvas" style="flex: 1; border-radius: 8px; background: #f8f9fa;"></canvas>
-            </div>
-
-            <!-- Phase Schematic -->
-            <div class="phase-container">
-                <div class="phase-title"><i class="fas fa-layer-group"></i> KRK Checkmate Phases</div>
-                <div class="phases-grid" id="phases-grid">
-                    <div class="phase-item state-inactive" data-phase="krk_root">ROOT: KRK Checkmate</div>
-                    <div class="phase-item state-inactive" data-phase="phase1_drive_to_edge">PHASE1: Drive to Edge</div>
-                    <div class="phase-item state-inactive" data-phase="phase2_shrink_box">PHASE2: Shrink Box</div>
-                    <div class="phase-item state-inactive" data-phase="phase3_take_opposition">PHASE3: Take Opposition</div>
-                    <div class="phase-item state-inactive" data-phase="phase4_deliver_mate">PHASE4: Deliver Mate</div>
-                    <div class="phase-item state-inactive" data-phase="king_at_edge">King at Edge?</div>
-                    <div class="phase-item state-inactive" data-phase="box_can_shrink">Box Shrink Possible?</div>
-                    <div class="phase-item state-inactive" data-phase="can_take_opposition">Has Opposition?</div>
-                </div>
             </div>
         </div>
     </div>
@@ -103,6 +117,11 @@
         <button class="control-btn" id="next-move-btn" disabled>
             Next Move <i class="fas fa-forward"></i>
         </button>
+        <div class="jump-container">
+            <label for="step-input">Step</label>
+            <input id="step-input" class="jump-input" type="number" min="1" value="1">
+            <button class="control-btn jump-btn" id="jump-btn">Go</button>
+        </div>
         <div class="step-counter" id="step-counter">Step 0 / 0</div>
     </div>
 
@@ -120,6 +139,8 @@
                 this.playInterval = null;
                 this.speedFactor = 1;
                 this.moveSteps = []; // indices where a move was applied/logged
+                this.stepInput = null;
+                this.jumpButton = null;
 
                 // Initialize modules
                 this.dataManager = new DataManager();
@@ -165,6 +186,12 @@
                 const speedSelect = document.getElementById('speed-select');
                 const prevMoveBtn = document.getElementById('prev-move-btn');
                 const nextMoveBtn = document.getElementById('next-move-btn');
+                const labelToggle = document.getElementById('toggle-labels');
+                const stepInput = document.getElementById('step-input');
+                const jumpBtn = document.getElementById('jump-btn');
+
+                this.stepInput = stepInput;
+                this.jumpButton = jumpBtn;
 
                 prevBtn.addEventListener('click', () => {
                     if (this.currentStep > 0) {
@@ -198,6 +225,44 @@
                     }
                 });
 
+                if (labelToggle) {
+                    this.networkVis.setShowLabels(labelToggle.checked);
+                    labelToggle.addEventListener('change', (e) => {
+                        this.networkVis.setShowLabels(e.target.checked);
+                    });
+                }
+
+                const compactToggle = document.getElementById('toggle-compact');
+                if (compactToggle) {
+                    this.networkVis.setCompact(compactToggle.checked);
+                    compactToggle.addEventListener('change', (e) => {
+                        this.networkVis.setCompact(e.target.checked);
+                    });
+                }
+
+                const handleJump = () => {
+                    if (!this.stepInput) return;
+                    const target = parseInt(this.stepInput.value, 10);
+                    if (Number.isNaN(target)) return;
+                    this.jumpToStep(target - 1);
+                };
+
+                if (stepInput) {
+                    stepInput.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleJump();
+                        }
+                    });
+                }
+
+                if (jumpBtn) {
+                    jumpBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        handleJump();
+                    });
+                }
+
                 prevMoveBtn.addEventListener('click', () => {
                     if (!this.moveSteps.length) return;
                     // find the previous move index strictly less than currentStep
@@ -219,6 +284,15 @@
                 });
 
                 this.updateControls();
+            }
+
+            jumpToStep(stepIndex) {
+                const data = this.dataManager.getData();
+                if (!data || !data.length) return;
+                const clamped = Math.max(0, Math.min(stepIndex, data.length - 1));
+                this.pausePlayback();
+                this.currentStep = clamped;
+                this.updateVisualization(this.currentStep);
             }
 
             // Start playback
@@ -264,6 +338,21 @@
 
                 const total = data.length;
                 stepCounter.textContent = `Step ${this.currentStep + 1} / ${total}`;
+
+                if (this.stepInput) {
+                    if (total > 0) {
+                        this.stepInput.disabled = false;
+                        this.stepInput.min = 1;
+                        this.stepInput.max = total;
+                        this.stepInput.value = this.currentStep + 1;
+                    } else {
+                        this.stepInput.disabled = true;
+                        this.stepInput.value = '';
+                    }
+                }
+                if (this.jumpButton) {
+                    this.jumpButton.disabled = total === 0;
+                }
             }
 
             // Update visualization for given step
@@ -306,6 +395,18 @@
                 // Update thoughts
                 if (frame.thoughts) {
                     document.getElementById('thoughts-text').textContent = frame.thoughts;
+                }
+
+                const rationaleEl = document.getElementById('rationale-ribbon');
+                if (rationaleEl) {
+                    const reason = frame.env && (frame.env.last_reason || frame.env.reason);
+                    if (reason) {
+                        rationaleEl.textContent = `Rationale: ${reason}`;
+                        rationaleEl.style.display = 'block';
+                    } else {
+                        rationaleEl.textContent = '';
+                        rationaleEl.style.display = 'none';
+                    }
                 }
 
                 // Ensure we always have node state data

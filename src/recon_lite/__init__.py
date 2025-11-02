@@ -13,5 +13,5 @@ from .logger import RunLogger
 __all__ = [
     # Core ReCoN components
     "Graph", "Node", "NodeType", "NodeState", "LinkType",
-    "ReConEngine", "RunLogger"
+    "ReConEngine", "RunLogger",
 ]

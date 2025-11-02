@@ -18,6 +18,7 @@ class DataManager {
             if (!response.ok) throw new Error('Failed to load visualization data');
 
             this.visualizationData = await response.json();
+            this.fillMissingNodeStates();
             console.log('Loaded visualization data from', url, this.visualizationData);
 
             // Read graph edges if present on first frame
@@ -36,6 +37,7 @@ class DataManager {
 
             // Create mock data for testing
             this.visualizationData = this.createMockData();
+            this.fillMissingNodeStates();
             this.updateDataTypeDisplay();
 
             return this.visualizationData;
@@ -85,6 +87,7 @@ class DataManager {
             const text = await file.text();
             const data = JSON.parse(text);
             this.visualizationData = data;
+            this.fillMissingNodeStates();
             this.externalEdges = (data.length > 0 && data[0].graph && data[0].graph.edges) ? data[0].graph.edges : null;
             return data;
         } catch (e) {
@@ -169,6 +172,24 @@ class DataManager {
 
     getExternalEdges() {
         return this.externalEdges;
+    }
+
+    fillMissingNodeStates() {
+        let lastNodes = null;
+        this.visualizationData = (this.visualizationData || []).map((frame) => {
+            if (!frame || typeof frame !== 'object') {
+                return frame;
+            }
+            const nodes = frame.nodes;
+            if (nodes && Object.keys(nodes).length > 1) {
+                lastNodes = { ...nodes };
+                return frame;
+            }
+            if (lastNodes) {
+                frame.nodes = { ...lastNodes };
+            }
+            return frame;
+        });
     }
 }
 

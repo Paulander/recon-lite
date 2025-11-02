@@ -1,6 +1,7 @@
 # recon_lite/engine.py
 from typing import Dict, Any, Optional
-from .graph import Graph, NodeType, NodeState
+from .graph import Graph, NodeType, NodeState, LinkType
+from .time.microtick import MicrotickConfig, run_microticks
 
 class ReConEngine:
     """
@@ -39,9 +40,57 @@ class ReConEngine:
             return True
         return all(self.g.nodes[p].state in (NodeState.TRUE, NodeState.CONFIRMED) for p in preds)
 
+    # Helper: fetch edge weight for a specific link (defaults to 1.0 if absent)
+    def _edge_weight(self, src: str, dst: str, ltype: LinkType) -> float:
+        for e in self.g.edges:
+            if e.ltype == ltype and e.src == src and e.dst == dst:
+                try:
+                    # Edge.w may be ndarray or scalar-like
+                    return float(e.w[0]) if hasattr(e.w, "__len__") else float(e.w)
+                except Exception:
+                    try:
+                        return float(e.w)
+                    except Exception:
+                        return 1.0
+        return 1.0
+
+    # Policy-aware POR gating. Defaults to logical AND for full backward compatibility.
+    # Configure on the gated node via meta:
+    #   node.meta["por_policy"] ∈ {"and","or","xor","k_of_n","weighted"}
+    #   node.meta["por_k"]      (int) for k_of_n
+    #   node.meta["por_theta"]  (float) for weighted (sum of satisfied predecessor weights)
+    def _por_gate_ready(self, nid: str) -> bool:
+        preds = self.g.predecessors(nid)
+        if not preds:
+            return True
+        node = self.g.nodes[nid]
+        policy = node.meta.get("por_policy", "and")
+        satisfied = [self.g.nodes[p].state in (NodeState.TRUE, NodeState.CONFIRMED) for p in preds]
+
+        if policy == "and":
+            return all(satisfied)
+        if policy == "or":
+            return any(satisfied)
+        if policy == "xor":
+            return sum(1 for v in satisfied if v) == 1
+        if policy == "k_of_n":
+            k = int(node.meta.get("por_k", len(preds)))
+            return sum(1 for v in satisfied if v) >= k
+        if policy == "weighted":
+            theta = float(node.meta.get("por_theta", 1.0))
+            total = 0.0
+            for p, ok in zip(preds, satisfied):
+                if ok:
+                    total += self._edge_weight(p, nid, LinkType.POR)
+            return total >= theta
+
+        # Fallback to legacy behavior
+        return all(satisfied)
+
     def _request_child_if_ready(self, child_id: str, now_requested: Dict[str, bool]):
         child = self.g.nodes[child_id]
-        if child.state == NodeState.INACTIVE and self._all_por_predecessors_true(child_id):
+        # Use policy-aware POR gating (defaults to AND)
+        if child.state == NodeState.INACTIVE and self._por_gate_ready(child_id):
             child.state = NodeState.REQUESTED
             child.tick_entered = self.tick
             now_requested[child_id] = True
@@ -50,6 +99,10 @@ class ReConEngine:
         roots = [c for c in self.g.children(parent_id) if not self.g.predecessors(c)]
         if not roots:
             return True
+
+        policy = self.g.nodes[parent_id].meta.get("confirm_policy", "and")
+        satisfied_count = 0
+
         for r in roots:
             cur = r
             last = cur
@@ -63,16 +116,31 @@ class ReConEngine:
                 cur = succ[0]
                 if cur in visited:
                     break
-            # OR semantics: if the root child script node is marked alt, accept this root
-            # as satisfied when the root script itself is CONFIRMED (i.e., its own
-            # local goal test subtree confirmed), without requiring successors.
+            # Per-root override: if root child is marked alt, accept the root when
+            # the root script itself reaches CONFIRMED/TRUE.
             if self.g.nodes[r].meta.get("alt", False):
-                if self.g.nodes[r].state in (NodeState.CONFIRMED, NodeState.TRUE):
-                    continue
-            # Default: require last in chain CONFIRMED
-            if self.g.nodes[last].state != NodeState.CONFIRMED:
+                chain_ok = self.g.nodes[r].state in (NodeState.CONFIRMED, NodeState.TRUE)
+            else:
+                chain_ok = (self.g.nodes[last].state == NodeState.CONFIRMED)
+
+            if chain_ok:
+                satisfied_count += 1
+            elif policy == "and":
+                # Short-circuit for AND policy
                 return False
-        return True
+
+        if policy == "and":
+            return satisfied_count == len(roots)
+        if policy == "or":
+            return satisfied_count >= 1
+        if policy == "xor":
+            return satisfied_count == 1
+        if policy == "k_of_n":
+            k = int(self.g.nodes[parent_id].meta.get("confirm_k", len(roots)))
+            return satisfied_count >= k
+
+        # Fallback to legacy behavior (AND)
+        return satisfied_count == len(roots)
 
     def _update_terminals(self, env: Dict[str, Any], now_requested: Dict[str, bool]):
         """Handle state transitions for terminal nodes."""
@@ -124,6 +192,30 @@ class ReConEngine:
         """Execute one discrete time step of the ReCon network."""
         self.tick += 1
         env = env or {}
+        micro_cfg = env.get("microticks")
+        micro_history = None
+
+        if isinstance(micro_cfg, MicrotickConfig):
+            micro_history = run_microticks(micro_cfg)
+        elif isinstance(micro_cfg, dict):
+            states = micro_cfg.get("states")
+            compute_targets = micro_cfg.get("compute_targets")
+            steps = micro_cfg.get("steps", 0)
+            eta = micro_cfg.get("eta", 0.3)
+            history_flag = bool(micro_cfg.get("history", False))
+            if states is not None and compute_targets is not None and steps:
+                cfg = MicrotickConfig(
+                    states=states,
+                    compute_targets=compute_targets,
+                    steps=int(steps),
+                    eta=float(eta),
+                    history=history_flag,
+                )
+                micro_history = run_microticks(cfg)
+
+        if micro_history is not None:
+            env["microtick_history"] = micro_history
+
         now_requested: Dict[str, bool] = {}
 
         self._update_terminals(env, now_requested)

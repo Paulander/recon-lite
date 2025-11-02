@@ -1,5 +1,0 @@
----
-description: run python using uv.
-globs:
-alwaysApply: true
----
