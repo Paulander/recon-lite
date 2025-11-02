@@ -19,6 +19,16 @@ def is_mate(board: chess.Board) -> bool:
 def is_stalemate(board: chess.Board) -> bool:
     return board.is_stalemate()
 
+def can_deliver_mate(board: chess.Board) -> bool:
+    for move in board.legal_moves:
+        board.push(move)
+        try:
+            if board.is_checkmate():
+                return True
+        finally:
+            board.pop()
+    return False
+
 def is_stalemate_after(board: chess.Board, move: chess.Move) -> bool:
     b = board.copy(stack=False)
     b.push(move)
