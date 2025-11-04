@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ReCoN Macrograph Viewer</title>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      body {
+        background: #0f172a;
+        color: #f8fafc;
+        height: 100vh;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      header {
+        padding: 18px 28px;
+        background: rgba(15, 23, 42, 0.9);
+        backdrop-filter: blur(8px);
+        border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      header h1 {
+        font-weight: 400;
+        font-size: 1.4rem;
+        margin: 0;
+      }
+      .controls {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+      .controls button {
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        background: #1d4ed8;
+        color: #fff;
+        font-weight: 600;
+      }
+      .controls input[type="file"] {
+        color: #e2e8f0;
+      }
+      main {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 20px;
+        padding: 20px 30px;
+        height: 100%;
+        box-sizing: border-box;
+      }
+      #macrograph-container {
+        background: #1e293b;
+        border-radius: 16px;
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25);
+        overflow: hidden;
+        position: relative;
+      }
+      #macrograph-canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      #macrograph-info {
+        background: #111827;
+        border-radius: 16px;
+        padding: 18px;
+        font-family: 'Cascadia Code', 'Fira Code', monospace;
+        white-space: pre-wrap;
+        overflow-y: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>ReCoN Macrograph Viewer</h1>
+      <div class="controls">
+        <button id="load-default-btn">Load Default</button>
+        <label>
+          <span>Custom Spec:</span>
+          <input type="file" id="macrograph-file" accept="application/json" />
+        </label>
+      </div>
+    </header>
+    <main>
+      <section id="macrograph-container">
+        <canvas id="macrograph-canvas"></canvas>
+      </section>
+      <section id="macrograph-info"></section>
+    </main>
+    <script src="macrograph-static.js"></script>
+  </body>
+</html>
