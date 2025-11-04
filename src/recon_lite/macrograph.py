@@ -13,7 +13,10 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, Optional
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional
+
+from recon_lite import Graph, LinkType, Node, NodeType
+from recon_lite.graph import NodeState
 
 
 @dataclass
@@ -139,3 +142,104 @@ def describe_macrograph(spec: MacroGraphSpec) -> str:
         for key, val in spec.notes.items():
             lines.append(f"  * {key}: {val}")
     return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# Runtime instantiation helpers
+
+EDGE_KIND_TO_LINKTYPE: Dict[str, LinkType] = {
+    "sub": LinkType.SUB,
+    # For the macro skeleton we treat non-hierarchical relationships as POR edges.
+    # They preserve connectivity without imposing parent constraints. Future work
+    # can refine this mapping once specialised edge handling is implemented.
+    "request": LinkType.POR,
+    "confirm": LinkType.POR,
+    "feature": LinkType.POR,
+    "eval": LinkType.POR,
+    "gate": LinkType.POR,
+    "tune": LinkType.POR,
+    "goal": LinkType.POR,
+}
+
+
+def _edge_kind_to_linktype(kind: str) -> LinkType:
+    try:
+        return EDGE_KIND_TO_LINKTYPE[kind]
+    except KeyError as exc:
+        raise MacrographError(f"Unsupported edge kind '{kind}' in macrograph spec.") from exc
+
+
+def _copy_node(node: Node) -> Node:
+    """
+    Create a shallow copy of a node suitable for mounting into the macrograph.
+    Activation state and tick metadata are reset; predicates and meta are retained.
+    """
+    return Node(
+        nid=node.nid,
+        ntype=node.ntype,
+        predicate=node.predicate,
+        meta=dict(node.meta),
+    )
+
+
+def _mount_subgraph(parent_graph: Graph, mount_id: str, child_graph: Graph) -> None:
+    """
+    Merge an existing child graph (e.g., KRK network) into the parent graph and
+    attach its root to the mount node via a SUB edge.
+    """
+    if mount_id not in parent_graph.nodes:
+        raise MacrographError(f"Mount node '{mount_id}' not present in macrograph.")
+
+    for node in child_graph.nodes.values():
+        if node.nid in parent_graph.nodes:
+            raise MacrographError(f"Cannot mount subgraph; node id collision: {node.nid}")
+        parent_graph.add_node(_copy_node(node))
+
+    for edge in child_graph.edges:
+        parent_graph.add_edge(edge.src, edge.dst, edge.ltype)
+        parent_graph.edges[-1].w = edge.w
+
+    # Identify candidate roots (nodes without parents in child graph). For KRK this
+    # will be 'krk_root'.
+    root_candidates = [nid for nid, parent in child_graph.parent.items() if parent is None]
+    if not root_candidates:
+        raise MacrographError("Subgraph mount requires at least one root node.")
+
+    for root in root_candidates:
+        if root not in parent_graph.nodes:
+            raise MacrographError(f"Expected subgraph root '{root}' missing after merge.")
+        parent_graph.add_edge(mount_id, root, LinkType.SUB)
+
+
+def instantiate_macrograph(
+    spec_path: str | Path,
+    *,
+    krk_builder: Optional[Callable[[], Graph]] = None,
+) -> Graph:
+    """
+    Instantiate a `Graph` from the macrograph specification, optionally mounting
+    the KRK sub-network (or any builder supplied via `krk_builder`).
+    """
+    spec = load_macrograph(spec_path)
+    graph = Graph()
+
+    # Materialise nodes. We default to SCRIPT nodes but tag macro-specific type info.
+    for node in spec.nodes.values():
+        macro_type = node.ntype
+        ntype = NodeType.SCRIPT
+        macro_node = Node(nid=node.nid, ntype=ntype, meta={"macro_type": macro_type, **node.meta})
+        graph.add_node(macro_node)
+
+    # Materialise edges with LinkType mapping; store weights.
+    for edge in spec.edges:
+        ltype = _edge_kind_to_linktype(edge.kind)
+        graph.add_edge(edge.src, edge.dst, ltype)
+        graph.edges[-1].w = edge.weight
+
+    # Optional subgraph mounts (currently only KRK).
+    mounts = spec.subgraph_mounts()
+    if krk_builder and "KRKSubgraph" in mounts:
+        krk_graph = krk_builder()
+        _mount_subgraph(graph, "KRKSubgraph", krk_graph)
+
+    return graph
