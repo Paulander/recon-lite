@@ -24,3 +24,15 @@ def test_macro_engine_auto_activates_krk():
     env = {"board": board}
     engine.step(env)
     assert engine.g.nodes["KRKSubgraph"].state != engine.g.nodes["KRKSubgraph"].state.__class__.INACTIVE
+    macro_frame = env.get("macro_frame")
+    assert macro_frame is not None
+    assert set(macro_frame.keys()) == {
+        "version",
+        "goal_vector",
+        "phase_mix",
+        "plan_groups",
+        "feature_groups",
+        "bindings",
+        "move_synth",
+    }
+    assert macro_frame["move_synth"]["weights"]["plan"] == 0.4

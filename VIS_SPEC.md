@@ -10,6 +10,14 @@ Fields:
 - `env`: optional dict (e.g., chess: `{ "fen": "<FEN string>" }`)
 - `thoughts`: optional string (overlay commentary)
 - `latents`: optional map `node_id -> [float, ...]`
+- `macro_frame`: optional dict describing top-level macrograph state:
+  - `version`: schema version (string)
+  - `goal_vector`: map goal id → float `[0, 1]`
+  - `phase_mix`: map phase id → float (sums ~1)
+  - `plan_groups`: list of `{ "id", "activation", "plans": [...] }`
+  - `feature_groups`: list of `{ "id", "confidence", "features": [...] }`
+  - `bindings`: map namespace → list of `{ "feature", "items": [...] }`
+  - `move_synth`: `{ "weights": {...}, "proposals": [{ "uci", "score", "components": {...} }...], "chosen": "uci" }`
 
 ## Player layout
 - **Left (main)**: chess board from `env.fen` (or placeholder).

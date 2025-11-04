@@ -27,20 +27,31 @@ expand the system without repeatedly rewriting top-level wiring.
 - `MacroNode`, `MacroEdge` dataclasses with metadata (goal vectors, phase lists, mounts)
 - Support for locating subgraph mounts (`spec.subgraph_mounts()`)
 
-## Usage
+## Runtime usage
 
 ```python
-from recon_lite.macrograph import load_macrograph, describe_macrograph
+from recon_lite.macrograph import load_macrograph, describe_macrograph, instantiate_macrograph
+from recon_lite.macro_engine import MacroEngine
 
 spec = load_macrograph("specs/macrograph_v0.json")
 print(describe_macrograph(spec))
+
+graph = instantiate_macrograph("specs/macrograph_v0.json")
+engine = MacroEngine()
+frame = engine.capture_macro_frame({"board": None})
 ```
 
-Future stages will:
+## Macro telemetry (preview)
 
-- Instantiate the macrograph into a running `Graph` (mapping semantic edge kinds to ReCoN link policies).
-- Mount the existing KRK sub-network under `PlanEndgame` / `KRKSubgraph`.
-- Store learned weights/thresholds in sidecar JSON referenced in the spec.
+`MacroEngine.capture_macro_frame(env)` generates the per-step payload used by the
+visualization layer. Keys include:
 
-Because the spec is separate from implementation, we can evolve the internal
-nodes (adding new plans, sensors, or learning hooks) without altering the macrograph.
+- `goal_vector`: Goal projections (Material, KingSafety, Initiative, Structure, PhaseProgress, RiskBudget, TacticWindow) in `[0,1]`.
+- `phase_mix`: Soft phase distribution (`Opening`, `Middlegame`, `Endgame`).
+- `plan_groups`: Each top-level plan group with activation and plan IDs.
+- `feature_groups`: Feature bundles with confidence and constituent feature IDs.
+- `bindings`: High-level bindings (e.g., rook/king squares in macro/endgame contexts).
+- `move_synth`: Weights, per-move component scores, and the currently chosen move.
+
+The viewer consumes this frame in addition to standard KRK snapshots, enabling
+side-by-side macro + micro reasoning traces.
