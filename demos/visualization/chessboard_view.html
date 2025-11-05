@@ -492,12 +492,44 @@
                     .map(([k, v]) => `${k}: ${(v * 100).toFixed(0)}%`)
                     .join(' · ');
 
-                const topPlans = (macro.plan_groups || [])
-                    .slice()
-                    .sort((a, b) => (b.activation || 0) - (a.activation || 0))
-                    .slice(0, 2)
-                    .map((group) => `${group.id} ${(group.activation * 100).toFixed(0)}%`)
-                    .join(', ');
+                const planGroups = (macro.plan_groups || []).map((group) => {
+                    const activation = Math.max(0, Math.min(100, Math.round((group.activation || 0) * 100)));
+                    const details = (group.details || group.plans || []).map((item) => {
+                        const name = item.name || item;
+                        const highlight = item.highlight ? ' macro-pill highlight' : ' macro-pill';
+                        return `<span class="${highlight.trim()}">${name}</span>`;
+                    }).join('');
+                    const barWidth = activation;
+                    return `
+                        <div class="macro-block">
+                            <div class="macro-block-header">
+                                <span>${group.id}</span>
+                                <span>${activation}%</span>
+                            </div>
+                            <div class="macro-bar"><div class="macro-bar-fill" style="width:${barWidth}%"></div></div>
+                            <div class="macro-block-list">${details || '<span class="macro-empty">No plans</span>'}</div>
+                        </div>
+                    `;
+                }).join('');
+
+                const featureGroups = (macro.feature_groups || []).map((group) => {
+                    const confidence = Math.max(0, Math.min(100, Math.round((group.confidence || 0) * 100)));
+                    const details = (group.details || group.features || []).map((item) => {
+                        const name = item.name || item;
+                        const highlight = item.highlight ? ' macro-pill highlight' : ' macro-pill';
+                        return `<span class="${highlight.trim()}">${name}</span>`;
+                    }).join('');
+                    return `
+                        <div class="macro-block">
+                            <div class="macro-block-header">
+                                <span>${group.id}</span>
+                                <span>${confidence}%</span>
+                            </div>
+                            <div class="macro-bar"><div class="macro-bar-fill" style="width:${confidence}%"></div></div>
+                            <div class="macro-block-list">${details || '<span class="macro-empty">No features</span>'}</div>
+                        </div>
+                    `;
+                }).join('');
 
                 const chosen = macro.move_synth && macro.move_synth.chosen
                     ? macro.move_synth.chosen
@@ -513,9 +545,12 @@
                 linesEl.innerHTML = `
                     <div><strong>Goals:</strong> ${goalEntries || '—'}</div>
                     <div><strong>Phases:</strong> ${phaseEntries || '—'}</div>
-                    <div><strong>Plans:</strong> ${topPlans || '—'}</div>
                     <div><strong>Chosen Move:</strong> ${chosen}</div>
                     <div><strong>Move components:</strong> ${componentText || '—'}</div>
+                    <div class="macro-section-title">Plan Groups</div>
+                    ${planGroups || '<div class="macro-empty">No plan data</div>'}
+                    <div class="macro-section-title">Feature Groups</div>
+                    ${featureGroups || '<div class="macro-empty">No feature data</div>'}
                 `;
                 container.style.display = 'block';
             }

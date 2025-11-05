@@ -341,6 +341,74 @@
             color: #e2e8f0;
         }
 
+        .macro-summary .macro-section-title {
+            margin-top: 8px;
+            font-weight: 600;
+            color: #38bdf8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.72em;
+        }
+
+        .macro-summary .macro-block {
+            margin-bottom: 8px;
+            padding-bottom: 4px;
+            border-bottom: 1px dashed rgba(148, 163, 184, 0.2);
+        }
+
+        .macro-summary .macro-block:last-child {
+            border-bottom: none;
+        }
+
+        .macro-summary .macro-block-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.82em;
+            color: #e2e8f0;
+        }
+
+        .macro-summary .macro-bar {
+            position: relative;
+            background: rgba(148, 163, 184, 0.25);
+            border-radius: 4px;
+            height: 6px;
+            overflow: hidden;
+            margin: 4px 0 6px;
+        }
+
+        .macro-summary .macro-bar-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, #38bdf8, #22d3ee);
+        }
+
+        .macro-summary .macro-block-list {
+            font-size: 0.7em;
+            color: #cbd5f5;
+        }
+
+        .macro-summary .macro-pill {
+            display: inline-block;
+            background: rgba(148, 163, 184, 0.2);
+            color: #e2e8f0;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            margin: 0 4px 4px 0;
+        }
+
+        .macro-summary .macro-pill.highlight {
+            background: #38bdf8;
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        .macro-summary .macro-empty {
+            font-size: 0.72em;
+            color: rgba(226, 232, 240, 0.6);
+        }
+
         .square.white .piece.black { color: #333; }
         .square.black .piece.white { color: #f0f0f0; }
 

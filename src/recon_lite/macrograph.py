@@ -144,6 +144,79 @@ def describe_macrograph(spec: MacroGraphSpec) -> str:
     return "\n".join(lines)
 
 
+def _resolve_sidecar_path(spec_path: Path, entry: str) -> Path:
+    entry_path = Path(entry)
+    if entry_path.is_absolute():
+        return entry_path
+    for anchor in spec_path.parents:
+        candidate = anchor / entry_path
+        if candidate.exists():
+            return candidate
+    return spec_path.parent / entry_path
+
+
+def _load_macro_weight_payload(spec: MacroGraphSpec, spec_path: Path) -> Optional[Dict[str, Any]]:
+    sidecars = spec.notes.get("sidecars")
+    if not sidecars:
+        return None
+    for entry in sidecars:
+        if "macro_weights" in entry:
+            target = _resolve_sidecar_path(spec_path, entry)
+            return _load_json(target)
+    return None
+
+
+def _apply_macro_weight_sidecar(graph: Graph, payload: Mapping[str, Any]) -> None:
+    por_edges = payload.get("por_edges", {})
+    for key, value in por_edges.items():
+        if not isinstance(key, str) or "->" not in key:
+            raise MacrographError(f"Invalid POR edge key '{key}' in macro weights sidecar.")
+        src, dst = (part.strip() for part in key.split("->", 1))
+        try:
+            graph.set_por_weight(src, dst, float(value))
+        except (KeyError, ValueError) as exc:
+            raise MacrographError(f"Failed to set POR weight for edge {src}->{dst}: {exc}") from exc
+
+    por_policies = payload.get("por_policies", {})
+    for nid, cfg in por_policies.items():
+        if not isinstance(cfg, Mapping):
+            raise MacrographError(f"POR policy for node '{nid}' must be a mapping.")
+        policy = cfg.get("policy")
+        if not policy:
+            raise MacrographError(f"POR policy for node '{nid}' is missing a 'policy' entry.")
+        k = cfg.get("k")
+        theta = cfg.get("theta")
+        try:
+            graph.set_por_policy(
+                nid,
+                policy=policy,
+                k=None if k is None else int(k),
+                theta=None if theta is None else float(theta),
+            )
+        except KeyError as exc:
+            raise MacrographError(f"POR policy references unknown node '{nid}'.") from exc
+
+    confirm_policies = payload.get("confirm_policies", {})
+    for nid, cfg in confirm_policies.items():
+        if not isinstance(cfg, Mapping):
+            raise MacrographError(f"Confirm policy for node '{nid}' must be a mapping.")
+        policy = cfg.get("policy")
+        if not policy:
+            raise MacrographError(f"Confirm policy for node '{nid}' is missing a 'policy' entry.")
+        k = cfg.get("k")
+        try:
+            graph.set_confirm_policy(
+                nid,
+                policy=policy,
+                k=None if k is None else int(k),
+            )
+        except KeyError as exc:
+            raise MacrographError(f"Confirm policy references unknown node '{nid}'.") from exc
+
+    version = payload.get("version")
+    if version is not None:
+        setattr(graph, "macro_weights_version", str(version))
+
 # ---------------------------------------------------------------------------
 # Runtime instantiation helpers
 
@@ -215,11 +288,14 @@ def instantiate_macrograph(
     spec_path: str | Path,
     *,
     krk_builder: Optional[Callable[[], Graph]] = None,
+    kpk_builder: Optional[Callable[[], Graph]] = None,
+    mount_builders: Optional[Mapping[str, Callable[[], Graph]]] = None,
 ) -> Graph:
     """
     Instantiate a `Graph` from the macrograph specification, optionally mounting
     the KRK sub-network (or any builder supplied via `krk_builder`).
     """
+    spec_path = Path(spec_path)
     spec = load_macrograph(spec_path)
     graph = Graph()
 
@@ -236,10 +312,25 @@ def instantiate_macrograph(
         graph.add_edge(edge.src, edge.dst, ltype)
         graph.edges[-1].w = edge.weight
 
-    # Optional subgraph mounts (currently only KRK).
+    weight_payload = _load_macro_weight_payload(spec, spec_path)
+    if weight_payload:
+        _apply_macro_weight_sidecar(graph, weight_payload)
+
+    # Optional subgraph mounts (KRK, KPK, ...).
     mounts = spec.subgraph_mounts()
-    if krk_builder and "KRKSubgraph" in mounts:
-        krk_graph = krk_builder()
-        _mount_subgraph(graph, "KRKSubgraph", krk_graph)
+    builder_map: Dict[str, Callable[[], Graph]] = {}
+    if mount_builders:
+        builder_map.update(mount_builders)
+    if krk_builder:
+        builder_map.setdefault("krk", krk_builder)
+    if kpk_builder:
+        builder_map.setdefault("kpk", kpk_builder)
+
+    for mount_id, mount_key in mounts.items():
+        builder = builder_map.get(mount_key)
+        if builder is None:
+            continue
+        subgraph = builder()
+        _mount_subgraph(graph, mount_id, subgraph)
 
     return graph
