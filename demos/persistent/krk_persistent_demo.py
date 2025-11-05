@@ -511,27 +511,29 @@ def _decision_cycle(engine: ReConEngine,
                     for e in engine.g.edges
                 ])
 
-            if viz_logger is not None:
-                viz_logger.snapshot(
-                    engine=engine,
-                    note=f"Persistent eval tick {ticks} (ply {plies+1})",
-                    env=view_env,
-                    thoughts="Persistent evaluation...",
-                    new_requests=list(now_req.keys()) if now_req else [],
-                    latents=latents_payload,
-                )
+        if viz_logger is not None:
+            viz_logger.snapshot(
+                engine=engine,
+                note=f"Persistent eval tick {ticks} (ply {plies+1})",
+                env=view_env,
+                thoughts="Persistent evaluation...",
+                new_requests=list(now_req.keys()) if now_req else [],
+                latents=latents_payload,
+                macro=env.get("macro_frame"),
+            )
 
-            if debug_logger is not None:
-                debug_payload = dict(view_env)
-                debug_payload.update(dbg)
-                debug_logger.snapshot(
-                    engine=engine,
-                    note=f"Persistent eval tick {ticks} (ply {plies+1})",
-                    env=debug_payload,
-                    thoughts="Persistent evaluation...",
-                    new_requests=list(now_req.keys()) if now_req else [],
-                    latents=latents_payload,
-                )
+        if debug_logger is not None:
+            debug_payload = dict(view_env)
+            debug_payload.update(dbg)
+            debug_logger.snapshot(
+                engine=engine,
+                note=f"Persistent eval tick {ticks} (ply {plies+1})",
+                env=debug_payload,
+                thoughts="Persistent evaluation...",
+                new_requests=list(now_req.keys()) if now_req else [],
+                latents=latents_payload,
+                macro=env.get("macro_frame"),
+            )
 
         proposed_move = env.get("chosen_move")
         if proposed_move:
@@ -597,6 +599,7 @@ def _decision_cycle(engine: ReConEngine,
                 thoughts="Collected proposals",
                 new_requests=[],
                 latents=env.get("phase_latents"),
+                macro=env.get("macro_frame"),
             )
         if debug_logger is not None and debug_logger is not viz_logger:
             debug_logger.snapshot(
@@ -606,6 +609,7 @@ def _decision_cycle(engine: ReConEngine,
                 thoughts="Collected proposals",
                 new_requests=[],
                 latents=env.get("phase_latents"),
+                macro=env.get("macro_frame"),
             )
     return selected, ordered, ticks
 
@@ -793,6 +797,8 @@ def play_persistent_game(initial_fen: str | None = None,
             env=env_payload,
             thoughts=thoughts,
             new_requests=new_requests or [],
+            latents=env.get("phase_latents"),
+            macro=env.get("macro_frame"),
         )
 
     while not board.is_game_over() and plies < max_plies:
@@ -830,6 +836,8 @@ def play_persistent_game(initial_fen: str | None = None,
                         env={"fen": board.fen(), "ply": plies, "opponents_move": opp_uci},
                         thoughts="Opponent move (persistent)",
                         new_requests=[],
+                        latents=env.get("phase_latents"),
+                        macro=env.get("macro_frame"),
                     )
             else:
                 # No legal opponent move; treat as finished
@@ -857,12 +865,7 @@ def play_persistent_game(initial_fen: str | None = None,
                     note="Leg2 proposal",
                     env_payload={"fen": board.fen(), "ply": plies + 1, "leg2": True},
                     thoughts="Leg2 direct proposal",
-<<<<<<< HEAD
-                    include_engine=True,
-=======
-                    new_requests=[],
-                    latents=env.get("phase_latents"),
->>>>>>> expansion_to_ML
+                    include_engine=log_full_state,
                 )
             if debug_logger is not None and ordered:
                 debug_logger.snapshot(
@@ -910,29 +913,12 @@ def play_persistent_game(initial_fen: str | None = None,
                     "reason": "safety fallback",
                 }
                 move_uci = fallback
-<<<<<<< HEAD
                 _log_snapshot(
                     note=f"FALLBACK applied: {fallback}",
                     env_payload={"fen": board.fen(), "ply": plies + 1, "fallback": True},
                     thoughts="No acceptable proposal; applying fallback",
                     include_engine=log_full_state,
                 )
-=======
-                if viz_logger is not None:
-                    if log_full_state:
-                        try:
-                            engine.step(env)
-                        except Exception:
-                            pass
-                    viz_logger.snapshot(
-                        engine=engine,
-                        note=f"FALLBACK applied: {fallback}",
-                        env={"fen": board.fen(), "ply": plies + 1, "fallback": True},
-                        thoughts="No acceptable proposal; applying fallback",
-                        new_requests=[],
-                        latents=env.get("phase_latents"),
-                    )
->>>>>>> expansion_to_ML
                 if debug_logger is not None and debug_logger is not viz_logger:
                     debug_logger.snapshot(
                         engine=None,
@@ -941,6 +927,7 @@ def play_persistent_game(initial_fen: str | None = None,
                         thoughts="No acceptable proposal; applying fallback",
                         new_requests=[],
                         latents=env.get("phase_latents"),
+                        macro=env.get("macro_frame"),
                     )
 
         if move_uci:
@@ -960,34 +947,18 @@ def play_persistent_game(initial_fen: str | None = None,
                     env={**move_record["validation"], "ply": plies},
                     thoughts="Recorded shrink metrics",
                     new_requests=[],
+                    macro=env.get("macro_frame"),
                 )
 
             if not any(p.piece_type == chess.ROOK and p.color == chess.WHITE for p in board.piece_map().values()):
                 rook_lost = True
 
-<<<<<<< HEAD
             _log_snapshot(
                 note=f"Applied move {plies}: {move_uci}",
                 env_payload={"fen": board.fen(), "ply": plies, "recons_move": move_uci},
                 thoughts=f"Applied {move_uci} (persistent)",
                 include_engine=log_full_state,
             )
-=======
-            if viz_logger is not None:
-                if log_full_state:
-                    try:
-                        engine.step(env)
-                    except Exception:
-                        pass
-                viz_logger.snapshot(
-                    engine=engine,
-                    note=f"Applied move {plies}: {move_uci}",
-                    env={"fen": board.fen(), "ply": plies, "recons_move": move_uci},
-                    thoughts=f"Applied {move_uci} (persistent)",
-                    new_requests=[],
-                    latents=env.get("phase_latents"),
-                )
->>>>>>> expansion_to_ML
             if debug_logger is not None and debug_logger is not viz_logger:
                 debug_logger.snapshot(
                     engine=None,
@@ -996,6 +967,7 @@ def play_persistent_game(initial_fen: str | None = None,
                     thoughts=f"Applied {move_uci} (persistent)",
                     new_requests=[],
                     latents=env.get("phase_latents"),
+                    macro=env.get("macro_frame"),
                 )
 
             if board.is_game_over() or plies >= max_plies:
@@ -1004,59 +976,6 @@ def play_persistent_game(initial_fen: str | None = None,
             if step_mode:
                 break
 
-<<<<<<< HEAD
-=======
-            if not skip_opponent and not board.is_game_over():
-                opp_move_obj = None
-                if opponent_policy is not None:
-                    candidate = opponent_policy(board.copy())
-                    if isinstance(candidate, chess.Move):
-                        opp_move_obj = candidate
-                    elif isinstance(candidate, str):
-                        try:
-                            opp_move_obj = chess.Move.from_uci(candidate)
-                        except ValueError:
-                            opp_move_obj = None
-                if opp_move_obj is None:
-                    opp_candidates = list(board.legal_moves)
-                    if opp_candidates:
-                        opp_move_obj = random.choice(opp_candidates)
-                if opp_move_obj is not None and opp_move_obj in board.legal_moves:
-                    board.push(opp_move_obj)
-                    opp_uci = opp_move_obj.uci()
-                    _force_phase_targets(board, env, phase_states, phase_temperature)
-                    env["binding"] = _update_binding_table(binding_table, board)
-                    env["phase_latents"] = activation_snapshot(phase_states)
-                    if viz_logger is not None:
-                        if log_full_state:
-                            try:
-                                engine.step(env)
-                            except Exception:
-                                pass
-                        viz_logger.snapshot(
-                            engine=engine,
-                            note=f"Opponent ply {plies}: {opp_uci}",
-                            env={"fen": board.fen(), "ply": plies, "opponents_move": opp_uci},
-                            thoughts="Opponent move (persistent)",
-                            new_requests=[],
-                            latents=env.get("phase_latents"),
-                        )
-                    if debug_logger is not None and debug_logger is not viz_logger:
-                        debug_logger.snapshot(
-                            engine=None,
-                            note=f"Opponent ply {plies}: {opp_uci}",
-                            env={"fen": board.fen(), "ply": plies, "opponents_move": opp_uci},
-                            thoughts="Opponent move (persistent)",
-                            new_requests=[],
-                            latents=env.get("phase_latents"),
-                        )
-            if board.is_game_over() or plies >= max_plies:
-                break
-
-            if step_mode:
-                break
-
->>>>>>> expansion_to_ML
     # Reset only terminals (evaluators/actuators) and preserve confirmed phase states
     # This was overly aggressive earlier and ruined the whole graph: 
     # Per ReCoN engine (_request_child_if_ready): A node (e.g., PHASE1) is only REQUESTED if all POR predecessors (e.g., PHASE0) are TRUE/CONFIRMED (_all_por_predecessors_true

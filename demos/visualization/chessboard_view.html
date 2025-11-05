@@ -38,6 +38,10 @@
                     <div class="thoughts-label">AI Thoughts:</div>
                     <div class="thoughts-text" id="thoughts-text">Initializing ReCoN network...</div>
                     <div class="rationale-ribbon" id="rationale-ribbon" style="display:none;"></div>
+                    <div class="macro-summary" id="macro-summary">
+                        <div class="macro-title">Macrograph Snapshot</div>
+                        <div class="macro-lines" id="macro-lines"></div>
+                    </div>
                 </div>
             </div>
 
@@ -430,6 +434,7 @@
 
                 // Update phase states
                 this.updatePhaseStates(nodeStates || {});
+                this.updateMacroSummary(frame.macro_frame);
 
                 // Update controls
                 this.updateControls();
@@ -463,6 +468,56 @@
                     // Add current state class
                     element.classList.add(stateClass);
                 });
+            }
+
+            updateMacroSummary(macro) {
+                const container = document.getElementById('macro-summary');
+                const linesEl = document.getElementById('macro-lines');
+                if (!container || !linesEl) return;
+                if (!macro) {
+                    container.style.display = 'none';
+                    linesEl.textContent = '';
+                    return;
+                }
+
+                const goalVector = macro.goal_vector || {};
+                const goalEntries = Object.entries(goalVector)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 4)
+                    .map(([k, v]) => `${k}: ${(v * 100).toFixed(0)}%`)
+                    .join(' · ');
+
+                const phaseMix = macro.phase_mix || {};
+                const phaseEntries = Object.entries(phaseMix)
+                    .map(([k, v]) => `${k}: ${(v * 100).toFixed(0)}%`)
+                    .join(' · ');
+
+                const topPlans = (macro.plan_groups || [])
+                    .slice()
+                    .sort((a, b) => (b.activation || 0) - (a.activation || 0))
+                    .slice(0, 2)
+                    .map((group) => `${group.id} ${(group.activation * 100).toFixed(0)}%`)
+                    .join(', ');
+
+                const chosen = macro.move_synth && macro.move_synth.chosen
+                    ? macro.move_synth.chosen
+                    : '—';
+
+                const components = macro.move_synth && macro.move_synth.proposals && macro.move_synth.proposals[0]
+                    ? macro.move_synth.proposals[0].components || {}
+                    : {};
+                const componentText = Object.entries(components)
+                    .map(([k, v]) => `${k}:${(v * 100).toFixed(0)}%`)
+                    .join(' ');
+
+                linesEl.innerHTML = `
+                    <div><strong>Goals:</strong> ${goalEntries || '—'}</div>
+                    <div><strong>Phases:</strong> ${phaseEntries || '—'}</div>
+                    <div><strong>Plans:</strong> ${topPlans || '—'}</div>
+                    <div><strong>Chosen Move:</strong> ${chosen}</div>
+                    <div><strong>Move components:</strong> ${componentText || '—'}</div>
+                `;
+                container.style.display = 'block';
             }
         }
 

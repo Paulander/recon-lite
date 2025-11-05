@@ -317,6 +317,30 @@
             letter-spacing: 0.02em;
         }
 
+        .macro-summary {
+            background: rgba(15, 23, 42, 0.85);
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-top: 12px;
+            display: none;
+            font-size: 0.78em;
+            line-height: 1.4;
+            border-left: 3px solid #22d3ee;
+        }
+
+        .macro-summary .macro-title {
+            font-weight: 600;
+            color: #22d3ee;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .macro-summary .macro-lines div {
+            margin-bottom: 4px;
+            color: #e2e8f0;
+        }
+
         .square.white .piece.black { color: #333; }
         .square.black .piece.white { color: #f0f0f0; }
 

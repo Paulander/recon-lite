@@ -39,6 +39,7 @@ class RunLogger:
         thoughts: Optional[str] = None,
         latents: Optional[Dict[str, Any]] = None,
         new_requests: Optional[List[str]] = None,
+        macro: Optional[Dict[str, Any]] = None,
     ):
         frame: Dict[str, Any] = {
             "type": "snapshot",
@@ -68,6 +69,8 @@ class RunLogger:
             frame["thoughts"] = thoughts
         if latents is not None:
             frame["latents"] = latents
+        if macro is not None:
+            frame["macro_frame"] = macro
         self.events.append(frame)
         
     def to_json(self, path: str):
