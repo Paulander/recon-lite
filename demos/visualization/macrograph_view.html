@@ -14,6 +14,7 @@
         display: flex;
         flex-direction: column;
         overflow: hidden;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       }
       header {
         padding: 18px 28px;
@@ -23,16 +24,18 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        gap: 24px;
       }
       header h1 {
-        font-weight: 400;
+        font-weight: 500;
         font-size: 1.4rem;
         margin: 0;
       }
       .controls {
         display: flex;
-        gap: 12px;
+        gap: 16px;
         align-items: center;
+        flex-wrap: wrap;
       }
       .controls button {
         padding: 8px 16px;
@@ -42,8 +45,23 @@
         background: #1d4ed8;
         color: #fff;
         font-weight: 600;
+        transition: background 0.2s ease;
       }
-      .controls input[type="file"] {
+      .controls button:disabled {
+        background: #334155;
+        cursor: not-allowed;
+      }
+      .controls button:not(:disabled):hover {
+        background: #2563eb;
+      }
+      .file-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.85rem;
+        color: #cbd5f5;
+      }
+      .file-label input[type="file"] {
         color: #e2e8f0;
       }
       main {
@@ -60,11 +78,48 @@
         box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25);
         overflow: hidden;
         position: relative;
+        padding-bottom: 76px;
       }
       #macrograph-canvas {
         width: 100%;
         height: 100%;
         display: block;
+      }
+      #timeline-controls {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        background: rgba(15, 23, 42, 0.85);
+        border-top: 1px solid rgba(148, 163, 184, 0.2);
+        backdrop-filter: blur(6px);
+      }
+      #timeline-controls button {
+        padding: 8px 14px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        background: #22c55e;
+        color: #0f172a;
+        font-weight: 600;
+      }
+      #timeline-controls button:disabled {
+        background: #334155;
+        color: #94a3b8;
+        cursor: not-allowed;
+      }
+      #frame-slider {
+        flex: 1;
+        accent-color: #38bdf8;
+      }
+      #frame-label {
+        font-size: 0.85rem;
+        color: #e2e8f0;
+        min-width: 220px;
       }
       #macrograph-info {
         background: #111827;
@@ -73,6 +128,16 @@
         font-family: 'Cascadia Code', 'Fira Code', monospace;
         white-space: pre-wrap;
         overflow-y: auto;
+        line-height: 1.35;
+      }
+      @media (max-width: 1200px) {
+        main {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto auto;
+        }
+        #macrograph-info {
+          max-height: 320px;
+        }
       }
     </style>
   </head>
@@ -80,16 +145,26 @@
     <header>
       <h1>ReCoN Macrograph Viewer</h1>
       <div class="controls">
-        <button id="load-default-btn">Load Default</button>
-        <label>
-          <span>Custom Spec:</span>
-          <input type="file" id="macrograph-file" accept="application/json" />
+        <button id="load-spec-btn">Load Spec v0.2</button>
+        <label class="file-label">
+          <span>Custom Spec</span>
+          <input type="file" id="spec-file" accept="application/json" />
+        </label>
+        <button id="load-timeline-btn">Load Demo Timeline</button>
+        <label class="file-label">
+          <span>Custom Timeline</span>
+          <input type="file" id="timeline-file" accept="application/json" />
         </label>
       </div>
     </header>
     <main>
       <section id="macrograph-container">
         <canvas id="macrograph-canvas"></canvas>
+        <div id="timeline-controls">
+          <button id="play-btn" disabled>Play</button>
+          <input type="range" id="frame-slider" min="0" max="0" value="0" step="1" disabled />
+          <span id="frame-label">No frames loaded</span>
+        </div>
       </section>
       <section id="macrograph-info"></section>
     </main>

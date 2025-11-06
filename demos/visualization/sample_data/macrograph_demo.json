@@ -1,0 +1,1738 @@
+[
+  {
+    "tick": 0,
+    "label": "Opening initiative: develop and fight for center.",
+    "board_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1",
+    "macro_frame": {
+      "version": "0.1",
+      "goal_vector": {
+        "Material": 0.5,
+        "KingSafety": 0.55,
+        "Initiative": 0.58,
+        "Structure": 0.5,
+        "PhaseProgress": 0.33,
+        "RiskBudget": 0.45,
+        "TacticWindow": 0.52
+      },
+      "phase_mix": {
+        "Opening": 0.4,
+        "Middlegame": 0.4,
+        "Endgame": 0.2
+      },
+      "plan_groups": [
+        {
+          "id": "PlanOpening",
+          "activation": 0.2,
+          "plans": [
+            "Develop",
+            "CastleSafety",
+            "CenterControl",
+            "AvoidTraps"
+          ],
+          "details": [
+            {
+              "name": "Develop",
+              "highlight": false
+            },
+            {
+              "name": "CastleSafety",
+              "highlight": false
+            },
+            {
+              "name": "CenterControl",
+              "highlight": false
+            },
+            {
+              "name": "AvoidTraps",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "id": "PlanMiddlegame",
+          "activation": 0.35,
+          "plans": [
+            "CreateWeakness",
+            "KingSafety",
+            "ActivatePieces",
+            "Simplify",
+            "AttackKing"
+          ],
+          "details": [
+            {
+              "name": "CreateWeakness",
+              "highlight": false
+            },
+            {
+              "name": "KingSafety",
+              "highlight": false
+            },
+            {
+              "name": "ActivatePieces",
+              "highlight": false
+            },
+            {
+              "name": "Simplify",
+              "highlight": false
+            },
+            {
+              "name": "AttackKing",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "id": "PlanEndgame",
+          "activation": 0.3,
+          "plans": [
+            "KRK",
+            "KPK",
+            "RookTechniques",
+            "Conversion"
+          ],
+          "details": [
+            {
+              "name": "KRK",
+              "highlight": false
+            },
+            {
+              "name": "KPK",
+              "highlight": false
+            },
+            {
+              "name": "RookTechniques",
+              "highlight": false
+            },
+            {
+              "name": "Conversion",
+              "highlight": false
+            }
+          ]
+        }
+      ],
+      "feature_groups": [
+        {
+          "id": "FeatureTactics",
+          "confidence": 0.45,
+          "features": [
+            "HangingPiece",
+            "MateThreat",
+            "Fork",
+            "Pin",
+            "Skewer",
+            "DiscoveredCheck"
+          ],
+          "details": [
+            {
+              "name": "HangingPiece",
+              "highlight": false
+            },
+            {
+              "name": "MateThreat",
+              "highlight": false
+            },
+            {
+              "name": "Fork",
+              "highlight": false
+            },
+            {
+              "name": "Pin",
+              "highlight": false
+            },
+            {
+              "name": "Skewer",
+              "highlight": false
+            },
+            {
+              "name": "DiscoveredCheck",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "id": "FeatureStructure",
+          "confidence": 0.52,
+          "features": [
+            "OpenFile",
+            "PassedPawn",
+            "IsolatedPawn",
+            "DoubledPawn",
+            "Outpost",
+            "KingShelter"
+          ],
+          "details": [
+            {
+              "name": "OpenFile",
+              "highlight": false
+            },
+            {
+              "name": "PassedPawn",
+              "highlight": false
+            },
+            {
+              "name": "IsolatedPawn",
+              "highlight": false
+            },
+            {
+              "name": "DoubledPawn",
+              "highlight": false
+            },
+            {
+              "name": "Outpost",
+              "highlight": false
+            },
+            {
+              "name": "KingShelter",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "id": "FeatureEndgame",
+          "confidence": 0.25,
+          "features": [
+            "KRK",
+            "KPK",
+            "RookCutoff",
+            "BoxShrink",
+            "Opposition"
+          ],
+          "details": [
+            {
+              "name": "KRK",
+              "highlight": false
+            },
+            {
+              "name": "KPK",
+              "highlight": false
+            },
+            {
+              "name": "RookCutoff",
+              "highlight": false
+            },
+            {
+              "name": "BoxShrink",
+              "highlight": false
+            },
+            {
+              "name": "Opposition",
+              "highlight": false
+            }
+          ]
+        }
+      ],
+      "bindings": {
+        "macro/endgame/krk": [
+          {
+            "feature": "rook_anchor",
+            "items": [
+              "square:h1"
+            ]
+          },
+          {
+            "feature": "own_king",
+            "items": [
+              "square:e1"
+            ]
+          },
+          {
+            "feature": "enemy_king",
+            "items": [
+              "square:e8"
+            ]
+          }
+        ]
+      },
+      "move_synth": {
+        "weights": {
+          "plan": 0.4,
+          "features": 0.3,
+          "eval": 0.2,
+          "goal": 0.1
+        },
+        "proposals": [
+          {
+            "uci": "g1h3",
+            "score": 1.0,
+            "components": {
+              "plan": 0.45,
+              "features": 0.28,
+              "eval": 0.18,
+              "goal": 0.09
+            }
+          },
+          {
+            "uci": "g1f3",
+            "score": 1.07,
+            "components": {
+              "plan": 0.48,
+              "features": 0.3,
+              "eval": 0.19,
+              "goal": 0.1
+            }
+          },
+          {
+            "uci": "b1c3",
+            "score": 1.14,
+            "components": {
+              "plan": 0.51,
+              "features": 0.32,
+              "eval": 0.2,
+              "goal": 0.11
+            }
+          }
+        ],
+        "chosen": "g1h3"
+      }
+    }
+  },
+  {
+    "tick": 1,
+    "label": "Middlegame tension: semi-open center with both kings castled.",
+    "board_fen": "r2qk2r/pp1bbppp/2n1pn2/2pp4/2P1P3/1PNPBN2/PB1Q1PPP/R4RK1 w kq - 2 10",
+    "macro_frame": {
+      "version": "0.1",
+      "goal_vector": {
+        "Material": 0.5,
+        "KingSafety": 0.55,
+        "Initiative": 0.58,
+        "Structure": 0.5,
+        "PhaseProgress": 0.33,
+        "RiskBudget": 0.45,
+        "TacticWindow": 0.52
+      },
+      "phase_mix": {
+        "Opening": 0.4,
+        "Middlegame": 0.4,
+        "Endgame": 0.2
+      },
+      "plan_groups": [
+        {
+          "id": "PlanOpening",
+          "activation": 0.2,
+          "plans": [
+            "Develop",
+            "CastleSafety",
+            "CenterControl",
+            "AvoidTraps"
+          ],
+          "details": [
+            {
+              "name": "Develop",
+              "highlight": false
+            },
+            {
+              "name": "CastleSafety",
+              "highlight": false
+            },
+            {
+              "name": "CenterControl",
+              "highlight": false
+            },
+            {
+              "name": "AvoidTraps",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "id": "PlanMiddlegame",
+          "activation": 0.35,
+          "plans": [
+            "CreateWeakness",
+            "KingSafety",
+            "ActivatePieces",
+            "Simplify",
+            "AttackKing"
+          ],
+          "details": [
+            {
+              "name": "CreateWeakness",
+              "highlight": false
+            },
+            {
+              "name": "KingSafety",
+              "highlight": false
+            },
+            {
+              "name": "ActivatePieces",
+              "highlight": false
+            },
+            {
+              "name": "Simplify",
+              "highlight": false
+            },
+            {
+              "name": "AttackKing",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "id": "PlanEndgame",
+          "activation": 0.3,
+          "plans": [
+            "KRK",
+            "KPK",
+            "RookTechniques",
+            "Conversion"
+          ],
+          "details": [
+            {
+              "name": "KRK",
+              "highlight": false
+            },
+            {
+              "name": "KPK",
+              "highlight": false
+            },
+            {
+              "name": "RookTechniques",
+              "highlight": false
+            },
+            {
+              "name": "Conversion",
+              "highlight": false
+            }
+          ]
+        }
+      ],
+      "feature_groups": [
+        {
+          "id": "FeatureTactics",
+          "confidence": 0.45,
+          "features": [
+            "HangingPiece",
+            "MateThreat",
+            "Fork",
+            "Pin",
+            "Skewer",
+            "DiscoveredCheck"
+          ],
+          "details": [
+            {
+              "name": "HangingPiece",
+              "highlight": false
+            },
+            {
+              "name": "MateThreat",
+              "highlight": false
+            },
+            {
+              "name": "Fork",
+              "highlight": false
+            },
+            {
+              "name": "Pin",
+              "highlight": false
+            },
+            {
+              "name": "Skewer",
+              "highlight": false
+            },
+            {
+              "name": "DiscoveredCheck",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "id": "FeatureStructure",
+          "confidence": 0.52,
+          "features": [
+            "OpenFile",
+            "PassedPawn",
+            "IsolatedPawn",
+            "DoubledPawn",
+            "Outpost",
+            "KingShelter"
+          ],
+          "details": [
+            {
+              "name": "OpenFile",
+              "highlight": false
+            },
+            {
+              "name": "PassedPawn",
+              "highlight": false
+            },
+            {
+              "name": "IsolatedPawn",
+              "highlight": false
+            },
+            {
+              "name": "DoubledPawn",
+              "highlight": false
+            },
+            {
+              "name": "Outpost",
+              "highlight": false
+            },
+            {
+              "name": "KingShelter",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "id": "FeatureEndgame",
+          "confidence": 0.25,
+          "features": [
+            "KRK",
+            "KPK",
+            "RookCutoff",
+            "BoxShrink",
+            "Opposition"
+          ],
+          "details": [
+            {
+              "name": "KRK",
+              "highlight": false
+            },
+            {
+              "name": "KPK",
+              "highlight": false
+            },
+            {
+              "name": "RookCutoff",
+              "highlight": false
+            },
+            {
+              "name": "BoxShrink",
+              "highlight": false
+            },
+            {
+              "name": "Opposition",
+              "highlight": false
+            }
+          ]
+        }
+      ],
+      "bindings": {
+        "macro/endgame/krk": [
+          {
+            "feature": "rook_anchor",
+            "items": [
+              "square:f1"
+            ]
+          },
+          {
+            "feature": "own_king",
+            "items": [
+              "square:g1"
+            ]
+          },
+          {
+            "feature": "enemy_king",
+            "items": [
+              "square:e8"
+            ]
+          }
+        ]
+      },
+      "move_synth": {
+        "weights": {
+          "plan": 0.4,
+          "features": 0.3,
+          "eval": 0.2,
+          "goal": 0.1
+        },
+        "proposals": [
+          {
+            "uci": "f3g5",
+            "score": 1.0,
+            "components": {
+              "plan": 0.45,
+              "features": 0.28,
+              "eval": 0.18,
+              "goal": 0.09
+            }
+          },
+          {
+            "uci": "f3e5",
+            "score": 1.07,
+            "components": {
+              "plan": 0.48,
+              "features": 0.3,
+              "eval": 0.19,
+              "goal": 0.1
+            }
+          },
+          {
+            "uci": "f3h4",
+            "score": 1.14,
+            "components": {
+              "plan": 0.51,
+              "features": 0.32,
+              "eval": 0.2,
+              "goal": 0.11
+            }
+          }
+        ],
+        "chosen": "f3g5"
+      }
+    }
+  },
+  {
+    "tick": 2,
+    "label": "Simplified: queenless, minor pieces remain.",
+    "board_fen": "2r2rk1/1p2qppp/p1n1pn2/3p4/2PP4/1P1NPN2/P3BPPP/2RQ1RK1 w - - 4 19",
+    "macro_frame": {
+      "version": "0.1",
+      "goal_vector": {
+        "Material": 0.7,
+        "KingSafety": 0.55,
+        "Initiative": 0.58,
+        "Structure": 0.5,
+        "PhaseProgress": 0.33,
+        "RiskBudget": 0.45,
+        "TacticWindow": 0.52
+      },
+      "phase_mix": {
+        "Opening": 0.4,
+        "Middlegame": 0.4,
+        "Endgame": 0.2
+      },
+      "plan_groups": [
+        {
+          "id": "PlanOpening",
+          "activation": 0.2,
+          "plans": [
+            "Develop",
+            "CastleSafety",
+            "CenterControl",
+            "AvoidTraps"
+          ],
+          "details": [
+            {
+              "name": "Develop",
+              "highlight": false
+            },
+            {
+              "name": "CastleSafety",
+              "highlight": false
+            },
+            {
+              "name": "CenterControl",
+              "highlight": false
+            },
+            {
+              "name": "AvoidTraps",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "id": "PlanMiddlegame",
+          "activation": 0.35,
+          "plans": [
+            "CreateWeakness",
+            "KingSafety",
+            "ActivatePieces",
+            "Simplify",
+            "AttackKing"
+          ],
+          "details": [
+            {
+              "name": "CreateWeakness",
+              "highlight": false
+            },
+            {
+              "name": "KingSafety",
+              "highlight": false
+            },
+            {
+              "name": "ActivatePieces",
+              "highlight": false
+            },
+            {
+              "name": "Simplify",
+              "highlight": false
+            },
+            {
+              "name": "AttackKing",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "id": "PlanEndgame",
+          "activation": 0.3,
+          "plans": [
+            "KRK",
+            "KPK",
+            "RookTechniques",
+            "Conversion"
+          ],
+          "details": [
+            {
+              "name": "KRK",
+              "highlight": false
+            },
+            {
+              "name": "KPK",
+              "highlight": false
+            },
+            {
+              "name": "RookTechniques",
+              "highlight": false
+            },
+            {
+              "name": "Conversion",
+              "highlight": false
+            }
+          ]
+        }
+      ],
+      "feature_groups": [
+        {
+          "id": "FeatureTactics",
+          "confidence": 0.45,
+          "features": [
+            "HangingPiece",
+            "MateThreat",
+            "Fork",
+            "Pin",
+            "Skewer",
+            "DiscoveredCheck"
+          ],
+          "details": [
+            {
+              "name": "HangingPiece",
+              "highlight": false
+            },
+            {
+              "name": "MateThreat",
+              "highlight": false
+            },
+            {
+              "name": "Fork",
+              "highlight": false
+            },
+            {
+              "name": "Pin",
+              "highlight": false
+            },
+            {
+              "name": "Skewer",
+              "highlight": false
+            },
+            {
+              "name": "DiscoveredCheck",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "id": "FeatureStructure",
+          "confidence": 0.52,
+          "features": [
+            "OpenFile",
+            "PassedPawn",
+            "IsolatedPawn",
+            "DoubledPawn",
+            "Outpost",
+            "KingShelter"
+          ],
+          "details": [
+            {
+              "name": "OpenFile",
+              "highlight": false
+            },
+            {
+              "name": "PassedPawn",
+              "highlight": false
+            },
+            {
+              "name": "IsolatedPawn",
+              "highlight": false
+            },
+            {
+              "name": "DoubledPawn",
+              "highlight": false
+            },
+            {
+              "name": "Outpost",
+              "highlight": false
+            },
+            {
+              "name": "KingShelter",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "id": "FeatureEndgame",
+          "confidence": 0.25,
+          "features": [
+            "KRK",
+            "KPK",
+            "RookCutoff",
+            "BoxShrink",
+            "Opposition"
+          ],
+          "details": [
+            {
+              "name": "KRK",
+              "highlight": false
+            },
+            {
+              "name": "KPK",
+              "highlight": false
+            },
+            {
+              "name": "RookCutoff",
+              "highlight": false
+            },
+            {
+              "name": "BoxShrink",
+              "highlight": false
+            },
+            {
+              "name": "Opposition",
+              "highlight": false
+            }
+          ]
+        }
+      ],
+      "bindings": {
+        "macro/endgame/krk": [
+          {
+            "feature": "rook_anchor",
+            "items": [
+              "square:f1"
+            ]
+          },
+          {
+            "feature": "own_king",
+            "items": [
+              "square:g1"
+            ]
+          },
+          {
+            "feature": "enemy_king",
+            "items": [
+              "square:g8"
+            ]
+          }
+        ]
+      },
+      "move_synth": {
+        "weights": {
+          "plan": 0.4,
+          "features": 0.3,
+          "eval": 0.2,
+          "goal": 0.1
+        },
+        "proposals": [
+          {
+            "uci": "f3g5",
+            "score": 1.0,
+            "components": {
+              "plan": 0.45,
+              "features": 0.28,
+              "eval": 0.18,
+              "goal": 0.09
+            }
+          },
+          {
+            "uci": "f3e5",
+            "score": 1.07,
+            "components": {
+              "plan": 0.48,
+              "features": 0.3,
+              "eval": 0.19,
+              "goal": 0.1
+            }
+          },
+          {
+            "uci": "f3h4",
+            "score": 1.14,
+            "components": {
+              "plan": 0.51,
+              "features": 0.32,
+              "eval": 0.2,
+              "goal": 0.11
+            }
+          }
+        ],
+        "chosen": "f3g5"
+      }
+    }
+  },
+  {
+    "tick": 3,
+    "label": "KRK endgame (classic).",
+    "board_fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+    "macro_frame": {
+      "version": "0.1",
+      "goal_vector": {
+        "Material": 0.75,
+        "KingSafety": 0.65,
+        "Initiative": 0.58,
+        "Structure": 0.6,
+        "PhaseProgress": 0.92,
+        "RiskBudget": 0.28,
+        "TacticWindow": 0.37
+      },
+      "phase_mix": {
+        "Opening": 0.05,
+        "Middlegame": 0.15,
+        "Endgame": 0.8
+      },
+      "plan_groups": [
+        {
+          "id": "PlanOpening",
+          "activation": 0.2,
+          "plans": [
+            "Develop",
+            "CastleSafety",
+            "CenterControl",
+            "AvoidTraps"
+          ],
+          "details": [
+            {
+              "name": "Develop",
+              "highlight": false
+            },
+            {
+              "name": "CastleSafety",
+              "highlight": false
+            },
+            {
+              "name": "CenterControl",
+              "highlight": false
+            },
+            {
+              "name": "AvoidTraps",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "id": "PlanMiddlegame",
+          "activation": 0.35,
+          "plans": [
+            "CreateWeakness",
+            "KingSafety",
+            "ActivatePieces",
+            "Simplify",
+            "AttackKing"
+          ],
+          "details": [
+            {
+              "name": "CreateWeakness",
+              "highlight": false
+            },
+            {
+              "name": "KingSafety",
+              "highlight": false
+            },
+            {
+              "name": "ActivatePieces",
+              "highlight": false
+            },
+            {
+              "name": "Simplify",
+              "highlight": false
+            },
+            {
+              "name": "AttackKing",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "id": "PlanEndgame",
+          "activation": 0.85,
+          "plans": [
+            "KRK",
+            "KPK",
+            "RookTechniques",
+            "Conversion"
+          ],
+          "details": [
+            {
+              "name": "KRK",
+              "highlight": true
+            },
+            {
+              "name": "KPK",
+              "highlight": false
+            },
+            {
+              "name": "RookTechniques",
+              "highlight": true
+            },
+            {
+              "name": "Conversion",
+              "highlight": false
+            }
+          ]
+        }
+      ],
+      "feature_groups": [
+        {
+          "id": "FeatureTactics",
+          "confidence": 0.45,
+          "features": [
+            "HangingPiece",
+            "MateThreat",
+            "Fork",
+            "Pin",
+            "Skewer",
+            "DiscoveredCheck"
+          ],
+          "details": [
+            {
+              "name": "HangingPiece",
+              "highlight": false
+            },
+            {
+              "name": "MateThreat",
+              "highlight": false
+            },
+            {
+              "name": "Fork",
+              "highlight": false
+            },
+            {
+              "name": "Pin",
+              "highlight": false
+            },
+            {
+              "name": "Skewer",
+              "highlight": false
+            },
+            {
+              "name": "DiscoveredCheck",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "id": "FeatureStructure",
+          "confidence": 0.52,
+          "features": [
+            "OpenFile",
+            "PassedPawn",
+            "IsolatedPawn",
+            "DoubledPawn",
+            "Outpost",
+            "KingShelter"
+          ],
+          "details": [
+            {
+              "name": "OpenFile",
+              "highlight": false
+            },
+            {
+              "name": "PassedPawn",
+              "highlight": false
+            },
+            {
+              "name": "IsolatedPawn",
+              "highlight": false
+            },
+            {
+              "name": "DoubledPawn",
+              "highlight": false
+            },
+            {
+              "name": "Outpost",
+              "highlight": false
+            },
+            {
+              "name": "KingShelter",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "id": "FeatureEndgame",
+          "confidence": 0.88,
+          "features": [
+            "KRK",
+            "KPK",
+            "RookCutoff",
+            "BoxShrink",
+            "Opposition"
+          ],
+          "details": [
+            {
+              "name": "KRK",
+              "highlight": true
+            },
+            {
+              "name": "KPK",
+              "highlight": false
+            },
+            {
+              "name": "RookCutoff",
+              "highlight": true
+            },
+            {
+              "name": "BoxShrink",
+              "highlight": true
+            },
+            {
+              "name": "Opposition",
+              "highlight": true
+            }
+          ]
+        }
+      ],
+      "bindings": {
+        "macro/endgame/krk": [
+          {
+            "feature": "rook_anchor",
+            "items": [
+              "square:a2"
+            ]
+          },
+          {
+            "feature": "own_king",
+            "items": [
+              "square:g7"
+            ]
+          },
+          {
+            "feature": "enemy_king",
+            "items": [
+              "square:e8"
+            ]
+          }
+        ]
+      },
+      "move_synth": {
+        "weights": {
+          "plan": 0.4,
+          "features": 0.3,
+          "eval": 0.2,
+          "goal": 0.1
+        },
+        "proposals": [
+          {
+            "uci": "g7h8",
+            "score": 1.0,
+            "components": {
+              "plan": 0.45,
+              "features": 0.28,
+              "eval": 0.18,
+              "goal": 0.09
+            }
+          },
+          {
+            "uci": "g7g8",
+            "score": 1.07,
+            "components": {
+              "plan": 0.48,
+              "features": 0.3,
+              "eval": 0.19,
+              "goal": 0.1
+            }
+          },
+          {
+            "uci": "g7h7",
+            "score": 1.14,
+            "components": {
+              "plan": 0.51,
+              "features": 0.32,
+              "eval": 0.2,
+              "goal": 0.11
+            }
+          }
+        ],
+        "chosen": "g7h8"
+      }
+    }
+  },
+  {
+    "tick": 4,
+    "label": "KPK conversion attempt.",
+    "board_fen": "8/8/2k5/8/8/6K1/4P3/8 w - - 0 1",
+    "macro_frame": {
+      "version": "0.1",
+      "goal_vector": {
+        "Material": 0.55,
+        "KingSafety": 0.65,
+        "Initiative": 0.58,
+        "Structure": 0.6,
+        "PhaseProgress": 0.92,
+        "RiskBudget": 0.28,
+        "TacticWindow": 0.37
+      },
+      "phase_mix": {
+        "Opening": 0.05,
+        "Middlegame": 0.15,
+        "Endgame": 0.8
+      },
+      "plan_groups": [
+        {
+          "id": "PlanOpening",
+          "activation": 0.2,
+          "plans": [
+            "Develop",
+            "CastleSafety",
+            "CenterControl",
+            "AvoidTraps"
+          ],
+          "details": [
+            {
+              "name": "Develop",
+              "highlight": false
+            },
+            {
+              "name": "CastleSafety",
+              "highlight": false
+            },
+            {
+              "name": "CenterControl",
+              "highlight": false
+            },
+            {
+              "name": "AvoidTraps",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "id": "PlanMiddlegame",
+          "activation": 0.35,
+          "plans": [
+            "CreateWeakness",
+            "KingSafety",
+            "ActivatePieces",
+            "Simplify",
+            "AttackKing"
+          ],
+          "details": [
+            {
+              "name": "CreateWeakness",
+              "highlight": false
+            },
+            {
+              "name": "KingSafety",
+              "highlight": false
+            },
+            {
+              "name": "ActivatePieces",
+              "highlight": false
+            },
+            {
+              "name": "Simplify",
+              "highlight": false
+            },
+            {
+              "name": "AttackKing",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "id": "PlanEndgame",
+          "activation": 0.85,
+          "plans": [
+            "KRK",
+            "KPK",
+            "RookTechniques",
+            "Conversion"
+          ],
+          "details": [
+            {
+              "name": "KRK",
+              "highlight": false
+            },
+            {
+              "name": "KPK",
+              "highlight": true
+            },
+            {
+              "name": "RookTechniques",
+              "highlight": false
+            },
+            {
+              "name": "Conversion",
+              "highlight": false
+            }
+          ]
+        }
+      ],
+      "feature_groups": [
+        {
+          "id": "FeatureTactics",
+          "confidence": 0.45,
+          "features": [
+            "HangingPiece",
+            "MateThreat",
+            "Fork",
+            "Pin",
+            "Skewer",
+            "DiscoveredCheck"
+          ],
+          "details": [
+            {
+              "name": "HangingPiece",
+              "highlight": false
+            },
+            {
+              "name": "MateThreat",
+              "highlight": false
+            },
+            {
+              "name": "Fork",
+              "highlight": false
+            },
+            {
+              "name": "Pin",
+              "highlight": false
+            },
+            {
+              "name": "Skewer",
+              "highlight": false
+            },
+            {
+              "name": "DiscoveredCheck",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "id": "FeatureStructure",
+          "confidence": 0.52,
+          "features": [
+            "OpenFile",
+            "PassedPawn",
+            "IsolatedPawn",
+            "DoubledPawn",
+            "Outpost",
+            "KingShelter"
+          ],
+          "details": [
+            {
+              "name": "OpenFile",
+              "highlight": false
+            },
+            {
+              "name": "PassedPawn",
+              "highlight": false
+            },
+            {
+              "name": "IsolatedPawn",
+              "highlight": false
+            },
+            {
+              "name": "DoubledPawn",
+              "highlight": false
+            },
+            {
+              "name": "Outpost",
+              "highlight": false
+            },
+            {
+              "name": "KingShelter",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "id": "FeatureEndgame",
+          "confidence": 0.88,
+          "features": [
+            "KRK",
+            "KPK",
+            "RookCutoff",
+            "BoxShrink",
+            "Opposition"
+          ],
+          "details": [
+            {
+              "name": "KRK",
+              "highlight": false
+            },
+            {
+              "name": "KPK",
+              "highlight": true
+            },
+            {
+              "name": "RookCutoff",
+              "highlight": false
+            },
+            {
+              "name": "BoxShrink",
+              "highlight": false
+            },
+            {
+              "name": "Opposition",
+              "highlight": false
+            }
+          ]
+        }
+      ],
+      "bindings": {
+        "macro/endgame/krk": [
+          {
+            "feature": "own_king",
+            "items": [
+              "square:g3"
+            ]
+          },
+          {
+            "feature": "enemy_king",
+            "items": [
+              "square:c6"
+            ]
+          }
+        ],
+        "macro/endgame/kpk": [
+          {
+            "feature": "pawn",
+            "items": [
+              "square:e2"
+            ]
+          },
+          {
+            "feature": "attacker_king_white",
+            "items": [
+              "square:g3"
+            ]
+          },
+          {
+            "feature": "defender_king",
+            "items": [
+              "square:c6"
+            ]
+          }
+        ]
+      },
+      "move_synth": {
+        "weights": {
+          "plan": 0.4,
+          "features": 0.3,
+          "eval": 0.2,
+          "goal": 0.1
+        },
+        "proposals": [
+          {
+            "uci": "g3h4",
+            "score": 1.0,
+            "components": {
+              "plan": 0.45,
+              "features": 0.28,
+              "eval": 0.18,
+              "goal": 0.09
+            }
+          },
+          {
+            "uci": "g3g4",
+            "score": 1.07,
+            "components": {
+              "plan": 0.48,
+              "features": 0.3,
+              "eval": 0.19,
+              "goal": 0.1
+            }
+          },
+          {
+            "uci": "g3f4",
+            "score": 1.14,
+            "components": {
+              "plan": 0.51,
+              "features": 0.32,
+              "eval": 0.2,
+              "goal": 0.11
+            }
+          }
+        ],
+        "chosen": "g3h4"
+      }
+    }
+  },
+  {
+    "tick": 5,
+    "label": "Rook technique: cut-off and bridge motifs.",
+    "board_fen": "4k3/6K1/8/8/3R4/8/8/8 w - - 0 1",
+    "macro_frame": {
+      "version": "0.1",
+      "goal_vector": {
+        "Material": 0.75,
+        "KingSafety": 0.65,
+        "Initiative": 0.58,
+        "Structure": 0.6,
+        "PhaseProgress": 0.92,
+        "RiskBudget": 0.28,
+        "TacticWindow": 0.37
+      },
+      "phase_mix": {
+        "Opening": 0.05,
+        "Middlegame": 0.15,
+        "Endgame": 0.8
+      },
+      "plan_groups": [
+        {
+          "id": "PlanOpening",
+          "activation": 0.2,
+          "plans": [
+            "Develop",
+            "CastleSafety",
+            "CenterControl",
+            "AvoidTraps"
+          ],
+          "details": [
+            {
+              "name": "Develop",
+              "highlight": false
+            },
+            {
+              "name": "CastleSafety",
+              "highlight": false
+            },
+            {
+              "name": "CenterControl",
+              "highlight": false
+            },
+            {
+              "name": "AvoidTraps",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "id": "PlanMiddlegame",
+          "activation": 0.35,
+          "plans": [
+            "CreateWeakness",
+            "KingSafety",
+            "ActivatePieces",
+            "Simplify",
+            "AttackKing"
+          ],
+          "details": [
+            {
+              "name": "CreateWeakness",
+              "highlight": false
+            },
+            {
+              "name": "KingSafety",
+              "highlight": false
+            },
+            {
+              "name": "ActivatePieces",
+              "highlight": false
+            },
+            {
+              "name": "Simplify",
+              "highlight": false
+            },
+            {
+              "name": "AttackKing",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "id": "PlanEndgame",
+          "activation": 0.85,
+          "plans": [
+            "KRK",
+            "KPK",
+            "RookTechniques",
+            "Conversion"
+          ],
+          "details": [
+            {
+              "name": "KRK",
+              "highlight": true
+            },
+            {
+              "name": "KPK",
+              "highlight": false
+            },
+            {
+              "name": "RookTechniques",
+              "highlight": true
+            },
+            {
+              "name": "Conversion",
+              "highlight": false
+            }
+          ]
+        }
+      ],
+      "feature_groups": [
+        {
+          "id": "FeatureTactics",
+          "confidence": 0.45,
+          "features": [
+            "HangingPiece",
+            "MateThreat",
+            "Fork",
+            "Pin",
+            "Skewer",
+            "DiscoveredCheck"
+          ],
+          "details": [
+            {
+              "name": "HangingPiece",
+              "highlight": false
+            },
+            {
+              "name": "MateThreat",
+              "highlight": false
+            },
+            {
+              "name": "Fork",
+              "highlight": false
+            },
+            {
+              "name": "Pin",
+              "highlight": false
+            },
+            {
+              "name": "Skewer",
+              "highlight": false
+            },
+            {
+              "name": "DiscoveredCheck",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "id": "FeatureStructure",
+          "confidence": 0.52,
+          "features": [
+            "OpenFile",
+            "PassedPawn",
+            "IsolatedPawn",
+            "DoubledPawn",
+            "Outpost",
+            "KingShelter"
+          ],
+          "details": [
+            {
+              "name": "OpenFile",
+              "highlight": false
+            },
+            {
+              "name": "PassedPawn",
+              "highlight": false
+            },
+            {
+              "name": "IsolatedPawn",
+              "highlight": false
+            },
+            {
+              "name": "DoubledPawn",
+              "highlight": false
+            },
+            {
+              "name": "Outpost",
+              "highlight": false
+            },
+            {
+              "name": "KingShelter",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "id": "FeatureEndgame",
+          "confidence": 0.88,
+          "features": [
+            "KRK",
+            "KPK",
+            "RookCutoff",
+            "BoxShrink",
+            "Opposition"
+          ],
+          "details": [
+            {
+              "name": "KRK",
+              "highlight": true
+            },
+            {
+              "name": "KPK",
+              "highlight": false
+            },
+            {
+              "name": "RookCutoff",
+              "highlight": true
+            },
+            {
+              "name": "BoxShrink",
+              "highlight": true
+            },
+            {
+              "name": "Opposition",
+              "highlight": true
+            }
+          ]
+        }
+      ],
+      "bindings": {
+        "macro/endgame/krk": [
+          {
+            "feature": "rook_anchor",
+            "items": [
+              "square:d4"
+            ]
+          },
+          {
+            "feature": "own_king",
+            "items": [
+              "square:g7"
+            ]
+          },
+          {
+            "feature": "enemy_king",
+            "items": [
+              "square:e8"
+            ]
+          }
+        ]
+      },
+      "move_synth": {
+        "weights": {
+          "plan": 0.4,
+          "features": 0.3,
+          "eval": 0.2,
+          "goal": 0.1
+        },
+        "proposals": [
+          {
+            "uci": "g7h8",
+            "score": 1.0,
+            "components": {
+              "plan": 0.45,
+              "features": 0.28,
+              "eval": 0.18,
+              "goal": 0.09
+            }
+          },
+          {
+            "uci": "g7g8",
+            "score": 1.07,
+            "components": {
+              "plan": 0.48,
+              "features": 0.3,
+              "eval": 0.19,
+              "goal": 0.1
+            }
+          },
+          {
+            "uci": "g7h7",
+            "score": 1.14,
+            "components": {
+              "plan": 0.51,
+              "features": 0.32,
+              "eval": 0.2,
+              "goal": 0.11
+            }
+          }
+        ],
+        "chosen": "g7h8"
+      }
+    }
+  }
+]
