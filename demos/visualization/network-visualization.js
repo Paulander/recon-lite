@@ -2,16 +2,6 @@
 // Handles the ReCoN network canvas drawing and state management
 
 class NetworkVisualization {
-<<<<<<< HEAD
-    constructor() {
-        this.canvas = null;
-        this.ctx = null;
-        this.externalEdges = null; // from JSON graph.edges if provided
-        this.lastNodesState = {};  // for transition detection
-        this.transitionSet = new Set(); // nodes that changed state this frame
-        this.compact = false; // render full network with wrapper script nodes by default
-    }
-=======
     constructor() {
         this.canvas = null;
         this.ctx = null;
@@ -25,7 +15,6 @@ class NetworkVisualization {
         this.lastLatents = {};
         this.pulseStrength = {};
     }
->>>>>>> expansion_to_ML
 
     normalizeId(id) {
         const map = {
@@ -48,118 +37,6 @@ class NetworkVisualization {
         return out;
     }
 
-<<<<<<< HEAD
-    // Node positions for network visualization (simplified)
-    static get nodePositions() {
-        const baseX = 160;
-        const colSpacing = 150;
-        const colX = (idx) => baseX + idx * colSpacing;
-        const levels = {
-            root: 80,
-            watchers: 160,
-            check: 250,
-            phase: 340,
-            move: 430,
-            actuator: 520,
-            waitGate: 610,
-            sensor: 690,
-            sentinelLow: 750
-        };
-
-        const positions = {
-            // Root and global sentinels
-            'krk_root': { x: colX(2), y: levels.root },
-            'wait_for_board_change': { x: colX(2), y: levels.watchers },
-            'no_progress_watch': { x: colX(1), y: levels.watchers },
-            'is_stalemate': { x: colX(4.6), y: levels.watchers },
-            'rook_lost': { x: colX(4.6), y: levels.sentinelLow },
-
-            // Fallback actuator
-            'random_legal_moves': { x: colX(2) + 80, y: levels.actuator + 40 }
-        };
-
-        const phaseConfigs = [
-            {
-                idx: 0,
-                phase: 'phase0_establish_cut',
-                prefix: 'p0',
-                actuators: [
-                    { id: 'choose_phase0', dx: -40 }
-                ],
-                sensors: [
-                    { id: 'cut_established', dx: -50 }
-                ]
-            },
-            {
-                idx: 1,
-                phase: 'phase1_drive_to_edge',
-                prefix: 'p1',
-                actuators: [
-                    { id: 'king_drive_moves', dx: -60 },
-                    { id: 'confinement_moves', dx: 0 },
-                    { id: 'barrier_placement_moves', dx: 60 }
-                ],
-                sensors: [
-                    { id: 'king_at_edge', dx: -70 },
-                    { id: 'king_confined', dx: -10 },
-                    { id: 'barrier_ready', dx: 60 }
-                ]
-            },
-            {
-                idx: 2,
-                phase: 'phase2_shrink_box',
-                prefix: 'p2',
-                actuators: [
-                    { id: 'box_shrink_moves', dx: 0 }
-                ],
-                sensors: [
-                    { id: 'box_can_shrink', dx: 0 }
-                ]
-            },
-            {
-                idx: 3,
-                phase: 'phase3_take_opposition',
-                prefix: 'p3',
-                actuators: [
-                    { id: 'opposition_moves', dx: 0 }
-                ],
-                sensors: [
-                    { id: 'can_take_opposition', dx: 0 }
-                ]
-            },
-            {
-                idx: 4,
-                phase: 'phase4_deliver_mate',
-                prefix: 'p4',
-                actuators: [
-                    { id: 'mate_moves', dx: 0 }
-                ],
-                sensors: [
-                    { id: 'can_deliver_mate', dx: 0 }
-                ]
-            }
-        ];
-
-        phaseConfigs.forEach(({ idx, phase, prefix, actuators = [], sensors = [] }) => {
-            const base = colX(idx);
-            positions[phase] = { x: base, y: levels.phase };
-            positions[`${prefix}_check`] = { x: base, y: levels.check };
-            positions[`${prefix}_move`] = { x: base, y: levels.move };
-            positions[`${prefix}_wait`] = { x: base + 70, y: levels.actuator };
-            positions[`wait_after_${prefix}`] = { x: base + 70, y: levels.waitGate };
-
-            actuators.forEach(({ id, dx = 0 }) => {
-                positions[id] = { x: base + dx, y: levels.actuator };
-            });
-
-            sensors.forEach(({ id, dx = 0, level = 'sensor' }) => {
-                const targetLevel = level === 'sensor' ? levels.sensor : levels[level] || levels.sensor;
-                positions[id] = { x: base + dx, y: targetLevel };
-            });
-        });
-
-        return positions;
-=======
     static cloneDeep(obj) {
         if (obj === null || obj === undefined) return obj;
         if (typeof structuredClone === 'function') {
@@ -343,7 +220,6 @@ class NetworkVisualization {
                 return segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase();
             })
             .join(' ');
->>>>>>> expansion_to_ML
     }
 
     // Edges between nodes
@@ -422,13 +298,6 @@ class NetworkVisualization {
     // Node categories
     static get sensorNodes() {
         return new Set([
-<<<<<<< HEAD
-            'wait_for_board_change', 'no_progress_watch',
-            'king_at_edge', 'box_can_shrink', 'can_take_opposition', 'can_deliver_mate', 'is_stalemate',
-            'cut_established', 'king_confined', 'barrier_ready',
-            'wait_after_p0','wait_after_p1','wait_after_p2','wait_after_p3','wait_after_p4',
-            'rook_lost'
-=======
             'wait_for_board_change',
             'king_at_edge', 'box_can_shrink', 'can_take_opposition', 'can_deliver_mate', 'is_stalemate',
             'king_confined', 'barrier_ready',
@@ -436,23 +305,10 @@ class NetworkVisualization {
             'wait_after_p0','wait_after_p1','wait_after_p2','wait_after_p3','wait_after_p4',
             'rook_lost',
             'no_progress_watch'
->>>>>>> expansion_to_ML
         ]);
     }
 
     // State colors
-<<<<<<< HEAD
-    static get stateColors() {
-        return {
-            'INACTIVE': '#d8dee6',
-            'REQUESTED': '#2563eb',
-            'ACTIVE': '#0ea5e9',
-            'SUPPRESSED': '#94a3b8',
-            'WAITING': '#f59e0b',
-            'TRUE': '#22c55e',
-            'CONFIRMED': '#0d9488',
-            'FAILED': '#ef4444'
-=======
     static get stateColors() {
         return {
             'INACTIVE': '#cfd8dc',
@@ -463,24 +319,10 @@ class NetworkVisualization {
             'TRUE': '#81c784',
             'CONFIRMED': '#34d399',
             'FAILED': '#e57373'
->>>>>>> expansion_to_ML
         };
     }
 
     static get stateBorderColors() {
-<<<<<<< HEAD
-        return {
-            'INACTIVE': '#94a3b8',
-            'REQUESTED': '#1d4ed8',
-            'ACTIVE': '#0284c7',
-            'SUPPRESSED': '#64748b',
-            'WAITING': '#b45309',
-            'TRUE': '#15803d',
-            'CONFIRMED': '#0f766e',
-            'FAILED': '#b91c1c'
-        };
-    }
-=======
         return {
             'INACTIVE': '#90a4ae',
             'REQUESTED': '#1e88e5',
@@ -492,7 +334,6 @@ class NetworkVisualization {
             'FAILED': '#b71c1c'
         };
     }
->>>>>>> expansion_to_ML
 
     static hexToRgb(hex) {
         const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -542,7 +383,6 @@ class NetworkVisualization {
         this.externalEdges = edges;
     }
 
-<<<<<<< HEAD
     draw(frame = null, newReqSet = new Set()) {
         const canvas = this.ctx.canvas;
 
@@ -722,7 +562,6 @@ class NetworkVisualization {
             this.ctx.fillText(label, pos.x, labelY);
         });
     }
-=======
     draw(frame = null, newReqSet = new Set()) {
         let drawFrame = frame;
         let requestSet = newReqSet;
@@ -1004,7 +843,6 @@ class NetworkVisualization {
             this.draw();
         }
     }
->>>>>>> expansion_to_ML
 
     updateTransitionSet(currentNodes) {
         this.transitionSet = new Set();
