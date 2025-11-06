@@ -5,8 +5,10 @@ from pathlib import Path
 import pytest
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-if str(PROJECT_ROOT / "src") not in sys.path:
-    sys.path.append(str(PROJECT_ROOT / "src"))
+for target in (PROJECT_ROOT / "src", PROJECT_ROOT):
+    target_str = str(target)
+    if target_str not in sys.path:
+        sys.path.append(target_str)
 
 from recon_lite import LinkType  # type: ignore  # pylint: disable=wrong-import-position
 from recon_lite.macrograph import instantiate_macrograph  # type: ignore  # pylint: disable=wrong-import-position

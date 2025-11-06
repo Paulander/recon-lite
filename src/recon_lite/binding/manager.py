@@ -96,8 +96,11 @@ class BindingTable:
         """
         signature = board.board_fen()
         if self._board_signature is None:
+            changed = bool(self._namespaces)
             self._board_signature = signature
-            return False
+            if changed:
+                self.clear()
+            return changed
         if signature != self._board_signature:
             self._board_signature = signature
             self.clear()

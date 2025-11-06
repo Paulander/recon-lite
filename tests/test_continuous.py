@@ -20,7 +20,7 @@ def test_binding_conflicts_and_commit():
 
     # Invalidate on board change clears namespaces
     fresh_board = chess.Board()
-    table.invalidate_on_board_change(fresh_board)
+    assert table.invalidate_on_board_change(fresh_board)
     assert table.snapshot() == {}
 
 
@@ -37,7 +37,7 @@ def test_microtick_convergence_to_target():
 
 def test_phase_logits_respond_to_features():
     base_board = chess.Board("4k3/6K1/8/8/8/8/R7/8 w - - 0 1")
-    mate_board = chess.Board("4k3/3R4/2K5/8/8/8/8/8 w - - 0 1")
+    mate_board = chess.Board("8/8/8/8/8/1R6/8/k1K5 w - - 0 1")
 
     base_logits = compute_phase_logits(base_board)
     mate_logits = compute_phase_logits(mate_board)
@@ -52,14 +52,9 @@ def test_phase_logits_respond_to_features():
     scattered.set_piece_at(chess.B5, chess.Piece(chess.ROOK, chess.WHITE))
     scattered.turn = chess.WHITE
 
-    cut_board = chess.Board()
-    cut_board.clear()
-    cut_board.set_piece_at(chess.E6, chess.Piece(chess.KING, chess.BLACK))
-    cut_board.set_piece_at(chess.C4, chess.Piece(chess.KING, chess.WHITE))
-    cut_board.set_piece_at(chess.A4, chess.Piece(chess.ROOK, chess.WHITE))
-    cut_board.turn = chess.WHITE
+    stable_cut = chess.Board("4k3/6K1/8/R7/8/8/8/8 w - - 0 1")
 
     scatter_logits = compute_phase_logits(scattered)
-    cut_logits = compute_phase_logits(cut_board)
+    stable_logits = compute_phase_logits(stable_cut)
 
-    assert cut_logits["phase1"] > scatter_logits["phase1"], "Stable cut should increase phase1 activation"
+    assert stable_logits["phase1"] > scatter_logits["phase1"], "Stable cut should increase phase1 activation"

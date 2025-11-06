@@ -1,5 +1,14 @@
 import chess
 
+import sys
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+for target in (PROJECT_ROOT / "src", PROJECT_ROOT):
+    target_str = str(target)
+    if target_str not in sys.path:
+        sys.path.append(target_str)
+
 from recon_lite.macrograph import instantiate_macrograph
 from recon_lite.macro_engine import MacroEngine
 

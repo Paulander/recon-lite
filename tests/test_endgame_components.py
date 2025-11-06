@@ -14,7 +14,7 @@ from recon_lite_chess.scripts.rook_endings import build_rook_techniques_network 
 
 
 def test_kpk_sensors_and_move_selector():
-    board = chess.Board('8/8/8/8/4k3/4K3/4P3/8 w - - 0 1')
+    board = chess.Board('8/8/2k5/8/8/6K1/4P3/8 w - - 0 1')
     summary = struct_sensors.summarize_kpk_material(board)
     assert summary['is_kpk'] is True
     assert struct_sensors.pawn_has_clear_path(board)

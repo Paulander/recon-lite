@@ -1,0 +1,13 @@
+{
+  "version": "0.1",
+  "por_thresholds": {
+    "PlanHub": 0.75,
+    "FeatureHub": 0.55,
+    "MoveSynth": 0.6
+  },
+  "confirm_thresholds": {
+    "PlanHub": 1,
+    "PlanEndgame": 1
+  },
+  "notes": "Placeholder thresholds for macro policies; refined by the teacher pipeline."
+}

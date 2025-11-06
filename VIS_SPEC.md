@@ -14,8 +14,8 @@ Fields:
   - `version`: schema version (string)
   - `goal_vector`: map goal id → float `[0, 1]`
   - `phase_mix`: map phase id → float (sums ~1)
-  - `plan_groups`: list of `{ "id", "activation", "plans": [...] }`
-  - `feature_groups`: list of `{ "id", "confidence", "features": [...] }`
+  - `plan_groups`: list of `{ "id", "activation", "plans": [...], "details": [{"name","highlight"}] }`
+  - `feature_groups`: list of `{ "id", "confidence", "features": [...], "details": [{"name","highlight"}] }`
   - `bindings`: map namespace → list of `{ "feature", "items": [...] }`
   - `move_synth`: `{ "weights": {...}, "proposals": [{ "uci", "score", "components": {...} }...], "chosen": "uci" }`
 
