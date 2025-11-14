@@ -38,7 +38,7 @@ PHASE_CHOOSERS = {
 
 _PHASE_WEIGHT_ENV = "RECON_PHASE_WEIGHT_FILE"
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
-_DEFAULT_PHASE_WEIGHT_PATH = _PROJECT_ROOT / "weights" / "phase_child_weights.json"
+_DEFAULT_PHASE_WEIGHT_PATH = _PROJECT_ROOT / "weights" / "krk_phase_weight_pack.swp"
 _DEFAULT_PHASE_BIASES = {
     "phase1": 1.0,
     "phase2": 1.0,

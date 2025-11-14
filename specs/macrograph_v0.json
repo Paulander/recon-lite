@@ -276,11 +276,11 @@
     }
   ],
   "notes": {
-    "phase_mix": "Softmax with hysteresis; assets stored in weights/phase_layer.json.",
-    "sidecars": [
-      "weights/macro_weights.json",
-      "weights/macro_thresholds.json",
-      "weights/phase_layer.json"
+    "phase_mix": "Softmax with hysteresis; assets stored in weights/phase_layer_pack.swp.",
+    "weight_packs": [
+      "weights/macro_weight_pack.swp",
+      "weights/macro_threshold_pack.swp",
+      "weights/phase_layer_pack.swp"
     ]
   }
 }

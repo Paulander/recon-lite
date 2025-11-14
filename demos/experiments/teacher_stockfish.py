@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Minimal Stockfish-backed teacher to refresh macro sidecar weights."""
+"""Minimal Stockfish-backed teacher to refresh macro Subgraph Weight Packs."""
 
 from __future__ import annotations
 
@@ -29,8 +29,8 @@ from recon_lite_chess.actuators import (
 from recon_lite_chess.actuators_blend import cheap_eval_after
 from recon_lite_chess.sensors.structure import summarize_kpk_material
 
-DEFAULT_SIDE_CAR = Path("weights/macro_weights.json")
-DEFAULT_PHASE_OUTPUT = Path("weights/phase_child_weights.json")
+DEFAULT_MACRO_WEIGHT_PACK = Path("weights/macro_weight_pack.swp")
+DEFAULT_PHASE_WEIGHT_PACK = Path("weights/krk_phase_weight_pack.swp")
 PHASE_WEIGHT_CHOOSERS = {
     "phase1": choose_move_phase1,
     "phase2": choose_move_phase2,
@@ -245,10 +245,10 @@ def run_phase_teacher(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Label macrograph preferences using Stockfish and update sidecar weights.")
+    parser = argparse.ArgumentParser(description="Label macrograph preferences using Stockfish and refresh Subgraph Weight Packs (SWPs).")
     parser.add_argument("fen_file", type=Path, help="Path to a file containing FEN positions (one per line).")
-    parser.add_argument("--output", type=Path, default=DEFAULT_SIDE_CAR, help="Sidecar JSON to update (default: weights/macro_weights.json)")
-    parser.add_argument("--phase-output", type=Path, default=DEFAULT_PHASE_OUTPUT, help="Path for blended phase weight sidecar (default: weights/phase_child_weights.json)")
+    parser.add_argument("--output", type=Path, default=DEFAULT_MACRO_WEIGHT_PACK, help="Macro Subgraph Weight Pack to update (default: weights/macro_weight_pack.swp)")
+    parser.add_argument("--phase-output", type=Path, default=DEFAULT_PHASE_WEIGHT_PACK, help="Path for blended phase weight pack (default: weights/krk_phase_weight_pack.swp)")
     parser.add_argument("--skip-phase-output", action="store_true", help="Skip blended phase weight computation")
     parser.add_argument("--engine", type=str, default=None, help="Path to Stockfish binary (optional – heuristics used if omitted)")
     parser.add_argument("--depth", type=int, default=4, help="Search depth for Stockfish analysis")

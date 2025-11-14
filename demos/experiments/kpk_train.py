@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Simple trainer for KPK move selector weights.
+"""Simple trainer for the KPK Subgraph Weight Pack.
 Scans KPK datasets (FENs), estimates a push preference from how often
-`can_push_pawn_safely` holds, and writes weights/subgraphs/kpk.json.
+`can_push_pawn_safely` holds, and writes weights/subgraphs/kpk_weight_pack.swp.
 """
 from __future__ import annotations
 import argparse, json, sys
@@ -13,7 +13,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 from recon_lite_chess.sensors import structure as struct_sensors
 from recon_lite_chess.sensors import tactics as tactic_sensors
-DEFAULT_OUTPUT = Path('weights/subgraphs/kpk.json')
+DEFAULT_OUTPUT = Path('weights/subgraphs/kpk_weight_pack.swp')
 
 def _load_fens(path: Path) -> Iterable[str]:
     for line in path.read_text().splitlines():

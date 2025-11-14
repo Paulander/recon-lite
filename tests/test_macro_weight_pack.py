@@ -22,7 +22,7 @@ def _edge_weight(graph, src: str, dst: str, ltype: LinkType) -> float:
     raise AssertionError(f"Edge {src}->{dst} ({ltype}) not found")
 
 
-def test_macrograph_applies_sidecar_weights():
+def test_macrograph_applies_weight_pack():
     graph = instantiate_macrograph('specs/macrograph_v0.json')
     weight = _edge_weight(graph, 'FeatureHub', 'MoveSynth', LinkType.POR)
     assert weight == pytest.approx(1.05, rel=1e-6)
@@ -30,10 +30,10 @@ def test_macrograph_applies_sidecar_weights():
     hub_meta = graph.nodes['PlanHub'].meta
     assert hub_meta.get('por_policy') == 'weighted'
     assert hub_meta.get('por_theta') == pytest.approx(0.75)
-    assert getattr(graph, 'macro_weights_version', None) == '0.1'
+    assert getattr(graph, 'macro_weight_pack_version', None) == '0.1'
 
 
-def test_teacher_updates_sidecar(tmp_path):
+def test_teacher_updates_weight_pack(tmp_path):
     fen_file = tmp_path / 'positions.fen'
     fen_file.write_text('\n'.join([
         '4k3/6K1/8/8/8/8/R7/8 w - - 0 1',  # KRK
@@ -41,7 +41,7 @@ def test_teacher_updates_sidecar(tmp_path):
         '8/8/8/4k3/3R4/4K3/8/8 w - - 0 1',  # Rook technique
     ]) + '\n')
 
-    output = tmp_path / 'macro_weights.json'
+    output = tmp_path / 'macro_weight_pack.swp'
     payload = run_teacher(fen_file, output, engine_path=None, depth=2)
 
     assert output.exists()
@@ -58,7 +58,7 @@ def test_phase_teacher_generates_weights(tmp_path):
         '4k3/6K1/8/8/8/8/R7/8 w - - 0 1',
         '4k3/6K1/8/3R4/8/8/8/8 w - - 0 1',
     ]
-    output = tmp_path / 'phase_weights.json'
+    output = tmp_path / 'krk_phase_weight_pack.swp'
     payload = run_phase_teacher(fens, output, engine_path=None, depth=2)
     assert output.exists()
     data = json.loads(output.read_text())

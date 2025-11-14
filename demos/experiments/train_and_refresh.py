@@ -22,9 +22,9 @@ from demos.experiments.teacher_stockfish import apply_weight_update, label_fens,
 from recon_lite.macro_engine import MacroEngine
 
 DATASET_ROOT = Path("data/endgames")
-DEFAULT_BASE_WEIGHTS = Path("weights/macro_weights.json")
+DEFAULT_BASE_WEIGHTS = Path("weights/macro_weight_pack.swp")
 DEFAULT_VERSION_DIR = Path("weights/versions")
-DEFAULT_PHASE_OUTPUT = Path("weights/phase_child_weights.json")
+DEFAULT_PHASE_OUTPUT = Path("weights/krk_phase_weight_pack.swp")
 
 VALIDATION_POSITIONS: List[Tuple[str, str]] = [
     ("krk", "4k3/6K1/8/8/8/8/R7/8 w - - 0 1"),
@@ -66,8 +66,7 @@ def aggregate_labels(files: Iterable[Path], engine_path: Optional[str], depth: i
 def save_versioned_weights(payload: Dict[str, object], base_path: Path, versions_dir: Path) -> Path:
     timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
     versions_dir.mkdir(parents=True, exist_ok=True)
-    version_path = versions_dir / f"macro_weights_{timestamp}.json"
-    version_path = versions_dir / f"macro_weights_{timestamp}.json"
+    version_path = versions_dir / f"macro_weight_pack_{timestamp}.swp"
     version_path.write_text(json.dumps(payload, indent=2) + "\n")
     if base_path.exists():
         backup = base_path.with_name(base_path.stem + f"_backup_{timestamp}" + base_path.suffix)
@@ -109,9 +108,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--datasets", type=Path, default=DATASET_ROOT, help="Root folder containing *.fen datasets (default: data/endgames)")
     parser.add_argument("--engine", type=str, default=None, help="Optional path to Stockfish binary")
     parser.add_argument("--depth", type=int, default=4, help="Stockfish depth for labeling")
-    parser.add_argument("--base-weights", type=Path, default=DEFAULT_BASE_WEIGHTS, help="Live macro weights JSON path")
+    parser.add_argument("--base-weights", type=Path, default=DEFAULT_BASE_WEIGHTS, help="Live macro weight pack path")
     parser.add_argument("--versions-dir", type=Path, default=DEFAULT_VERSION_DIR, help="Directory for timestamped weight snapshots")
-    parser.add_argument("--phase-output", type=Path, default=DEFAULT_PHASE_OUTPUT, help="Path for blended phase weight sidecar (default: weights/phase_child_weights.json)")
+    parser.add_argument("--phase-output", type=Path, default=DEFAULT_PHASE_OUTPUT, help="Path for blended phase weight pack (default: weights/krk_phase_weight_pack.swp)")
     parser.add_argument("--skip-validation", action="store_true", help="Skip MacroEngine validation step")
     parser.add_argument("--skip-phase-weights", action="store_true", help="Skip blended phase weight refresh")
     parser.add_argument("--dry-run", action="store_true", help="Compute candidates but do not write any files")
@@ -126,7 +125,7 @@ def main() -> None:
     if args.with_subgraphs:
         try:
             from demos.experiments.kpk_train import train_kpk
-            kpk_out = Path('weights/subgraphs/kpk.json')
+            kpk_out = Path('weights/subgraphs/kpk_weight_pack.swp')
             train_kpk(Path('data/endgames/kpk'), kpk_out)
             print('Trained KPK subgraph weights ->', kpk_out)
         except Exception as e:

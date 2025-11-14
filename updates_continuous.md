@@ -64,7 +64,7 @@ We want the KRK demo to feel like a living ReCoN brain: continuous activations t
 ## M2 (4–6 Weeks): KPK + Rook Techniques + Script-weight Learning
 - Extend sensors with KPK cues and rook technique detectors under `src/recon_lite_chess/sensors/{structure.py,tactics.py}`.
 - Add scripts in `src/recon_lite_chess/scripts/{kpk.py,rook_endings.py}` that reuse the new binding namespaces and activations.
-- Build a lightweight teacher (`demos/experiments/teacher_stockfish.py`) running Stockfish depth 4 to label script choices and learn child weights `a_i`; emit them to `weights/phase_child_weights.json` and have `actuators_blend` consume the sidecar (with overrides for experiments) so blended scoring reflects the learned preferences.
+- Build a lightweight teacher (`demos/experiments/teacher_stockfish.py`) running Stockfish depth 4 to label script choices and learn child weights `a_i`; emit them to `weights/krk_phase_weight_pack.swp` (Subgraph Weight Pack, formerly “sidecar”) and have `actuators_blend` consume the pack (with overrides for experiments) so blended scoring reflects the learned preferences.
 
 ## M3 (8–10 Weeks): Minimal Opening/Middlegame Layer + Tactical Detectors
 - Flesh out the strategic layer with `GamePhase`, `OutcomeMode`, and `StyleBias` continuous nodes, routed into plan-selection weights.
@@ -80,10 +80,10 @@ We want the KRK demo to feel like a living ReCoN brain: continuous activations t
 - Documentation: refresh `ARCHITECTURE.md` and `VIS_SPEC.md` to reflect continuous activations, bindings, and visualization changes.
 - Publication track: artifact-ready repo, interactive demo, and a short paper outline ("Hierarchical Hypothesis-Driven Control with ReCoNs: A Case Study in Chess").
 
-## M2 kickoff: macrograph sidecars + endgame mounts (2025-11-05)
+## M2 kickoff: macrograph Subgraph Weight Packs + endgame mounts (2025-11-05)
 
-- Weights sidecars wired: `weights/macro_weights.json`, `weights/macro_thresholds.json`; loader applies POR weights and node policies at instantiation.
+- Macrograph SWPs wired: `weights/macro_weight_pack.swp`, `weights/macro_threshold_pack.swp`; loader applies POR weights and node policies at instantiation (name change from “sidecar” documented here for legacy context).
 - Macrograph spec extended with endgame subgraphs: `KPKSubgraph`, `RookTechniquesSubgraph`, mounted via `mount_builders`.
 - Skeleton KPK and rook technique subgraphs added (script chains with placeholder terminals).
-- Tests added for sidecar application and subgraph mounting (`tests/test_macro_sidecar.py`, `tests/test_endgame_components.py`).
+- Tests added for SWP application and subgraph mounting (`tests/test_macro_weight_pack.py`, `tests/test_endgame_components.py`).
 - `MacroEngine` accepts multiple builders to mount all endgame subgraphs cleanly. Visualization unchanged (macrograph-static auto-places new nodes).

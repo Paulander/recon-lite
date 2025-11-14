@@ -75,7 +75,7 @@ def create_kpk_move_selector(nid: str) -> Node:
         if _cfg_cache["loaded"]:
             return _cfg_cache["weights"]
         try:
-            path = Path("weights/subgraphs/kpk.json")
+            path = Path("weights/subgraphs/kpk_weight_pack.swp")
             data = json.loads(path.read_text())
             ws = data.get("move_selector", {})
             _cfg_cache["weights"].update({

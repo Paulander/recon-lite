@@ -1,9 +1,0 @@
-{
-  "version": "0.1",
-  "phase_weights": {
-    "phase1": 1.0,
-    "phase2": 1.0,
-    "phase3": 1.0
-  },
-  "notes": "Script child weights (a_i) for KRK blended actuator; updated via teacher_stockfish."
-}

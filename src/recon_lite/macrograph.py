@@ -144,7 +144,7 @@ def describe_macrograph(spec: MacroGraphSpec) -> str:
     return "\n".join(lines)
 
 
-def _resolve_sidecar_path(spec_path: Path, entry: str) -> Path:
+def _resolve_weight_pack_path(spec_path: Path, entry: str) -> Path:
     entry_path = Path(entry)
     if entry_path.is_absolute():
         return entry_path
@@ -155,22 +155,22 @@ def _resolve_sidecar_path(spec_path: Path, entry: str) -> Path:
     return spec_path.parent / entry_path
 
 
-def _load_macro_weight_payload(spec: MacroGraphSpec, spec_path: Path) -> Optional[Dict[str, Any]]:
-    sidecars = spec.notes.get("sidecars")
-    if not sidecars:
+def _load_macro_weight_pack(spec: MacroGraphSpec, spec_path: Path) -> Optional[Dict[str, Any]]:
+    packs = spec.notes.get("weight_packs") or spec.notes.get("sidecars")
+    if not packs:
         return None
-    for entry in sidecars:
-        if "macro_weights" in entry:
-            target = _resolve_sidecar_path(spec_path, entry)
+    for entry in packs:
+        if "macro_weight_pack" in entry or "macro_weights" in entry:
+            target = _resolve_weight_pack_path(spec_path, entry)
             return _load_json(target)
     return None
 
 
-def _apply_macro_weight_sidecar(graph: Graph, payload: Mapping[str, Any]) -> None:
+def _apply_macro_weight_pack(graph: Graph, payload: Mapping[str, Any]) -> None:
     por_edges = payload.get("por_edges", {})
     for key, value in por_edges.items():
         if not isinstance(key, str) or "->" not in key:
-            raise MacrographError(f"Invalid POR edge key '{key}' in macro weights sidecar.")
+            raise MacrographError(f"Invalid POR edge key '{key}' in macro weight pack.")
         src, dst = (part.strip() for part in key.split("->", 1))
         try:
             graph.set_por_weight(src, dst, float(value))
@@ -215,7 +215,7 @@ def _apply_macro_weight_sidecar(graph: Graph, payload: Mapping[str, Any]) -> Non
 
     version = payload.get("version")
     if version is not None:
-        setattr(graph, "macro_weights_version", str(version))
+        setattr(graph, "macro_weight_pack_version", str(version))
 
 # ---------------------------------------------------------------------------
 # Runtime instantiation helpers
@@ -312,9 +312,9 @@ def instantiate_macrograph(
         graph.add_edge(edge.src, edge.dst, ltype)
         graph.edges[-1].w = edge.weight
 
-    weight_payload = _load_macro_weight_payload(spec, spec_path)
+    weight_payload = _load_macro_weight_pack(spec, spec_path)
     if weight_payload:
-        _apply_macro_weight_sidecar(graph, weight_payload)
+        _apply_macro_weight_pack(graph, weight_payload)
 
     # Optional subgraph mounts (KRK, KPK, ...).
     mounts = spec.subgraph_mounts()
