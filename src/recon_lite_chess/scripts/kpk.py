@@ -8,12 +8,15 @@ import chess
 
 from recon_lite import Graph, LinkType, Node, NodeType
 from recon_lite_chess import create_wait_for_board_change
+from pathlib import Path
+import json
 from recon_lite_chess.sensors import structure as struct_sensors
 from recon_lite_chess.sensors import tactics as tactic_sensors
 
 
 def create_kpk_material_detector(nid: str) -> Node:
     def _predicate(node: Node, env: Dict[str, Any]):
+        weights = _load_cfg()
         board = env.get("board")
         summary = struct_sensors.summarize_kpk_material(board)
         node.meta["summary"] = summary
@@ -26,6 +29,7 @@ def create_kpk_material_detector(nid: str) -> Node:
 
 def create_kpk_push_window(nid: str) -> Node:
     def _predicate(node: Node, env: Dict[str, Any]):
+        weights = _load_cfg()
         board = env.get("board")
         summary = struct_sensors.summarize_kpk_material(board)
         color = summary.get("attacker_color")
@@ -39,6 +43,7 @@ def create_kpk_push_window(nid: str) -> Node:
 
 def create_kpk_opposition_probe(nid: str) -> Node:
     def _predicate(node: Node, env: Dict[str, Any]):
+        weights = _load_cfg()
         board = env.get("board")
         summary = struct_sensors.summarize_kpk_material(board)
         color = summary.get("attacker_color")
@@ -52,6 +57,7 @@ def create_kpk_opposition_probe(nid: str) -> Node:
 
 def create_kpk_promotion_probe(nid: str) -> Node:
     def _predicate(node: Node, env: Dict[str, Any]):
+        weights = _load_cfg()
         board = env.get("board")
         distance = struct_sensors.pawn_distance_to_promotion(board)
         node.meta["distance"] = distance
@@ -63,7 +69,27 @@ def create_kpk_promotion_probe(nid: str) -> Node:
 
 
 def create_kpk_move_selector(nid: str) -> Node:
+    _cfg_cache = {"loaded": False, "weights": {"push_bias": 0.6, "king_distance_weight": 0.25, "safety_weight": 0.15}}
+
+    def _load_cfg():
+        if _cfg_cache["loaded"]:
+            return _cfg_cache["weights"]
+        try:
+            path = Path("weights/subgraphs/kpk.json")
+            data = json.loads(path.read_text())
+            ws = data.get("move_selector", {})
+            _cfg_cache["weights"].update({
+                "push_bias": float(ws.get("push_bias", _cfg_cache["weights"]["push_bias"])),
+                "king_distance_weight": float(ws.get("king_distance_weight", _cfg_cache["weights"]["king_distance_weight"])),
+                "safety_weight": float(ws.get("safety_weight", _cfg_cache["weights"]["safety_weight"]))
+            })
+        except Exception:
+            pass
+        _cfg_cache["loaded"] = True
+        return _cfg_cache["weights"]
+
     def _predicate(node: Node, env: Dict[str, Any]):
+        weights = _load_cfg()
         board = env.get("board")
         summary = struct_sensors.summarize_kpk_material(board)
         if not summary.get("is_kpk"):
@@ -77,30 +103,33 @@ def create_kpk_move_selector(nid: str) -> Node:
         direction = 8 if color else -8
         push_sq = pawn_sq + direction
         push_move = chess.Move(pawn_sq, push_sq)
-        if push_move in board.legal_moves and tactic_sensors.can_push_pawn_safely(board, attacker_color=color):
+        safe_push = (push_move in board.legal_moves) and tactic_sensors.can_push_pawn_safely(board, attacker_color=color)
+        push_score = (weights.get("push_bias", 0.6) + (weights.get("safety_weight", 0.15) if safe_push else 0.0)) if (push_move in board.legal_moves) else -1.0
+
+        attacker_king = summary.get("attacker_king")
+        defender_king = summary.get("defender_king")
+        best_king = None
+        for move in board.legal_moves:
+            piece = board.piece_at(move.from_square)
+            if piece and piece.color == color and piece.piece_type == chess.KING:
+                trial = board.copy(stack=False)
+                trial.push(move)
+                new_sq = trial.king(color)
+                if new_sq is None or defender_king is None:
+                    continue
+                cur_d = max(abs(chess.square_file(attacker_king) - chess.square_file(defender_king)),
+                            abs(chess.square_rank(attacker_king) - chess.square_rank(defender_king))) if attacker_king is not None else 0
+                new_d = max(abs(chess.square_file(new_sq) - chess.square_file(defender_king)),
+                            abs(chess.square_rank(new_sq) - chess.square_rank(defender_king)))
+                gain = max(0, cur_d - new_d)
+                score = gain * weights.get("king_distance_weight", 0.25)
+                if best_king is None or score > best_king[0]:
+                    best_king = (score, move)
+
+        if best_king is not None and best_king[0] >= push_score:
+            suggestion = best_king[1].uci()
+        elif push_score >= 0:
             suggestion = push_move.uci()
-        else:
-            attacker_king = summary.get("attacker_king")
-            defender_king = summary.get("defender_king")
-            best = None
-            for move in board.legal_moves:
-                piece = board.piece_at(move.from_square)
-                if piece and piece.color == color and piece.piece_type == chess.KING:
-                    trial = board.copy(stack=False)
-                    trial.push(move)
-                    new_sq = trial.king(color)
-                    if new_sq is None or defender_king is None:
-                        continue
-                    dist = max(abs(chess.square_file(new_sq) - chess.square_file(defender_king)),
-                               abs(chess.square_rank(new_sq) - chess.square_rank(defender_king)))
-                    score = dist
-                    if attacker_king is not None:
-                        score -= max(abs(chess.square_file(attacker_king) - chess.square_file(defender_king)),
-                                     abs(chess.square_rank(attacker_king) - chess.square_rank(defender_king))) * 0.25
-                    if best is None or score < best[0]:
-                        best = (score, move)
-            if best is not None:
-                suggestion = best[1].uci()
 
         if suggestion is None:
             legal = list(board.legal_moves)

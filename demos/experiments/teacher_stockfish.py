@@ -5,8 +5,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
-from typing import Dict, Iterable, Optional
+from typing import Dict, Iterable, Optional, Tuple
 
 import chess
 
@@ -14,6 +15,10 @@ try:
     import chess.engine
 except Exception:  # pragma: no cover - python-chess optional extras may be missing
     chess = chess  # type: ignore[misc]
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from recon_lite.macro_engine import MacroEngine
 from recon_lite_chess.sensors.structure import summarize_kpk_material
@@ -59,7 +64,34 @@ def _analyse(engine: Optional[chess.engine.SimpleEngine], board: chess.Board, de
         return 0.0
 
 
-def _update_weights(payload: Dict[str, any], counts: Dict[str, int], avg_score: float) -> None:
+def label_fens(fens: Iterable[str], engine_path: Optional[str], depth: int) -> Tuple[Dict[str, int], float]:
+    """Label an iterable of FENs and return (counts, avg_score)."""
+    fens = [fen for fen in fens if fen]
+    if not fens:
+        raise ValueError("No FEN positions supplied for labeling.")
+
+    counts: Dict[str, int] = {"krk": 0, "kpk": 0, "rook": 0, "generic": 0}
+    score_total = 0.0
+    total_positions = 0
+
+    engine = _open_engine(engine_path)
+    try:
+        for fen in fens:
+            board = chess.Board(fen)
+            label = _classify(board)
+            counts[label] = counts.get(label, 0) + 1
+            score_total += _analyse(engine, board, depth)
+            total_positions += 1
+    finally:
+        if engine is not None:
+            engine.quit()
+
+    avg_score = score_total / max(1, total_positions)
+    return counts, avg_score
+
+
+def apply_weight_update(payload: Dict[str, object], counts: Dict[str, int], avg_score: float) -> None:
+    """Mutate the weight payload using aggregated teacher counts."""
     total = max(1, sum(counts.values()))
     por_edges = payload.setdefault("por_edges", {})
     base_plan = 0.6 + 0.05 * (counts.get("kpk", 0) + counts.get("krk", 0))
@@ -68,12 +100,16 @@ def _update_weights(payload: Dict[str, any], counts: Dict[str, int], avg_score: 
     por_edges["LearningSupervisor->MoveSynth"] = round(min(1.6, base_move), 3)
 
     por_policies = payload.setdefault("por_policies", {})
-    por_policies.setdefault("PlanHub", {})["theta"] = round(0.5 + total * 0.02, 3)
-    por_policies.setdefault("PlanHub", {})["policy"] = por_policies["PlanHub"].get("policy", "weighted")
+    plan_policy = por_policies.setdefault("PlanHub", {})
+    plan_policy.setdefault("policy", "weighted")
+    plan_policy["theta"] = round(0.5 + total * 0.02, 3)
 
     notes = payload.setdefault("notes", {})
-    notes.setdefault("teacher", {})
-    notes["teacher"].update(
+    if not isinstance(notes, dict):
+        notes = {"legacy": notes}
+        payload["notes"] = notes
+    teacher_meta = notes.setdefault("teacher", {})
+    teacher_meta.update(
         {
             "labels": counts,
             "avg_score": round(avg_score, 2),
@@ -86,28 +122,15 @@ def run_teacher(
     output_path: Path,
     engine_path: Optional[str],
     depth: int,
-) -> Dict[str, any]:
+) -> Dict[str, object]:
     fens = list(_load_fens(fen_path))
     if not fens:
         raise SystemExit(f"No FEN positions found in {fen_path}")
 
+    counts, avg_score = label_fens(fens, engine_path, depth)
+
     payload = json.loads(output_path.read_text()) if output_path.exists() else {"version": "0.1"}
-    counts: Dict[str, int] = {"krk": 0, "kpk": 0, "rook": 0, "generic": 0}
-    score_total = 0.0
-
-    engine = _open_engine(engine_path)
-    try:
-        for fen in fens:
-            board = chess.Board(fen)
-            label = _classify(board)
-            counts[label] = counts.get(label, 0) + 1
-            score_total += _analyse(engine, board, depth)
-    finally:
-        if engine is not None:
-            engine.quit()
-
-    avg_score = score_total / max(1, sum(counts.values()))
-    _update_weights(payload, counts, avg_score)
+    apply_weight_update(payload, counts, avg_score)
     output_path.write_text(json.dumps(payload, indent=2) + "\n")
     return payload
 

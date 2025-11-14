@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ReCoN Chess Network Visualization</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        #info { position: absolute; top: 10px; left: 10px; color: white; background: rgba(0, 0, 0, 0.5); padding: 10px; font-family: Arial, sans-serif; max-width: 400px; }
+    </style>
+
+    </head>
+<body>
+        <!-- add this in <head> or just before your <script type="module"> -->
+            <script type="importmap">
+                {
+                "imports": {
+                    "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
+                    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
+                }
+                }
+                </script>
+    <div id="info"></div>
+    <script type="module">
+        import * as THREE from 'three';
+        import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+        import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+        const data = [
+  {
+    "type": "snapshot",
+    "note": "Leg2 proposal",
+    "new_requests": [],
+    "env": {
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "ply": 1,
+      "leg2": true
+    },
+    "thoughts": "Leg2 direct proposal",
+    "latents": {
+      "phase0_establish_cut": 0.09556647006184531,
+      "phase1_drive_to_edge": 0.19521621540511025,
+      "phase2_shrink_box": 0.13658742476926353,
+      "phase3_take_opposition": 0.5699429754081118,
+      "phase4_deliver_mate": 0.0026869143556691646
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "decision_proposals",
+    "new_requests": [],
+    "env": {
+      "ply": 1,
+      "proposals": [
+        {
+          "move": "a2a7",
+          "phase": "phase4",
+          "rank": 4,
+          "reason": "Leg2: mate execution attempt"
+        }
+      ]
+    },
+    "thoughts": "Collected leg2 proposals",
+    "latents": {
+      "phase0_establish_cut": 0.09556647006184531,
+      "phase1_drive_to_edge": 0.19521621540511025,
+      "phase2_shrink_box": 0.13658742476926353,
+      "phase3_take_opposition": 0.5699429754081118,
+      "phase4_deliver_mate": 0.0026869143556691646
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "Applied move 1: a2a7",
+    "new_requests": [],
+    "env": {
+      "fen": "4k3/R5K1/8/8/8/8/8/8 b - - 1 1",
+      "ply": 1,
+      "recons_move": "a2a7"
+    },
+    "thoughts": "Applied a2a7 (persistent)",
+    "latents": {
+      "phase0_establish_cut": 0.6224788575564931,
+      "phase1_drive_to_edge": 0.017501403759987197,
+      "phase2_shrink_box": 0.3047293329673219,
+      "phase3_take_opposition": 0.05109617616593084,
+      "phase4_deliver_mate": 0.004194229550266923
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 1: e8d8",
+    "new_requests": [],
+    "env": {
+      "fen": "3k4/R5K1/8/8/8/8/8/8 w - - 2 2",
+      "ply": 1,
+      "opponents_move": "e8d8"
+    },
+    "thoughts": "Opponent move (persistent)",
+    "latents": {
+      "phase0_establish_cut": 0.6224788575564931,
+      "phase1_drive_to_edge": 0.017501403759987197,
+      "phase2_shrink_box": 0.3047293329673219,
+      "phase3_take_opposition": 0.05109617616593084,
+      "phase4_deliver_mate": 0.004194229550266923
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "Leg2 proposal",
+    "new_requests": [],
+    "env": {
+      "fen": "3k4/R5K1/8/8/8/8/8/8 w - - 2 2",
+      "ply": 2,
+      "leg2": true
+    },
+    "thoughts": "Leg2 direct proposal",
+    "latents": {
+      "phase0_establish_cut": 0.061945888713402536,
+      "phase1_drive_to_edge": 0.36943526432198,
+      "phase2_shrink_box": 0.4416629150830942,
+      "phase3_take_opposition": 0.12653854376656123,
+      "phase4_deliver_mate": 0.0004173881149621526
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "decision_proposals",
+    "new_requests": [],
+    "env": {
+      "ply": 2,
+      "proposals": [
+        {
+          "move": "g7f7",
+          "phase": "phase4",
+          "rank": 4,
+          "reason": "Leg2: mate execution attempt"
+        }
+      ]
+    },
+    "thoughts": "Collected leg2 proposals",
+    "latents": {
+      "phase0_establish_cut": 0.061945888713402536,
+      "phase1_drive_to_edge": 0.36943526432198,
+      "phase2_shrink_box": 0.4416629150830942,
+      "phase3_take_opposition": 0.12653854376656123,
+      "phase4_deliver_mate": 0.0004173881149621526
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "Applied move 2: g7f7",
+    "new_requests": [],
+    "env": {
+      "fen": "3k4/R4K2/8/8/8/8/8/8 b - - 3 2",
+      "ply": 2,
+      "recons_move": "g7f7"
+    },
+    "thoughts": "Applied g7f7 (persistent)",
+    "latents": {
+      "phase0_establish_cut": 0.6224788575564931,
+      "phase1_drive_to_edge": 0.017501403759987197,
+      "phase2_shrink_box": 0.3047293329673219,
+      "phase3_take_opposition": 0.05109617616593084,
+      "phase4_deliver_mate": 0.004194229550266923
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 2: d8c8",
+    "new_requests": [],
+    "env": {
+      "fen": "2k5/R4K2/8/8/8/8/8/8 w - - 4 3",
+      "ply": 2,
+      "opponents_move": "d8c8"
+    },
+    "thoughts": "Opponent move (persistent)",
+    "latents": {
+      "phase0_establish_cut": 0.6224788575564931,
+      "phase1_drive_to_edge": 0.017501403759987197,
+      "phase2_shrink_box": 0.3047293329673219,
+      "phase3_take_opposition": 0.05109617616593084,
+      "phase4_deliver_mate": 0.004194229550266923
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "Leg2 proposal",
+    "new_requests": [],
+    "env": {
+      "fen": "2k5/R4K2/8/8/8/8/8/8 w - - 4 3",
+      "ply": 3,
+      "leg2": true
+    },
+    "thoughts": "Leg2 direct proposal",
+    "latents": {
+      "phase0_establish_cut": 0.061945888713402536,
+      "phase1_drive_to_edge": 0.36943526432198,
+      "phase2_shrink_box": 0.4416629150830942,
+      "phase3_take_opposition": 0.12653854376656123,
+      "phase4_deliver_mate": 0.0004173881149621526
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "decision_proposals",
+    "new_requests": [],
+    "env": {
+      "ply": 3,
+      "proposals": [
+        {
+          "move": "f7e6",
+          "phase": "phase4",
+          "rank": 4,
+          "reason": "Leg2: mate execution attempt"
+        }
+      ]
+    },
+    "thoughts": "Collected leg2 proposals",
+    "latents": {
+      "phase0_establish_cut": 0.061945888713402536,
+      "phase1_drive_to_edge": 0.36943526432198,
+      "phase2_shrink_box": 0.4416629150830942,
+      "phase3_take_opposition": 0.12653854376656123,
+      "phase4_deliver_mate": 0.0004173881149621526
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "Applied move 3: f7e6",
+    "new_requests": [],
+    "env": {
+      "fen": "2k5/R7/4K3/8/8/8/8/8 b - - 5 3",
+      "ply": 3,
+      "recons_move": "f7e6"
+    },
+    "thoughts": "Applied f7e6 (persistent)",
+    "latents": {
+      "phase0_establish_cut": 0.6224788575564931,
+      "phase1_drive_to_edge": 0.017501403759987197,
+      "phase2_shrink_box": 0.3047293329673219,
+      "phase3_take_opposition": 0.05109617616593084,
+      "phase4_deliver_mate": 0.004194229550266923
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 3: c8d8",
+    "new_requests": [],
+    "env": {
+      "fen": "3k4/R7/4K3/8/8/8/8/8 w - - 6 4",
+      "ply": 3,
+      "opponents_move": "c8d8"
+    },
+    "thoughts": "Opponent move (persistent)",
+    "latents": {
+      "phase0_establish_cut": 0.6224788575564931,
+      "phase1_drive_to_edge": 0.017501403759987197,
+      "phase2_shrink_box": 0.3047293329673219,
+      "phase3_take_opposition": 0.05109617616593084,
+      "phase4_deliver_mate": 0.004194229550266923
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "Leg2 proposal",
+    "new_requests": [],
+    "env": {
+      "fen": "3k4/R7/4K3/8/8/8/8/8 w - - 6 4",
+      "ply": 4,
+      "leg2": true
+    },
+    "thoughts": "Leg2 direct proposal",
+    "latents": {
+      "phase0_establish_cut": 0.061945888713402536,
+      "phase1_drive_to_edge": 0.36943526432198,
+      "phase2_shrink_box": 0.4416629150830942,
+      "phase3_take_opposition": 0.12653854376656123,
+      "phase4_deliver_mate": 0.0004173881149621526
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "decision_proposals",
+    "new_requests": [],
+    "env": {
+      "ply": 4,
+      "proposals": [
+        {
+          "move": "a7h7",
+          "phase": "phase4",
+          "rank": 4,
+          "reason": "Leg2: mate execution attempt"
+        }
+      ]
+    },
+    "thoughts": "Collected leg2 proposals",
+    "latents": {
+      "phase0_establish_cut": 0.061945888713402536,
+      "phase1_drive_to_edge": 0.36943526432198,
+      "phase2_shrink_box": 0.4416629150830942,
+      "phase3_take_opposition": 0.12653854376656123,
+      "phase4_deliver_mate": 0.0004173881149621526
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "Applied move 4: a7h7",
+    "new_requests": [],
+    "env": {
+      "fen": "3k4/7R/4K3/8/8/8/8/8 b - - 7 4",
+      "ply": 4,
+      "recons_move": "a7h7"
+    },
+    "thoughts": "Applied a7h7 (persistent)",
+    "latents": {
+      "phase0_establish_cut": 0.4965398802507187,
+      "phase1_drive_to_edge": 0.01396054632492453,
+      "phase2_shrink_box": 0.2430769570141476,
+      "phase3_take_opposition": 0.2430769570141476,
+      "phase4_deliver_mate": 0.003345659396061587
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 4: d8e8",
+    "new_requests": [],
+    "env": {
+      "fen": "4k3/7R/4K3/8/8/8/8/8 w - - 8 5",
+      "ply": 4,
+      "opponents_move": "d8e8"
+    },
+    "thoughts": "Opponent move (persistent)",
+    "latents": {
+      "phase0_establish_cut": 0.4965398802507187,
+      "phase1_drive_to_edge": 0.01396054632492453,
+      "phase2_shrink_box": 0.2430769570141476,
+      "phase3_take_opposition": 0.2430769570141476,
+      "phase4_deliver_mate": 0.003345659396061587
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "Leg2 proposal",
+    "new_requests": [],
+    "env": {
+      "fen": "4k3/7R/4K3/8/8/8/8/8 w - - 8 5",
+      "ply": 5,
+      "leg2": true
+    },
+    "thoughts": "Leg2 direct proposal",
+    "latents": {
+      "phase0_establish_cut": 0.04923896911925854,
+      "phase1_drive_to_edge": 0.29365325043079715,
+      "phase2_shrink_box": 0.3510648904806659,
+      "phase3_take_opposition": 0.10058177513190802,
+      "phase4_deliver_mate": 0.20546111483737042
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "decision_proposals",
+    "new_requests": [],
+    "env": {
+      "ply": 5,
+      "proposals": [
+        {
+          "move": "h7h8",
+          "phase": "phase4",
+          "rank": 4,
+          "reason": "Leg2: mate execution attempt"
+        }
+      ]
+    },
+    "thoughts": "Collected leg2 proposals",
+    "latents": {
+      "phase0_establish_cut": 0.04923896911925854,
+      "phase1_drive_to_edge": 0.29365325043079715,
+      "phase2_shrink_box": 0.3510648904806659,
+      "phase3_take_opposition": 0.10058177513190802,
+      "phase4_deliver_mate": 0.20546111483737042
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "Applied move 5: h7h8",
+    "new_requests": [],
+    "env": {
+      "fen": "4k2R/8/4K3/8/8/8/8/8 b - - 9 5",
+      "ply": 5,
+      "recons_move": "h7h8"
+    },
+    "thoughts": "Applied h7h8 (persistent)",
+    "latents": {
+      "phase0_establish_cut": 0.6154842675042651,
+      "phase1_drive_to_edge": 0.07220810100773115,
+      "phase2_shrink_box": 0.14750144262100431,
+      "phase3_take_opposition": 0.14750144262100431,
+      "phase4_deliver_mate": 0.017304746245995203
+    }
+  }
+];
+
+        const phaseNames = Object.keys(data[0].latents);
+        const numPhases = phaseNames.length;
+        const phaseLabels = {
+            "phase0_establish_cut": "Establish Cut",
+            "phase1_drive_to_edge": "Drive to Edge",
+            "phase2_shrink_box": "Shrink Box",
+            "phase3_take_opposition": "Take Opposition",
+            "phase4_deliver_mate": "Deliver Mate"
+        };
+        const phaseColors = [0x0000ff, 0x00ff00, 0xffff00, 0xffa500, 0xff0000];
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x000022);
+        scene.fog = new THREE.Fog(0x000022, 10, 100);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 15, 30);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        const composer = new EffectComposer(renderer);
+        const renderPass = new RenderPass(scene, camera);
+        composer.addPass(renderPass);
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.0, 0.4, 0.85);
+        composer.addPass(bloomPass);
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(0, 20, 10);
+        scene.add(dirLight);
+
+        // Particles for futuristic background
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCnt = 5000;
+        const posArray = new Float32Array(particlesCnt * 3);
+        for (let i = 0; i < particlesCnt * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 200;
+        }
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const particlesMaterial = new THREE.PointsMaterial({ size: 0.05, color: 0xffffff });
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particlesMesh);
+
+        // Board
+        const boardGroup = new THREE.Group();
+        scene.add(boardGroup);
+        const squareSize = 3;
+        for (let file = 0; file < 8; file++) {
+            for (let rank = 0; rank < 8; rank++) {
+                const color = (file + rank) % 2 === 0 ? 0xdddddd : 0x333333;
+                const geo = new THREE.PlaneGeometry(squareSize, squareSize);
+                const mat = new THREE.MeshStandardMaterial({ color });
+                const mesh = new THREE.Mesh(geo, mat);
+                mesh.rotation.x = -Math.PI / 2;
+                mesh.position.set((file - 3.5) * squareSize, -10, ((7 - rank) - 3.5) * squareSize); // Adjust for FEN orientation
+                boardGroup.add(mesh);
+            }
+        }
+
+        const symbols = {
+            'K': '♔',
+            'k': '♚',
+            'R': '♖',
+            'r': '♜'
+        };
+
+        let currentPieces = [];
+        let lastFen = null;
+
+        const loader = new FontLoader();
+        loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', (font) => {
+            // Create phase nodes, lights, labels, edges
+            const nodes = [];
+            const lights = [];
+            const labels = [];
+            for (let i = 0; i < numPhases; i++) {
+                const name = phaseNames[i];
+                const posX = (i - 2) * 5;
+                const posY = 5;
+                const posZ = 0;
+
+                const geometry = new THREE.SphereGeometry(1, 32, 32);
+                const material = new THREE.MeshStandardMaterial({
+                    color: phaseColors[i],
+                    emissive: 0x000000,
+                    roughness: 0.5,
+                    metalness: 0.5
+                });
+                const sphere = new THREE.Mesh(geometry, material);
+                sphere.position.set(posX, posY, posZ);
+                scene.add(sphere);
+                nodes.push(sphere);
+
+                const light = new THREE.PointLight(phaseColors[i], 0, 20);
+                light.position.set(posX, posY, posZ);
+                scene.add(light);
+                lights.push(light);
+
+                const textGeo = new TextGeometry(phaseLabels[name], {
+                    font: font,
+                    size: 1.2,
+                    height: 0.1
+                });
+                const textMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+                const textMesh = new THREE.Mesh(textGeo, textMat);
+                textMesh.position.set(posX - 3, posY - 3, posZ);
+                scene.add(textMesh);
+                labels.push(textMesh);
+            }
+
+            // Edges
+            for (let i = 0; i < numPhases - 1; i++) {
+                const p1 = nodes[i].position.clone();
+                const p2 = nodes[i + 1].position.clone();
+                const points = [p1, p2];
+                const curve = new THREE.CatmullRomCurve3(points);
+                const tubeGeo = new THREE.TubeGeometry(curve, 64, 0.3, 8, false);
+                const tubeMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, transparent: true, opacity: 0.3 });
+                const tube = new THREE.Mesh(tubeGeo, tubeMat);
+                scene.add(tube);
+            }
+
+            // Update board function
+            function updateBoard(fen) {
+                if (!fen) return;
+                lastFen = fen;
+                currentPieces.forEach(m => boardGroup.remove(m));
+                currentPieces = [];
+                const rows = fen.split(' ')[0].split('/');
+                for (let rank = 0; rank < 8; rank++) {
+                    const row = rows[rank];
+                    let file = 0;
+                    for (let char of row) {
+                        if (/\d/.test(char)) {
+                            file += parseInt(char);
+                            continue;
+                        }
+                        const symbol = symbols[char];
+                        if (symbol) {
+                            const textGeo = new TextGeometry(symbol, {
+                                font: font,
+                                size: squareSize * 0.7,
+                                height: 0.1
+                            });
+                            const color = char.toUpperCase() === char ? 0xeeeeee : 0x111111;
+                            const textMat = new THREE.MeshStandardMaterial({ color });
+                            const textMesh = new THREE.Mesh(textGeo, textMat);
+                            textMesh.rotation.x = -Math.PI / 2;
+                            textMesh.position.set((file - 3.5) * squareSize, -9.9, ((7 - rank) - 3.5) * squareSize);
+                            textGeo.computeBoundingBox();
+                            const centerOffset = -0.5 * (textGeo.boundingBox.max.x - textGeo.boundingBox.min.x);
+                            textMesh.position.x += centerOffset;
+                            boardGroup.add(textMesh);
+                            currentPieces.push(textMesh);
+                        }
+                        file++;
+                    }
+                }
+            }
+
+            let currentFrameIndex = 0;
+            let currentLatents = { ...data[0].latents };
+            let targetLatents = { ...data[0].latents };
+
+            function updateInfo() {
+                const frame = data[currentFrameIndex];
+                let html = `Frame: ${currentFrameIndex + 1} / ${data.length}<br>Note: ${frame.note || 'N/A'}<br>Thoughts: ${frame.thoughts || 'N/A'}<br>`;
+                if (frame.env) {
+                    if (frame.env.ply) html += `Ply: ${frame.env.ply}<br>`;
+                    if (frame.env.recons_move) html += `ReCoN Move: ${frame.env.recons_move}<br>`;
+                    if (frame.env.opponents_move) html += `Opponent Move: ${frame.env.opponents_move}<br>`;
+                    if (frame.env.proposals) {
+                        html += 'Proposals:<ul>';
+                        frame.env.proposals.forEach(p => {
+                            html += `<li>${p.move} (${p.phase}, rank ${p.rank}): ${p.reason}</li>`;
+                        });
+                        html += '</ul>';
+                    }
+                }
+                document.getElementById('info').innerHTML = html;
+            }
+
+            function changeFrame() {
+                const frame = data[currentFrameIndex];
+                if (frame.env && frame.env.fen) {
+                    updateBoard(frame.env.fen);
+                } else if (lastFen) {
+                    updateBoard(lastFen); // Persistent board
+                }
+                if (frame.latents) {
+                    targetLatents = { ...frame.latents };
+                }
+                updateInfo();
+            }
+
+            setInterval(() => {
+                currentFrameIndex = (currentFrameIndex + 1) % data.length;
+                changeFrame();
+            }, 3000);
+
+            changeFrame(); // Initial
+
+            const animate = function () {
+                requestAnimationFrame(animate);
+
+                // Lerp latents for smooth transition
+                phaseNames.forEach((name, i) => {
+                    currentLatents[name] += (targetLatents[name] - currentLatents[name]) * 0.1;
+                    const act = currentLatents[name];
+                    const s = 1 + act * 3;
+                    nodes[i].scale.set(s, s, s);
+                    lights[i].intensity = act * 20;
+                    const col = new THREE.Color(phaseColors[i]).multiplyScalar(act * 2);
+                    nodes[i].material.emissive = col;
+                });
+
+                // Auto camera rotation
+                const time = Date.now() * 0.0002;
+                camera.position.x = Math.sin(time) * 40;
+                camera.position.z = Math.cos(time) * 40;
+                camera.position.y = 20 + Math.sin(time * 0.5) * 5;
+                camera.lookAt(0, 0, 0);
+
+                composer.render();
+            };
+
+            animate();
+        });
+    </script>
+</body>
+</html>

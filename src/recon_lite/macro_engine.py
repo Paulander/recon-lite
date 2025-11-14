@@ -298,6 +298,17 @@ class MacroEngine(ReConEngine):
         macro_frame = self.capture_macro_frame(env)
         result = super().step(env)
         env["macro_frame"] = macro_frame
+        # Optional fallback: if no script proposed a move, provide one to keep play going.
+        try:
+            board = env.get("board")
+            if board is not None and env.get("chosen_move") is None:
+                if env.get("fallback_move", False) or env.get("stockfish_path"):
+                    move = self._fallback_move(board, env)
+                    if move is not None:
+                        env["chosen_move"] = move.uci()
+        except Exception:
+            # Fallback must never crash the engine loop
+            pass
         return result
 
 
