@@ -12,7 +12,7 @@ for target in (PROJECT_ROOT / "src", PROJECT_ROOT):
 
 from recon_lite import LinkType  # type: ignore  # pylint: disable=wrong-import-position
 from recon_lite.macrograph import instantiate_macrograph  # type: ignore  # pylint: disable=wrong-import-position
-from demos.experiments.teacher_stockfish import run_teacher  # type: ignore  # pylint: disable=wrong-import-position
+from demos.experiments.teacher_stockfish import run_phase_teacher, run_teacher  # type: ignore  # pylint: disable=wrong-import-position
 
 
 def _edge_weight(graph, src: str, dst: str, ltype: LinkType) -> float:
@@ -51,3 +51,17 @@ def test_teacher_updates_sidecar(tmp_path):
     teacher_meta = data.get('notes', {}).get('teacher', {})
     assert teacher_meta.get('labels') == payload.get('notes', {}).get('teacher', {}).get('labels')
     assert sum(teacher_meta.get('labels', {}).values()) == 3
+
+
+def test_phase_teacher_generates_weights(tmp_path):
+    fens = [
+        '4k3/6K1/8/8/8/8/R7/8 w - - 0 1',
+        '4k3/6K1/8/3R4/8/8/8/8 w - - 0 1',
+    ]
+    output = tmp_path / 'phase_weights.json'
+    payload = run_phase_teacher(fens, output, engine_path=None, depth=2)
+    assert output.exists()
+    data = json.loads(output.read_text())
+    assert set(data['phase_weights']) == {'phase1', 'phase2', 'phase3'}
+    assert payload['phase_weights'] == data['phase_weights']
+    assert data['notes']['teacher']['positions_considered'] >= 0

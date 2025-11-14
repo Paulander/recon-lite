@@ -7,7 +7,11 @@ with existing actuators while allowing a smooth interpolation between phases.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
+from functools import lru_cache
+import json
+import os
+from pathlib import Path
+from typing import Dict, List, Mapping, Optional, Tuple
 
 import chess
 
@@ -32,6 +36,67 @@ PHASE_CHOOSERS = {
     "phase3": choose_move_phase3,
 }
 
+_PHASE_WEIGHT_ENV = "RECON_PHASE_WEIGHT_FILE"
+_PROJECT_ROOT = Path(__file__).resolve().parents[2]
+_DEFAULT_PHASE_WEIGHT_PATH = _PROJECT_ROOT / "weights" / "phase_child_weights.json"
+_DEFAULT_PHASE_BIASES = {
+    "phase1": 1.0,
+    "phase2": 1.0,
+    "phase3": 1.0,
+}
+
+
+def _to_float(value: object) -> Optional[float]:
+    try:
+        return float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return None
+
+
+def _normalize_weights(weights: Mapping[str, object]) -> Dict[str, float]:
+    cleaned: Dict[str, float] = {}
+    for phase, value in weights.items():
+        num = _to_float(value)
+        if num is None or num < 0:
+            continue
+        cleaned[str(phase)] = num
+    if not cleaned:
+        return dict(_DEFAULT_PHASE_BIASES)
+    avg = sum(cleaned.values()) / len(cleaned)
+    if avg <= 0:
+        return dict(_DEFAULT_PHASE_BIASES)
+    return {phase: val / avg for phase, val in cleaned.items()}
+
+
+@lru_cache(maxsize=1)
+def _phase_weight_table() -> Dict[str, float]:
+    path_str = os.environ.get(_PHASE_WEIGHT_ENV)
+    path = Path(path_str) if path_str else _DEFAULT_PHASE_WEIGHT_PATH
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        weights = payload.get("phase_weights") or payload.get("weights") or {}
+    except (FileNotFoundError, json.JSONDecodeError):
+        weights = {}
+    table = _normalize_weights(weights)
+    for phase, default in _DEFAULT_PHASE_BIASES.items():
+        table.setdefault(phase, default)
+    return table
+
+
+def clear_phase_weight_cache() -> None:
+    """Reset cached phase weights (primarily for tests)."""
+    _phase_weight_table.cache_clear()
+
+
+def _phase_bias(phase: str, env: Optional[Mapping[str, object]]) -> float:
+    if env:
+        override = env.get("phase_weight_override")
+        if isinstance(override, Mapping):
+            value = _to_float(override.get(phase))
+            if value is not None:
+                return max(0.0, value)
+    return _phase_weight_table().get(phase, 1.0)
+
 
 def _cheap_eval(board: chess.Board) -> float:
     """Very light evaluation encouraging edge pressure and king proximity."""
@@ -52,7 +117,7 @@ def _cheap_eval(board: chess.Board) -> float:
     return float(score)
 
 
-def _cheap_eval_after(board: chess.Board, move: chess.Move) -> float:
+def cheap_eval_after(board: chess.Board, move: chess.Move) -> float:
     board.push(move)
     try:
         return _cheap_eval(board)
@@ -92,16 +157,18 @@ class BlendedCandidate:
     phase_weight: float
     phase_score: float
     cheap_eval: float
+    phase_bias: float = 1.0
 
     @property
     def blended_score(self) -> float:
-        return self.phase_weight * self.phase_score + self.cheap_eval
+        return self.phase_weight * self.phase_bias * self.phase_score + self.cheap_eval
 
     def as_dict(self) -> Dict[str, float | str]:
         return {
             "move": self.uci,
             "phase": self.phase,
             "phase_weight": self.phase_weight,
+            "phase_bias": self.phase_bias,
             "phase_score": self.phase_score,
             "cheap_eval": self.cheap_eval,
             "score": self.blended_score,
@@ -132,7 +199,8 @@ def gather_candidates(
         move = chess.Move.from_uci(uci)
         weight = _phase_weight(phase_latents, phase)
         phase_score = _phase_score(board, move, phase, base_min_side)
-        cheap = _cheap_eval_after(board, move)
+        cheap = cheap_eval_after(board, move)
+        bias = _phase_bias(phase, env)
         candidates.append(
             BlendedCandidate(
                 uci=uci,
@@ -140,6 +208,7 @@ def gather_candidates(
                 phase_weight=weight,
                 phase_score=phase_score,
                 cheap_eval=cheap,
+                phase_bias=bias,
             )
         )
     return candidates

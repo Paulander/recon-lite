@@ -64,7 +64,7 @@ We want the KRK demo to feel like a living ReCoN brain: continuous activations t
 ## M2 (4–6 Weeks): KPK + Rook Techniques + Script-weight Learning
 - Extend sensors with KPK cues and rook technique detectors under `src/recon_lite_chess/sensors/{structure.py,tactics.py}`.
 - Add scripts in `src/recon_lite_chess/scripts/{kpk.py,rook_endings.py}` that reuse the new binding namespaces and activations.
-- Build a lightweight teacher (`demos/experiments/teacher_stockfish.py`) running Stockfish depth 4 to label script choices and learn child weights `a_i`; store in graph metadata or a sidecar JSON; connect to `actuators_blend`.
+- Build a lightweight teacher (`demos/experiments/teacher_stockfish.py`) running Stockfish depth 4 to label script choices and learn child weights `a_i`; emit them to `weights/phase_child_weights.json` and have `actuators_blend` consume the sidecar (with overrides for experiments) so blended scoring reflects the learned preferences.
 
 ## M3 (8–10 Weeks): Minimal Opening/Middlegame Layer + Tactical Detectors
 - Flesh out the strategic layer with `GamePhase`, `OutcomeMode`, and `StyleBias` continuous nodes, routed into plan-selection weights.

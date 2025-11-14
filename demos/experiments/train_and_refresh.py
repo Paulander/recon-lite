@@ -18,12 +18,13 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from demos.experiments.teacher_stockfish import apply_weight_update, label_fens
+from demos.experiments.teacher_stockfish import apply_weight_update, label_fens, run_phase_teacher
 from recon_lite.macro_engine import MacroEngine
 
 DATASET_ROOT = Path("data/endgames")
 DEFAULT_BASE_WEIGHTS = Path("weights/macro_weights.json")
 DEFAULT_VERSION_DIR = Path("weights/versions")
+DEFAULT_PHASE_OUTPUT = Path("weights/phase_child_weights.json")
 
 VALIDATION_POSITIONS: List[Tuple[str, str]] = [
     ("krk", "4k3/6K1/8/8/8/8/R7/8 w - - 0 1"),
@@ -110,7 +111,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--depth", type=int, default=4, help="Stockfish depth for labeling")
     parser.add_argument("--base-weights", type=Path, default=DEFAULT_BASE_WEIGHTS, help="Live macro weights JSON path")
     parser.add_argument("--versions-dir", type=Path, default=DEFAULT_VERSION_DIR, help="Directory for timestamped weight snapshots")
+    parser.add_argument("--phase-output", type=Path, default=DEFAULT_PHASE_OUTPUT, help="Path for blended phase weight sidecar (default: weights/phase_child_weights.json)")
     parser.add_argument("--skip-validation", action="store_true", help="Skip MacroEngine validation step")
+    parser.add_argument("--skip-phase-weights", action="store_true", help="Skip blended phase weight refresh")
     parser.add_argument("--dry-run", action="store_true", help="Compute candidates but do not write any files")
     parser.add_argument("--with-subgraphs", action="store_true", help="Also train subgraph weights (e.g., KPK) before macro merge")
     return parser.parse_args()
@@ -132,6 +135,10 @@ def main() -> None:
     dataset_files = discover_datasets(args.datasets)
     if not dataset_files:
         raise SystemExit(f"No *.fen files found under {args.datasets}.")
+
+    phase_fens: List[str] = []
+    for fen_file in dataset_files:
+        phase_fens.extend(_load_fens(fen_file))
 
     counts, avg_score = aggregate_labels(dataset_files, args.engine, args.depth)
 
@@ -162,6 +169,13 @@ def main() -> None:
 
     for line in summarize_changes(base_payload, updated_payload):
         print(line)
+
+    if not args.skip_phase_weights and phase_fens:
+        try:
+            run_phase_teacher(phase_fens, args.phase_output, args.engine, args.depth)
+            print("Updated phase weights ->", args.phase_output)
+        except Exception as exc:  # pragma: no cover - diagnostics only
+            print("Warning: phase weight refresh failed:", exc)
 
 
 if __name__ == "__main__":

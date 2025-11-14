@@ -7,7 +7,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Dict, Iterable, Optional, Tuple
+from typing import Dict, Iterable, Mapping, Optional, Sequence, Tuple
 
 import chess
 
@@ -21,9 +21,21 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from recon_lite.macro_engine import MacroEngine
+from recon_lite_chess.actuators import (
+    choose_move_phase1,
+    choose_move_phase2,
+    choose_move_phase3,
+)
+from recon_lite_chess.actuators_blend import cheap_eval_after
 from recon_lite_chess.sensors.structure import summarize_kpk_material
 
 DEFAULT_SIDE_CAR = Path("weights/macro_weights.json")
+DEFAULT_PHASE_OUTPUT = Path("weights/phase_child_weights.json")
+PHASE_WEIGHT_CHOOSERS = {
+    "phase1": choose_move_phase1,
+    "phase2": choose_move_phase2,
+    "phase3": choose_move_phase3,
+}
 
 
 def _load_fens(path: Path) -> Iterable[str]:
@@ -62,6 +74,74 @@ def _analyse(engine: Optional[chess.engine.SimpleEngine], board: chess.Board, de
         return float(score.white().score(mate_score=10000) or 0.0)
     except Exception:
         return 0.0
+
+
+def _score_phase_candidates(
+    board: chess.Board,
+    engine: Optional[chess.engine.SimpleEngine],
+    depth: int,
+) -> Dict[str, float]:
+    """Return positive scores for each phase chooser that produced a move."""
+    scores: Dict[str, float] = {}
+    for phase, chooser in PHASE_WEIGHT_CHOOSERS.items():
+        try:
+            uci = chooser(board, None)
+        except Exception:
+            continue
+        if not uci:
+            continue
+        move = chess.Move.from_uci(uci)
+        if move not in board.legal_moves:
+            continue
+        if engine is None:
+            score = cheap_eval_after(board.copy(stack=False), move)
+        else:
+            trial = board.copy(stack=False)
+            try:
+                trial.push(move)
+            except ValueError:
+                continue
+            score = _analyse(engine, trial, depth)
+        if score <= 0.0:
+            continue
+        scores[phase] = float(score)
+    return scores
+
+
+def _derive_phase_totals(
+    fens: Sequence[str],
+    engine_path: Optional[str],
+    depth: int,
+) -> Tuple[Dict[str, float], Dict[str, int]]:
+    totals = {phase: 0.0 for phase in PHASE_WEIGHT_CHOOSERS}
+    counts = {phase: 0 for phase in PHASE_WEIGHT_CHOOSERS}
+    engine = _open_engine(engine_path)
+    try:
+        for fen in fens:
+            if not fen:
+                continue
+            board = chess.Board(fen)
+            if not MacroEngine._is_krk_board(board):
+                continue
+            scores = _score_phase_candidates(board, engine, depth)
+            for phase, score in scores.items():
+                totals[phase] += score
+                counts[phase] += 1
+    finally:
+        if engine is not None:
+            engine.quit()
+    return totals, counts
+
+
+def _normalize_phase_totals(totals: Mapping[str, float]) -> Dict[str, float]:
+    filtered = {phase: max(0.0, totals.get(phase, 0.0)) for phase in PHASE_WEIGHT_CHOOSERS}
+    total = sum(filtered.values())
+    if total <= 0.0:
+        return {phase: 1.0 for phase in PHASE_WEIGHT_CHOOSERS}
+    avg = total / len(filtered)
+    if avg <= 0.0:
+        avg = 1.0
+    return {phase: round(filtered.get(phase, 0.0) / avg, 3) for phase in PHASE_WEIGHT_CHOOSERS}
 
 
 def label_fens(fens: Iterable[str], engine_path: Optional[str], depth: int) -> Tuple[Dict[str, int], float]:
@@ -122,8 +202,10 @@ def run_teacher(
     output_path: Path,
     engine_path: Optional[str],
     depth: int,
+    *,
+    fens_override: Optional[Sequence[str]] = None,
 ) -> Dict[str, object]:
-    fens = list(_load_fens(fen_path))
+    fens = list(fens_override) if fens_override is not None else list(_load_fens(fen_path))
     if not fens:
         raise SystemExit(f"No FEN positions found in {fen_path}")
 
@@ -131,7 +213,34 @@ def run_teacher(
 
     payload = json.loads(output_path.read_text()) if output_path.exists() else {"version": "0.1"}
     apply_weight_update(payload, counts, avg_score)
-    output_path.write_text(json.dumps(payload, indent=2) + "\n")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    return payload
+
+
+def run_phase_teacher(
+    fens: Sequence[str],
+    output_path: Path,
+    engine_path: Optional[str],
+    depth: int,
+) -> Dict[str, object]:
+    if not fens:
+        raise SystemExit("No FEN positions supplied for phase weight training.")
+    totals, counts = _derive_phase_totals(fens, engine_path, depth)
+    weights = _normalize_phase_totals(totals)
+    payload: Dict[str, object] = {
+        "version": "0.1",
+        "phase_weights": weights,
+        "notes": {
+            "teacher": {
+                "phase_counts": counts,
+                "positions_considered": int(sum(counts.values())),
+                "engine": bool(engine_path),
+            }
+        },
+    }
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     return payload
 
 
@@ -139,16 +248,30 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Label macrograph preferences using Stockfish and update sidecar weights.")
     parser.add_argument("fen_file", type=Path, help="Path to a file containing FEN positions (one per line).")
     parser.add_argument("--output", type=Path, default=DEFAULT_SIDE_CAR, help="Sidecar JSON to update (default: weights/macro_weights.json)")
+    parser.add_argument("--phase-output", type=Path, default=DEFAULT_PHASE_OUTPUT, help="Path for blended phase weight sidecar (default: weights/phase_child_weights.json)")
+    parser.add_argument("--skip-phase-output", action="store_true", help="Skip blended phase weight computation")
     parser.add_argument("--engine", type=str, default=None, help="Path to Stockfish binary (optional – heuristics used if omitted)")
     parser.add_argument("--depth", type=int, default=4, help="Search depth for Stockfish analysis")
     args = parser.parse_args()
 
-    payload = run_teacher(args.fen_file, args.output, args.engine, args.depth)
+    fens = list(_load_fens(args.fen_file))
+    if not fens:
+        raise SystemExit(f"No FEN positions found in {args.fen_file}")
+
+    payload = run_teacher(args.fen_file, args.output, args.engine, args.depth, fens_override=fens)
     print("Updated", args.output)
     teacher_meta = payload.get("notes", {}).get("teacher", {})
     if teacher_meta:
         print("Counts:", teacher_meta.get("labels", {}))
         print("Average score:", teacher_meta.get("avg_score"))
+
+    if not args.skip_phase_output and args.phase_output:
+        phase_payload = run_phase_teacher(fens, args.phase_output, args.engine, args.depth)
+        print("Updated", args.phase_output)
+        phase_meta = phase_payload.get("notes", {}).get("teacher", {})
+        if phase_meta:
+            print("Phase counts:", phase_meta.get("phase_counts", {}))
+            print("Positions considered:", phase_meta.get("positions_considered"))
 
 
 if __name__ == "__main__":
