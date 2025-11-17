@@ -769,6 +769,7 @@ def play_persistent_game(initial_fen: str | None = None,
     our_color = board.turn
     plies = 0
     rook_lost = False
+    total_ticks = 0
     # Persistent env across plies to maintain fen history and pressure
 
     # Note: Obviously it's a "smarter" solution to just keep the whole board inside the nodes; it's trivial
@@ -855,6 +856,7 @@ def play_persistent_game(initial_fen: str | None = None,
         stage = _update_stage(env, board)
         min_index = 3 if stage >= 1 else 0
         leg2_mode = (stage >= 1 and not single_phase and not disable_leg2)
+        ticks = 0
         if leg2_mode:
             selected, ordered = _leg2_choose(board, env)
             phase_tag = selected["phase"] if selected else PHASE_SEQUENCE[min_index]
@@ -908,6 +910,7 @@ def play_persistent_game(initial_fen: str | None = None,
             )
             move_record = selected
             move_uci = move_record["move"] if move_record else None
+        total_ticks += ticks
 
         if not move_uci:
             from recon_lite_chess.actuators import choose_any_safe_move
@@ -1037,7 +1040,7 @@ def play_persistent_game(initial_fen: str | None = None,
             result=board.result() if board.is_game_over() else None,
             ticks=tick_records,
             pack_meta=pack_meta,
-            notes={"plies": plies, "ticks": tick_count},
+            notes={"plies": plies, "ticks": total_ticks},
         )
         trace_db.add_episode(ep)
 
