@@ -32,7 +32,7 @@ from demos.shared.krk_network import build_krk_network  # type: ignore  # pylint
 from recon_lite import ReConEngine  # type: ignore  # pylint: disable=wrong-import-position
 from recon_lite.graph import NodeState  # type: ignore  # pylint: disable=wrong-import-position
 from recon_lite.logger import RunLogger  # type: ignore  # pylint: disable=wrong-import-position
-from recon_lite.trace_db import pack_fingerprint  # type: ignore  # pylint: disable=wrong-import-position
+from recon_lite.trace_db import TraceDB, pack_fingerprint  # type: ignore  # pylint: disable=wrong-import-position
 from recon_lite_chess.scripts.kpk import build_kpk_network  # type: ignore  # pylint: disable=wrong-import-position
 
 

@@ -15,6 +15,7 @@ import chess
 from recon_lite.engine import ReConEngine
 from recon_lite.graph import NodeState
 from recon_lite.macrograph import instantiate_macrograph
+from recon_lite.trace_db import EpisodeRecord, TickRecord, TraceDB, pack_fingerprint
 
 # Default spec location (relative to project root).
 DEFAULT_SPEC_PATH = Path("specs/macrograph_v0.json")
@@ -310,6 +311,52 @@ class MacroEngine(ReConEngine):
             # Fallback must never crash the engine loop
             pass
         return result
+
+
+def run_macro_episode(
+    board: chess.Board,
+    *,
+    max_ticks: int = 200,
+    trace_db: Optional[TraceDB] = None,
+    episode_id: str = "macro-episode",
+    pack_paths: Optional[list[Path]] = None,
+) -> EpisodeRecord:
+    """Utility to run a single macro-engine tick loop and emit an EpisodeRecord."""
+    engine = MacroEngine("specs/macrograph_v0.json")
+    env: Dict[str, Any] = {"board": board.copy()}
+    ticks: list[TickRecord] = []
+    pack_meta = pack_fingerprint(pack_paths or [])
+
+    while len(ticks) < max_ticks:
+        now_req = engine.step(env)
+        ticks.append(
+            TickRecord(
+                tick_id=len(ticks) + 1,
+                phase_estimate=None,
+                goal_vector=env.get("macro_frame", {}).get("goal_vector"),
+                board_fen=board.fen(),
+                active_nodes=[nid for nid, node in engine.g.nodes.items() if node.state != NodeState.INACTIVE],
+                fired_edges=[],
+                action=env.get("chosen_move"),
+                meta={
+                    "macro_frame": env.get("macro_frame"),
+                    "new_requests": list(now_req.keys()),
+                },
+            )
+        )
+        if env.get("chosen_move"):
+            break
+
+    ep = EpisodeRecord(
+        episode_id=episode_id,
+        result=None,
+        ticks=ticks,
+        pack_meta=pack_meta,
+        notes={"ticks": len(ticks)},
+    )
+    if trace_db:
+        trace_db.add_episode(ep)
+    return ep
 
 
 def build_macro_engine(spec_path: Path | str = DEFAULT_SPEC_PATH) -> MacroEngine:

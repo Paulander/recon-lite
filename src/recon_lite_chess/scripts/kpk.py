@@ -7,6 +7,7 @@ from typing import Any, Dict
 import chess
 
 from recon_lite import Graph, LinkType, Node, NodeType
+from recon_lite.trace_db import EpisodeRecord, TickRecord, TraceDB, pack_fingerprint
 from recon_lite_chess import create_wait_for_board_change
 from pathlib import Path
 import json
@@ -183,6 +184,32 @@ def build_kpk_network() -> Graph:
     g.add_edge("kpk_finish", "kpk_wait", LinkType.POR)
 
     return g
+
+
+def run_kpk_episode_with_trace(
+    board: chess.Board,
+    *,
+    max_plies: int = 100,
+    max_ticks_per_move: int = 200,
+    trace_db: Optional[TraceDB] = None,
+    episode_id: str = "kpk-episode",
+    pack_paths: Optional[list[Path]] = None,
+) -> EpisodeRecord:
+    """Run a single KPK episode and emit an EpisodeRecord (optional TraceDB append)."""
+    g = build_kpk_network()
+    eng = Graph()  # placeholder to satisfy type checkers
+    eng = None
+    # Reuse the existing evaluator inside demos/experiments rather than duplicating here
+    from demos.experiments.batch_eval import run_kpk_episode as _run
+
+    tmp_trace = TraceDB(Path("/dev/null")) if trace_db is None else trace_db  # reuse batch evaluator
+    _, _, ep = _run(board.fen(), max_plies=max_plies, max_ticks_per_move=max_ticks_per_move, pack_paths=pack_paths or [])
+    ep.episode_id = episode_id
+    if pack_paths:
+        ep.pack_meta = pack_fingerprint(pack_paths)
+    if trace_db:
+        trace_db.add_episode(ep)
+    return ep
 
 
 __all__ = [
