@@ -1,0 +1,144 @@
+#!/usr/bin/env python3
+"""
+Block runner that batches evaluation, checkpoints packs, and emits per-block viz logs.
+
+Workflow per block:
+ 1) Run batch_eval for N games (KRK or KPK) with optional Stockfish labeling.
+ 2) Copy current weight packs into a checkpoint directory.
+ 3) Play ONE illustrative game with the checkpointed pack and save the viz log.
+
+This gives you block-by-block metrics and a visualization sample without manual steps.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import shutil
+import sys
+from pathlib import Path
+from typing import Iterable, List, Optional
+
+import chess
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+for target in (PROJECT_ROOT / "src", PROJECT_ROOT):
+    target_str = str(target)
+    if target_str not in sys.path:
+        sys.path.append(target_str)
+
+from demos.experiments.batch_eval import evaluate_batch, _load_fens  # type: ignore  # pylint: disable=wrong-import-position
+from demos.shared.krk_network import build_krk_network  # type: ignore  # pylint: disable=wrong-import-position
+from recon_lite import ReConEngine  # type: ignore  # pylint: disable=wrong-import-position
+from recon_lite.graph import NodeState  # type: ignore  # pylint: disable=wrong-import-position
+from recon_lite.logger import RunLogger  # type: ignore  # pylint: disable=wrong-import-position
+from recon_lite.trace_db import pack_fingerprint  # type: ignore  # pylint: disable=wrong-import-position
+from recon_lite_chess.scripts.kpk import build_kpk_network  # type: ignore  # pylint: disable=wrong-import-position
+
+
+def _copy_packs(paths: Iterable[Path], destination: Path, block_idx: int) -> List[Path]:
+    destination.mkdir(parents=True, exist_ok=True)
+    copied: List[Path] = []
+    for p in paths:
+        if not p.exists():
+            continue
+        target = destination / f"{p.stem}_block{block_idx}{p.suffix}"
+        shutil.copy2(p, target)
+        copied.append(target)
+    return copied
+
+
+def _play_single_game(mode: str, fen: str, pack_paths: Iterable[Path], out_json: Path) -> None:
+    if mode == "krk":
+        g = build_krk_network()
+        root_id = "krk_root"
+    else:
+        g = build_kpk_network()
+        root_id = "kpk_root"
+
+    eng = ReConEngine(g)
+    g.nodes[root_id].state = NodeState.REQUESTED
+    board = chess.Board(fen)
+    logger = RunLogger()
+    logger.attach_graph([
+        {"src": e.src, "dst": e.dst, "type": e.ltype.name, "weight": float(getattr(e, "w", 1.0) or 1.0)}
+        for e in eng.g.edges
+    ])
+
+    env = {"board": board, "chosen_move": None}
+    ticks = 0
+    max_ticks = 200
+    while ticks < max_ticks and env.get("chosen_move") is None and not board.is_game_over():
+        ticks += 1
+        now_req = eng.step(env)
+        logger.snapshot(
+            engine=eng,
+            note=f"tick {ticks}",
+            env={"fen": board.fen()},
+            new_requests=list(now_req.keys()),
+            latents=env.get("phase_latents"),
+        )
+    # Save the log even if no move was chosen
+    out_json.parent.mkdir(parents=True, exist_ok=True)
+    logger.to_json(str(out_json))
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Block runner: batch eval + checkpoints + viz sample.")
+    parser.add_argument("--mode", choices=["krk", "kpk"], default="krk", help="Subgraph to run.")
+    parser.add_argument("--fen-file", type=Path, required=True, help="Path to FEN file (one per line).")
+    parser.add_argument("--runs-per-block", type=int, default=50, help="Games per block.")
+    parser.add_argument("--blocks", type=int, default=3, help="Number of blocks.")
+    parser.add_argument("--max-plies", type=int, default=100, help="Max plies per game.")
+    parser.add_argument("--max-ticks", type=int, default=200, help="Max ticks per move.")
+    parser.add_argument("--pack", action="append", type=Path, default=[], help="Weight pack path(s) to hash/copy.")
+    parser.add_argument("--engine", type=Path, default=None, help="Optional Stockfish path.")
+    parser.add_argument("--depth", type=int, default=2, help="Stockfish depth.")
+    parser.add_argument("--out-dir", type=Path, default=Path("reports/blocks"), help="Output directory for stats/checkpoints/viz.")
+    args = parser.parse_args()
+
+    fens = _load_fens(args.fen_file)
+    if not fens:
+        raise SystemExit(f"No FENs in {args.fen_file}")
+
+    out_dir = args.out_dir
+    out_dir.mkdir(parents=True, exist_ok=True)
+    summary = {"mode": args.mode, "blocks": []}
+
+    for block_idx in range(1, args.blocks + 1):
+        trace_path = out_dir / f"{args.mode}_block{block_idx}_trace.jsonl"
+        stats = evaluate_batch(
+            args.mode,
+            fens,
+            args.runs_per_block,
+            max_plies=args.max_plies,
+            max_ticks_per_move=args.max_ticks,
+            pack_paths=args.pack,
+            trace_path=trace_path,
+            engine_path=args.engine,
+            depth=args.depth,
+            block_size=args.runs_per_block,  # one summary per block
+            checkpoint_dir=None,
+        )
+        block_dir = out_dir / f"block_{block_idx}"
+        copied = _copy_packs(args.pack, block_dir, block_idx)
+        # Viz sample from first FEN in this block
+        viz_out = block_dir / f"{args.mode}_viz_block{block_idx}.json"
+        _play_single_game(args.mode, fens[(block_idx - 1) % len(fens)], copied or args.pack, viz_out)
+
+        summary["blocks"].append(
+            {
+                "block": block_idx,
+                "stats": stats,
+                "packs": pack_fingerprint(copied or args.pack),
+                "trace": str(trace_path),
+                "viz": str(viz_out),
+            }
+        )
+
+    (out_dir / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    print(json.dumps(summary, indent=2))
+
+
+if __name__ == "__main__":
+    main()
