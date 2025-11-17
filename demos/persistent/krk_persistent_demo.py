@@ -61,6 +61,7 @@ from recon_lite_chess.predicates import (
     enemy_nearest_edge_info,
     would_cause_threefold,
 )
+from recon_lite.trace_db import EpisodeRecord, TickRecord, TraceDB, pack_fingerprint
 
 PHASE_SEQUENCE = ["phase0", "phase1", "phase2", "phase3", "phase4"]
 PHASE_SCRIPT_IDS = {
@@ -726,7 +727,10 @@ def play_persistent_game(initial_fen: str | None = None,
                          phase_eta: float = DEFAULT_MICROTICK_ETA,
                          phase_temperature: float = 1.4,
                          latent_log_stride: int = DEFAULT_LATENT_LOG_STRIDE,
-                         use_blended_actuator: bool = False) -> dict:
+                         use_blended_actuator: bool = False,
+                         trace_db: Optional["TraceDB"] = None,
+                         trace_episode_id: Optional[str] = None,
+                         pack_paths: Optional[list[Path]] = None) -> dict:
     if split_logs:
         viz_logger = RunLogger()
         debug_logger = RunLogger()
@@ -779,6 +783,9 @@ def play_persistent_game(initial_fen: str | None = None,
     }
     phase_states = ensure_phase_states({})
     binding_table = BindingTable()
+    pack_meta = pack_fingerprint(pack_paths or [])
+    tick_records: list[TickRecord] = []
+
     env.update({
         "phase_states": phase_states,
         "phase_temperature": phase_temperature,
