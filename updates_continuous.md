@@ -87,3 +87,4 @@ We want the KRK demo to feel like a living ReCoN brain: continuous activations t
 - Skeleton KPK and rook technique subgraphs added (script chains with placeholder terminals).
 - Tests added for SWP application and subgraph mounting (`tests/test_macro_weight_pack.py`, `tests/test_endgame_components.py`).
 - `MacroEngine` accepts multiple builders to mount all endgame subgraphs cleanly. Visualization unchanged (macrograph-static auto-places new nodes).
+- TraceDB + metrics: KRK persistent emits Tick/Episode traces with pack fingerprints; batch/block runners write traces, checkpoints, per-block viz logs (KRK playback); nightly runner stub added for automation.

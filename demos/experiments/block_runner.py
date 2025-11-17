@@ -35,6 +35,7 @@ from recon_lite.logger import RunLogger  # type: ignore  # pylint: disable=wrong
 from recon_lite.trace_db import TraceDB, pack_fingerprint  # type: ignore  # pylint: disable=wrong-import-position
 from recon_lite_chess.scripts.kpk import build_kpk_network  # type: ignore  # pylint: disable=wrong-import-position
 from demos.persistent.krk_persistent_demo import play_persistent_game as play_krk  # type: ignore  # pylint: disable=wrong-import-position
+from demos.persistent.kpk_persistent_demo import play_persistent_game as play_kpk  # type: ignore  # pylint: disable=wrong-import-position
 
 
 def _copy_packs(paths: Iterable[Path], destination: Path, block_idx: int) -> List[Path]:
@@ -184,19 +185,25 @@ def main(args: Optional[argparse.Namespace] = None) -> None:
                 pack_paths=copied or args.pack,
             )
             trace_db.flush()
-            # Move viz log into block_dir
             src_viz = Path("demos/outputs/persistent") / f"{args.mode}_block{block_idx}_viz_viz.json"
             if src_viz.exists():
                 src_viz.replace(viz_out)
         else:
-            _play_single_game(
-                args.mode,
-                fens[(block_idx - 1) % len(fens)],
-                copied or args.pack,
-                viz_out,
-                max_plies=args.max_plies,
+            trace_db = TraceDB(viz_out)
+            play_kpk(
+                initial_fen=fens[(block_idx - 1) % len(fens)],
+                max_plies=min(60, args.max_plies),
                 max_ticks_per_move=args.max_ticks,
+                split_logs=True,
+                output_basename=f"{args.mode}_block{block_idx}_viz",
+                trace_db=trace_db,
+                trace_episode_id=f"{args.mode}-block{block_idx}",
+                pack_paths=copied or args.pack,
             )
+            trace_db.flush()
+            src_viz = Path("demos/outputs/persistent") / f"{args.mode}_block{block_idx}_viz_viz.json"
+            if src_viz.exists():
+                src_viz.replace(viz_out)
 
         summary["blocks"].append(
             {
