@@ -34,6 +34,7 @@ from recon_lite.graph import NodeState  # type: ignore  # pylint: disable=wrong-
 from recon_lite.logger import RunLogger  # type: ignore  # pylint: disable=wrong-import-position
 from recon_lite.trace_db import TraceDB, pack_fingerprint  # type: ignore  # pylint: disable=wrong-import-position
 from recon_lite_chess.scripts.kpk import build_kpk_network  # type: ignore  # pylint: disable=wrong-import-position
+from demos.persistent.krk_persistent_demo import play_persistent_game as play_krk  # type: ignore  # pylint: disable=wrong-import-position
 
 
 def _copy_packs(paths: Iterable[Path], destination: Path, block_idx: int) -> List[Path]:
@@ -169,14 +170,33 @@ def main(args: Optional[argparse.Namespace] = None) -> None:
         copied = _copy_packs(args.pack, block_dir, block_idx)
         # Viz sample from first FEN in this block
         viz_out = block_dir / f"{args.mode}_viz_block{block_idx}.json"
-        _play_single_game(
-            args.mode,
-            fens[(block_idx - 1) % len(fens)],
-            copied or args.pack,
-            viz_out,
-            max_plies=args.max_plies,
-            max_ticks_per_move=args.max_ticks,
-        )
+        if args.mode == "krk":
+            trace_db = TraceDB(viz_out)  # reuse JSON writer to log viz events
+            play_krk(
+                initial_fen=fens[(block_idx - 1) % len(fens)],
+                max_plies=min(40, args.max_plies),
+                tick_watchdog=args.max_ticks,
+                split_logs=True,
+                output_basename=f"{args.mode}_block{block_idx}_viz",
+                use_blended_actuator=True,
+                trace_db=trace_db,
+                trace_episode_id=f"{args.mode}-block{block_idx}",
+                pack_paths=copied or args.pack,
+            )
+            trace_db.flush()
+            # Move viz log into block_dir
+            src_viz = Path("demos/outputs/persistent") / f"{args.mode}_block{block_idx}_viz_viz.json"
+            if src_viz.exists():
+                src_viz.replace(viz_out)
+        else:
+            _play_single_game(
+                args.mode,
+                fens[(block_idx - 1) % len(fens)],
+                copied or args.pack,
+                viz_out,
+                max_plies=args.max_plies,
+                max_ticks_per_move=args.max_ticks,
+            )
 
         summary["blocks"].append(
             {
