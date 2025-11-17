@@ -77,7 +77,7 @@ def _play_single_game(
 
     env = {"board": board}
     if krk_mode:
-        env["chosen_move"] = None
+        env["chosen_move"] = None  # KRK actuators will populate this
 
     plies = 0
     while not board.is_game_over() and plies < max_plies:
