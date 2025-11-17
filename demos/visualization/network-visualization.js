@@ -393,8 +393,8 @@ class NetworkVisualization {
 
         // Determine edges to draw: JSON-provided else fallback static
         let edgesToDraw = this.externalEdges ?
-            this.externalEdges.map(e => [this.normalizeId(e.src), this.normalizeId(e.dst), e.type]) :
-            NetworkVisualization.edges.map(([a,b]) => [a,b,'SUB']);
+            this.externalEdges.map((e) => [this.normalizeId(e.src), this.normalizeId(e.dst), e.type, Number.isFinite(e.weight) ? Number(e.weight) : 1]) :
+            NetworkVisualization.edges.map(([a,b]) => [a,b,'SUB', 1]);
 
         let hiddenNodes = new Set();
 
@@ -437,15 +437,21 @@ class NetworkVisualization {
                     if (hiddenNodes.has(c)) return; // don't show hidden wait terminals
                     // Avoid duplicates
                     const exists = filtered.some(([s,d,t]) => s===phaseParent && d===c && t==='SUB');
-                    if (!exists) filtered.push([phaseParent, c, 'SUB']);
+                    if (!exists) filtered.push([phaseParent, c, 'SUB', 1]);
                 });
             });
 
             edgesToDraw = filtered;
         }
 
+        // Compute weight normalization for edge thickness
+        const maxWeight = edgesToDraw.reduce((acc, [, , , w]) => {
+            const val = Number.isFinite(w) ? Math.abs(w) : NaN;
+            return Number.isFinite(val) && val > acc ? val : acc;
+        }, 0) || 1;
+
         // Draw edges with labels
-        edgesToDraw.forEach(([src, dst, etype]) => {
+        edgesToDraw.forEach(([src, dst, etype, weight]) => {
             const fromPos = NetworkVisualization.nodePositions[src];
             const toPos = NetworkVisualization.nodePositions[dst];
             if (!fromPos || !toPos) return;
@@ -453,7 +459,9 @@ class NetworkVisualization {
             const isNewReq = newReqSet.has(dst);
             const colorMap = { SUB: '#94a3b8', POR: '#1e88e5', RET: '#8e24aa', SUR: '#90a4ae' };
             this.ctx.strokeStyle = isNewReq ? '#1e88e5' : (dstState === 'TRUE' || dstState === 'CONFIRMED') ? '#2e7d32' : (colorMap[etype] || '#cbd5e1');
-            this.ctx.lineWidth = isNewReq ? 3 : 2;
+            const norm = maxWeight > 0 && Number.isFinite(weight) ? Math.min(1, Math.max(0, Math.abs(weight) / maxWeight)) : 1;
+            const scale = 0.65 + 0.9 * norm;
+            this.ctx.lineWidth = (isNewReq ? 3 : 2) * scale;
             this.ctx.beginPath();
             this.ctx.moveTo(fromPos.x, fromPos.y);
             this.ctx.lineTo(toPos.x, toPos.y);
@@ -629,8 +637,8 @@ class NetworkVisualization {
 
         // Determine edges to draw: JSON-provided else fallback static
         let edgesToDraw = this.externalEdges ?
-            this.externalEdges.map(e => [this.normalizeId(e.src), this.normalizeId(e.dst), e.type]) :
-            NetworkVisualization.edges.map(([a,b]) => [a,b,'SUB']);
+            this.externalEdges.map((e) => [this.normalizeId(e.src), this.normalizeId(e.dst), e.type, Number.isFinite(e.weight) ? Number(e.weight) : 1]) :
+            NetworkVisualization.edges.map(([a,b]) => [a,b,'SUB', 1]);
 
         // --- Compact mode: hide wrapper script nodes and rewire edges visually ---
         if (this.compact) {
@@ -671,7 +679,7 @@ class NetworkVisualization {
                     if (hidden.has(c)) return; // don't show hidden wait terminals
                     // Avoid duplicates
                     const exists = filtered.some(([s,d,t]) => s===phaseParent && d===c && t==='SUB');
-                    if (!exists) filtered.push([phaseParent, c, 'SUB']);
+                    if (!exists) filtered.push([phaseParent, c, 'SUB', 1]);
                 });
             });
 
@@ -681,8 +689,13 @@ class NetworkVisualization {
         const layout = NetworkVisualization.computeLayout(canvas.width, canvas.height);
         const positions = layout.positions;
 
+        const maxWeight = edgesToDraw.reduce((acc, [, , , w]) => {
+            const val = Number.isFinite(w) ? Math.abs(w) : NaN;
+            return Number.isFinite(val) && val > acc ? val : acc;
+        }, 0) || 1;
+
         // Draw edges with labels
-        edgesToDraw.forEach(([src, dst, etype]) => {
+        edgesToDraw.forEach(([src, dst, etype, weight]) => {
             const fromPos = positions[src];
             const toPos = positions[dst];
             if (!fromPos || !toPos) return;
@@ -690,7 +703,10 @@ class NetworkVisualization {
             const isNewReq = requestSet.has(dst);
             const colorMap = { SUB: '#94a3b8', POR: '#1e88e5', RET: '#8e24aa', SUR: '#90a4ae' };
             this.ctx.strokeStyle = isNewReq ? '#1e88e5' : (dstState === 'TRUE' || dstState === 'CONFIRMED') ? '#2e7d32' : (colorMap[etype] || '#cbd5e1');
-            this.ctx.lineWidth = isNewReq ? layout.emphasisEdgeWidth : layout.baseEdgeWidth;
+            const norm = maxWeight > 0 && Number.isFinite(weight) ? Math.min(1, Math.max(0, Math.abs(weight) / maxWeight)) : 1;
+            const scale = 0.65 + 0.9 * norm;
+            const baseWidth = isNewReq ? layout.emphasisEdgeWidth : layout.baseEdgeWidth;
+            this.ctx.lineWidth = baseWidth * scale;
             this.ctx.lineCap = 'round';
             this.ctx.beginPath();
             this.ctx.moveTo(fromPos.x, fromPos.y);

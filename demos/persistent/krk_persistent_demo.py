@@ -750,7 +750,7 @@ def play_persistent_game(initial_fen: str | None = None,
 
     if viz_logger is not None:
         viz_logger.attach_graph([
-            {"src": e.src, "dst": e.dst, "type": e.ltype.name}
+            {"src": e.src, "dst": e.dst, "type": e.ltype.name, "weight": float(getattr(e, "w", 1.0) or 1.0)}
             for e in engine.g.edges
         ])
 

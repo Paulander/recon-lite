@@ -154,16 +154,18 @@ function drawNode(ctx, node, position, intensity = 0) {
   ctx.fillText(node.id, position.x, position.y);
 }
 
-function drawEdge(ctx, edge, positions, highlights) {
+function drawEdge(ctx, edge, positions, highlights, maxWeight = 1) {
   const src = positions[edge.from];
   const dst = positions[edge.to];
   if (!src || !dst) return;
   const baseColor = EDGE_COLORS[edge.kind] || '#64748b';
   const intensity = Math.max(highlights[edge.from] || 0, highlights[edge.to] || 0);
   const color = intensity > 0 ? lightenColor(baseColor, 0.5 * intensity) : baseColor;
+  const norm = clamp01(maxWeight > 0 && Number.isFinite(edge.weight) ? Math.abs(edge.weight) / maxWeight : 1);
+  const widthScale = 0.7 + 0.9 * norm;
 
   ctx.strokeStyle = color;
-  ctx.lineWidth = 2 + intensity * 3;
+  ctx.lineWidth = (2 + intensity * 3) * widthScale;
   ctx.globalAlpha = 0.65 + intensity * 0.35;
   ctx.beginPath();
   ctx.moveTo(src.x, src.y);
@@ -327,8 +329,12 @@ function drawMacrographFrame() {
   const edges = currentSpec.edges || [];
   const frame = currentFrames[currentFrameIndex] || null;
   const highlights = computeHighlights(frame);
+  const maxWeight = edges.reduce((acc, edge) => {
+    const val = Number.isFinite(edge.weight) ? Math.abs(edge.weight) : NaN;
+    return Number.isFinite(val) && val > acc ? val : acc;
+  }, 0) || 1;
 
-  edges.forEach((edge) => drawEdge(ctx, edge, currentPositions, highlights));
+  edges.forEach((edge) => drawEdge(ctx, edge, currentPositions, highlights, maxWeight));
   nodes.forEach((node) => {
     const position = currentPositions[node.id];
     if (!position) return;

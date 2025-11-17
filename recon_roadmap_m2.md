@@ -37,6 +37,10 @@ You need a clear objective signal for learning and structural edits. For chess:
 
 Engine‑based eval can be used more sparsely (e.g. once per move, or on sampled ticks) if cost is an issue.
 
+- **KRK‑first teacher configuration (practical default)**:
+  - Install a local Stockfish binary and standardize on depth 3 (optionally 4 for overnight runs) as the teacher for KRK endgames.
+  - Generate KRK (and related endgame) games using `MacroEngine` or the KRK persistent demo, log per‑ply FENs, and feed those FENs with Stockfish depth‑3 evals into `demos/experiments/train_and_refresh.py` to refresh `macro_weight_pack.swp` and `krk_phase_weight_pack.swp` before implementing the more general M3/M4 learning loops.
+
 ### 1.2 Tick and Episode Schema
 
 Define a standard structure for logging:
