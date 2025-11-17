@@ -1146,6 +1146,8 @@ def main():
     parser.add_argument("--phase-temperature", type=float, default=1.4, help="Softmax temperature for phase latents")
     parser.add_argument("--latent-log-stride", type=int, default=DEFAULT_LATENT_LOG_STRIDE, help="Log latents/bindings every N ticks")
     parser.add_argument("--use-blended-actuator", action="store_true", help="Enable phase-weighted blended move chooser")
+    parser.add_argument("--trace-out", type=Path, default=None, help="Optional JSONL trace output (EpisodeRecord/TickRecord).")
+    parser.add_argument("--pack", action="append", type=Path, default=[], help="Weight pack path(s) to fingerprint in traces.")
     # Single graph; demo uses the shared KRK network
     args = parser.parse_args()
 
@@ -1170,6 +1172,7 @@ def main():
         )
     else:
         start_fen = args.fen if args.fen else "4k3/6K1/8/8/8/8/R7/8 w - - 0 1"
+        trace_db = TraceDB(args.trace_out) if args.trace_out else None
         res = play_persistent_game(
             initial_fen=start_fen,
             max_plies=args.max_plies,
@@ -1187,7 +1190,12 @@ def main():
             phase_temperature=args.phase_temperature,
             latent_log_stride=args.latent_log_stride,
             use_blended_actuator=args.use_blended_actuator,
+            trace_db=trace_db,
+            trace_episode_id="krk-cli-run",
+            pack_paths=args.pack,
         )
+        if trace_db:
+            trace_db.flush()
         print(res)
 
 
