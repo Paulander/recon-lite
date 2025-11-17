@@ -130,6 +130,11 @@ to set up a ReCoN network though. It could easily be expanded/improved in severa
 
 See `ARCHITECTURE.md` for detailed design decisions and implementation rationale.
 
+## Docs & Howtos
+
+- `docs/HOWTO_RUN_TRAIN_EVAL.md` — quickstart for running, training, and evaluating with Subgraph Weight Packs (SWPs), batch/block evaluation, tracing, and visualization.
+- `docs/TRACE_AND_EVAL.md` — trace schema, weight pack provenance, and evaluation harness details.
+
 ## Acknowledgements
 
 The ReCoN implementation is based on 

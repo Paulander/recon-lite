@@ -943,6 +943,22 @@ def play_persistent_game(initial_fen: str | None = None,
             except Exception:
                 break
             plies += 1
+            tick_records.append(
+                TickRecord(
+                    tick_id=len(tick_records) + 1,
+                    phase_estimate=None,
+                    goal_vector=env.get("goal_vector"),
+                    board_fen=board.fen(),
+                    active_nodes=[nid for nid, node in engine.g.nodes.items() if node.state != NodeState.INACTIVE],
+                    fired_edges=[],
+                    action=move_uci,
+                    meta={
+                        "ply": plies,
+                        "stage": env.get("stage"),
+                        "reason": move_record["reason"] if isinstance(move_record, dict) else None,
+                    },
+                )
+            )
             _force_phase_targets(board, env, phase_states, phase_temperature)
             env["binding"] = _update_binding_table(binding_table, board)
             env["phase_latents"] = activation_snapshot(phase_states)
@@ -1013,6 +1029,17 @@ def play_persistent_game(initial_fen: str | None = None,
         "rook_lost": rook_lost,
         "final_fen": board.fen(),
     }
+
+    if trace_db is not None:
+        ep_id = trace_episode_id or f"krk-{seed or 0}"
+        ep = EpisodeRecord(
+            episode_id=ep_id,
+            result=board.result() if board.is_game_over() else None,
+            ticks=tick_records,
+            pack_meta=pack_meta,
+            notes={"plies": plies, "ticks": tick_count},
+        )
+        trace_db.add_episode(ep)
 
     out_dir = Path("demos/outputs/persistent")
     out_dir.mkdir(parents=True, exist_ok=True)
