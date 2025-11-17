@@ -27,7 +27,7 @@ for target in (PROJECT_ROOT / "src", PROJECT_ROOT):
     if target_str not in sys.path:
         sys.path.append(target_str)
 
-from demos.experiments.batch_eval import evaluate_batch, _load_fens  # type: ignore  # pylint: disable=wrong-import-position
+from demos.experiments.batch_eval import evaluate_batch, _load_fens, _random_opponent_move  # type: ignore  # pylint: disable=wrong-import-position
 from demos.shared.krk_network import build_krk_network  # type: ignore  # pylint: disable=wrong-import-position
 from recon_lite import ReConEngine  # type: ignore  # pylint: disable=wrong-import-position
 from recon_lite.graph import NodeState  # type: ignore  # pylint: disable=wrong-import-position
@@ -48,13 +48,23 @@ def _copy_packs(paths: Iterable[Path], destination: Path, block_idx: int) -> Lis
     return copied
 
 
-def _play_single_game(mode: str, fen: str, pack_paths: Iterable[Path], out_json: Path) -> None:
+def _play_single_game(
+    mode: str,
+    fen: str,
+    pack_paths: Iterable[Path],
+    out_json: Path,
+    *,
+    max_plies: int,
+    max_ticks_per_move: int,
+) -> None:
     if mode == "krk":
         g = build_krk_network()
         root_id = "krk_root"
+        krk_mode = True
     else:
         g = build_kpk_network()
         root_id = "kpk_root"
+        krk_mode = False
 
     eng = ReConEngine(g)
     g.nodes[root_id].state = NodeState.REQUESTED
@@ -65,25 +75,59 @@ def _play_single_game(mode: str, fen: str, pack_paths: Iterable[Path], out_json:
         for e in eng.g.edges
     ])
 
-    env = {"board": board, "chosen_move": None}
-    ticks = 0
-    max_ticks = 200
-    while ticks < max_ticks and env.get("chosen_move") is None and not board.is_game_over():
-        ticks += 1
-        now_req = eng.step(env)
+    env = {"board": board}
+    if krk_mode:
+        env["chosen_move"] = None
+
+    plies = 0
+    while not board.is_game_over() and plies < max_plies:
+        move_ticks = 0
+        chosen: Optional[str] = None
+        while move_ticks < max_ticks_per_move and chosen is None and not board.is_game_over():
+            move_ticks += 1
+            now_req = eng.step(env)
+            chosen = env.get("chosen_move") if krk_mode else env.get("kpk", {}).get("policy", {}).get("suggested_move") if isinstance(env.get("kpk"), dict) else None
+            logger.snapshot(
+                engine=eng,
+                note=f"tick {move_ticks}",
+                env={"fen": board.fen(), "ply": plies + 1},
+                new_requests=list(now_req.keys()),
+                latents=env.get("phase_latents"),
+            )
+        if chosen is None:
+            break
+        try:
+            board.push_uci(chosen)
+        except Exception:
+            break
+        plies += 1
         logger.snapshot(
             engine=eng,
-            note=f"tick {ticks}",
-            env={"fen": board.fen()},
-            new_requests=list(now_req.keys()),
+            note="applied_move",
+            env={"fen": board.fen(), "ply": plies, "move": chosen},
             latents=env.get("phase_latents"),
         )
-    # Save the log even if no move was chosen
+        if board.is_game_over():
+            break
+        opp = _random_opponent_move(board)
+        if opp is None:
+            break
+        board.push(opp)
+        plies += 1
+        logger.snapshot(
+            engine=eng,
+            note="opponent_move",
+            env={"fen": board.fen(), "ply": plies, "move": opp.uci()},
+            latents=env.get("phase_latents"),
+        )
+        if krk_mode:
+            env["chosen_move"] = None
+
     out_json.parent.mkdir(parents=True, exist_ok=True)
     logger.to_json(str(out_json))
 
 
-def main() -> None:
+def main(args: Optional[argparse.Namespace] = None) -> None:
     parser = argparse.ArgumentParser(description="Block runner: batch eval + checkpoints + viz sample.")
     parser.add_argument("--mode", choices=["krk", "kpk"], default="krk", help="Subgraph to run.")
     parser.add_argument("--fen-file", type=Path, required=True, help="Path to FEN file (one per line).")
@@ -95,7 +139,8 @@ def main() -> None:
     parser.add_argument("--engine", type=Path, default=None, help="Optional Stockfish path.")
     parser.add_argument("--depth", type=int, default=2, help="Stockfish depth.")
     parser.add_argument("--out-dir", type=Path, default=Path("reports/blocks"), help="Output directory for stats/checkpoints/viz.")
-    args = parser.parse_args()
+    if args is None:
+        args = parser.parse_args()
 
     fens = _load_fens(args.fen_file)
     if not fens:
@@ -124,7 +169,14 @@ def main() -> None:
         copied = _copy_packs(args.pack, block_dir, block_idx)
         # Viz sample from first FEN in this block
         viz_out = block_dir / f"{args.mode}_viz_block{block_idx}.json"
-        _play_single_game(args.mode, fens[(block_idx - 1) % len(fens)], copied or args.pack, viz_out)
+        _play_single_game(
+            args.mode,
+            fens[(block_idx - 1) % len(fens)],
+            copied or args.pack,
+            viz_out,
+            max_plies=args.max_plies,
+            max_ticks_per_move=args.max_ticks,
+        )
 
         summary["blocks"].append(
             {
