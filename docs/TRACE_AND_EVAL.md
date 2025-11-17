@@ -12,9 +12,10 @@ This short guide summarizes how to log runs, capture weight-pack provenance, and
 - Trainers (e.g., `demos/experiments/teacher_stockfish.py`) read/write SWPs; runtime loaders pull them automatically. Include SWP paths + hashes in episode notes for reproducibility.
 
 ## Evaluation harness goals
-- Iterate over SWPs, run batches of FENs with shallow Stockfish labels, and log win/stall/draw + tick/ply counts.
-- Stop criteria for KPK (example): >95% win rate on Stockfish-labeled wins across the last block.
-- Save checkpoints every block (e.g., 100 games): copy SWPs + a sample viz log so we can replay progress.
+- Iterate over SWPs, run batches of FENs with shallow Stockfish labels, and log win/stall/draw + tick/ply counts (`demos/experiments/batch_eval.py`).
+- Stop criteria for KPK (example): >95% win rate on Stockfish-labeled wins across the last block (block metrics emitted when `--block-size` is set).
+- Save checkpoints every block (e.g., 100 games): copy SWPs + a sample viz log so we can replay progress (`--checkpoint-dir`).
+- Modes: `--mode krk|kpk`, optional `--engine /path/to/stockfish --depth 2`, `--pack` paths recorded with hashes, `--trace-out` for JSONL ticks/episodes.
 
 ## Visualization
 - Macro viz shows `KRKSubgraph`/`KPKSubgraph` nodes with edge thickness scaled by weights.
