@@ -7,13 +7,13 @@
     "FeatureHub->MoveSynth": 1.05,
     "GoalVector->MoveSynth": 0.8,
     "LightEval->MoveSynth": 0.9,
-    "LearningSupervisor->PlanHub": 0.75,
+    "LearningSupervisor->PlanHub": 1.8,
     "LearningSupervisor->MoveSynth": 0.4
   },
   "por_policies": {
     "PlanHub": {
       "policy": "weighted",
-      "theta": 0.56
+      "theta": 10.5
     },
     "FeatureHub": {
       "policy": "or"
@@ -42,12 +42,12 @@
     "legacy": "Default scaffolding for macro-level edge weights and node policies. Updated by the learning supervisor pipeline.",
     "teacher": {
       "labels": {
-        "krk": 2,
-        "kpk": 1,
+        "krk": 500,
+        "kpk": 0,
         "rook": 0,
         "generic": 0
       },
-      "avg_score": 0.0
+      "avg_score": 631.74
     }
   }
 }

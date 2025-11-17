@@ -134,6 +134,7 @@ See `ARCHITECTURE.md` for detailed design decisions and implementation rationale
 
 - `docs/HOWTO_RUN_TRAIN_EVAL.md` — quickstart for running, training, and evaluating with Subgraph Weight Packs (SWPs), batch/block evaluation, tracing, and visualization.
 - `docs/TRACE_AND_EVAL.md` — trace schema, weight pack provenance, and evaluation harness details.
+- `demos/experiments/krk_generate_fens.py` — utility to generate random legal KRK FEN suites for training/eval.
 
 ## Acknowledgements
 
