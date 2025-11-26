@@ -35,6 +35,13 @@ This is the quick-start for running the chess subgraphs with weight packs (SWPs)
     --out-dir reports/blocks
   ```
   Produces `summary.json`, per-block traces, pack copies, and one viz log per block.
+- Full-game (hybrid) driver with MacroEngine + optional Stockfish fallback:
+  ```bash
+  uv run python demos/gameplay/full_game_macro.py \
+    --engine /usr/games/stockfish --depth 2 \
+    --trace-out reports/fullgame_trace.jsonl
+  ```
+  Uses MacroEngine for macro decisions; falls back to Stockfish when no move is chosen.
 
 ## Tracing
 - Trace schema lives in `src/recon_lite/trace_db.py`:

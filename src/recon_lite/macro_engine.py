@@ -342,8 +342,9 @@ class MacroEngine(ReConEngine):
         env = env or {}
         self._maybe_activate_endgame(env)
         macro_frame = self.capture_macro_frame(env)
-        result = super().step(env)
         env["macro_frame"] = macro_frame
+        env["features"] = macro_frame.get("features")
+        result = super().step(env)
         # Optional fallback: if no script proposed a move, provide one to keep play going.
         try:
             board = env.get("board")
