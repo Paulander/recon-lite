@@ -281,6 +281,50 @@ class MacroEngine(ReConEngine):
             "chosen": chosen,
         }
 
+    def _feature_bus(self, board: Optional[chess.Board]) -> Dict[str, Any]:
+        """
+        Aggregate raw features per tick for macro decisions. This is a "bus"
+        that downstream nodes (plan selection, viz, trainers) can consume.
+        """
+        if board is None:
+            return {}
+        features: Dict[str, Any] = {}
+        # Material breakdown (white-centric)
+        material_score = self._material_score(board)
+        pieces = board.piece_map()
+        counts: Dict[str, int] = {"white": 0, "black": 0}
+        piece_counts: Dict[str, Dict[str, int]] = {
+            "white": {k: 0 for k in ["P", "N", "B", "R", "Q"]},
+            "black": {k: 0 for k in ["p", "n", "b", "r", "q"]},
+        }
+        for sq, piece in pieces.items():
+            color_key = "white" if piece.color else "black"
+            counts[color_key] += 1
+            symbol = piece.symbol()
+            if symbol in piece_counts[color_key]:
+                piece_counts[color_key][symbol] += 1
+        features["material_score"] = material_score
+        features["piece_counts"] = piece_counts
+        features["total_pieces"] = counts
+
+        # Phase / endgame detectors
+        features["is_endgame"] = self._is_endgame_board(board)
+        features["is_krk"] = self._is_krk_board(board)
+        features["is_kpk"] = self._is_kpk_board(board)
+        features["phase_mix"] = self._phase_mix(board)
+        features["goal_vector"] = self._goal_vector(board)
+
+        # Simple king distances
+        wk = board.king(True)
+        bk = board.king(False)
+        if wk is not None and bk is not None:
+            dx = abs(chess.square_file(wk) - chess.square_file(bk))
+            dy = abs(chess.square_rank(wk) - chess.square_rank(bk))
+            features["king_distance_chebyshev"] = max(dx, dy)
+        # Bindings snapshot
+        features["bindings"] = self._macro_bindings(board)
+        return features
+
     def capture_macro_frame(self, env: Dict[str, Any]) -> Dict[str, Any]:
         board = env.get("board")
         return {
@@ -291,6 +335,7 @@ class MacroEngine(ReConEngine):
             "feature_groups": self._feature_groups(board),
             "bindings": self._macro_bindings(board),
             "move_synth": self._move_synth_preview(board),
+            "features": self._feature_bus(board),
         }
 
     def step(self, env: Optional[Dict[str, Any]] = None) -> Dict[str, bool]:

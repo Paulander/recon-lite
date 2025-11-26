@@ -204,12 +204,29 @@ def run_teacher(
     depth: int,
     *,
     fens_override: Optional[Sequence[str]] = None,
+    progress_every: int = 0,
 ) -> Dict[str, object]:
     fens = list(fens_override) if fens_override is not None else list(_load_fens(fen_path))
     if not fens:
         raise SystemExit(f"No FEN positions found in {fen_path}")
 
-    counts, avg_score = label_fens(fens, engine_path, depth)
+    counts: Dict[str, int] = {"krk": 0, "kpk": 0, "rook": 0, "generic": 0}
+    score_total = 0.0
+    total_positions = 0
+    engine = _open_engine(engine_path)
+    try:
+        for idx, fen in enumerate(fens, start=1):
+            board = chess.Board(fen)
+            label = _classify(board)
+            counts[label] = counts.get(label, 0) + 1
+            score_total += _analyse(engine, board, depth)
+            total_positions += 1
+            if progress_every > 0 and idx % progress_every == 0:
+                print(f"[teacher] processed {idx}/{len(fens)} FENs")
+    finally:
+        if engine is not None:
+            engine.quit()
+    avg_score = score_total / max(1, total_positions)
 
     payload = json.loads(output_path.read_text()) if output_path.exists() else {"version": "0.1"}
     apply_weight_update(payload, counts, avg_score)
@@ -252,13 +269,14 @@ def main() -> None:
     parser.add_argument("--skip-phase-output", action="store_true", help="Skip blended phase weight computation")
     parser.add_argument("--engine", type=str, default=None, help="Path to Stockfish binary (optional – heuristics used if omitted)")
     parser.add_argument("--depth", type=int, default=4, help="Search depth for Stockfish analysis")
+    parser.add_argument("--progress-every", type=int, default=0, help="Print progress every N FENs (0 = silent)")
     args = parser.parse_args()
 
     fens = list(_load_fens(args.fen_file))
     if not fens:
         raise SystemExit(f"No FEN positions found in {args.fen_file}")
 
-    payload = run_teacher(args.fen_file, args.output, args.engine, args.depth, fens_override=fens)
+    payload = run_teacher(args.fen_file, args.output, args.engine, args.depth, fens_override=fens, progress_every=args.progress_every)
     print("Updated", args.output)
     teacher_meta = payload.get("notes", {}).get("teacher", {})
     if teacher_meta:
