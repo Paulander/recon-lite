@@ -4,17 +4,37 @@ from __future__ import annotations
 
 from typing import Any, Dict
 from pathlib import Path
+import json
 
 import chess
 
 from recon_lite import Graph, LinkType, Node, NodeType
 from recon_lite.trace_db import EpisodeRecord, TickRecord, TraceDB, pack_fingerprint
-from recon_lite.trace_db import EpisodeRecord, TickRecord, TraceDB, pack_fingerprint
 from recon_lite_chess import create_wait_for_board_change
-from pathlib import Path
-import json
 from recon_lite_chess.sensors import structure as struct_sensors
 from recon_lite_chess.sensors import tactics as tactic_sensors
+
+# Shared config cache for KPK weights
+_CFG_CACHE = {"loaded": False, "weights": {"push_bias": 0.6, "king_distance_weight": 0.25, "safety_weight": 0.15}}
+
+
+def _load_cfg():
+    """Load KPK weights once from the SWP, fallback to defaults."""
+    if _CFG_CACHE["loaded"]:
+        return _CFG_CACHE["weights"]
+    try:
+        path = Path("weights/subgraphs/kpk_weight_pack.swp")
+        data = json.loads(path.read_text())
+        ws = data.get("move_selector", {})
+        _CFG_CACHE["weights"].update({
+            "push_bias": float(ws.get("push_bias", _CFG_CACHE["weights"]["push_bias"])),
+            "king_distance_weight": float(ws.get("king_distance_weight", _CFG_CACHE["weights"]["king_distance_weight"])),
+            "safety_weight": float(ws.get("safety_weight", _CFG_CACHE["weights"]["safety_weight"]))
+        })
+    except Exception:
+        pass
+    _CFG_CACHE["loaded"] = True
+    return _CFG_CACHE["weights"]
 
 
 def create_kpk_material_detector(nid: str) -> Node:
@@ -72,25 +92,6 @@ def create_kpk_promotion_probe(nid: str) -> Node:
 
 
 def create_kpk_move_selector(nid: str) -> Node:
-    _cfg_cache = {"loaded": False, "weights": {"push_bias": 0.6, "king_distance_weight": 0.25, "safety_weight": 0.15}}
-
-    def _load_cfg():
-        if _cfg_cache["loaded"]:
-            return _cfg_cache["weights"]
-        try:
-            path = Path("weights/subgraphs/kpk_weight_pack.swp")
-            data = json.loads(path.read_text())
-            ws = data.get("move_selector", {})
-            _cfg_cache["weights"].update({
-                "push_bias": float(ws.get("push_bias", _cfg_cache["weights"]["push_bias"])),
-                "king_distance_weight": float(ws.get("king_distance_weight", _cfg_cache["weights"]["king_distance_weight"])),
-                "safety_weight": float(ws.get("safety_weight", _cfg_cache["weights"]["safety_weight"]))
-            })
-        except Exception:
-            pass
-        _cfg_cache["loaded"] = True
-        return _cfg_cache["weights"]
-
     def _predicate(node: Node, env: Dict[str, Any]):
         weights = _load_cfg()
         board = env.get("board")

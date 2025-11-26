@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Optional
 
 import chess
+import chess.engine
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
@@ -30,6 +31,8 @@ def play_persistent_game(
     max_ticks_per_move: int = 200,
     split_logs: bool = True,
     output_basename: str = "kpk_persistent",
+    stockfish_path: Optional[str] = None,
+    stockfish_depth: int = 2,
     trace_db: Optional[TraceDB] = None,
     trace_episode_id: Optional[str] = None,
     pack_paths: Optional[list[Path]] = None,
@@ -50,6 +53,12 @@ def play_persistent_game(
     tick_records: list[TickRecord] = []
     pack_meta = pack_fingerprint(pack_paths or [])
     plies = 0
+    sf_engine = None
+    if stockfish_path:
+        try:
+            sf_engine = chess.engine.SimpleEngine.popen_uci(stockfish_path)
+        except Exception:
+            sf_engine = None
 
     while not board.is_game_over() and plies < max_plies:
         env = {"board": board}
@@ -68,7 +77,23 @@ def play_persistent_game(
         if not chosen:
             break
         try:
+            eval_before = None
+            eval_after = None
+            if sf_engine is not None:
+                try:
+                    info_before = sf_engine.analyse(board, limit=chess.engine.Limit(depth=stockfish_depth))
+                    score_before = info_before.get("score") if info_before else None
+                    eval_before = float(score_before.white().score(mate_score=10000) or 0.0) if score_before else None
+                except Exception:
+                    eval_before = None
             board.push_uci(chosen)
+            if sf_engine is not None:
+                try:
+                    info_after = sf_engine.analyse(board, limit=chess.engine.Limit(depth=stockfish_depth))
+                    score_after = info_after.get("score") if info_after else None
+                    eval_after = float(score_after.white().score(mate_score=10000) or 0.0) if score_after else None
+                except Exception:
+                    eval_after = None
         except Exception:
             break
         plies += 1
@@ -78,6 +103,9 @@ def play_persistent_game(
                 board_fen=board.fen(),
                 action=chosen,
                 active_nodes=[nid for nid, node in eng.g.nodes.items() if node.state != NodeState.INACTIVE],
+                eval_before=eval_before,
+                eval_after=eval_after,
+                reward_tick=(round(eval_after - eval_before, 3) if eval_after is not None and eval_before is not None else None),
                 meta={"ply": plies},
             )
         )
@@ -109,6 +137,11 @@ def play_persistent_game(
             notes={"plies": plies},
         )
         trace_db.add_episode(ep)
+    if sf_engine is not None:
+        try:
+            sf_engine.quit()
+        except Exception:
+            pass
 
     out_dir = Path("demos/outputs/persistent")
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -129,6 +162,8 @@ def main() -> None:
     parser.add_argument("--fen", type=str, default=None)
     parser.add_argument("--max-plies", type=int, default=100)
     parser.add_argument("--max-ticks", type=int, default=200)
+    parser.add_argument("--engine", type=str, default=None, help="Path to Stockfish (optional)")
+    parser.add_argument("--depth", type=int, default=2, help="Stockfish depth when scoring moves")
     parser.add_argument("--trace-out", type=Path, default=None)
     parser.add_argument("--pack", action="append", type=Path, default=[])
     args = parser.parse_args()
@@ -141,6 +176,8 @@ def main() -> None:
         trace_db=trace_db,
         pack_paths=args.pack,
         trace_episode_id="kpk-cli",
+        stockfish_path=args.engine,
+        stockfish_depth=args.depth,
     )
     if trace_db:
         trace_db.flush()
@@ -149,4 +186,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

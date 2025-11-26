@@ -12,6 +12,7 @@ Runs a single ReCoN engine instance across the whole game.
 import argparse
 from collections import deque
 import chess
+import chess.engine
 import sys
 from pathlib import Path
 import random
@@ -720,6 +721,8 @@ def play_persistent_game(initial_fen: str | None = None,
                          single_phase: Optional[str] = None,
                          seed: Optional[int] = None,
                          step_mode: bool = False,
+                         stockfish_path: Optional[str] = None,
+                         stockfish_depth: int = 2,
                          opponent_policy: Optional[Callable[[chess.Board], Optional[chess.Move]]] = None,
                          log_full_state: bool = False,
                          disable_leg2: bool = False,
@@ -786,6 +789,12 @@ def play_persistent_game(initial_fen: str | None = None,
     binding_table = BindingTable()
     pack_meta = pack_fingerprint(pack_paths or [])
     tick_records: list[TickRecord] = []
+    sf_engine = None
+    if stockfish_path:
+        try:
+            sf_engine = chess.engine.SimpleEngine.popen_uci(stockfish_path)
+        except Exception:
+            sf_engine = None
 
     env.update({
         "phase_states": phase_states,
@@ -942,7 +951,23 @@ def play_persistent_game(initial_fen: str | None = None,
 
         if move_uci:
             try:
+                eval_before = None
+                eval_after = None
+                if sf_engine is not None:
+                    try:
+                        info_before = sf_engine.analyse(board, limit=chess.engine.Limit(depth=stockfish_depth))
+                        score_before = info_before.get("score") if info_before else None
+                        eval_before = float(score_before.white().score(mate_score=10000) or 0.0) if score_before else None
+                    except Exception:
+                        eval_before = None
                 board.push_uci(move_uci)
+                if sf_engine is not None:
+                    try:
+                        info_after = sf_engine.analyse(board, limit=chess.engine.Limit(depth=stockfish_depth))
+                        score_after = info_after.get("score") if info_after else None
+                        eval_after = float(score_after.white().score(mate_score=10000) or 0.0) if score_after else None
+                    except Exception:
+                        eval_after = None
             except Exception:
                 break
             plies += 1
@@ -955,6 +980,9 @@ def play_persistent_game(initial_fen: str | None = None,
                     active_nodes=[nid for nid, node in engine.g.nodes.items() if node.state != NodeState.INACTIVE],
                     fired_edges=[],
                     action=move_uci,
+                    eval_before=eval_before,
+                    eval_after=eval_after,
+                    reward_tick=(round(eval_after - eval_before, 3) if eval_after is not None and eval_before is not None else None),
                     meta={
                         "ply": plies,
                         "stage": env.get("stage"),
@@ -1043,6 +1071,11 @@ def play_persistent_game(initial_fen: str | None = None,
             notes={"plies": plies, "ticks": total_ticks},
         )
         trace_db.add_episode(ep)
+    if sf_engine is not None:
+        try:
+            sf_engine.quit()
+        except Exception:
+            pass
 
     out_dir = Path("demos/outputs/persistent")
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -1149,6 +1182,8 @@ def main():
     parser.add_argument("--phase-temperature", type=float, default=1.4, help="Softmax temperature for phase latents")
     parser.add_argument("--latent-log-stride", type=int, default=DEFAULT_LATENT_LOG_STRIDE, help="Log latents/bindings every N ticks")
     parser.add_argument("--use-blended-actuator", action="store_true", help="Enable phase-weighted blended move chooser")
+    parser.add_argument("--engine", type=str, default=None, help="Path to Stockfish for eval/reward logging (optional)")
+    parser.add_argument("--depth", type=int, default=2, help="Stockfish depth when scoring moves")
     parser.add_argument("--trace-out", type=Path, default=None, help="Optional JSONL trace output (EpisodeRecord/TickRecord).")
     parser.add_argument("--pack", action="append", type=Path, default=[], help="Weight pack path(s) to fingerprint in traces.")
     # Single graph; demo uses the shared KRK network
@@ -1172,6 +1207,8 @@ def main():
             phase_temperature=args.phase_temperature,
             latent_log_stride=args.latent_log_stride,
             use_blended_actuator=args.use_blended_actuator,
+            stockfish_path=args.engine,
+            stockfish_depth=args.depth,
         )
     else:
         start_fen = args.fen if args.fen else "4k3/6K1/8/8/8/8/R7/8 w - - 0 1"
@@ -1196,6 +1233,8 @@ def main():
             trace_db=trace_db,
             trace_episode_id="krk-cli-run",
             pack_paths=args.pack,
+            stockfish_path=args.engine,
+            stockfish_depth=args.depth,
         )
         if trace_db:
             trace_db.flush()

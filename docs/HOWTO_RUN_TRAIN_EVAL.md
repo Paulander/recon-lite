@@ -11,9 +11,18 @@ This is the quick-start for running the chess subgraphs with weight packs (SWPs)
   ```bash
   uv run python demos/persistent/krk_persistent_demo.py \
     --use-blended-actuator \
+    --engine /usr/games/stockfish --depth 2 \
     --phase-microticks 5 --phase-eta 0.3
   ```
   Loads the current `krk_phase_weight_pack.swp` by default; attach `RECON_PHASE_WEIGHT_FILE` to override.
+  If `--engine` is provided, per-tick eval_before/eval_after/reward_tick are logged into traces.
+- Persistent KPK demo (lightweight):
+  ```bash
+  uv run python demos/persistent/kpk_persistent_demo.py \
+    --engine /usr/games/stockfish --depth 2 \
+    --trace-out reports/kpk_trace.jsonl
+  ```
+  Stockfish is optional; when present, per-move eval/reward are captured in the trace.
 
 ## Batch evaluation
 - Single block, KRK/KPK, optional Stockfish labeling:
