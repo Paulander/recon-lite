@@ -157,15 +157,21 @@ class MacroEngine(ReConEngine):
             return {"Opening": 0.05, "Middlegame": 0.15, "Endgame": 0.80}
         return {"Opening": 0.4, "Middlegame": 0.4, "Endgame": 0.2}
 
-    def _plan_groups(self, board: Optional[chess.Board]) -> List[Dict[str, Any]]:
-        is_endgame = board is not None and self._is_endgame_board(board)
+    def _plan_groups(self, board: Optional[chess.Board], features: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+        feat = features or {}
+        is_endgame = bool(feat.get("is_endgame")) if features is not None else (board is not None and self._is_endgame_board(board))
         activations = {
             "PlanOpening": 0.2,
             "PlanMiddlegame": 0.35,
             "PlanEndgame": 0.85 if is_endgame else 0.3,
         }
         highlights: Set[str] = set()
-        if board is not None:
+        if features is not None:
+            if feat.get("is_krk"):
+                highlights.add("KRK")
+            if feat.get("is_kpk"):
+                highlights.add("KPK")
+        elif board is not None:
             if self._is_krk_board(board):
                 highlights.add("KRK")
             if self._is_kpk_board(board):
@@ -185,25 +191,31 @@ class MacroEngine(ReConEngine):
             )
         return plans
 
-    def _feature_groups(self, board: Optional[chess.Board]) -> List[Dict[str, Any]]:
-        is_endgame = board is not None and self._is_endgame_board(board)
+    def _feature_groups(self, board: Optional[chess.Board], features: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+        feat = features or {}
+        is_endgame = bool(feat.get("is_endgame")) if features is not None else (board is not None and self._is_endgame_board(board))
         confidences = {
             "FeatureTactics": 0.45,
             "FeatureStructure": 0.52,
             "FeatureEndgame": 0.88 if is_endgame else 0.25,
         }
         highlight_lookup: Dict[str, bool] = {}
-        if board is not None:
+        if features is not None:
+            if feat.get("is_krk"):
+                highlight_lookup.update({"KRK": True, "BoxShrink": True, "Opposition": True})
+            if feat.get("is_kpk"):
+                highlight_lookup.update({"KPK": True})
+        elif board is not None:
             if self._is_krk_board(board):
                 highlight_lookup.update({"KRK": True, "BoxShrink": True, "Opposition": True})
             if self._is_kpk_board(board):
                 highlight_lookup.update({"KPK": True})
             if self._looks_like_rook_endgame(board):
                 highlight_lookup.update({"RookCutoff": True})
-        features = []
+        features_out = []
         for fid, children in self.FEATURE_GROUPS.items():
             feature_details = [{"name": child, "highlight": bool(highlight_lookup.get(child))} for child in children]
-            features.append(
+            features_out.append(
                 {
                     "id": fid,
                     "confidence": confidences.get(fid, 0.3),
@@ -211,7 +223,7 @@ class MacroEngine(ReConEngine):
                     "details": feature_details,
                 }
             )
-        return features
+        return features_out
 
     def _macro_bindings(self, board: Optional[chess.Board]) -> Dict[str, Any]:
         if board is None:
@@ -327,15 +339,16 @@ class MacroEngine(ReConEngine):
 
     def capture_macro_frame(self, env: Dict[str, Any]) -> Dict[str, Any]:
         board = env.get("board")
+        feat_bus = self._feature_bus(board)
         return {
             "version": "0.1",
-            "goal_vector": self._goal_vector(board),
-            "phase_mix": self._phase_mix(board),
-            "plan_groups": self._plan_groups(board),
-            "feature_groups": self._feature_groups(board),
-            "bindings": self._macro_bindings(board),
+            "goal_vector": feat_bus.get("goal_vector") or self._goal_vector(board),
+            "phase_mix": feat_bus.get("phase_mix") or self._phase_mix(board),
+            "plan_groups": self._plan_groups(board, feat_bus),
+            "feature_groups": self._feature_groups(board, feat_bus),
+            "bindings": feat_bus.get("bindings") or self._macro_bindings(board),
             "move_synth": self._move_synth_preview(board),
-            "features": self._feature_bus(board),
+            "features": feat_bus,
         }
 
     def step(self, env: Optional[Dict[str, Any]] = None) -> Dict[str, bool]:

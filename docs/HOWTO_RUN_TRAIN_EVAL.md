@@ -42,6 +42,15 @@ This is the quick-start for running the chess subgraphs with weight packs (SWPs)
     --trace-out reports/fullgame_trace.jsonl
   ```
   Uses MacroEngine for macro decisions; falls back to Stockfish when no move is chosen.
+- Pack tournament (compare multiple SWPs):
+  ```bash
+  uv run python demos/experiments/pack_tournament.py \
+    --mode krk --fen-file data/endgames/krk/random.fen \
+    --pack weights/krk_phase_weight_pack.swp --pack weights/krk_phase_weight_pack_alt.swp \
+    --engine /usr/games/stockfish --depth 2 --runs 200 \
+    --output reports/krk_pack_tournament.json
+  ```
+  Ranks packs by expected win rate (if Stockfish provided) and wins.
 
 ## Tracing
 - Trace schema lives in `src/recon_lite/trace_db.py`:
