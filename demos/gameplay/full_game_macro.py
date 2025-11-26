@@ -32,6 +32,20 @@ def _fallback_stockfish(board: chess.Board, engine: chess.engine.SimpleEngine, d
         return None
 
 
+def _score_stockfish(board: chess.Board, engine: Optional[chess.engine.SimpleEngine], depth: int) -> Optional[float]:
+    """Return centipawn score for side to move (white-positive)."""
+    if engine is None:
+        return None
+    try:
+        info = engine.analyse(board, limit=chess.engine.Limit(depth=depth))
+        score = info.get("score")
+        if score is None:
+            return None
+        return float(score.white().score(mate_score=10000) or 0.0)
+    except Exception:
+        return None
+
+
 def play_full_game(
     *,
     initial_fen: Optional[str],
@@ -60,18 +74,26 @@ def play_full_game(
             # Macro step until a move is chosen or watchdog hits
             macro_env["chosen_move"] = None
             ticks_this_ply = 0
+            eval_before_move: Optional[float] = None
             while ticks_this_ply < 64 and macro_env.get("chosen_move") is None:
                 ticks_this_ply += 1
                 now_req = engine.step(macro_env)
+                if macro_env.get("chosen_move") is not None:
+                    eval_before_move = _score_stockfish(board, sf_engine, stockfish_depth)
                 tick_records.append(
                     TickRecord(
                         tick_id=len(tick_records) + 1,
+                        phase_estimate=macro_env.get("macro_frame", {}).get("phase_estimate") if isinstance(macro_env.get("macro_frame"), dict) else None,
                         goal_vector=macro_env.get("goal_vector"),
                         board_fen=board.fen(),
                         active_nodes=[nid for nid, node in engine.g.nodes.items() if node.state.name != "INACTIVE"],
                         fired_edges=[],
                         action=macro_env.get("chosen_move"),
-                        meta={"new_requests": list(now_req.keys()), "features": macro_env.get("features")},
+                        eval_before=eval_before_move,
+                        meta={
+                            "new_requests": list(now_req.keys()),
+                            "features": macro_env.get("features"),
+                        },
                     )
                 )
                 if macro_env.get("chosen_move"):
@@ -86,6 +108,15 @@ def play_full_game(
                 board.push_uci(move_uci)
             except Exception:
                 break
+            if tick_records:
+                eval_after = _score_stockfish(board, sf_engine, stockfish_depth)
+                last_tick = tick_records[-1]
+                if last_tick.eval_before is None:
+                    last_tick.eval_before = eval_before_move
+                if eval_after is not None:
+                    last_tick.eval_after = eval_after
+                    if last_tick.eval_before is not None:
+                        last_tick.reward_tick = round(eval_after - last_tick.eval_before, 3)
             plies += 1
             if board.is_game_over() or plies >= max_plies:
                 break
@@ -151,4 +182,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

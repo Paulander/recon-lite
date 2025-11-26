@@ -41,7 +41,7 @@ This is the quick-start for running the chess subgraphs with weight packs (SWPs)
     --engine /usr/games/stockfish --depth 2 \
     --trace-out reports/fullgame_trace.jsonl
   ```
-  Uses MacroEngine for macro decisions; falls back to Stockfish when no move is chosen.
+  Uses MacroEngine for macro decisions; falls back to Stockfish when no move is chosen. When Stockfish is provided, per-tick eval/reward are logged in traces.
 - Pack tournament (compare multiple SWPs):
   ```bash
   uv run python demos/experiments/pack_tournament.py \
