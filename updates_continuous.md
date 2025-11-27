@@ -7,6 +7,7 @@ We want the KRK demo to feel like a living ReCoN brain: continuous activations t
 - Start with KRK (M1) so we can phase in latents, binding tables, and visualization upgrades in a controlled setting.
 - Keep `python-chess` and reuse current KRK scripts/sensors; only incremental re-organization for now.
 - Treat the KRK loop as the place where we practice running soft activations before we scale to KPK and the rest of the full game stack.
+- For the detailed **M3 fast-plasticity & bandit-control plan** that builds on top of this continuous layer, see `recon_roadmap_m3_fast_plasticity.md`.
 
 ## Key Integrations (Use Existing APIs)
 - Engine already exposes a `step` hook; we extend it with an optional micro-tick pre-phase when `env["microticks"] > 0` (default 0, so the legacy flow stays intact).
