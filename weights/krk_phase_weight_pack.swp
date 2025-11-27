@@ -1,0 +1,19 @@
+{
+  "version": "0.1",
+  "phase_weights": {
+    "phase1": 0.911,
+    "phase2": 0.893,
+    "phase3": 1.195
+  },
+  "notes": {
+    "teacher": {
+      "phase_counts": {
+        "phase1": 500,
+        "phase2": 486,
+        "phase3": 500
+      },
+      "positions_considered": 1486,
+      "engine": true
+    }
+  }
+}

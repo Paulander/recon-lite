@@ -191,7 +191,7 @@ class Graph:
         found = False
         for e in self.edges:
             if e.src == src and e.dst == dst and e.ltype == LinkType.POR:
-                e.w = np.array([float(weight)])
+                e.w = float(weight)
                 found = True
                 break
         if not found:

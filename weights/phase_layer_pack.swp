@@ -1,0 +1,8 @@
+{
+  "version": "0.1",
+  "opening_bias": 0.33,
+  "middlegame_bias": 0.34,
+  "endgame_bias": 0.33,
+  "hysteresis": 0.08,
+  "notes": "Baseline tuning for phase mixing; consumed by MacroEngine._phase_mix."
+}

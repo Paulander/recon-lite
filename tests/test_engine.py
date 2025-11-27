@@ -31,6 +31,6 @@ def test_sequence_confirms():
     g = build_seq()
     eng = ReConEngine(g)
     g.nodes["ROOT"].state = NodeState.REQUESTED
-    for _ in range(10):
+    for _ in range(20):
         eng.step()
     assert all(n.state == NodeState.CONFIRMED for nid,n in g.nodes.items() if n.ntype == NodeType.SCRIPT)

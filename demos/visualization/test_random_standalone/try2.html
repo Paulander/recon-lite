@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>ReCoN Chess Network Visualization</title>
+<style>
+body { margin: 0; }
+canvas { display: block; }
+#info { position: absolute; top: 10px; left: 10px; color: white; background: rgba(0,0,0,0.5); padding: 10px; font-family: monospace; }
+#controls { position: absolute; top: 10px; right: 10px; }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<div id="info"></div>
+<div id="controls"></div>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+const data = [
+  {
+    "type": "snapshot",
+    "note": "Leg2 proposal",
+    "new_requests": [],
+    "env": {
+      "fen": "4k3/6K1/8/8/8/8/R7/8 w - - 0 1",
+      "ply": 1,
+      "leg2": true
+    },
+    "thoughts": "Leg2 direct proposal",
+    "latents": {
+      "phase0_establish_cut": 0.09556647006184531,
+      "phase1_drive_to_edge": 0.19521621540511025,
+      "phase2_shrink_box": 0.13658742476926353,
+      "phase3_take_opposition": 0.5699429754081118,
+      "phase4_deliver_mate": 0.0026869143556691646
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "decision_proposals",
+    "new_requests": [],
+    "env": {
+      "ply": 1,
+      "proposals": [
+        {
+          "move": "a2a7",
+          "phase": "phase4",
+          "rank": 4,
+          "reason": "Leg2: mate execution attempt"
+        }
+      ]
+    },
+    "thoughts": "Collected leg2 proposals",
+    "latents": {
+      "phase0_establish_cut": 0.09556647006184531,
+      "phase1_drive_to_edge": 0.19521621540511025,
+      "phase2_shrink_box": 0.13658742476926353,
+      "phase3_take_opposition": 0.5699429754081118,
+      "phase4_deliver_mate": 0.0026869143556691646
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "Applied move 1: a2a7",
+    "new_requests": [],
+    "env": {
+      "fen": "4k3/R5K1/8/8/8/8/8/8 b - - 1 1",
+      "ply": 1,
+      "recons_move": "a2a7"
+    },
+    "thoughts": "Applied a2a7 (persistent)",
+    "latents": {
+      "phase0_establish_cut": 0.6224788575564931,
+      "phase1_drive_to_edge": 0.017501403759987197,
+      "phase2_shrink_box": 0.3047293329673219,
+      "phase3_take_opposition": 0.05109617616593084,
+      "phase4_deliver_mate": 0.004194229550266923
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 1: e8d8",
+    "new_requests": [],
+    "env": {
+      "fen": "3k4/R5K1/8/8/8/8/8/8 w - - 2 2",
+      "ply": 1,
+      "opponents_move": "e8d8"
+    },
+    "thoughts": "Opponent move (persistent)",
+    "latents": {
+      "phase0_establish_cut": 0.6224788575564931,
+      "phase1_drive_to_edge": 0.017501403759987197,
+      "phase2_shrink_box": 0.3047293329673219,
+      "phase3_take_opposition": 0.05109617616593084,
+      "phase4_deliver_mate": 0.004194229550266923
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "Leg2 proposal",
+    "new_requests": [],
+    "env": {
+      "fen": "3k4/R5K1/8/8/8/8/8/8 w - - 2 2",
+      "ply": 2,
+      "leg2": true
+    },
+    "thoughts": "Leg2 direct proposal",
+    "latents": {
+      "phase0_establish_cut": 0.061945888713402536,
+      "phase1_drive_to_edge": 0.36943526432198,
+      "phase2_shrink_box": 0.4416629150830942,
+      "phase3_take_opposition": 0.12653854376656123,
+      "phase4_deliver_mate": 0.0004173881149621526
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "decision_proposals",
+    "new_requests": [],
+    "env": {
+      "ply": 2,
+      "proposals": [
+        {
+          "move": "g7f7",
+          "phase": "phase4",
+          "rank": 4,
+          "reason": "Leg2: mate execution attempt"
+        }
+      ]
+    },
+    "thoughts": "Collected leg2 proposals",
+    "latents": {
+      "phase0_establish_cut": 0.061945888713402536,
+      "phase1_drive_to_edge": 0.36943526432198,
+      "phase2_shrink_box": 0.4416629150830942,
+      "phase3_take_opposition": 0.12653854376656123,
+      "phase4_deliver_mate": 0.0004173881149621526
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "Applied move 2: g7f7",
+    "new_requests": [],
+    "env": {
+      "fen": "3k4/R4K2/8/8/8/8/8/8 b - - 3 2",
+      "ply": 2,
+      "recons_move": "g7f7"
+    },
+    "thoughts": "Applied g7f7 (persistent)",
+    "latents": {
+      "phase0_establish_cut": 0.6224788575564931,
+      "phase1_drive_to_edge": 0.017501403759987197,
+      "phase2_shrink_box": 0.3047293329673219,
+      "phase3_take_opposition": 0.05109617616593084,
+      "phase4_deliver_mate": 0.004194229550266923
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 2: d8c8",
+    "new_requests": [],
+    "env": {
+      "fen": "2k5/R4K2/8/8/8/8/8/8 w - - 4 3",
+      "ply": 2,
+      "opponents_move": "d8c8"
+    },
+    "thoughts": "Opponent move (persistent)",
+    "latents": {
+      "phase0_establish_cut": 0.6224788575564931,
+      "phase1_drive_to_edge": 0.017501403759987197,
+      "phase2_shrink_box": 0.3047293329673219,
+      "phase3_take_opposition": 0.05109617616593084,
+      "phase4_deliver_mate": 0.004194229550266923
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "Leg2 proposal",
+    "new_requests": [],
+    "env": {
+      "fen": "2k5/R4K2/8/8/8/8/8/8 w - - 4 3",
+      "ply": 3,
+      "leg2": true
+    },
+    "thoughts": "Leg2 direct proposal",
+    "latents": {
+      "phase0_establish_cut": 0.061945888713402536,
+      "phase1_drive_to_edge": 0.36943526432198,
+      "phase2_shrink_box": 0.4416629150830942,
+      "phase3_take_opposition": 0.12653854376656123,
+      "phase4_deliver_mate": 0.0004173881149621526
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "decision_proposals",
+    "new_requests": [],
+    "env": {
+      "ply": 3,
+      "proposals": [
+        {
+          "move": "f7e6",
+          "phase": "phase4",
+          "rank": 4,
+          "reason": "Leg2: mate execution attempt"
+        }
+      ]
+    },
+    "thoughts": "Collected leg2 proposals",
+    "latents": {
+      "phase0_establish_cut": 0.061945888713402536,
+      "phase1_drive_to_edge": 0.36943526432198,
+      "phase2_shrink_box": 0.4416629150830942,
+      "phase3_take_opposition": 0.12653854376656123,
+      "phase4_deliver_mate": 0.0004173881149621526
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "Applied move 3: f7e6",
+    "new_requests": [],
+    "env": {
+      "fen": "2k5/R7/4K3/8/8/8/8/8 b - - 5 3",
+      "ply": 3,
+      "recons_move": "f7e6"
+    },
+    "thoughts": "Applied f7e6 (persistent)",
+    "latents": {
+      "phase0_establish_cut": 0.6224788575564931,
+      "phase1_drive_to_edge": 0.017501403759987197,
+      "phase2_shrink_box": 0.3047293329673219,
+      "phase3_take_opposition": 0.05109617616593084,
+      "phase4_deliver_mate": 0.004194229550266923
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 3: c8d8",
+    "new_requests": [],
+    "env": {
+      "fen": "3k4/R7/4K3/8/8/8/8/8 w - - 6 4",
+      "ply": 3,
+      "opponents_move": "c8d8"
+    },
+    "thoughts": "Opponent move (persistent)",
+    "latents": {
+      "phase0_establish_cut": 0.6224788575564931,
+      "phase1_drive_to_edge": 0.017501403759987197,
+      "phase2_shrink_box": 0.3047293329673219,
+      "phase3_take_opposition": 0.05109617616593084,
+      "phase4_deliver_mate": 0.004194229550266923
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "Leg2 proposal",
+    "new_requests": [],
+    "env": {
+      "fen": "3k4/R7/4K3/8/8/8/8/8 w - - 6 4",
+      "ply": 4,
+      "leg2": true
+    },
+    "thoughts": "Leg2 direct proposal",
+    "latents": {
+      "phase0_establish_cut": 0.061945888713402536,
+      "phase1_drive_to_edge": 0.36943526432198,
+      "phase2_shrink_box": 0.4416629150830942,
+      "phase3_take_opposition": 0.12653854376656123,
+      "phase4_deliver_mate": 0.0004173881149621526
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "decision_proposals",
+    "new_requests": [],
+    "env": {
+      "ply": 4,
+      "proposals": [
+        {
+          "move": "a7h7",
+          "phase": "phase4",
+          "rank": 4,
+          "reason": "Leg2: mate execution attempt"
+        }
+      ]
+    },
+    "thoughts": "Collected leg2 proposals",
+    "latents": {
+      "phase0_establish_cut": 0.061945888713402536,
+      "phase1_drive_to_edge": 0.36943526432198,
+      "phase2_shrink_box": 0.4416629150830942,
+      "phase3_take_opposition": 0.12653854376656123,
+      "phase4_deliver_mate": 0.0004173881149621526
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "Applied move 4: a7h7",
+    "new_requests": [],
+    "env": {
+      "fen": "3k4/7R/4K3/8/8/8/8/8 b - - 7 4",
+      "ply": 4,
+      "recons_move": "a7h7"
+    },
+    "thoughts": "Applied a7h7 (persistent)",
+    "latents": {
+      "phase0_establish_cut": 0.4965398802507187,
+      "phase1_drive_to_edge": 0.01396054632492453,
+      "phase2_shrink_box": 0.2430769570141476,
+      "phase3_take_opposition": 0.2430769570141476,
+      "phase4_deliver_mate": 0.003345659396061587
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "Opponent ply 4: d8e8",
+    "new_requests": [],
+    "env": {
+      "fen": "4k3/7R/4K3/8/8/8/8/8 w - - 8 5",
+      "ply": 4,
+      "opponents_move": "d8e8"
+    },
+    "thoughts": "Opponent move (persistent)",
+    "latents": {
+      "phase0_establish_cut": 0.4965398802507187,
+      "phase1_drive_to_edge": 0.01396054632492453,
+      "phase2_shrink_box": 0.2430769570141476,
+      "phase3_take_opposition": 0.2430769570141476,
+      "phase4_deliver_mate": 0.003345659396061587
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "Leg2 proposal",
+    "new_requests": [],
+    "env": {
+      "fen": "4k3/7R/4K3/8/8/8/8/8 w - - 8 5",
+      "ply": 5,
+      "leg2": true
+    },
+    "thoughts": "Leg2 direct proposal",
+    "latents": {
+      "phase0_establish_cut": 0.04923896911925854,
+      "phase1_drive_to_edge": 0.29365325043079715,
+      "phase2_shrink_box": 0.3510648904806659,
+      "phase3_take_opposition": 0.10058177513190802,
+      "phase4_deliver_mate": 0.20546111483737042
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "decision_proposals",
+    "new_requests": [],
+    "env": {
+      "ply": 5,
+      "proposals": [
+        {
+          "move": "h7h8",
+          "phase": "phase4",
+          "rank": 4,
+          "reason": "Leg2: mate execution attempt"
+        }
+      ]
+    },
+    "thoughts": "Collected leg2 proposals",
+    "latents": {
+      "phase0_establish_cut": 0.04923896911925854,
+      "phase1_drive_to_edge": 0.29365325043079715,
+      "phase2_shrink_box": 0.3510648904806659,
+      "phase3_take_opposition": 0.10058177513190802,
+      "phase4_deliver_mate": 0.20546111483737042
+    }
+  },
+  {
+    "type": "snapshot",
+    "note": "Applied move 5: h7h8",
+    "new_requests": [],
+    "env": {
+      "fen": "4k2R/8/4K3/8/8/8/8/8 b - - 9 5",
+      "ply": 5,
+      "recons_move": "h7h8"
+    },
+    "thoughts": "Applied h7h8 (persistent)",
+    "latents": {
+      "phase0_establish_cut": 0.6154842675042651,
+      "phase1_drive_to_edge": 0.07220810100773115,
+      "phase2_shrink_box": 0.14750144262100431,
+      "phase3_take_opposition": 0.14750144262100431,
+      "phase4_deliver_mate": 0.017304746245995203
+    }
+  }
+];
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+const composer = new EffectComposer(renderer);
+const renderPass = new RenderPass(scene, camera);
+composer.addPass(renderPass);
+const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+composer.addPass(bloomPass);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+camera.position.set(0, 5, 25);
+controls.update();
+
+const nodes = [
+  { id: 'krk_root', label: 'KRK Checkmate', parent: null, pos: new THREE.Vector3(0, 16, 0), color: 0xffd166, defaultColor: 0xffd166, latent: false, shape: 'sphere' },
+  { id: 'phase0_establish_cut', label: 'Phase0: Establish Cut', parent: 'krk_root', pos: new THREE.Vector3(-16, 9, 0), color: 0x90be6d, defaultColor: 0x90be6d, latent: true, shape: 'sphere' },
+  { id: 'phase1_drive_to_edge', label: 'Phase1: Drive to Edge', parent: 'krk_root', pos: new THREE.Vector3(-8, 9, 0), color: 0x577590, defaultColor: 0x577590, latent: true, shape: 'sphere' },
+  { id: 'phase2_shrink_box', label: 'Phase2: Shrink Box', parent: 'krk_root', pos: new THREE.Vector3(0, 9, 0), color: 0xf94144, defaultColor: 0xf94144, latent: true, shape: 'sphere' },
+  { id: 'phase3_take_opposition', label: 'Phase3: Take Opposition', parent: 'krk_root', pos: new THREE.Vector3(8, 9, 0), color: 0xf3722c, defaultColor: 0xf3722c, latent: true, shape: 'sphere' },
+  { id: 'phase4_deliver_mate', label: 'Phase4: Deliver Mate', parent: 'krk_root', pos: new THREE.Vector3(16, 9, 0), color: 0x277da1, defaultColor: 0x277da1, latent: true, shape: 'sphere' },
+  { id: 'cut_establish', label: 'Cut Establish', parent: 'phase0_establish_cut', pos: new THREE.Vector3(-16, 0, 0), color: 0xc9cba3, defaultColor: 0xc9cba3, latent: false, shape: 'octahedron' },
+  { id: 'p0_move', label: 'P0 Move', parent: 'phase0_establish_cut', pos: new THREE.Vector3(-16, 0, 3), color: 0x90be6d, defaultColor: 0x90be6d, latent: false, shape: 'sphere' },
+  { id: 'king_at_edge', label: 'King At Edge', parent: 'phase1_drive_to_edge', pos: new THREE.Vector3(-8, 0, 0), color: 0xc9cba3, defaultColor: 0xc9cba3, latent: false, shape: 'octahedron' },
+  { id: 'p1_move', label: 'P1 Move', parent: 'phase1_drive_to_edge', pos: new THREE.Vector3(-8, 0, 3), color: 0x577590, defaultColor: 0x577590, latent: false, shape: 'sphere' },
+  { id: 'box_can_shrink', label: 'Box Can Shrink', parent: 'phase2_shrink_box', pos: new THREE.Vector3(0, 0, 0), color: 0xc9cba3, defaultColor: 0xc9cba3, latent: false, shape: 'octahedron' },
+  { id: 'p2_move', label: 'P2 Move', parent: 'phase2_shrink_box', pos: new THREE.Vector3(0, 0, 3), color: 0xf94144, defaultColor: 0xf94144, latent: false, shape: 'sphere' },
+  { id: 'can_deliver_mate', label: 'Can Deliver Mate', parent: 'phase3_take_opposition', pos: new THREE.Vector3(8, 0, 0), color: 0xc9cba3, defaultColor: 0xc9cba3, latent: false, shape: 'octahedron' },
+  { id: 'p3_move', label: 'P3 Move', parent: 'phase3_take_opposition', pos: new THREE.Vector3(8, 0, 3), color: 0xf3722c, defaultColor: 0xf3722c, latent: false, shape: 'sphere' },
+  { id: 'mate', label: 'Mate', parent: 'phase4_deliver_mate', pos: new THREE.Vector3(16, 0, 0), color: 0xc9cba3, defaultColor: 0xc9cba3, latent: false, shape: 'octahedron' },
+  { id: 'p4_move', label: 'P4 Move', parent: 'phase4_deliver_mate', pos: new THREE.Vector3(16, 0, 3), color: 0x277da1, defaultColor: 0x277da1, latent: false, shape: 'sphere' },
+  { id: 'rook_lost', label: 'Rook Lost', parent: 'krk_root', pos: new THREE.Vector3(24, 9, 0), color: 0xffd166, defaultColor: 0xffd166, latent: false, shape: 'octahedron' }
+];
+
+const nodeMeshes = {};
+const nodeLights = {};
+const labels = {};
+const edges = [];
+
+const fontLoader = new FontLoader();
+fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', (font) => {
+  nodes.forEach(node => {
+    const geometry = new TextGeometry(node.label, { font, size: 0.6, height: 0.1 });
+    const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const label = new THREE.Mesh(geometry, material);
+    label.position.copy(node.pos.clone().add(new THREE.Vector3(1.5, 0, 0)));
+    scene.add(label);
+    labels[node.id] = label;
+  });
+});
+
+nodes.forEach(node => {
+  let geometry;
+  if (node.shape === 'octahedron') {
+    geometry = new THREE.OctahedronGeometry(1);
+  } else {
+    geometry = new THREE.SphereGeometry(1, 32, 32);
+  }
+  const material = new THREE.MeshStandardMaterial({
+    color: 0x111111,
+    emissive: node.color,
+    emissiveIntensity: 0,
+    roughness: 0.5,
+    metalness: 0.5
+  });
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.position.copy(node.pos);
+  scene.add(mesh);
+  nodeMeshes[node.id] = mesh;
+
+  const light = new THREE.PointLight(node.color, 0, 5);
+  light.position.copy(node.pos);
+  scene.add(light);
+  nodeLights[node.id] = light;
+});
+
+nodes.forEach(node => {
+  if (node.parent) {
+    const points = [nodes.find(n => n.id === node.parent).pos, node.pos];
+    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+    const material = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.3 });
+    const line = new THREE.Line(geometry, material);
+    scene.add(line);
+    edges.push(line);
+  }
+});
+
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
+scene.add(ambientLight);
+
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.55);
+dirLight.position.set(0, 28, 18);
+scene.add(dirLight);
+
+const boardGroup = new THREE.Group();
+boardGroup.position.set(0, -10, 0);
+scene.add(boardGroup);
+
+const squareSize = 1.7;
+for (let file = 0; file < 8; file++) {
+  for (let rank = 0; rank < 8; rank++) {
+    const color = (file + rank) % 2 === 0 ? 0xd2b48c : 0x8b4513;
+    const geometry = new THREE.BoxGeometry(squareSize, 0.12, squareSize);
+    const material = new THREE.MeshStandardMaterial({ color });
+    const square = new THREE.Mesh(geometry, material);
+    square.position.set((file - 3.5) * squareSize, 0, (rank - 3.5) * squareSize);
+    boardGroup.add(square);
+  }
+}
+
+const piecesGroup = new THREE.Group();
+piecesGroup.scale.set(squareSize, 1, squareSize);
+boardGroup.add(piecesGroup);
+const bindingGroup = new THREE.Group();
+bindingGroup.scale.set(squareSize, 1, squareSize);
+boardGroup.add(bindingGroup);
+
+const bindingColors = {};
+const bindingPalette = [0x0ea5e9, 0xf97316, 0x22c55e, 0xa855f7, 0xef4444, 0x14b8a6];
+
+function colorForNamespace(namespace) {
+  if (!namespace) return 0x64748b;
+  if (!bindingColors[namespace]) {
+    const index = Object.keys(bindingColors).length % bindingPalette.length;
+    bindingColors[namespace] = bindingPalette[index];
+  }
+  return bindingColors[namespace];
+}
+
+function computeBindingMap(bindingPayload) {
+  const mapping = {};
+  if (!bindingPayload || typeof bindingPayload !== 'object') return mapping;
+  Object.entries(bindingPayload).forEach(([namespace, instances]) => {
+    if (!Array.isArray(instances)) return;
+    const color = colorForNamespace(namespace);
+    instances.forEach((instance) => {
+      if (!instance || !Array.isArray(instance.items)) return;
+      const feature = instance.feature || instance.id || namespace;
+      instance.items.forEach((item) => {
+        if (typeof item !== 'string') return;
+        const [kind, value] = item.split(':');
+        if (kind !== 'square' || !value) return;
+        const square = value.toLowerCase();
+        if (!mapping[square]) mapping[square] = [];
+        mapping[square].push({ namespace, feature, color });
+      });
+    });
+  });
+  return mapping;
+}
+
+function createChipSprite(label, colorHex) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 128;
+  canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = `#${colorHex.toString(16).padStart(6, '0')}`;
+  ctx.globalAlpha = 0.85;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 28px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(label, canvas.width / 2, canvas.height / 2);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
+  const sprite = new THREE.Sprite(material);
+  sprite.scale.set(0.9, 0.4, 1);
+  return sprite;
+}
+
+function updatePieces(fen, binding) {
+  if (!fen && !binding) return;
+  const bindingKey = binding ? JSON.stringify(binding) : null;
+  if (fen === updatePieces.lastFen && bindingKey === updatePieces.lastBindingKey) return;
+
+  updatePieces.lastFen = fen;
+  updatePieces.lastBindingKey = bindingKey;
+  updatePieces.lastBinding = binding;
+
+  if (fen) {
+    piecesGroup.clear();
+    const parts = fen.split(' ')[0].split('/');
+    let rank = 7;
+    for (let rowStr of parts) {
+      let file = 0;
+      for (let char of rowStr) {
+        if (!isNaN(parseInt(char))) {
+          file += parseInt(char);
+        } else {
+          const type = char.toLowerCase();
+          const col = char === type ? 'b' : 'w';
+          let geometry;
+          if (type === 'k') {
+            geometry = new THREE.ConeGeometry(0.4, 0.8, 32);
+          } else if (type === 'r') {
+            geometry = new THREE.CylinderGeometry(0.3, 0.3, 0.8, 32);
+          } else {
+            file++;
+            continue;
+          }
+          const material = new THREE.MeshStandardMaterial({ color: col === 'w' ? 0xffffff : 0x222222, emissive: 0x000000, emissiveIntensity: 0 });
+          const mesh = new THREE.Mesh(geometry, material);
+          mesh.position.set((file - 3.5) * squareSize, 0.5, -(rank - 3.5) * squareSize);
+          piecesGroup.add(mesh);
+          file++;
+        }
+      }
+      rank--;
+    }
+  }
+
+  bindingGroup.clear();
+  if (binding) {
+    const mapping = computeBindingMap(binding);
+    Object.entries(mapping).forEach(([square, entries]) => {
+      const file = square.charCodeAt(0) - 97; // 'a'
+      const rank = parseInt(square[1], 10) - 1;
+      const baseX = file - 3.5;
+      const baseZ = -(rank - 3.5);
+      entries.slice(0, 3).forEach((entry, idx) => {
+        const label = entry.feature.split(/[\s_]+/)[0].slice(0, 4).toUpperCase();
+        const sprite = createChipSprite(label, entry.color);
+        sprite.position.set(baseX * squareSize, 1.2 + idx * 0.4, baseZ * squareSize);
+        bindingGroup.add(sprite);
+      });
+    });
+  }
+}
+updatePieces.lastFen = null;
+updatePieces.lastBindingKey = null;
+updatePieces.lastBinding = null;
+
+let currentFrame = 0;
+let time = 0;
+let intervalId;
+let isPlaying = true;
+
+function updateScene() {
+  const frame = data[currentFrame];
+  const stateColors = {
+    INACTIVE: 0xcbd5e1,
+    REQUESTED: 0x38bdf8,
+    ACTIVE: 0x60a5fa,
+    SUPPRESSED: 0x94a3b8,
+    WAITING: 0xfbbf24,
+    TRUE: 0x34d399,
+    CONFIRMED: 0x10b981,
+    FAILED: 0xf87171
+  };
+  let parentIntensities = {};
+  nodes.forEach(node => {
+    const mesh = nodeMeshes[node.id];
+    const light = nodeLights[node.id];
+    const state = frame.nodes ? frame.nodes[node.id] : undefined;
+    const displayColor = state && stateColors[state] ? stateColors[state] : node.defaultColor;
+    mesh.material.color.setHex(displayColor);
+    mesh.material.emissive.setHex(displayColor);
+    light.color.setHex(displayColor);
+
+    let intensity = 0;
+    if (node.latent && frame.latents && frame.latents[node.id] !== undefined) {
+      intensity = Math.max(frame.latents[node.id], 0) * 1.5;
+      parentIntensities[node.id] = intensity;
+    } else if (node.parent && parentIntensities[node.parent]) {
+      intensity = parentIntensities[node.parent] * 0.4;
+    }
+    mesh.material.emissiveIntensity = intensity;
+    light.intensity = intensity * 0.9;
+  });
+
+  let html = `Frame: ${currentFrame + 1}/${data.length}<br>Note: ${frame.note || 'N/A'}<br>Thoughts: ${frame.thoughts || 'N/A'}<br>Ply: ${frame.env?.ply || 'N/A'}`;
+  if (frame.env?.fen) html += `<br>FEN: ${frame.env.fen}`;
+  if (frame.env?.recons_move) html += `<br>Recons Move: ${frame.env.recons_move}`;
+  if (frame.env?.opponents_move) html += `<br>Opponent Move: ${frame.env.opponents_move}`;
+  if (frame.env?.proposals) {
+    html += '<br>Proposals:';
+    frame.env.proposals.forEach(p => {
+      html += `<br>- ${p.move} (${p.phase}): ${p.reason}`;
+    });
+  }
+  document.getElementById('info').innerHTML = html;
+
+  const fenToShow = frame.env?.fen || updatePieces.lastFen;
+  const bindingPayload = frame.env?.binding || updatePieces.lastBinding;
+  if (fenToShow || bindingPayload) updatePieces(fenToShow, bindingPayload);
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  time += 0.08;
+  nodes.forEach(node => {
+    const mesh = nodeMeshes[node.id];
+    const light = nodeLights[node.id];
+    const baseIntensity = mesh.material.emissiveIntensity;
+    if (baseIntensity > 0.03) {
+      const pulse = Math.sin(time * 1.4) * 0.03 * baseIntensity;
+      mesh.material.emissiveIntensity = baseIntensity + pulse;
+      light.intensity = (baseIntensity + pulse) * 0.9;
+    }
+  });
+  edges.forEach(edge => {
+    edge.material.opacity = 0.4 + Math.sin(time * 0.4) * 0.03;
+  });
+  controls.update();
+  composer.render();
+}
+
+animate();
+updateScene();
+
+intervalId = setInterval(() => {
+  if (isPlaying) {
+    currentFrame = (currentFrame + 1) % data.length;
+    updateScene();
+  }
+}, 3000);
+
+const playPauseButton = document.createElement('button');
+playPauseButton.innerText = 'Pause';
+playPauseButton.onclick = () => {
+  isPlaying = !isPlaying;
+  playPauseButton.innerText = isPlaying ? 'Pause' : 'Play';
+};
+document.getElementById('controls').appendChild(playPauseButton);
+
+const nextButton = document.createElement('button');
+nextButton.innerText = 'Next';
+nextButton.onclick = () => {
+  currentFrame = (currentFrame + 1) % data.length;
+  updateScene();
+};
+document.getElementById('controls').appendChild(nextButton);
+
+const prevButton = document.createElement('button');
+prevButton.innerText = 'Prev';
+prevButton.onclick = () => {
+  currentFrame = (currentFrame - 1 + data.length) % data.length;
+  updateScene();
+};
+document.getElementById('controls').appendChild(prevButton);
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>

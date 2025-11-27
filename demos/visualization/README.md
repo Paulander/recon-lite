@@ -33,6 +33,12 @@ This directory contains multiple visualization approaches for ReCoN networks:
 - **Minimal UI**: Load JSON, play/pause, scrub speed
 - **Best for showcase**: Works offline (double-click)
 
+### 5. **Macrograph Viewer** (`macrograph_view.html`)
+**Purpose**: Inspect the top-level macrograph skeleton (`specs/macrograph_v0.json`)
+- **Static layout**: Displays control/phase/plan/feature hubs with edge labels
+- **Toggle spec**: Load default or supply a custom JSON spec
+- **Zero dependencies**: Works offline; ideal for design reviews
+
 
 ## 🚀 Quick Start Guide
 
@@ -76,6 +82,15 @@ uv run python demos/persistent/krk_persistent_demo.py \
 
 # Double-click to open
 neuro_mri/index.html
+```
+
+### Option 5: Macrograph Viewer (No Server)
+**Best for validating macrograph specs**
+```bash
+# Double-click to open
+macrograph_view.html
+
+# Loads ../../specs/macrograph_v0.json by default; drag-drop a custom spec if needed.
 ```
 
 ## 📋 Prerequisites

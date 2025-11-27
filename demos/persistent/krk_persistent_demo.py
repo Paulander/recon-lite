@@ -12,6 +12,7 @@ Runs a single ReCoN engine instance across the whole game.
 import argparse
 from collections import deque
 import chess
+import chess.engine
 import sys
 from pathlib import Path
 import random
@@ -61,6 +62,7 @@ from recon_lite_chess.predicates import (
     enemy_nearest_edge_info,
     would_cause_threefold,
 )
+from recon_lite.trace_db import EpisodeRecord, TickRecord, TraceDB, pack_fingerprint
 
 PHASE_SEQUENCE = ["phase0", "phase1", "phase2", "phase3", "phase4"]
 PHASE_SCRIPT_IDS = {
@@ -511,27 +513,29 @@ def _decision_cycle(engine: ReConEngine,
                     for e in engine.g.edges
                 ])
 
-            if viz_logger is not None:
-                viz_logger.snapshot(
-                    engine=engine,
-                    note=f"Persistent eval tick {ticks} (ply {plies+1})",
-                    env=view_env,
-                    thoughts="Persistent evaluation...",
-                    new_requests=list(now_req.keys()) if now_req else [],
-                    latents=latents_payload,
-                )
+        if viz_logger is not None:
+            viz_logger.snapshot(
+                engine=engine,
+                note=f"Persistent eval tick {ticks} (ply {plies+1})",
+                env=view_env,
+                thoughts="Persistent evaluation...",
+                new_requests=list(now_req.keys()) if now_req else [],
+                latents=latents_payload,
+                macro=env.get("macro_frame"),
+            )
 
-            if debug_logger is not None:
-                debug_payload = dict(view_env)
-                debug_payload.update(dbg)
-                debug_logger.snapshot(
-                    engine=engine,
-                    note=f"Persistent eval tick {ticks} (ply {plies+1})",
-                    env=debug_payload,
-                    thoughts="Persistent evaluation...",
-                    new_requests=list(now_req.keys()) if now_req else [],
-                    latents=latents_payload,
-                )
+        if debug_logger is not None:
+            debug_payload = dict(view_env)
+            debug_payload.update(dbg)
+            debug_logger.snapshot(
+                engine=engine,
+                note=f"Persistent eval tick {ticks} (ply {plies+1})",
+                env=debug_payload,
+                thoughts="Persistent evaluation...",
+                new_requests=list(now_req.keys()) if now_req else [],
+                latents=latents_payload,
+                macro=env.get("macro_frame"),
+            )
 
         proposed_move = env.get("chosen_move")
         if proposed_move:
@@ -597,6 +601,7 @@ def _decision_cycle(engine: ReConEngine,
                 thoughts="Collected proposals",
                 new_requests=[],
                 latents=env.get("phase_latents"),
+                macro=env.get("macro_frame"),
             )
         if debug_logger is not None and debug_logger is not viz_logger:
             debug_logger.snapshot(
@@ -606,6 +611,7 @@ def _decision_cycle(engine: ReConEngine,
                 thoughts="Collected proposals",
                 new_requests=[],
                 latents=env.get("phase_latents"),
+                macro=env.get("macro_frame"),
             )
     return selected, ordered, ticks
 
@@ -715,6 +721,8 @@ def play_persistent_game(initial_fen: str | None = None,
                          single_phase: Optional[str] = None,
                          seed: Optional[int] = None,
                          step_mode: bool = False,
+                         stockfish_path: Optional[str] = None,
+                         stockfish_depth: int = 2,
                          opponent_policy: Optional[Callable[[chess.Board], Optional[chess.Move]]] = None,
                          log_full_state: bool = False,
                          disable_leg2: bool = False,
@@ -722,7 +730,10 @@ def play_persistent_game(initial_fen: str | None = None,
                          phase_eta: float = DEFAULT_MICROTICK_ETA,
                          phase_temperature: float = 1.4,
                          latent_log_stride: int = DEFAULT_LATENT_LOG_STRIDE,
-                         use_blended_actuator: bool = False) -> dict:
+                         use_blended_actuator: bool = False,
+                         trace_db: Optional["TraceDB"] = None,
+                         trace_episode_id: Optional[str] = None,
+                         pack_paths: Optional[list[Path]] = None) -> dict:
     if split_logs:
         viz_logger = RunLogger()
         debug_logger = RunLogger()
@@ -746,7 +757,7 @@ def play_persistent_game(initial_fen: str | None = None,
 
     if viz_logger is not None:
         viz_logger.attach_graph([
-            {"src": e.src, "dst": e.dst, "type": e.ltype.name}
+            {"src": e.src, "dst": e.dst, "type": e.ltype.name, "weight": float(getattr(e, "w", 1.0) or 1.0)}
             for e in engine.g.edges
         ])
 
@@ -761,6 +772,7 @@ def play_persistent_game(initial_fen: str | None = None,
     our_color = board.turn
     plies = 0
     rook_lost = False
+    total_ticks = 0
     # Persistent env across plies to maintain fen history and pressure
 
     # Note: Obviously it's a "smarter" solution to just keep the whole board inside the nodes; it's trivial
@@ -775,6 +787,15 @@ def play_persistent_game(initial_fen: str | None = None,
     }
     phase_states = ensure_phase_states({})
     binding_table = BindingTable()
+    pack_meta = pack_fingerprint(pack_paths or [])
+    tick_records: list[TickRecord] = []
+    sf_engine = None
+    if stockfish_path:
+        try:
+            sf_engine = chess.engine.SimpleEngine.popen_uci(stockfish_path)
+        except Exception:
+            sf_engine = None
+
     env.update({
         "phase_states": phase_states,
         "phase_temperature": phase_temperature,
@@ -793,6 +814,8 @@ def play_persistent_game(initial_fen: str | None = None,
             env=env_payload,
             thoughts=thoughts,
             new_requests=new_requests or [],
+            latents=env.get("phase_latents"),
+            macro=env.get("macro_frame"),
         )
 
     while not board.is_game_over() and plies < max_plies:
@@ -830,6 +853,8 @@ def play_persistent_game(initial_fen: str | None = None,
                         env={"fen": board.fen(), "ply": plies, "opponents_move": opp_uci},
                         thoughts="Opponent move (persistent)",
                         new_requests=[],
+                        latents=env.get("phase_latents"),
+                        macro=env.get("macro_frame"),
                     )
             else:
                 # No legal opponent move; treat as finished
@@ -840,6 +865,7 @@ def play_persistent_game(initial_fen: str | None = None,
         stage = _update_stage(env, board)
         min_index = 3 if stage >= 1 else 0
         leg2_mode = (stage >= 1 and not single_phase and not disable_leg2)
+        ticks = 0
         if leg2_mode:
             selected, ordered = _leg2_choose(board, env)
             phase_tag = selected["phase"] if selected else PHASE_SEQUENCE[min_index]
@@ -857,12 +883,7 @@ def play_persistent_game(initial_fen: str | None = None,
                     note="Leg2 proposal",
                     env_payload={"fen": board.fen(), "ply": plies + 1, "leg2": True},
                     thoughts="Leg2 direct proposal",
-<<<<<<< HEAD
-                    include_engine=True,
-=======
-                    new_requests=[],
-                    latents=env.get("phase_latents"),
->>>>>>> expansion_to_ML
+                    include_engine=log_full_state,
                 )
             if debug_logger is not None and ordered:
                 debug_logger.snapshot(
@@ -898,6 +919,7 @@ def play_persistent_game(initial_fen: str | None = None,
             )
             move_record = selected
             move_uci = move_record["move"] if move_record else None
+        total_ticks += ticks
 
         if not move_uci:
             from recon_lite_chess.actuators import choose_any_safe_move
@@ -910,29 +932,12 @@ def play_persistent_game(initial_fen: str | None = None,
                     "reason": "safety fallback",
                 }
                 move_uci = fallback
-<<<<<<< HEAD
                 _log_snapshot(
                     note=f"FALLBACK applied: {fallback}",
                     env_payload={"fen": board.fen(), "ply": plies + 1, "fallback": True},
                     thoughts="No acceptable proposal; applying fallback",
                     include_engine=log_full_state,
                 )
-=======
-                if viz_logger is not None:
-                    if log_full_state:
-                        try:
-                            engine.step(env)
-                        except Exception:
-                            pass
-                    viz_logger.snapshot(
-                        engine=engine,
-                        note=f"FALLBACK applied: {fallback}",
-                        env={"fen": board.fen(), "ply": plies + 1, "fallback": True},
-                        thoughts="No acceptable proposal; applying fallback",
-                        new_requests=[],
-                        latents=env.get("phase_latents"),
-                    )
->>>>>>> expansion_to_ML
                 if debug_logger is not None and debug_logger is not viz_logger:
                     debug_logger.snapshot(
                         engine=None,
@@ -941,14 +946,50 @@ def play_persistent_game(initial_fen: str | None = None,
                         thoughts="No acceptable proposal; applying fallback",
                         new_requests=[],
                         latents=env.get("phase_latents"),
+                        macro=env.get("macro_frame"),
                     )
 
         if move_uci:
             try:
+                eval_before = None
+                eval_after = None
+                if sf_engine is not None:
+                    try:
+                        info_before = sf_engine.analyse(board, limit=chess.engine.Limit(depth=stockfish_depth))
+                        score_before = info_before.get("score") if info_before else None
+                        eval_before = float(score_before.white().score(mate_score=10000) or 0.0) if score_before else None
+                    except Exception:
+                        eval_before = None
                 board.push_uci(move_uci)
+                if sf_engine is not None:
+                    try:
+                        info_after = sf_engine.analyse(board, limit=chess.engine.Limit(depth=stockfish_depth))
+                        score_after = info_after.get("score") if info_after else None
+                        eval_after = float(score_after.white().score(mate_score=10000) or 0.0) if score_after else None
+                    except Exception:
+                        eval_after = None
             except Exception:
                 break
             plies += 1
+            tick_records.append(
+                TickRecord(
+                    tick_id=len(tick_records) + 1,
+                    phase_estimate=None,
+                    goal_vector=env.get("goal_vector"),
+                    board_fen=board.fen(),
+                    active_nodes=[nid for nid, node in engine.g.nodes.items() if node.state != NodeState.INACTIVE],
+                    fired_edges=[],
+                    action=move_uci,
+                    eval_before=eval_before,
+                    eval_after=eval_after,
+                    reward_tick=(round(eval_after - eval_before, 3) if eval_after is not None and eval_before is not None else None),
+                    meta={
+                        "ply": plies,
+                        "stage": env.get("stage"),
+                        "reason": move_record["reason"] if isinstance(move_record, dict) else None,
+                    },
+                )
+            )
             _force_phase_targets(board, env, phase_states, phase_temperature)
             env["binding"] = _update_binding_table(binding_table, board)
             env["phase_latents"] = activation_snapshot(phase_states)
@@ -960,34 +1001,18 @@ def play_persistent_game(initial_fen: str | None = None,
                     env={**move_record["validation"], "ply": plies},
                     thoughts="Recorded shrink metrics",
                     new_requests=[],
+                    macro=env.get("macro_frame"),
                 )
 
             if not any(p.piece_type == chess.ROOK and p.color == chess.WHITE for p in board.piece_map().values()):
                 rook_lost = True
 
-<<<<<<< HEAD
             _log_snapshot(
                 note=f"Applied move {plies}: {move_uci}",
                 env_payload={"fen": board.fen(), "ply": plies, "recons_move": move_uci},
                 thoughts=f"Applied {move_uci} (persistent)",
                 include_engine=log_full_state,
             )
-=======
-            if viz_logger is not None:
-                if log_full_state:
-                    try:
-                        engine.step(env)
-                    except Exception:
-                        pass
-                viz_logger.snapshot(
-                    engine=engine,
-                    note=f"Applied move {plies}: {move_uci}",
-                    env={"fen": board.fen(), "ply": plies, "recons_move": move_uci},
-                    thoughts=f"Applied {move_uci} (persistent)",
-                    new_requests=[],
-                    latents=env.get("phase_latents"),
-                )
->>>>>>> expansion_to_ML
             if debug_logger is not None and debug_logger is not viz_logger:
                 debug_logger.snapshot(
                     engine=None,
@@ -996,6 +1021,7 @@ def play_persistent_game(initial_fen: str | None = None,
                     thoughts=f"Applied {move_uci} (persistent)",
                     new_requests=[],
                     latents=env.get("phase_latents"),
+                    macro=env.get("macro_frame"),
                 )
 
             if board.is_game_over() or plies >= max_plies:
@@ -1004,59 +1030,6 @@ def play_persistent_game(initial_fen: str | None = None,
             if step_mode:
                 break
 
-<<<<<<< HEAD
-=======
-            if not skip_opponent and not board.is_game_over():
-                opp_move_obj = None
-                if opponent_policy is not None:
-                    candidate = opponent_policy(board.copy())
-                    if isinstance(candidate, chess.Move):
-                        opp_move_obj = candidate
-                    elif isinstance(candidate, str):
-                        try:
-                            opp_move_obj = chess.Move.from_uci(candidate)
-                        except ValueError:
-                            opp_move_obj = None
-                if opp_move_obj is None:
-                    opp_candidates = list(board.legal_moves)
-                    if opp_candidates:
-                        opp_move_obj = random.choice(opp_candidates)
-                if opp_move_obj is not None and opp_move_obj in board.legal_moves:
-                    board.push(opp_move_obj)
-                    opp_uci = opp_move_obj.uci()
-                    _force_phase_targets(board, env, phase_states, phase_temperature)
-                    env["binding"] = _update_binding_table(binding_table, board)
-                    env["phase_latents"] = activation_snapshot(phase_states)
-                    if viz_logger is not None:
-                        if log_full_state:
-                            try:
-                                engine.step(env)
-                            except Exception:
-                                pass
-                        viz_logger.snapshot(
-                            engine=engine,
-                            note=f"Opponent ply {plies}: {opp_uci}",
-                            env={"fen": board.fen(), "ply": plies, "opponents_move": opp_uci},
-                            thoughts="Opponent move (persistent)",
-                            new_requests=[],
-                            latents=env.get("phase_latents"),
-                        )
-                    if debug_logger is not None and debug_logger is not viz_logger:
-                        debug_logger.snapshot(
-                            engine=None,
-                            note=f"Opponent ply {plies}: {opp_uci}",
-                            env={"fen": board.fen(), "ply": plies, "opponents_move": opp_uci},
-                            thoughts="Opponent move (persistent)",
-                            new_requests=[],
-                            latents=env.get("phase_latents"),
-                        )
-            if board.is_game_over() or plies >= max_plies:
-                break
-
-            if step_mode:
-                break
-
->>>>>>> expansion_to_ML
     # Reset only terminals (evaluators/actuators) and preserve confirmed phase states
     # This was overly aggressive earlier and ruined the whole graph: 
     # Per ReCoN engine (_request_child_if_ready): A node (e.g., PHASE1) is only REQUESTED if all POR predecessors (e.g., PHASE0) are TRUE/CONFIRMED (_all_por_predecessors_true
@@ -1087,6 +1060,22 @@ def play_persistent_game(initial_fen: str | None = None,
         "rook_lost": rook_lost,
         "final_fen": board.fen(),
     }
+
+    if trace_db is not None:
+        ep_id = trace_episode_id or f"krk-{seed or 0}"
+        ep = EpisodeRecord(
+            episode_id=ep_id,
+            result=board.result() if board.is_game_over() else None,
+            ticks=tick_records,
+            pack_meta=pack_meta,
+            notes={"plies": plies, "ticks": total_ticks},
+        )
+        trace_db.add_episode(ep)
+    if sf_engine is not None:
+        try:
+            sf_engine.quit()
+        except Exception:
+            pass
 
     out_dir = Path("demos/outputs/persistent")
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -1193,6 +1182,10 @@ def main():
     parser.add_argument("--phase-temperature", type=float, default=1.4, help="Softmax temperature for phase latents")
     parser.add_argument("--latent-log-stride", type=int, default=DEFAULT_LATENT_LOG_STRIDE, help="Log latents/bindings every N ticks")
     parser.add_argument("--use-blended-actuator", action="store_true", help="Enable phase-weighted blended move chooser")
+    parser.add_argument("--engine", type=str, default=None, help="Path to Stockfish for eval/reward logging (optional)")
+    parser.add_argument("--depth", type=int, default=2, help="Stockfish depth when scoring moves")
+    parser.add_argument("--trace-out", type=Path, default=None, help="Optional JSONL trace output (EpisodeRecord/TickRecord).")
+    parser.add_argument("--pack", action="append", type=Path, default=[], help="Weight pack path(s) to fingerprint in traces.")
     # Single graph; demo uses the shared KRK network
     args = parser.parse_args()
 
@@ -1214,9 +1207,12 @@ def main():
             phase_temperature=args.phase_temperature,
             latent_log_stride=args.latent_log_stride,
             use_blended_actuator=args.use_blended_actuator,
+            stockfish_path=args.engine,
+            stockfish_depth=args.depth,
         )
     else:
         start_fen = args.fen if args.fen else "4k3/6K1/8/8/8/8/R7/8 w - - 0 1"
+        trace_db = TraceDB(args.trace_out) if args.trace_out else None
         res = play_persistent_game(
             initial_fen=start_fen,
             max_plies=args.max_plies,
@@ -1234,7 +1230,14 @@ def main():
             phase_temperature=args.phase_temperature,
             latent_log_stride=args.latent_log_stride,
             use_blended_actuator=args.use_blended_actuator,
+            trace_db=trace_db,
+            trace_episode_id="krk-cli-run",
+            pack_paths=args.pack,
+            stockfish_path=args.engine,
+            stockfish_depth=args.depth,
         )
+        if trace_db:
+            trace_db.flush()
         print(res)
 
 

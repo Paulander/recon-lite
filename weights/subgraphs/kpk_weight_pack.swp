@@ -1,0 +1,8 @@
+{
+  "version": "0.1",
+  "move_selector": {
+    "push_bias": 0.6,
+    "king_distance_weight": 0.25,
+    "safety_weight": 0.15
+  }
+}

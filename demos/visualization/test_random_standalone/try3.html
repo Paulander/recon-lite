@@ -1,0 +1,658 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReCoN KRK Endgame Visualization</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; color: #fff; font-family: Arial, sans-serif; }
+        .container { position: relative; margin: 0 auto; }
+        .network { height: 65%; }
+        .board { height: 35%; }
+        .overlay { position: absolute; bottom: 35%; left: 0; width: 100%; text-align: center; z-index: 10; padding: 10px; background: rgba(0,0,0,0.5); }
+        .controls { position: absolute; bottom: 0; left: 0; width: 100%; z-index: 10; background: rgba(0,0,0,0.5); padding: 10px; box-sizing: border-box; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        #timeline { flex: 1; }
+        #legend { font-size: 12px; text-align: left; }
+        .board-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 12px;
+        }
+        .board-chip {
+            position: absolute;
+            padding: 2px 6px;
+            border-radius: 12px;
+            color: #fff;
+            font-weight: 600;
+            background: rgba(0, 0, 0, 0.75);
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="network"></div>
+        <div class="board"></div>
+        <div class="overlay"><div id="info"></div></div>
+        <div class="controls">
+            <button id="playpause">Play</button>
+            <button id="prev">Prev</button>
+            <button id="next">Next</button>
+            <select id="speed">
+                <option value="1">1x</option>
+                <option value="2">2x</option>
+                <option value="4">4x</option>
+            </select>
+            <input type="range" id="timeline" min="0" value="0">
+            <div id="legend"></div>
+    </div>
+    </div>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+        import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+
+        let data = [];
+
+        // Load visualization data from file
+        async function loadData() {
+            try {
+                const response = await fetch('../outputs/persistent/viz_binding_demo_viz.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const loadedData = await response.json();
+                data = loadedData;
+                initializeVisualization();
+            } catch (error) {
+                console.error('Failed to load visualization data:', error);
+                document.getElementById('info').innerHTML = `Error loading data: ${error.message}. Using fallback data.`;
+                initializeVisualization();
+            }
+        }
+
+        function initializeVisualization() {
+        const numFrames = data.length;
+        let currentFrame = 0;
+        let playing = false;
+        let speed = 1;
+        const frameDuration = 1000; // ms per frame at 1x
+
+        // Network scene setup
+        const networkContainer = document.querySelector('.network');
+        const networkScene = new THREE.Scene();
+        const networkCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+        networkCamera.position.z = 20;
+        const networkRenderer = new THREE.WebGLRenderer({ antialias: true });
+        networkRenderer.setClearColor(0x000000);
+        networkContainer.appendChild(networkRenderer.domElement);
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        networkScene.add(ambientLight);
+        const pointLight = new THREE.PointLight(0xffffff, 1);
+        pointLight.position.set(10, 10, 10);
+        networkScene.add(pointLight);
+
+        const controls = new OrbitControls(networkCamera, networkRenderer.domElement);
+        controls.enablePan = false;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.5;
+
+        // Node definitions
+        const nodeRadius = 1;
+        const glowMaxScale = 3;
+        const phases = ['phase0_establish_cut', 'phase1_drive_to_edge', 'phase2_shrink_box', 'phase3_take_opposition', 'phase4_deliver_mate'];
+        const branchColors = {
+            krk_root: new THREE.Color('#CBD5E1'),
+            phase0_establish_cut: new THREE.Color('#34D399'),
+            phase1_drive_to_edge: new THREE.Color('#38BDF8'),
+            phase2_shrink_box: new THREE.Color('#60A5FA'),
+            phase3_take_opposition: new THREE.Color('#FBBF24'),
+            phase4_deliver_mate: new THREE.Color('#10B981')
+        };
+        const stateColors = {
+            'INACTIVE': 0xCBD5E1,
+            'REQUESTED': 0x38BDF8,
+            'ACTIVE': 0x60A5FA,
+            'SUPPRESSED': 0x94A3B8,
+            'WAITING': 0xFBBF24,
+            'TRUE': 0x34D399,
+            'CONFIRMED': 0x10B981,
+            'FAILED': 0xF87171
+        };
+        const nodePositions = {
+            krk_root: new THREE.Vector3(0, 10, 0),
+            phase0_establish_cut: new THREE.Vector3(-8, 0, 0),
+            phase1_drive_to_edge: new THREE.Vector3(-4, 0, 0),
+            phase2_shrink_box: new THREE.Vector3(0, 0, 0),
+            phase3_take_opposition: new THREE.Vector3(4, 0, 0),
+            phase4_deliver_mate: new THREE.Vector3(8, 0, 0)
+        };
+        const nodeMeta = {};
+        const stateHistory = {};
+        const edgeLines = {};
+
+        function createNode(id) {
+            const defaultColor = branchColors[id] ? branchColors[id].clone() : new THREE.Color('#94A3B8');
+            const group = new THREE.Group();
+            group.position.copy(nodePositions[id]);
+
+            const geometry = new THREE.SphereGeometry(nodeRadius, 48, 48);
+            const material = new THREE.MeshStandardMaterial({
+                color: defaultColor,
+                emissive: defaultColor.clone().multiplyScalar(0.25),
+                metalness: 0.65,
+                roughness: 0.25,
+                transparent: true,
+                opacity: 0.95
+            });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            mesh.userData.id = id;
+            group.add(mesh);
+
+            const glowGeometry = new THREE.SphereGeometry(nodeRadius * 1.05, 32, 32);
+            const glowMaterial = new THREE.MeshBasicMaterial({
+                color: defaultColor,
+                transparent: true,
+                opacity: 0.0,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false
+            });
+            const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
+            group.add(glowMesh);
+            glowMesh.userData.baseScale = 1; // Store base scale for pulsing
+
+            const labelHolder = new THREE.Group();
+            labelHolder.position.set(0, -1.4, 0);
+            group.add(labelHolder);
+
+            networkScene.add(group);
+            nodeMeta[id] = {
+                group,
+                mesh,
+                glow: glowMesh,
+                defaultColor,
+                labelHolder,
+                label: null
+            };
+        }
+
+        Object.keys(nodePositions).forEach(createNode);
+
+        phases.forEach(phase => {
+            const points = [nodePositions.krk_root, nodePositions[phase]];
+            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+            const material = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.3 });
+            const line = new THREE.Line(geometry, material);
+            networkScene.add(line);
+            edgeLines[phase] = line;
+        });
+
+        // Hover tooltip
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        let intersected = null;
+        const tooltip = document.createElement('div');
+        tooltip.style.position = 'absolute';
+        tooltip.style.background = 'rgba(0,0,0,0.7)';
+        tooltip.style.padding = '5px';
+        tooltip.style.pointerEvents = 'none';
+        tooltip.style.display = 'none';
+        tooltip.style.color = '#fff';
+        tooltip.style.borderRadius = '4px';
+        document.body.appendChild(tooltip);
+
+        networkContainer.addEventListener('mousemove', (event) => {
+            const rect = networkRenderer.domElement.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+            raycaster.setFromCamera(mouse, networkCamera);
+            const meshes = Object.values(nodeMeta).map(meta => meta.mesh);
+            const intersects = raycaster.intersectObjects(meshes);
+            if (intersects.length > 0) {
+                const obj = intersects[0].object;
+                const key = obj.userData.id;
+                if (key) {
+                    const latent = (data[currentFrame].latents && data[currentFrame].latents[key]) || 0;
+                    const state = stateHistory[key] || 'INACTIVE';
+                    tooltip.innerText = `${key}\nState: ${state}\nLatent: ${latent.toFixed(3)}`;
+                    tooltip.style.left = `${event.clientX + 10}px`;
+                    tooltip.style.top = `${event.clientY + 10}px`;
+                    tooltip.style.display = 'block';
+                    intersected = obj;
+                }
+            } else {
+                tooltip.style.display = 'none';
+                intersected = null;
+            }
+        });
+
+        // Board scene setup
+        const boardContainer = document.querySelector('.board');
+        const boardScene = new THREE.Scene();
+        const boardCamera = new THREE.OrthographicCamera(-4, 4, 4, -4, 0.1, 100); // initial, updated in resize
+        boardCamera.position.set(0, 0, 10);
+        boardCamera.lookAt(0, 0, 0);
+        const boardRenderer = new THREE.WebGLRenderer({ antialias: true });
+        boardRenderer.setClearColor(0x111111);
+        boardContainer.appendChild(boardRenderer.domElement);
+
+        const boardOverlay = document.createElement('div');
+        boardOverlay.className = 'board-overlay';
+        boardContainer.appendChild(boardOverlay);
+
+        boardScene.add(new THREE.AmbientLight(0xffffff, 0.8));
+        const boardPointLight = new THREE.PointLight(0xffffff, 1);
+        boardPointLight.position.set(5, 5, 5);
+        boardScene.add(boardPointLight);
+
+        const squareSize = 1;
+        const boardGroup = new THREE.Group();
+        for (let i = 0; i < 8; i++) {
+            for (let j = 0; j < 8; j++) {
+                const color = (i + j) % 2 === 0 ? 0xaaaaaa : 0x444444;
+                const material = new THREE.MeshLambertMaterial({ color, emissive: color, emissiveIntensity: 0.2 });
+                const geometry = new THREE.BoxGeometry(squareSize, squareSize, 0.1);
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.position.set(i - 3.5, j - 3.5, 0);
+                boardGroup.add(mesh);
+            }
+        }
+        boardScene.add(boardGroup);
+
+        let font;
+        const fontLoader = new FontLoader();
+        fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', (f) => {
+            font = f;
+            refreshNodeLabels();
+            updateFrame();
+        });
+
+        const pieceGlyphs = {
+            'K': '♔',
+            'R': '♖',
+            'k': '♚'
+        };
+        let currentPieces = {};
+
+        function updateBoard(fen) {
+            if (!fen || !font) return;
+            Object.values(currentPieces).forEach(mesh => boardScene.remove(mesh));
+            currentPieces = {};
+            const rows = fen.split(' ')[0].split('/');
+            for (let rank = 0; rank < 8; rank++) {
+                let file = 0;
+                for (let char of rows[rank]) {
+                    if (!isNaN(parseInt(char))) {
+                        file += parseInt(char);
+                        continue;
+                    }
+                    const key = `${file}${rank}`;
+                    const texture = pieceTextures[char];
+                    if (texture) {
+                        const geometry = new THREE.PlaneGeometry(0.8, 0.8);
+                        const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
+            const mesh = new THREE.Mesh(geometry, material);
+                        mesh.position.set(file - 3.5, (7 - rank) - 3.5, 0.2);
+                        boardScene.add(mesh);
+                        currentPieces[key] = mesh;
+                    } else if (pieceGlyphs[char]) {
+                        const glyph = pieceGlyphs[char];
+                        const geometry = new TextGeometry(glyph, { font, size: 0.9, height: 0.05 });
+                        const material = new THREE.MeshStandardMaterial({
+                            color: char === char.toUpperCase() ? 0xffffff : 0x111111,
+                            metalness: 0.4,
+                            roughness: 0.3,
+                            emissive: char === char.toUpperCase() ? new THREE.Color(0xffffff).multiplyScalar(0.1) : new THREE.Color(0x000000)
+                        });
+                        const mesh = new THREE.Mesh(geometry, material);
+                        mesh.position.set(file - 3.5, (7 - rank) - 3.5, 0.2);
+                        boardScene.add(mesh);
+                        currentPieces[key] = mesh;
+                    }
+                    file++;
+                }
+            }
+        }
+
+        const textureLoader = new THREE.TextureLoader();
+        const pieceTexturePaths = {
+            'K': 'assets/pieces/white_king.png',
+            'R': 'assets/pieces/white_rook.png',
+            'k': 'assets/pieces/black_king.png'
+        };
+        const pieceTextures = {};
+        Object.entries(pieceTexturePaths).forEach(([key, path]) => {
+            textureLoader.load(path, tex => pieceTextures[key] = tex, undefined, () => {});
+        });
+
+        const bindingSprites = [];
+        const namespaceColors = {};
+        const namespacePalette = [0x0ea5e9, 0xf97316, 0x22c55e, 0xa855f7, 0xef4444, 0x14b8a6];
+
+        function colorForNamespace(ns) {
+            if (!ns) return 0x64748b;
+            if (!namespaceColors[ns]) {
+                const idx = Object.keys(namespaceColors).length % namespacePalette.length;
+                namespaceColors[ns] = namespacePalette[idx];
+            }
+            return namespaceColors[ns];
+        }
+
+        function createChipSprite(label, colorHex) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = `#${colorHex.toString(16).padStart(6, '0')}`;
+            ctx.globalAlpha = 0.85;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#ffffff';
+            ctx.globalAlpha = 1;
+            ctx.font = 'bold 64px "Segoe UI", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(label, canvas.width / 2, canvas.height / 2);
+            const texture = new THREE.CanvasTexture(canvas);
+            const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthWrite: false });
+            const sprite = new THREE.Sprite(material);
+            sprite.scale.set(1.0, 0.4, 1);
+            return sprite;
+        }
+
+        let lastBindingPayload = null;
+
+        function updateBindings(bindingPayload) {
+            if (bindingPayload && typeof bindingPayload === 'object') {
+                lastBindingPayload = bindingPayload;
+            } else if (lastBindingPayload) {
+                bindingPayload = lastBindingPayload;
+            } else {
+                boardOverlay.innerHTML = '';
+                return;
+            }
+
+            boardOverlay.innerHTML = '';
+            const stackCount = {};
+            Object.entries(bindingPayload).forEach(([namespace, instances]) => {
+                const colorInt = colorForNamespace(namespace);
+                const color = `#${colorInt.toString(16).padStart(6, '0')}`;
+                (instances || []).forEach(instance => {
+                    const feature = instance?.feature || namespace;
+                    const abbrev = (feature.match(/[A-Za-z0-9]+/)?.[0] || 'TAG').slice(0, 4).toUpperCase();
+                    (instance?.items || []).forEach(item => {
+                        if (typeof item !== 'string' || !item.startsWith('square:')) return;
+                        const square = item.split(':')[1].toLowerCase();
+                        const file = square.charCodeAt(0) - 97;
+                        const rank = parseInt(square[1], 10) - 1;
+                        if (file < 0 || file > 7 || rank < 0 || rank > 7) return;
+                        const key = `${file}-${rank}`;
+                        const offset = (stackCount[key] || 0) * 18;
+                        stackCount[key] = (stackCount[key] || 0) + 1;
+
+                        const chip = document.createElement('div');
+                        chip.className = 'board-chip';
+                        chip.style.backgroundColor = color;
+                        chip.textContent = abbrev;
+                        const left = ((file + 0.5) / 8) * 100;
+                        const top = ((7 - rank + 0.5) / 8) * 100;
+                        chip.style.left = `${left}%`;
+                        chip.style.top = `calc(${top}% - ${offset}px)`;
+                        boardOverlay.appendChild(chip);
+                    });
+                });
+            });
+        }
+
+        const boardMoveGroup = new THREE.Group();
+        boardScene.add(boardMoveGroup);
+        const boardMoveLabels = [];
+
+        const networkMoveGroup = new THREE.Group();
+        networkScene.add(networkMoveGroup);
+        const networkMoveLabels = [];
+
+        function addLabel(text, color = 0x00ff00) {
+            if (!font) return;
+            const geometry = new TextGeometry(text, { font, size: 0.45, height: 0.04 });
+            geometry.computeBoundingBox();
+            const width = geometry.boundingBox.max.x - geometry.boundingBox.min.x;
+            const material = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 1 });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.position.set(-width / 2, 3.2, 0.6);
+            mesh.userData.ttl = 1500;
+            boardMoveGroup.add(mesh);
+            boardMoveLabels.push(mesh);
+        }
+
+        function showNetworkMove(nodeId, text, color = 0xffffff) {
+            if (!font) return;
+            const meta = nodeMeta[nodeId];
+            if (!meta) return;
+            const geometry = new TextGeometry(text, { font, size: 0.55, height: 0.04 });
+            geometry.computeBoundingBox();
+            const width = geometry.boundingBox.max.x - geometry.boundingBox.min.x;
+            const material = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 1 });
+            const mesh = new THREE.Mesh(geometry, material);
+            const anchor = meta.group.position.clone();
+            mesh.position.copy(anchor.add(new THREE.Vector3(-width / 2, 2.0, 0)));
+            mesh.userData.ttl = 1500;
+            networkMoveGroup.add(mesh);
+            networkMoveLabels.push(mesh);
+        }
+
+        function refreshNodeLabels() {
+            if (!font) return;
+            Object.entries(nodeMeta).forEach(([id, meta]) => {
+                while (meta.labelHolder.children.length) {
+                    meta.labelHolder.remove(meta.labelHolder.children[0]);
+                }
+                const shortName = id.replace('phase', 'P').replace(/_/g, ' ');
+                const geometry = new TextGeometry(shortName, { font, size: 0.45, height: 0.03 });
+                geometry.computeBoundingBox();
+                const width = geometry.boundingBox.max.x - geometry.boundingBox.min.x;
+                const material = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 });
+                const textMesh = new THREE.Mesh(geometry, material);
+                textMesh.position.set(-width / 2, 0, 0);
+                meta.labelHolder.add(textMesh);
+                meta.label = textMesh;
+            });
+        }
+
+        // Controls and overlay
+        const infoDiv = document.getElementById('info');
+        const playpause = document.getElementById('playpause');
+        playpause.addEventListener('click', () => {
+            playing = !playing;
+            playpause.textContent = playing ? 'Pause' : 'Play';
+        });
+        document.getElementById('prev').addEventListener('click', () => {
+            currentFrame = Math.max(0, currentFrame - 1);
+            updateTimeline();
+            updateFrame();
+        });
+        document.getElementById('next').addEventListener('click', () => {
+            currentFrame = Math.min(numFrames - 1, currentFrame + 1);
+            updateTimeline();
+            updateFrame();
+        });
+        document.getElementById('speed').addEventListener('change', (e) => speed = parseInt(e.target.value));
+        const timeline = document.getElementById('timeline');
+        timeline.max = numFrames - 1;
+        timeline.addEventListener('input', (e) => {
+            currentFrame = parseInt(e.target.value);
+            updateFrame();
+        });
+        function updateTimeline() {
+            timeline.value = currentFrame;
+        }
+
+        const legendDiv = document.getElementById('legend');
+        legendDiv.innerHTML = 'INACTIVE #CBD5E1 | REQUESTED #38BDF8 | ACTIVE #60A5FA | SUPPRESSED #94A3B8 | WAITING #FBBF24 | TRUE #34D399 | CONFIRMED #10B981 | FAILED #F87171';
+
+        function updateFrame() {
+            const frame = data[currentFrame];
+
+            // Update node colours and glow
+            for (const [id, meta] of Object.entries(nodeMeta)) {
+                if (frame.nodes && frame.nodes[id]) {
+                    stateHistory[id] = frame.nodes[id];
+                }
+                const state = stateHistory[id];
+                const colorHex = state && stateColors[state] ? stateColors[state] : meta.defaultColor.getHex();
+                const color = new THREE.Color(colorHex);
+                meta.mesh.material.color.copy(color);
+                meta.mesh.material.emissive.copy(color.clone().multiplyScalar(0.3));
+                const latent = (frame.latents && frame.latents[id]) || 0;
+                const glowScale = THREE.MathUtils.lerp(1, glowMaxScale, latent);
+                meta.glow.userData.baseScale = glowScale;
+                meta.glow.scale.setScalar(glowScale);
+                meta.glow.material.opacity = latent * 0.35;
+            }
+
+            // Highlight edges for new requests
+            if (frame.new_requests) {
+                frame.new_requests.forEach(id => {
+                    if (edgeLines[id]) {
+                        edgeLines[id].material.opacity = 0.8;
+                        setTimeout(() => edgeLines[id].material.opacity = 0.3, 250);
+                    }
+                });
+            }
+
+            // Update board and bindings
+            if (frame.env && frame.env.fen) updateBoard(frame.env.fen);
+            updateBindings(frame.env?.binding);
+
+            // Move labels (board + network)
+            if (frame.env?.recons_move) {
+                addLabel(`ReCoN → ${frame.env.recons_move}`, 0x00ff88);
+                showNetworkMove('phase4_deliver_mate', `ReCoN → ${frame.env.recons_move}`, 0x00ff88);
+            }
+            if (frame.env?.opponents_move) {
+                addLabel(`Opponent → ${frame.env.opponents_move}`, 0xff6688);
+                showNetworkMove('krk_root', `Opponent → ${frame.env.opponents_move}`, 0xff6688);
+            }
+
+            // Info overlay
+            let info = `Tick: ${currentFrame} | Note: ${frame.note || ''} | Thoughts: ${frame.thoughts || ''}`;
+            if (frame.env?.ply) info += ` | Ply: ${frame.env.ply}`;
+            if (frame.env?.proposals) {
+                info += '<br>Proposals:';
+                frame.env.proposals.forEach(prop => {
+                    info += `<br>- ${prop.move} (${prop.phase}, rank ${prop.rank}): ${prop.reason}`;
+                });
+            }
+            infoDiv.innerHTML = info;
+        }
+
+        // Animation loop
+        let previousTime = 0;
+        let lastStepTime = 0;
+        function animate(time) {
+            requestAnimationFrame(animate);
+            const delta = time - previousTime;
+            previousTime = time;
+
+            controls.update();
+
+            const pulse = 1 + 0.05 * Math.sin(time * 0.002);
+            Object.values(nodeMeta).forEach(meta => {
+                const base = meta.glow.userData.baseScale || 1;
+                meta.glow.scale.setScalar(base * pulse);
+            });
+
+            for (let i = networkMoveLabels.length - 1; i >= 0; i--) {
+                const label = networkMoveLabels[i];
+                label.userData.ttl -= delta;
+                label.position.y += delta * 0.0015;
+                label.material.opacity = Math.max(0, label.userData.ttl / 1500);
+                if (label.userData.ttl <= 0) {
+                    networkMoveGroup.remove(label);
+                    networkMoveLabels.splice(i, 1);
+                }
+            }
+
+            for (let i = boardMoveLabels.length - 1; i >= 0; i--) {
+                const label = boardMoveLabels[i];
+                label.userData.ttl -= delta;
+                label.position.y += delta * 0.0015;
+                label.material.opacity = Math.max(0, label.userData.ttl / 1500);
+                if (label.userData.ttl <= 0) {
+                    boardMoveGroup.remove(label);
+                    boardMoveLabels.splice(i, 1);
+                }
+            }
+
+            if (playing && (time - lastStepTime > frameDuration / speed)) {
+                currentFrame = (currentFrame + 1) % numFrames;
+                updateTimeline();
+                    updateFrame();
+                lastStepTime = time;
+            }
+
+            networkRenderer.render(networkScene, networkCamera);
+            boardRenderer.render(boardScene, boardCamera);
+        }
+        animate(0);
+
+        // Resize handler
+        window.addEventListener('resize', resize);
+        function resize() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const targetAspect = 9 / 16;
+            let newWidth = width;
+            let newHeight = height;
+            if (width / height > targetAspect) {
+                newWidth = height * targetAspect;
+            } else {
+                newHeight = width / targetAspect;
+            }
+            const container = document.querySelector('.container');
+            container.style.width = `${newWidth}px`;
+            container.style.height = `${newHeight}px`;
+            container.style.left = `${(width - newWidth) / 2}px`;
+            container.style.top = `${(height - newHeight) / 2}px`;
+
+            const netHeight = newHeight * 0.65;
+            networkCamera.aspect = newWidth / netHeight;
+            networkCamera.updateProjectionMatrix();
+            networkRenderer.setSize(newWidth, netHeight);
+
+            const boardHeight = newHeight * 0.35;
+            const boardAspect = newWidth / boardHeight;
+            boardCamera.left = -4 * boardAspect;
+            boardCamera.right = 4 * boardAspect;
+            boardCamera.top = 4;
+            boardCamera.bottom = -4;
+            boardCamera.updateProjectionMatrix();
+            boardRenderer.setSize(newWidth, boardHeight);
+        }
+        resize();
+        }
+
+        // Start loading data
+        loadData();
+    </script>
+</body>
+</html>

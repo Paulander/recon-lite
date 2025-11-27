@@ -1,136 +1,196 @@
-# Request Confirmation Networks – Implementation & Demos
+# ReCoN‑lite (Request–Confirmation Network) — Chess Sandbox
 
-## Intro/Background
-This repo started as my one-week exploration of Request Confirmation Networks (ReCoNs), a cognitive architecture proposed for hierarchical, sequential control and feature detection. I have kept working on it and the current goal is to have a Chess playing demo 
-that can play a full game of chess at at least 1900 ELO (which falls short of top chess engines, but is better than general LLMs such as GPT-5 or Grok 4). One core design philosophy is that the internal state of the graph should always be visibile/accesible.
+ReCoN‑lite is a small, dependency‑light Python implementation of a **Request–Confirmation Network (ReCoN)** plus a set of chess‑focused demos (KRK/KPK endgames, macrograph, visualization, and training/eval tooling). The goal is to explore ReCoNs as an **orchestrator** for scripts, heuristics, and learned components — not as a monolithic learner — while keeping the internal graph state explainable and easy to visualize.
 
-## What I built
+Current medium‑term target: a ReCoN‑driven chess player that can play full games in the ~1900 Elo range, with a clear story for *why* it plays the moves it plays.
 
-Core Engine: a modular ReCoN class with node types, message passing, and logging — able to run arbitrary ReCoN graphs.
+---
 
-Abstract Demo: a “toy” ReCoN animation that shows requests, confirmations, POR/RET gating and the message dynamics.
+## 1. What’s in this repo
 
-Chess Endgame Demo: a persistent King + Rook vs King solver built as a ReCoN graph, now handling the full leg‑2 choreography: keep the defender boxed, force zugzwang, and deliver the mate without re-entering shrink phases. Obviously this is nowhere near as strong as modern chess engines, but it demonstrates how ReCoN orchestrates sequential scripts. Plugging in Stockfish would simply mean swapping the heuristic actuator subtree for one node that queries the engine while the rest of the network keeps handling state and terminals—one of ReCoN’s strengths.
+- **Core ReCoN engine** (`src/recon_lite`)
+  - Graph, node and edge types, request→confirm executor, POR/RET sequencing.
+  - Continuous activations + micro‑ticks, binding manager, and a lightweight `TraceDB`.
+- **Chess integration** (`src/recon_lite_chess`)
+  - KRK (King + Rook vs King) and KPK (King + Pawn vs King) endgame scripts.
+  - Helpers for evaluation, feature extraction, and phase/strategy logic.
+- **Demos & experiments** (`demos/`)
+  - One‑shot KRK demos, persistent KRK loop, macrograph chess episodes.
+  - Batch/block evaluation, trace generation, and visualization data.
+- **Docs** (`docs/`)
+  - How‑to run/train/evaluate, trace schema, and visualization/spec notes.
+- **Roadmaps & architecture**
+  - `ARCHITECTURE.md` — overall ReCoN‑lite design and decisions.
+  - `updates_continuous.md` — continuous activations, micro‑ticks, binding, and the KRK persistent demo.
+  - `recon_roadmap_m2.md` — M2.x plan: instrumentation, macrograph, script‑weight learning.
+  - `recon_roadmap_m3_fast_plasticity.md` — M3 plan: fast plasticity & bandit control (within‑game).
 
-## What I learned
+---
 
-ReCoN is an orchestrator, not a learner. It’s a representational / control fabric, not a monolithic ML model. Nodes can be heuristics, detectors, or neural nets; ReCoN provides the sequencing and decision layer. I love abstractions and ReCoN's strength in my view is that it *is* very abstract; the nodes can be anything (as long as they adhere to the rules of the interface: states and connections).
+## 2. Project status (high‑level)
 
-### Strengths:
+- **M1: Continuous activations & binding (KRK)**
+  - Each node has a continuous activation state; micro‑ticks settle activations before each discrete tick.
+  - A `BindingTable` tracks which pieces/squares are “claimed” by which features, per namespace.
+  - Visualization overlays show activations and bindings during KRK games.
 
-- Compositional:  mix symbolic and learned nodes.
+- **M2.x: Macrograph, KPK/KRK subgraphs, TraceDB**
+  - Macrograph with endgame subgraphs (KRK, KPK, rook techniques), configured via Subgraph Weight Packs (SWPs) in `weights/`.
+  - `TraceDB` captures `TickRecord`/`EpisodeRecord` with evals, rewards, and fired edges for analysis and training.
+  - Batch/block runners generate traces and visualizations for offline inspection.
 
-- Transparent:  each node has local state, making the reasoning traceable.
+- **M3 (planned, design complete)**
+  - Fast, within‑game plasticity on a subset of edge weights using `reward_tick`.
+  - Bandit‑style control for choosing among alternative scripts.
+  - Goal‑aware modulation of learning rate and exploration.
+  - See `recon_roadmap_m3_fast_plasticity.md` for the detailed plan.
 
-- Neuro-inspired: resembles how brains coordinate distributed modules.
+---
 
-### Scope for growth:
+## 3. Install & setup (uv)
 
-Plug in vision nodes (CNNs, image parsers) for board recognition.
+Use `uv` for environment and dependencies:
 
-Replace heuristics with a chess engine or learned policies.
-
-Explore dynamic/learned graph structure beyond hand-crafted scripts.
-
-## Outlook
-
-ReCoNs strike me as a step toward more brain-like AI architectures: not end-to-end gradient blobs, but modular systems where perception, action, and reasoning interlock through structured control. Even in this small project, I’ve seen how they can serve as an “executive” layer above raw learning; a promising direction for building AI systems that are both more interpretable and more general.
-
-
-Specifically for this project I'd want to use a SOTA chess engine (as mentioned above) instead of my heuristic approach. Furthermore I would like to add terminal nodes (sensors) that could encode different representations of chessboards (API to websites, image recognnition of computer 2D-chessboards or photos or even live video of a real chess board; making it possible to play vs human opponents via a robot). This can quite easily be added by adding the terminal nodes (implemented reasonably e.g. via CNNs or similar) and maybe a selector script node as a parent that automatically identifies which sensor is active. 
-
-My original plan to build (which I didn't quite have time to implement - I partly blame a mancold, but the main issue 
-was probably me being overly optimistic and wasting time on trying to improve heuristics which was really just a side track; even though it's interesting from a ReCoN sense):
-- Implement "empty" ReCoN (the base class) and visualize dummy (done)
-- Solve King + Rook vs King (ROOT: Checkmate)
-- Solve King + Pawn vs King (ROOT: Promote)
-- Identify that King + Pawn -> Promote leaves us at King + Rook so we can expand with a "super ReCoN" that contains the two earlier examples as subtrees. *this showcases the distributed decision-making of ReCoN*; we can reuse the two earlier recons by simply hooking their respective ROOT nodes as subnodes to a higher level network that identifies what kind of position we are in and what strategy to employ. This way of thinking can be generalized to all kinds of problems/simulations. 
-
-- Fancier animations (3D, better schematic groups of subnetworks and different states in nodes/subnetworks and vertices)
-- Add image recognition, plug and play chess engines (basically making the ReCoN engine and board "environment" agnostic)
-
-
---- 
-"Standard" ReadMe below: 
-
-
-
-# ReCoN-lite (Request–Confirmation Network) — Minimal Scaffold
-
-A small, dependency-light Python implementation of a ReCoN-style executor with structured logging.
-
-## Features
-
-- ✅ **Complete ReCoN Foundation**: Core graph, engine, and execution logic
-- ✅ **Chess Integration**: King+Rook vs King endgame solver
-- ✅ **Visualization**: Structured logging for replay and debugging
-- ✅ **Extensible**: Plugin system for domain-specific nodes
-
-
-## State of the project and quick overview
-See `ARCHITECTURE.md` for a more complete description of the project. 
-On a top level we have the following hierarchy: 
-
-```
-├── src                   # The ReCoN implementation
-   ├── recon_lite         # Core ReCoN data structures and graph management
-   └── recon_lite_chess   # Chess specific ReCoN data structures and helper functions
-└──demos                 # Several example implementations of ReCoN networks. 
-    └──visualization      # Html visualizations of ReCoN outputs. (Run scripts to produce json)
-
-```
-
-## Install (uv)
 ```bash
 uv venv .venv
-source .venv/bin/activate
+source .venv/bin/activate   # or .venv\Scripts\activate on Windows
 uv pip install -e .
-uv run python -m demos.sequence_demo
 ```
 
-## Chess Demo
+You can sanity‑check the install by running a tiny demo:
 
-Try the King+Rook vs King checkmate solver:
+```bash
+uv run python -m demos.evaluation.sequence_demo
+```
+
+---
+
+## 4. Running the chess demos
+
+### 4.1 Basic KRK checkmate demo
+
+A simple KRK ReCoN graph that chooses a move, logs, and exits:
 
 ```bash
 uv run python demos/gameplay/krk_play_demo.py
 ```
 
-This demonstrates the hierarchical KRK strategy:
-- **Phase 1**: Drive enemy king to edge \*
-- **Phase 2**: Shrink the safe "box"
-- **Phase 3**: Take opposition
-- **Phase 4**: Deliver checkmate
+This demonstrates a hand‑authored hierarchical KRK strategy:
 
-To replay the execution, open `demos/visualization/chessboard_view.html` (double-click the file) or the compact `demos/visualization/onepage_view.html`, then use the “Load JSON” button to select any `_viz.json` produced by the demo.
+- **Phase 1**: Drive enemy king to the edge.
+- **Phase 2**: Shrink the “safe box”.
+- **Phase 3**: Take opposition.
+- **Phase 4**: Deliver checkmate.
 
-### Persistent deterministic leg 2 demo
+To visualize a run, open one of the HTML viewers:
+
+- `demos/visualization/chessboard_view.html`
+- `demos/visualization/onepage_view.html`
+
+…then use “Load JSON” to select a `_viz.json` produced by the demo.
+
+### 4.2 Persistent KRK (continuous activations, binding, micro‑ticks)
+
+The persistent KRK loop retains state between plies, uses continuous activations, and logs more data:
 
 ```bash
-uv run python demos/persistent/krk_persistent_demo.py --max-plies 40 --seed 0 --output-basename krk_persistent_review
+uv run python demos/persistent/krk_persistent_demo.py \
+  --max-plies 40 \
+  --seed 0 \
+  --output-basename krk_persistent_review
 ```
 
-- Produces `demos/outputs/krk_persistent_review_viz.json` and `_debug.json` (matched pair).
-- A pre-generated example (`krk_persistent_phasefix_viz.json`) is already in `demos/outputs` if you just want to load data immediately.
-- Visualization workflow is identical: open the HTML viewer of choice and load the `_viz.json` file.
+This produces:
 
-## Some comments and outlook:
+- Visualization logs under `demos/outputs/persistent/` (e.g. `*_viz.json` and `*_debug.json`).
+- Binding overlays and phase latents that can be inspected in the HTML viewers.
 
-This solver is far from perfect; in fact it's quite mediocre as a chess engine. I think it serves as a good demo of how 
-to set up a ReCoN network though. It could easily be expanded/improved in several ways (that is out of scope for now as I am running out of time):
-- Terminal Nodes could be added:
-    - a small CNN or MLP to identify chess positions from pngs (or other images)
-    - a more sophisticated image recognition (CNN or other) to identify positions from photos or videos of real chessboards
-- Use a true chess engine:
-    - instead of using the "phases" and heuristics above an API call to e.g. stockfish could be wrapped into one node and connected to the ReCoN. This would report back with suggested move. So the rest of the graph could stay the same, as long as the new node adheres to the interface spec. 
+### 4.3 Macrograph episodes and evaluation
 
-## Other demos and file structure
+Once you have weight packs and macros wired (see `recon_roadmap_m2.md` and `docs/HOWTO_RUN_TRAIN_EVAL.md`):
 
-## Architecture
+- Use batch/block runners in `demos/experiments/` to:
+  - Generate KRK/KPK positions.
+  - Run episodes with a configured macrograph.
+  - Emit traces for analysis and training.
 
-See `ARCHITECTURE.md` for detailed design decisions and implementation rationale.
+See:
 
-## Acknowledgements
+- `docs/HOWTO_RUN_TRAIN_EVAL.md`
+- `docs/TRACE_AND_EVAL.md`
 
-The ReCoN implementation is based on 
-**Request confirmation networks for neuro-symbolic script execution** by Joscha Bach and Priska Herger. 
+for up‑to‑date CLI examples.
+
+---
+
+## 5. Traces, training, and evaluation
+
+ReCoN‑lite uses a minimal `TraceDB` (`src/recon_lite/trace_db.py`) to log:
+
+- **Per‑tick**:
+  - `tick_id`, `phase_estimate`, `goal_vector`
+  - `board_fen`, `active_nodes`, `fired_edges`
+  - `eval_before`, `eval_after`, `reward_tick`
+- **Per‑episode**:
+  - `episode_id`, `result`, list of ticks
+  - `pack_meta` (weight pack fingerprints) and notes
+
+You can:
+
+- Run experiments in `demos/experiments/` to generate JSONL traces.
+- Use these traces to:
+  - Analyze which edges/scripts are helpful.
+  - Train simpler models (e.g. eval approximators, phase predictors).
+  - Drive M2/M3 learning loops described in `recon_roadmap_m2.md` and `recon_roadmap_m3_fast_plasticity.md`.
+
+---
+
+## 6. Architecture & design docs
+
+If you want to understand or extend the system:
+
+- `ARCHITECTURE.md` — high‑level design of the ReCoN‑lite engine and chess integration.
+- `updates_continuous.md` — continuous activations, micro‑ticks, binding, KRK persistent loop, and viz upgrades.
+- `recon_roadmap_m2.md` — roadmap from static scripts to a self‑organizing, explainable graph.
+- `recon_roadmap_m3_fast_plasticity.md` — detailed plan for fast plasticity & bandit control within games.
+- `VIS_SPEC.md` — visualization structure and expectations.
+
+---
+
+## 7. Outlook and future work
+
+ReCoN here is used as an **executive/orchestrator**, not a single end‑to‑end learner:
+
+- Nodes can be:
+  - Hand‑written heuristics.
+  - Chess engines (e.g. Stockfish).
+  - Neural models (CNNs/MLPs for vision, small policies, etc.).
+- ReCoN provides:
+  - Hierarchical sequencing (SUB/SUR).
+  - Temporal ordering (POR/RET).
+  - Request/confirm semantics with clear traces and logs.
+
+Planned / aspirational directions:
+
+- **Sensors & vision terminals**
+  - Terminals that:
+    - Parse chessboards from APIs/web UIs.
+    - Recognize boards from images (PNG screenshots) or camera frames.
+    - Eventually support human‑vs‑ReCoN via a physical board or robot.
+- **Engine integration**
+  - Nodes that wrap Stockfish or learned eval/policy networks as terminals.
+  - Reuse the existing graph to provide context, control, and explanation for engine‑backed moves.
+- **Self‑organization**
+  - M3 fast plasticity + bandit control (within‑game, per‑episode).
+  - M4 slow consolidation across games, feature/script induction, and structural evolution.
+
+---
+
+## 8. Acknowledgements
+
+This implementation is inspired by:
+
+> **Request confirmation networks for neuro-symbolic script execution**  
+> Joscha Bach and Priska Herger
+
+and uses `python-chess` for chess logic. The project aims to be a practical, inspectable playground for ReCoN ideas in a concrete domain (chess), not a polished chess engine.

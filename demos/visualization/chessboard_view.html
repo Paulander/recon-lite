@@ -38,6 +38,10 @@
                     <div class="thoughts-label">AI Thoughts:</div>
                     <div class="thoughts-text" id="thoughts-text">Initializing ReCoN network...</div>
                     <div class="rationale-ribbon" id="rationale-ribbon" style="display:none;"></div>
+                    <div class="macro-summary" id="macro-summary">
+                        <div class="macro-title">Macrograph Snapshot</div>
+                        <div class="macro-lines" id="macro-lines"></div>
+                    </div>
                 </div>
             </div>
 
@@ -430,6 +434,7 @@
 
                 // Update phase states
                 this.updatePhaseStates(nodeStates || {});
+                this.updateMacroSummary(frame.macro_frame);
 
                 // Update controls
                 this.updateControls();
@@ -463,6 +468,91 @@
                     // Add current state class
                     element.classList.add(stateClass);
                 });
+            }
+
+            updateMacroSummary(macro) {
+                const container = document.getElementById('macro-summary');
+                const linesEl = document.getElementById('macro-lines');
+                if (!container || !linesEl) return;
+                if (!macro) {
+                    container.style.display = 'none';
+                    linesEl.textContent = '';
+                    return;
+                }
+
+                const goalVector = macro.goal_vector || {};
+                const goalEntries = Object.entries(goalVector)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 4)
+                    .map(([k, v]) => `${k}: ${(v * 100).toFixed(0)}%`)
+                    .join(' · ');
+
+                const phaseMix = macro.phase_mix || {};
+                const phaseEntries = Object.entries(phaseMix)
+                    .map(([k, v]) => `${k}: ${(v * 100).toFixed(0)}%`)
+                    .join(' · ');
+
+                const planGroups = (macro.plan_groups || []).map((group) => {
+                    const activation = Math.max(0, Math.min(100, Math.round((group.activation || 0) * 100)));
+                    const details = (group.details || group.plans || []).map((item) => {
+                        const name = item.name || item;
+                        const highlight = item.highlight ? ' macro-pill highlight' : ' macro-pill';
+                        return `<span class="${highlight.trim()}">${name}</span>`;
+                    }).join('');
+                    const barWidth = activation;
+                    return `
+                        <div class="macro-block">
+                            <div class="macro-block-header">
+                                <span>${group.id}</span>
+                                <span>${activation}%</span>
+                            </div>
+                            <div class="macro-bar"><div class="macro-bar-fill" style="width:${barWidth}%"></div></div>
+                            <div class="macro-block-list">${details || '<span class="macro-empty">No plans</span>'}</div>
+                        </div>
+                    `;
+                }).join('');
+
+                const featureGroups = (macro.feature_groups || []).map((group) => {
+                    const confidence = Math.max(0, Math.min(100, Math.round((group.confidence || 0) * 100)));
+                    const details = (group.details || group.features || []).map((item) => {
+                        const name = item.name || item;
+                        const highlight = item.highlight ? ' macro-pill highlight' : ' macro-pill';
+                        return `<span class="${highlight.trim()}">${name}</span>`;
+                    }).join('');
+                    return `
+                        <div class="macro-block">
+                            <div class="macro-block-header">
+                                <span>${group.id}</span>
+                                <span>${confidence}%</span>
+                            </div>
+                            <div class="macro-bar"><div class="macro-bar-fill" style="width:${confidence}%"></div></div>
+                            <div class="macro-block-list">${details || '<span class="macro-empty">No features</span>'}</div>
+                        </div>
+                    `;
+                }).join('');
+
+                const chosen = macro.move_synth && macro.move_synth.chosen
+                    ? macro.move_synth.chosen
+                    : '—';
+
+                const components = macro.move_synth && macro.move_synth.proposals && macro.move_synth.proposals[0]
+                    ? macro.move_synth.proposals[0].components || {}
+                    : {};
+                const componentText = Object.entries(components)
+                    .map(([k, v]) => `${k}:${(v * 100).toFixed(0)}%`)
+                    .join(' ');
+
+                linesEl.innerHTML = `
+                    <div><strong>Goals:</strong> ${goalEntries || '—'}</div>
+                    <div><strong>Phases:</strong> ${phaseEntries || '—'}</div>
+                    <div><strong>Chosen Move:</strong> ${chosen}</div>
+                    <div><strong>Move components:</strong> ${componentText || '—'}</div>
+                    <div class="macro-section-title">Plan Groups</div>
+                    ${planGroups || '<div class="macro-empty">No plan data</div>'}
+                    <div class="macro-section-title">Feature Groups</div>
+                    ${featureGroups || '<div class="macro-empty">No feature data</div>'}
+                `;
+                container.style.display = 'block';
             }
         }
 

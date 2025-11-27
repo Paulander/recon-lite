@@ -1,0 +1,286 @@
+{
+  "version": "0.2",
+  "description": "Top-level ReCoN macrograph spanning game control, phases, plans, features, synthesis, and learning.",
+  "nodes": [
+    {
+      "id": "GameControl",
+      "type": "control",
+      "meta": {
+        "goal_vector": [
+          "Material",
+          "KingSafety",
+          "Initiative",
+          "Structure",
+          "PhaseProgress",
+          "RiskBudget",
+          "TacticWindow"
+        ]
+      }
+    },
+    {
+      "id": "GoalVector",
+      "type": "goals"
+    },
+    {
+      "id": "OutcomeMode",
+      "type": "selector",
+      "options": [
+        "Win",
+        "Neutral",
+        "Draw"
+      ]
+    },
+    {
+      "id": "PhaseLayer",
+      "type": "phase",
+      "phases": [
+        "Opening",
+        "Middlegame",
+        "Endgame"
+      ]
+    },
+    {
+      "id": "PlanHub",
+      "type": "router"
+    },
+    {
+      "id": "PlanOpening",
+      "type": "plan_group",
+      "plans": [
+        "Develop",
+        "CastleSafety",
+        "CenterControl",
+        "AvoidTraps"
+      ]
+    },
+    {
+      "id": "PlanMiddlegame",
+      "type": "plan_group",
+      "plans": [
+        "CreateWeakness",
+        "KingSafety",
+        "ActivatePieces",
+        "Simplify",
+        "AttackKing"
+      ]
+    },
+    {
+      "id": "PlanEndgame",
+      "type": "plan_group",
+      "plans": [
+        "KRK",
+        "KPK",
+        "RookTechniques",
+        "Conversion"
+      ]
+    },
+    {
+      "id": "FeatureHub",
+      "type": "features"
+    },
+    {
+      "id": "FeatureTactics",
+      "type": "feature_group",
+      "features": [
+        "HangingPiece",
+        "MateThreat",
+        "Fork",
+        "Pin",
+        "Skewer",
+        "DiscoveredCheck"
+      ]
+    },
+    {
+      "id": "FeatureStructure",
+      "type": "feature_group",
+      "features": [
+        "OpenFile",
+        "PassedPawn",
+        "IsolatedPawn",
+        "DoubledPawn",
+        "Outpost",
+        "KingShelter"
+      ]
+    },
+    {
+      "id": "FeatureEndgame",
+      "type": "feature_group",
+      "features": [
+        "KRK",
+        "KPK",
+        "RookCutoff",
+        "BoxShrink",
+        "Opposition"
+      ]
+    },
+    {
+      "id": "MoveSynth",
+      "type": "synth"
+    },
+    {
+      "id": "LightEval",
+      "type": "eval"
+    },
+    {
+      "id": "LearningSupervisor",
+      "type": "trainer"
+    },
+    {
+      "id": "KRKSubgraph",
+      "type": "subgraph",
+      "mount": "krk"
+    },
+    {
+      "id": "KPKSubgraph",
+      "type": "subgraph",
+      "mount": "kpk"
+    },
+    {
+      "id": "RookTechniquesSubgraph",
+      "type": "subgraph",
+      "mount": "rook_techniques"
+    }
+  ],
+  "edges": [
+    {
+      "from": "GameControl",
+      "to": "GoalVector",
+      "kind": "sub",
+      "weight": 1.0
+    },
+    {
+      "from": "GameControl",
+      "to": "OutcomeMode",
+      "kind": "sub",
+      "weight": 1.0
+    },
+    {
+      "from": "GameControl",
+      "to": "PhaseLayer",
+      "kind": "sub",
+      "weight": 1.0
+    },
+    {
+      "from": "PhaseLayer",
+      "to": "PlanHub",
+      "kind": "sub",
+      "weight": 1.0
+    },
+    {
+      "from": "PlanHub",
+      "to": "PlanOpening",
+      "kind": "sub",
+      "weight": 1.0
+    },
+    {
+      "from": "PlanHub",
+      "to": "PlanMiddlegame",
+      "kind": "sub",
+      "weight": 1.0
+    },
+    {
+      "from": "PlanHub",
+      "to": "PlanEndgame",
+      "kind": "sub",
+      "weight": 1.0
+    },
+    {
+      "from": "PlanEndgame",
+      "to": "KRKSubgraph",
+      "kind": "sub",
+      "weight": 1.0
+    },
+    {
+      "from": "PlanHub",
+      "to": "FeatureHub",
+      "kind": "request",
+      "weight": 1.0
+    },
+    {
+      "from": "FeatureHub",
+      "to": "PlanHub",
+      "kind": "confirm",
+      "weight": 1.0
+    },
+    {
+      "from": "FeatureHub",
+      "to": "FeatureTactics",
+      "kind": "sub",
+      "weight": 1.0
+    },
+    {
+      "from": "FeatureHub",
+      "to": "FeatureStructure",
+      "kind": "sub",
+      "weight": 1.0
+    },
+    {
+      "from": "FeatureHub",
+      "to": "FeatureEndgame",
+      "kind": "sub",
+      "weight": 1.0
+    },
+    {
+      "from": "GoalVector",
+      "to": "MoveSynth",
+      "kind": "goal",
+      "weight": 1.0
+    },
+    {
+      "from": "PlanHub",
+      "to": "MoveSynth",
+      "kind": "confirm",
+      "weight": 1.0
+    },
+    {
+      "from": "FeatureHub",
+      "to": "MoveSynth",
+      "kind": "feature",
+      "weight": 1.0
+    },
+    {
+      "from": "LightEval",
+      "to": "MoveSynth",
+      "kind": "eval",
+      "weight": 1.0
+    },
+    {
+      "from": "GameControl",
+      "to": "MoveSynth",
+      "kind": "gate",
+      "weight": 0.6
+    },
+    {
+      "from": "LearningSupervisor",
+      "to": "PlanHub",
+      "kind": "tune",
+      "weight": 1.0
+    },
+    {
+      "from": "LearningSupervisor",
+      "to": "MoveSynth",
+      "kind": "tune",
+      "weight": 0.4
+    },
+    {
+      "from": "PlanEndgame",
+      "to": "KPKSubgraph",
+      "kind": "sub",
+      "weight": 1.0
+    },
+    {
+      "from": "PlanEndgame",
+      "to": "RookTechniquesSubgraph",
+      "kind": "sub",
+      "weight": 1.0
+    }
+  ],
+  "notes": {
+    "phase_mix": "Softmax with hysteresis; assets stored in weights/phase_layer_pack.swp.",
+    "weight_packs": [
+      "weights/macro_weight_pack.swp",
+      "weights/macro_threshold_pack.swp",
+      "weights/phase_layer_pack.swp"
+    ]
+  }
+}
