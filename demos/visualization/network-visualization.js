@@ -14,6 +14,10 @@ class NetworkVisualization {
         this.lastNewRequests = new Set();
         this.lastLatents = {};
         this.pulseStrength = {};
+        // M3: Track edge weight changes for visualization
+        this.edgeWeights = {};      // current edge weights from frame
+        this.edgeDeltas = {};       // recent weight changes (positive/negative)
+        this.banditStats = {};      // bandit statistics per parent
     }
 
     normalizeId(id) {
@@ -383,6 +387,55 @@ class NetworkVisualization {
         this.externalEdges = edges;
     }
 
+    // M3: Update plasticity visualization data from frame
+    updatePlasticityData(frame) {
+        if (!frame) return;
+
+        // Extract edge weights from frame.env.edge_weights or frame.edge_weights
+        const edgeWeights = frame.edge_weights || (frame.env && frame.env.edge_weights) || {};
+        this.edgeWeights = { ...edgeWeights };
+
+        // Extract edge deltas from frame.env.m3_weight_deltas or frame.edge_deltas
+        const edgeDeltas = frame.edge_deltas || (frame.env && frame.env.m3_weight_deltas) || {};
+        // Decay old deltas and add new ones
+        Object.keys(this.edgeDeltas).forEach(key => {
+            this.edgeDeltas[key] = (this.edgeDeltas[key] || 0) * 0.7;
+            if (Math.abs(this.edgeDeltas[key]) < 0.001) {
+                delete this.edgeDeltas[key];
+            }
+        });
+        Object.entries(edgeDeltas).forEach(([key, delta]) => {
+            this.edgeDeltas[key] = (this.edgeDeltas[key] || 0) + delta;
+        });
+
+        // Extract bandit stats from frame.env.bandit_stats or frame.bandit_stats
+        const banditStats = frame.bandit_stats || (frame.env && frame.env.bandit_stats) || {};
+        this.banditStats = { ...banditStats };
+    }
+
+    // M3: Get edge color based on recent weight changes
+    getEdgePlasticityColor(edgeKey, baseColor) {
+        const delta = this.edgeDeltas[edgeKey] || 0;
+        if (Math.abs(delta) < 0.001) return baseColor;
+
+        // Green for strengthened, red for weakened
+        if (delta > 0) {
+            const intensity = Math.min(1, Math.abs(delta) * 2);
+            return `rgba(34, 197, 94, ${0.3 + intensity * 0.7})`; // green-500
+        } else {
+            const intensity = Math.min(1, Math.abs(delta) * 2);
+            return `rgba(239, 68, 68, ${0.3 + intensity * 0.7})`; // red-500
+        }
+    }
+
+    // M3: Get edge thickness multiplier based on weight
+    getEdgeWeightMultiplier(edgeKey) {
+        const weight = this.edgeWeights[edgeKey];
+        if (weight === undefined || weight === null) return 1.0;
+        // Scale thickness: weight of 1.0 = normal, 0.1 = thin, 3.0 = thick
+        return 0.5 + (Math.min(3.0, Math.max(0.1, weight)) / 3.0) * 1.5;
+    }
+
     draw(frame = null, newReqSet = new Set()) {
         const canvas = this.ctx.canvas;
 
@@ -610,6 +663,9 @@ class NetworkVisualization {
             }
         });
 
+        // M3: Update plasticity visualization data
+        this.updatePlasticityData(drawFrame);
+
         const pulseStrength = { ...this.pulseStrength };
         Object.entries(latents).forEach(([nid, value]) => {
             const prev = (this.lastLatents && typeof this.lastLatents[nid] === 'number') ? this.lastLatents[nid] : 0;
@@ -702,11 +758,22 @@ class NetworkVisualization {
             const dstState = nodesState[dst] || 'INACTIVE';
             const isNewReq = requestSet.has(dst);
             const colorMap = { SUB: '#94a3b8', POR: '#1e88e5', RET: '#8e24aa', SUR: '#90a4ae' };
-            this.ctx.strokeStyle = isNewReq ? '#1e88e5' : (dstState === 'TRUE' || dstState === 'CONFIRMED') ? '#2e7d32' : (colorMap[etype] || '#cbd5e1');
+
+            // M3: Build edge key for plasticity lookup
+            const edgeKey = `${src}->${dst}:${etype}`;
+
+            // M3: Check for plasticity-based coloring
+            let baseColor = isNewReq ? '#1e88e5' : (dstState === 'TRUE' || dstState === 'CONFIRMED') ? '#2e7d32' : (colorMap[etype] || '#cbd5e1');
+            const plasticityColor = this.getEdgePlasticityColor(edgeKey, baseColor);
+            const hasPlasticityChange = plasticityColor !== baseColor;
+            this.ctx.strokeStyle = hasPlasticityChange ? plasticityColor : baseColor;
+
+            // M3: Apply weight-based thickness multiplier
+            const weightMultiplier = this.getEdgeWeightMultiplier(edgeKey);
             const norm = maxWeight > 0 && Number.isFinite(weight) ? Math.min(1, Math.max(0, Math.abs(weight) / maxWeight)) : 1;
             const scale = 0.65 + 0.9 * norm;
             const baseWidth = isNewReq ? layout.emphasisEdgeWidth : layout.baseEdgeWidth;
-            this.ctx.lineWidth = baseWidth * scale;
+            this.ctx.lineWidth = baseWidth * scale * weightMultiplier;
             this.ctx.lineCap = 'round';
             this.ctx.beginPath();
             this.ctx.moveTo(fromPos.x, fromPos.y);

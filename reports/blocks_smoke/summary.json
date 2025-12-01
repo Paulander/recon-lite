@@ -1,0 +1,67 @@
+{
+  "mode": "krk",
+  "blocks": [
+    {
+      "block": 1,
+      "stats": {
+        "wins": 0,
+        "losses": 0,
+        "draws": 0,
+        "stall": 5,
+        "illegal": 0,
+        "max_plies": 0,
+        "games": 5,
+        "ticks": 1110,
+        "expected_win_total": 5,
+        "expected_win_success": 0,
+        "blocks": [
+          {
+            "block": 1,
+            "games": 5,
+            "wins": 0,
+            "expected_win_rate": 0.0
+          }
+        ]
+      },
+      "packs": [
+        {
+          "path": "/home/paulander/git/recon-lite/reports/blocks_smoke/block_1/krk_phase_weight_pack_block1.swp",
+          "sha256": "8f448ec71b2b879e464958fd4da6f7672bdaf7316c90fd792bdf4fec8df3de10"
+        }
+      ],
+      "trace": "reports/blocks_smoke/krk_block1_trace.jsonl",
+      "viz": "reports/blocks_smoke/block_1/krk_viz_block1.json"
+    },
+    {
+      "block": 2,
+      "stats": {
+        "wins": 0,
+        "losses": 0,
+        "draws": 0,
+        "stall": 5,
+        "illegal": 0,
+        "max_plies": 0,
+        "games": 5,
+        "ticks": 1110,
+        "expected_win_total": 5,
+        "expected_win_success": 0,
+        "blocks": [
+          {
+            "block": 1,
+            "games": 5,
+            "wins": 0,
+            "expected_win_rate": 0.0
+          }
+        ]
+      },
+      "packs": [
+        {
+          "path": "/home/paulander/git/recon-lite/reports/blocks_smoke/block_2/krk_phase_weight_pack_block2.swp",
+          "sha256": "8f448ec71b2b879e464958fd4da6f7672bdaf7316c90fd792bdf4fec8df3de10"
+        }
+      ],
+      "trace": "reports/blocks_smoke/krk_block2_trace.jsonl",
+      "viz": "reports/blocks_smoke/block_2/krk_viz_block2.json"
+    }
+  ]
+}

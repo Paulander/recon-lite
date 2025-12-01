@@ -63,6 +63,31 @@ from recon_lite_chess.predicates import (
     would_cause_threefold,
 )
 from recon_lite.trace_db import EpisodeRecord, TickRecord, TraceDB, pack_fingerprint
+from recon_lite.plasticity import (
+    PlasticityConfig,
+    init_plasticity_state,
+    update_eligibility,
+    apply_fast_update,
+    reset_episode as reset_plasticity_episode,
+    snapshot_plasticity,
+)
+from recon_lite.plasticity.bandit import (
+    BanditConfig,
+    init_bandit_state,
+    choose_child,
+    assign_reward,
+    reset_bandit_episode,
+    snapshot_bandit,
+)
+from recon_lite.plasticity.modulation import (
+    ModulationConfig,
+    compute_modulators,
+)
+from recon_lite_chess.eval.heuristic import (
+    eval_position,
+    compute_reward_tick,
+    eval_position_stockfish,
+)
 
 PHASE_SEQUENCE = ["phase0", "phase1", "phase2", "phase3", "phase4"]
 PHASE_SCRIPT_IDS = {
@@ -83,6 +108,41 @@ PHASE_PREFIXES = {
 DEFAULT_MICROTICK_STEPS = 5
 DEFAULT_MICROTICK_ETA = 0.3
 DEFAULT_LATENT_LOG_STRIDE = 1
+
+# M3 plasticity defaults
+DEFAULT_PLASTICITY_ETA = 0.05
+DEFAULT_PLASTICITY_R_MAX = 2.0
+DEFAULT_PLASTICITY_W_MIN = 0.1
+DEFAULT_PLASTICITY_W_MAX = 3.0
+DEFAULT_PLASTICITY_LAMBDA = 0.8
+
+# M3 bandit defaults
+DEFAULT_BANDIT_C_EXPLORE = 1.0
+
+# KRK edges eligible for fast plasticity (POR edges within phases)
+KRK_PLASTICITY_EDGES = [
+    # Phase internal POR edges (check -> move -> wait sequences)
+    ("p0_check", "p0_move", LinkType.POR),
+    ("p0_move", "p0_wait", LinkType.POR),
+    ("p1_check", "p1_move", LinkType.POR),
+    ("p1_move", "p1_wait", LinkType.POR),
+    ("p2_check", "p2_move", LinkType.POR),
+    ("p2_move", "p2_wait", LinkType.POR),
+    ("p3_check", "p3_move", LinkType.POR),
+    ("p3_move", "p3_wait", LinkType.POR),
+    ("p4_check", "p4_move", LinkType.POR),
+    ("p4_move", "p4_wait", LinkType.POR),
+    # Phase sequencing POR edges
+    ("phase0_establish_cut", "phase1_drive_to_edge", LinkType.POR),
+    ("phase1_drive_to_edge", "phase2_shrink_box", LinkType.POR),
+    ("phase2_shrink_box", "phase3_take_opposition", LinkType.POR),
+    ("phase3_take_opposition", "phase4_deliver_mate", LinkType.POR),
+]
+
+# KRK bandit parents and their children (for UCB selection)
+KRK_BANDIT_PARENTS = {
+    "p1_move": ["king_drive_moves", "confinement_moves", "barrier_placement_moves"],
+}
 
 
 def _build_basic_krk_graph() -> Graph:
@@ -446,7 +506,16 @@ def _decision_cycle(engine: ReConEngine,
                     phase_microticks: int,
                     phase_eta: float,
                     latent_log_stride: int,
-                    use_blended_actuator: bool) -> tuple[dict | None, list[dict], int]:
+                    use_blended_actuator: bool,
+                    # M3 plasticity/bandit parameters
+                    plasticity_state: Optional[dict] = None,
+                    plasticity_config: Optional[PlasticityConfig] = None,
+                    bandit_state: Optional[dict] = None,
+                    bandit_config: Optional[BanditConfig] = None,
+                    modulation_config: Optional[ModulationConfig] = None,
+                    last_eval: Optional[float] = None,
+                    sf_engine: Optional["chess.engine.SimpleEngine"] = None,
+                    eval_mode: str = "heuristic") -> tuple[dict | None, list[dict], int, Optional[float]]:
     env["board"] = board
     env["chosen_move"] = None
     proposals: list[dict] = []
@@ -454,11 +523,22 @@ def _decision_cycle(engine: ReConEngine,
     min_index = 3 if env.get("stage", 0) >= 1 else 0
     ensure_phase_states(phase_states)
 
+    # M3: Track eval for reward computation
+    current_eval = last_eval
+
     while ticks < tick_watchdog and not board.is_game_over():
         ticks += 1
         env.pop("blended_candidates", None)
         binding_snapshot = _update_binding_table(binding_table, board)
         env["binding"] = binding_snapshot
+
+        # M3: Compute eval before tick (for reward computation)
+        if plasticity_config and plasticity_config.enabled:
+            if current_eval is None:
+                if eval_mode == "stockfish" and sf_engine is not None:
+                    current_eval = eval_position_stockfish(board, sf_engine)
+                else:
+                    current_eval = eval_position(board)
 
         if phase_microticks > 0:
             env["microticks"] = _make_microtick_config(
@@ -480,6 +560,56 @@ def _decision_cycle(engine: ReConEngine,
         now_req = engine.step(env)
         phase_latent_values = activation_snapshot(phase_states)
         env["phase_latents"] = phase_latent_values
+
+        # M3: Compute reward and apply plasticity updates
+        reward_tick = None
+        if plasticity_config and plasticity_config.enabled and plasticity_state:
+            # Compute new eval
+            if eval_mode == "stockfish" and sf_engine is not None:
+                new_eval = eval_position_stockfish(board, sf_engine)
+            else:
+                new_eval = eval_position(board)
+
+            if current_eval is not None:
+                reward_tick = compute_reward_tick(current_eval, new_eval, plasticity_config.r_max)
+
+                # Build fired_edges from current node states
+                fired_edges = []
+                for e in engine.g.edges:
+                    src_node = engine.g.nodes.get(e.src)
+                    dst_node = engine.g.nodes.get(e.dst)
+                    if src_node and dst_node:
+                        # Edge "fired" if both nodes are active/confirmed
+                        if src_node.state in (NodeState.TRUE, NodeState.CONFIRMED, NodeState.WAITING):
+                            if dst_node.state in (NodeState.REQUESTED, NodeState.WAITING, NodeState.TRUE, NodeState.CONFIRMED):
+                                fired_edges.append({"src": e.src, "dst": e.dst, "ltype": e.ltype.name})
+
+                # Update eligibility traces
+                update_eligibility(plasticity_state, fired_edges, plasticity_config.lambda_decay)
+
+                # Compute modulators from goal_vector
+                goal_vector = env.get("goal_vector", {})
+                if not goal_vector:
+                    # Build a simple goal_vector from board
+                    goal_vector = {"phase_progress": phase_latent_values.get("phase4", 0.0)}
+                modulators = compute_modulators(goal_vector, modulation_config)
+
+                # Apply fast update
+                deltas = apply_fast_update(
+                    plasticity_state,
+                    engine.g,
+                    reward_tick,
+                    modulators.eta_tick_eff,
+                    plasticity_config,
+                )
+
+                # Store in env for logging
+                env["m3_reward_tick"] = reward_tick
+                env["m3_modulators"] = modulators.to_dict()
+                if deltas:
+                    env["m3_weight_deltas"] = deltas
+
+            current_eval = new_eval
 
         log_latents = latent_log_stride > 0 and (ticks % latent_log_stride == 0)
         latents_payload = phase_latent_values if log_latents else None
@@ -613,7 +743,7 @@ def _decision_cycle(engine: ReConEngine,
                 latents=env.get("phase_latents"),
                 macro=env.get("macro_frame"),
             )
-    return selected, ordered, ticks
+    return selected, ordered, ticks, current_eval
 
 
 def _update_stage(env: dict, board: chess.Board) -> int:
@@ -733,7 +863,17 @@ def play_persistent_game(initial_fen: str | None = None,
                          use_blended_actuator: bool = False,
                          trace_db: Optional["TraceDB"] = None,
                          trace_episode_id: Optional[str] = None,
-                         pack_paths: Optional[list[Path]] = None) -> dict:
+                         pack_paths: Optional[list[Path]] = None,
+                         # M3 plasticity parameters
+                         plasticity_enabled: bool = False,
+                         plasticity_eta: float = DEFAULT_PLASTICITY_ETA,
+                         plasticity_r_max: float = DEFAULT_PLASTICITY_R_MAX,
+                         plasticity_lambda: float = DEFAULT_PLASTICITY_LAMBDA,
+                         # M3 bandit parameters
+                         bandit_enabled: bool = False,
+                         bandit_c_explore: float = DEFAULT_BANDIT_C_EXPLORE,
+                         # M3 eval mode
+                         eval_mode: str = "heuristic") -> dict:
     if split_logs:
         viz_logger = RunLogger()
         debug_logger = RunLogger()
@@ -804,6 +944,34 @@ def play_persistent_game(initial_fen: str | None = None,
         "style_bias": neutral_style_bias().as_dict(),
         "use_blended_actuator": use_blended_actuator,
     })
+
+    # M3: Initialize plasticity state
+    plasticity_config = PlasticityConfig(
+        eta_tick=plasticity_eta,
+        r_max=plasticity_r_max,
+        lambda_decay=plasticity_lambda,
+        w_min=DEFAULT_PLASTICITY_W_MIN,
+        w_max=DEFAULT_PLASTICITY_W_MAX,
+        enabled=plasticity_enabled,
+    )
+    plasticity_state = init_plasticity_state(g, KRK_PLASTICITY_EDGES) if plasticity_enabled else {}
+
+    # M3: Initialize bandit state
+    bandit_config = BanditConfig(
+        c_explore=bandit_c_explore,
+        enabled=bandit_enabled,
+    )
+    bandit_state = init_bandit_state(KRK_BANDIT_PARENTS) if bandit_enabled else {}
+
+    # M3: Modulation config
+    modulation_config = ModulationConfig(
+        eta_base=plasticity_eta,
+        c_explore_base=bandit_c_explore,
+    )
+
+    # M3: Track last eval for reward computation
+    last_eval: Optional[float] = None
+    episode_reward_sum = 0.0
 
     def _log_snapshot(*, note: str, env_payload: dict, thoughts: str = "", new_requests=None, include_engine: bool = False):
         if viz_logger is None:
@@ -901,7 +1069,7 @@ def play_persistent_game(initial_fen: str | None = None,
                 phase_tag = PHASE_SEQUENCE[min_index]
             _prime_phase(g, phase_tag, min_index=min_index)
             local_watchdog = min(tick_watchdog, 60)
-            selected, ordered, ticks = _decision_cycle(
+            selected, ordered, ticks, last_eval = _decision_cycle(
                 engine,
                 board,
                 env,
@@ -916,6 +1084,15 @@ def play_persistent_game(initial_fen: str | None = None,
                 phase_eta=phase_eta,
                 latent_log_stride=latent_log_stride,
                 use_blended_actuator=use_blended_actuator,
+                # M3 plasticity/bandit
+                plasticity_state=plasticity_state,
+                plasticity_config=plasticity_config,
+                bandit_state=bandit_state,
+                bandit_config=bandit_config,
+                modulation_config=modulation_config,
+                last_eval=last_eval,
+                sf_engine=sf_engine,
+                eval_mode=eval_mode,
             )
             move_record = selected
             move_uci = move_record["move"] if move_record else None
@@ -1120,7 +1297,7 @@ def preview_decision(board: chess.Board,
             phase_tag = PHASE_SEQUENCE[min_index]
         _prime_phase(g, phase_tag, min_index=min_index)
 
-    decision, proposals, ticks = _decision_cycle(
+    decision, proposals, ticks, _ = _decision_cycle(
         engine,
         board,
         env,
@@ -1186,6 +1363,16 @@ def main():
     parser.add_argument("--depth", type=int, default=2, help="Stockfish depth when scoring moves")
     parser.add_argument("--trace-out", type=Path, default=None, help="Optional JSONL trace output (EpisodeRecord/TickRecord).")
     parser.add_argument("--pack", action="append", type=Path, default=[], help="Weight pack path(s) to fingerprint in traces.")
+    # M3 plasticity arguments
+    parser.add_argument("--plasticity", action="store_true", help="Enable M3 fast plasticity (within-game edge weight adaptation)")
+    parser.add_argument("--plasticity-eta", type=float, default=DEFAULT_PLASTICITY_ETA, help="Base learning rate for plasticity updates")
+    parser.add_argument("--plasticity-r-max", type=float, default=DEFAULT_PLASTICITY_R_MAX, help="Reward clipping bound for plasticity")
+    parser.add_argument("--plasticity-lambda", type=float, default=DEFAULT_PLASTICITY_LAMBDA, help="Eligibility trace decay factor")
+    # M3 bandit arguments
+    parser.add_argument("--bandit", action="store_true", help="Enable M3 bandit control (UCB selection among sibling scripts)")
+    parser.add_argument("--bandit-c-explore", type=float, default=DEFAULT_BANDIT_C_EXPLORE, help="Exploration coefficient for UCB")
+    # M3 eval mode
+    parser.add_argument("--eval-mode", choices=["heuristic", "stockfish"], default="heuristic", help="Evaluation mode for reward computation")
     # Single graph; demo uses the shared KRK network
     args = parser.parse_args()
 
@@ -1209,6 +1396,14 @@ def main():
             use_blended_actuator=args.use_blended_actuator,
             stockfish_path=args.engine,
             stockfish_depth=args.depth,
+            # M3 plasticity/bandit
+            plasticity_enabled=args.plasticity,
+            plasticity_eta=args.plasticity_eta,
+            plasticity_r_max=args.plasticity_r_max,
+            plasticity_lambda=args.plasticity_lambda,
+            bandit_enabled=args.bandit,
+            bandit_c_explore=args.bandit_c_explore,
+            eval_mode=args.eval_mode,
         )
     else:
         start_fen = args.fen if args.fen else "4k3/6K1/8/8/8/8/R7/8 w - - 0 1"
@@ -1235,6 +1430,14 @@ def main():
             pack_paths=args.pack,
             stockfish_path=args.engine,
             stockfish_depth=args.depth,
+            # M3 plasticity/bandit
+            plasticity_enabled=args.plasticity,
+            plasticity_eta=args.plasticity_eta,
+            plasticity_r_max=args.plasticity_r_max,
+            plasticity_lambda=args.plasticity_lambda,
+            bandit_enabled=args.bandit,
+            bandit_c_explore=args.bandit_c_explore,
+            eval_mode=args.eval_mode,
         )
         if trace_db:
             trace_db.flush()
