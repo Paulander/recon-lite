@@ -89,3 +89,90 @@ We want the KRK demo to feel like a living ReCoN brain: continuous activations t
 - Tests added for SWP application and subgraph mounting (`tests/test_macro_weight_pack.py`, `tests/test_endgame_components.py`).
 - `MacroEngine` accepts multiple builders to mount all endgame subgraphs cleanly. Visualization unchanged (macrograph-static auto-places new nodes).
 - TraceDB + metrics: KRK persistent emits Tick/Episode traces with pack fingerprints; batch/block runners write traces, checkpoints, per-block viz logs (KRK playback); nightly runner stub added for automation.
+
+---
+
+## Assistant handoff (2025‑12‑01)
+
+This section is a quick orientation for a future AI instance that needs to talk the user through the system (e.g. over voice) without lots of back‑and‑forth.
+
+### 1. Where we are on the roadmap
+
+- M1 (continuous activations, bindings, micro‑ticks) is implemented and tested (`src/recon_lite/core/activations.py`, `src/recon_lite/binding/manager.py`, `src/recon_lite/time/microtick.py`, `tests/test_continuous.py`).
+- M2 / M2.5 (macrograph, SWPs, Stockfish teacher, TraceDB, KRK/KPK tooling) are implemented:
+  - Macrograph: `specs/macrograph_v0.json`, `src/recon_lite/macro_engine.py`, `tests/test_macrograph.py`, `tests/test_macro_weight_pack.py`.
+  - TraceDB schema + helpers: `src/recon_lite/trace_db.py`, `src/recon_lite/macro_trace.py`.
+  - Teachers / eval: `demos/experiments/teacher_stockfish.py`, `demos/experiments/kpk_train.py`.
+  - Evaluation tools: `demos/experiments/batch_eval.py`, `demos/experiments/block_runner.py`, `demos/experiments/pack_tournament.py`.
+  - Persistent KRK/KPK demos with traces: `demos/persistent/krk_persistent_demo.py`, `demos/persistent/kpk_persistent_demo.py`.
+- M3 fast‑plasticity & bandit control is **partially implemented**:
+  - Core modules: `src/recon_lite/plasticity/fast.py`, `bandit.py`, `modulation.py`.
+  - Chess eval used for reward: `src/recon_lite_chess/eval/heuristic.py`.
+  - KRK wiring: `demos/persistent/krk_persistent_demo.py` supports optional plasticity/bandit flags and eval modes.
+  - Tests: `tests/test_plasticity.py`, `tests/test_plasticity_integration.py`.
+- Full M3 consolidation and polishing (e.g. applying plasticity beyond KRK, tuning bandits, tying into full‑game macro) is still ongoing; treat `recon_roadmap_m3_fast_plasticity.md` as the authoritative design.
+
+### 2. Files to skim first (for a new assistant)
+
+When you start a fresh session, read or be ready to reference:
+
+- `recon_roadmap_m2.md` – overall project roadmap from M2.5 upward (big picture).
+- `recon_roadmap_m3_fast_plasticity.md` – detailed M3 spec and status summary (what fast plasticity/bandits should do).
+- `updates_continuous.md` (this file) – history and intent for continuous activations + how KRK is wired.
+- `docs/HOWTO_RUN_TRAIN_EVAL.md` – exact commands the user runs for demos, teachers, and evaluations.
+- `ARCHITECTURE.md` – conceptual ReCoN architecture and terminology.
+- `VIS_SPEC.md` – how the visualization expects bindings/latents/weights.
+
+### 3. Typical commands the user runs
+
+These are the main entry points to confirm the system is healthy and to generate data:
+
+- KRK persistent demo with eval and trace:
+  - `uv run python demos/persistent/krk_persistent_demo.py --engine /usr/games/stockfish --depth 2 --trace-out reports/krk_trace.jsonl`
+- KPK persistent demo:
+  - `uv run python demos/persistent/kpk_persistent_demo.py --engine /usr/games/stockfish --depth 2 --trace-out reports/kpk_trace.jsonl`
+- KRK teacher (macro + phase packs):
+  - `uv run python demos/experiments/teacher_stockfish.py data/endgames/krk/random.fen --engine /usr/games/stockfish --depth 4 --output weights/macro_weight_pack.swp --phase-output weights/krk_phase_weight_pack.swp`
+- Batch evaluation:
+  - `uv run python demos/experiments/batch_eval.py --mode krk --fen-file data/endgames/krk/random.fen --runs 200 --pack weights/krk_phase_weight_pack.swp --engine /usr/games/stockfish --depth 2 --trace-out reports/krk_batch_trace.jsonl`
+- Pack tournament:
+  - `uv run python demos/experiments/pack_tournament.py --mode krk --fen-file data/endgames/krk/random.fen --pack weights/krk_phase_weight_pack.swp --engine /usr/games/stockfish --depth 2 --runs 200 --output reports/krk_pack_tournament.json`
+- Full‑game macro driver:
+  - `uv run python demos/gameplay/full_game_macro.py --engine /usr/games/stockfish --depth 2 --trace-out reports/fullgame_trace.jsonl`
+
+The user cares a lot about **metrics, traces, and viz**. When you suggest steps, try to preserve trace/logging options and explain how to interpret them (e.g. expected win rate, `reward_tick` trends, phase usage).
+
+### 4. Reward and learning signals (for M3/M4)
+
+- Tick‑level reward:
+  - `reward_tick = eval_after − eval_before` in centipawns (clipped).
+  - Eval source:
+    - Stockfish when `--engine` is provided (preferred).
+    - Heuristic eval (`recon_lite_chess.eval.heuristic.eval_position`) when no engine is available.
+  - Only meaningful on ticks where a move is chosen; other ticks may have `reward_tick = null`.
+- Episode‑level reward:
+  - `result` in `EpisodeRecord` (win/draw/loss) and summary stats in `notes`.
+- Fast plasticity:
+  - Implemented as within‑episode updates to edge weights for a whitelisted set of KRK edges; state resets between games.
+- Bandit control:
+  - Implemented (in code) but still needs tuning; used to choose between sibling scripts based on accumulated reward.
+
+When guiding the user, keep this mental model: **M2.5 gives you rich traces; M3 uses those traces online inside KRK; M4 will use them offline to adjust baseline weights across games.**
+
+### 5. What the user is aiming for next
+
+From recent notes and roadmaps, likely next steps the user will ask about:
+
+- Better understanding and tuning of M3 behavior:
+  - Visualizing how weights change during a KRK run (edge thickness/colors).
+  - Comparing “plasticity off” vs “plasticity on” using batch_eval / pack_tournament.
+- Extending plasticity/bandits beyond KRK:
+  - KPK endgames.
+  - Eventually macrograph decisions (phase/plan selection) once KRK/KPK look stable.
+- Moving toward full‑game play:
+  - More endgame subgraphs and heuristics.
+  - Shallow Stockfish teacher plus ReCoN control for opening/middlegame.
+- Laying groundwork for M4:
+  - Summaries per episode (per‑edge Δw_fast, bandit stats) that can be aggregated across traces.
+
+When in doubt, ask the user which **milestone** they want to push (M2.5 polish, M3 tuning, or early M4), and anchor your suggestions to the relevant roadmap file.
