@@ -214,6 +214,76 @@ def generate_report(
 
         lines.append("")
 
+        # M4: ASCII histogram of weight distribution
+        lines.append("### Weight Distribution")
+        lines.append("")
+        lines.append(_generate_histogram(values))
+        lines.append("")
+
+        # M4: Delta distribution (changes from initial)
+        if w_init:
+            deltas = [w_base.get(k, 1.0) - w_init.get(k, 1.0) for k in w_base.keys()]
+            if any(abs(d) > 0.001 for d in deltas):
+                lines.append("### Delta Distribution (w_base - w_init)")
+                lines.append("")
+                lines.append(_generate_histogram(deltas, center_zero=True))
+                lines.append("")
+
+    return "\n".join(lines)
+
+
+def _generate_histogram(
+    values: List[float],
+    bins: int = 10,
+    width: int = 40,
+    center_zero: bool = False,
+) -> str:
+    """Generate an ASCII histogram of values."""
+    if not values:
+        return "```\n(no data)\n```"
+
+    min_v = min(values)
+    max_v = max(values)
+
+    # Handle edge case of all same values
+    if max_v == min_v:
+        return f"```\nAll values = {min_v:.4f}\n```"
+
+    # For delta distribution, center around zero if requested
+    if center_zero:
+        abs_max = max(abs(min_v), abs(max_v))
+        min_v = -abs_max
+        max_v = abs_max
+
+    bin_width = (max_v - min_v) / bins
+    counts = [0] * bins
+
+    for v in values:
+        idx = min(int((v - min_v) / bin_width), bins - 1)
+        counts[idx] += 1
+
+    max_count = max(counts) if counts else 1
+
+    lines = ["```"]
+
+    for i, count in enumerate(counts):
+        bin_start = min_v + i * bin_width
+        bin_end = min_v + (i + 1) * bin_width
+
+        # Normalize bar width
+        bar_len = int(count / max_count * width) if max_count > 0 else 0
+        bar = "█" * bar_len
+
+        # Format bin range
+        if center_zero and bin_start < 0 < bin_end:
+            label = f"[{bin_start:+.2f}, {bin_end:+.2f})"
+        else:
+            label = f"[{bin_start:.2f}, {bin_end:.2f})"
+
+        lines.append(f"{label:>16} | {bar} {count}")
+
+    lines.append("```")
+
     return "\n".join(lines)
 
 

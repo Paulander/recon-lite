@@ -78,6 +78,10 @@ class EvalManager:
             "cache_hits": 0,
             "heuristic_evals": 0,
             "stockfish_evals": 0,
+            # M4: Hybrid mode tracking
+            "hybrid_validations": 0,
+            "hybrid_error_sum": 0.0,
+            "hybrid_error_abs_sum": 0.0,
         }
 
     def _get_cache_key(self, board: chess.Board) -> str:
@@ -170,8 +174,14 @@ class EvalManager:
         # Occasionally validate with Stockfish
         if random.random() < self.config.hybrid_sample_rate:
             sf_result = self._eval_stockfish(board)
+            diff = sf_result.score - heuristic_result.score
             heuristic_result.meta["sf_validation"] = sf_result.score
-            heuristic_result.meta["sf_diff"] = sf_result.score - heuristic_result.score
+            heuristic_result.meta["sf_diff"] = diff
+
+            # M4: Track hybrid validation statistics
+            self._stats["hybrid_validations"] += 1
+            self._stats["hybrid_error_sum"] += diff
+            self._stats["hybrid_error_abs_sum"] += abs(diff)
 
         return heuristic_result
 
@@ -230,6 +240,10 @@ class EvalManager:
         stats = dict(self._stats)
         if stats["total_evals"] > 0:
             stats["cache_hit_rate"] = stats["cache_hits"] / stats["total_evals"]
+        # M4: Compute hybrid error metrics
+        if stats["hybrid_validations"] > 0:
+            stats["hybrid_mean_error"] = stats["hybrid_error_sum"] / stats["hybrid_validations"]
+            stats["hybrid_mean_abs_error"] = stats["hybrid_error_abs_sum"] / stats["hybrid_validations"]
         return stats
 
     def clear_cache(self) -> None:
