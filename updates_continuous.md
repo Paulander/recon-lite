@@ -176,3 +176,149 @@ From recent notes and roadmaps, likely next steps the user will ask about:
   - Summaries per episode (per‑edge Δw_fast, bandit stats) that can be aggregated across traces.
 
 When in doubt, ask the user which **milestone** they want to push (M2.5 polish, M3 tuning, or early M4), and anchor your suggestions to the relevant roadmap file.
+
+---
+
+## M4: Slow Consolidation & Eval Upgrade (2025-12)
+
+M4 carries the fast, within-game adaptations from M3 into a persistent learning layer across games—stabilizing KRK/KPK performance, improving evaluation signals, and producing artifact-ready logs/visuals.
+
+### What's Implemented
+
+#### 1. Episode Summaries & Trace Enrichment (M4.1)
+
+- **EpisodeSummary** in `src/recon_lite/trace_db.py`:
+  - `edge_delta_sums`: cumulative Δw_fast per edge
+  - `bandit_stats`: per-arm pull counts and reward means
+  - `avg_reward_tick`, `total_reward_tick`, `reward_tick_count`
+  - `phase_usage`: count of ticks per phase
+  - `outcome_score`: +1 win, -1 loss, 0 draw
+
+- **extract_episode_summary()** in `src/recon_lite/plasticity/fast.py` aggregates episode data at game end.
+
+- **CLI tools**:
+  - `tools/trace_summarize.py`: aggregate metrics from JSONL traces to JSON/CSV
+  - Usage: `uv run python tools/trace_summarize.py reports/krk_trace.jsonl -o reports/summary.json`
+
+#### 2. Slow Weight Consolidation (M4.2)
+
+- **ConsolidationEngine** in `src/recon_lite/plasticity/consolidate.py`:
+  - `ConsolidationConfig`: `eta_consolidate`, `min_episodes`, `max_base_delta`, `w_min`, `w_max`
+  - `EdgeConsolidationState`: tracks `w_base`, `w_init`, accumulated weighted deltas
+  - `accumulate_episode(summary)`: adds episode data to running statistics
+  - `should_apply()`: checks if enough episodes accumulated
+  - `apply_to_graph(graph)`: updates graph edge weights with consolidated w_base
+  - `save_state()` / `load_state()`: persist to JSON
+  - `export_w_base_pack()`: export as SWP-compatible format
+
+- **Demo integration** in `demos/persistent/krk_persistent_demo.py`:
+  - `--consolidate`: enable slow consolidation
+  - `--consolidate-pack PATH`: load/save consolidation state
+  - `--consolidate-eta FLOAT`: learning rate (default 0.01)
+  - `--consolidate-min-episodes INT`: threshold before applying (default 10)
+
+#### 3. Cross-Game Bandit Refresh (M4.3)
+
+- **BanditPriors** in `src/recon_lite/plasticity/bandit.py`:
+  - Stores aggregated arm statistics across episodes
+  - `init_bandit_state_with_priors()`: warm-start new games with prior knowledge
+  - `export_priors()`, `merge_priors()`, `save_priors()`, `load_priors()`
+
+- **CLI**: `tools/bandit_refresh.py`
+  - Aggregates bandit stats from traces with optional decay
+  - Usage: `uv run python tools/bandit_refresh.py reports/*.jsonl --existing weights/priors.json --decay 0.9 -o weights/priors.json`
+
+- **Demo integration**: `--bandit-priors PATH` in krk_persistent_demo.py
+
+#### 4. Evaluation Upgrade & Hybrid Signals (M4.4)
+
+- **Expanded heuristic** in `src/recon_lite_chess/eval/heuristic.py`:
+  - `_material_score()`: piece values in pawn units
+  - `_king_safety_score()`: castling bonus, exposure penalty, attacker count
+  - `_mobility_score()`: legal move count differential
+  - `_pawn_structure_score()`: doubled, isolated, passed pawn detection
+  - `_piece_activity_score()`: centralization, outposts, bishop pair, rook files
+  - `_tactical_tension_score()`: hanging/under-defended pieces
+  - `_krk_specific_score()`: enemy king distance from center (endgame)
+  - `_endgame_factor()`: material-based phase interpolation
+  - Variants: `eval_position()`, `eval_position_fast()`, `eval_position_full()`
+
+- **EvalManager** in `src/recon_lite_chess/eval/manager.py`:
+  - Unified interface with modes: `HEURISTIC_FAST`, `HEURISTIC`, `HEURISTIC_FULL`, `STOCKFISH`, `HYBRID`, `DISTILLED`
+  - Caching with configurable max size
+  - Statistics tracking (`get_stats()`)
+
+- **Distillation stub** in `src/recon_lite_chess/eval/distill.py`:
+  - Interface defined for future ML-based evaluation
+  - `DistillationConfig`, `DistillationSample`, `DistillationDataset`
+  - `DistilledEvaluator`, `train_distilled_eval()`, `collect_distillation_data()`
+  - Currently raises `NotImplementedError` – placeholder for M5
+
+#### 5. Dashboards & Artifact Hooks (M4.5)
+
+- **CLI tools**:
+  - `tools/consolidate_batch.py`: offline batch consolidation from traces
+  - `tools/report_consolidation.py`: generate markdown reports with checksums and comparisons
+  - `tools/pack_diff.py`: compare two weight packs and show top changes
+
+- **Visualization** in `demos/visualization/network-visualization.js`:
+  - `edgeWBase`: tracks baseline weights from consolidation
+  - `setWBaseMode(mode)`: toggle between "baseline", "delta", "combined" display
+  - `getEdgeWBaseDriftColor()`: color edges by drift from initial weights
+  - Edge thickness/color reflects consolidation state
+
+#### 6. Tests & Benchmarks (M4.6)
+
+- `tests/test_consolidation.py`: 25 tests covering config, state, engine, save/load, bounds
+- `tests/test_eval_light.py`: 32 tests covering all heuristic components and EvalManager
+
+#### 7. Rollout Plan & Safety (M4.7)
+
+- **Versioning**: `save_state()` includes version field; packs have checksums
+- **Comparison**: `tools/pack_diff.py` and `report_consolidation.py --compare` show differences
+- **Validation workflow**:
+  1. Run consolidation on trace subset → produce candidate pack
+  2. Validate via `pack_tournament` vs baseline
+  3. Promote only if metrics improve
+
+### Typical M4 Commands
+
+```bash
+# Run KRK with consolidation enabled (batch of 20 games)
+uv run python demos/persistent/krk_persistent_demo.py \
+  --batch 20 --consolidate --consolidate-pack weights/krk_consol.json \
+  --consolidate-min-episodes 10 --plasticity --bandit \
+  --bandit-priors weights/bandit_priors.json \
+  --trace-out reports/krk_trace.jsonl
+
+# Summarize traces
+uv run python tools/trace_summarize.py reports/krk_trace.jsonl -o reports/summary.json
+
+# Refresh bandit priors with decay
+uv run python tools/bandit_refresh.py reports/*.jsonl \
+  --existing weights/bandit_priors.json --decay 0.9 -o weights/bandit_priors.json
+
+# Batch consolidation from multiple trace files
+uv run python tools/consolidate_batch.py reports/*.jsonl \
+  --existing weights/krk_consol.json --min-episodes 20 -o weights/krk_consol_new.json
+
+# Generate consolidation report
+uv run python tools/report_consolidation.py weights/krk_consol.json -o reports/consol_report.md
+
+# Compare two consolidation packs
+uv run python tools/pack_diff.py weights/krk_consol_old.json weights/krk_consol_new.json
+
+# Validate consolidated pack vs baseline
+uv run python demos/experiments/pack_tournament.py --mode krk \
+  --fen-file data/endgames/krk/random.fen \
+  --pack weights/krk_consol_new.json --runs 100
+```
+
+### Stubs for M5
+
+The **distillation module** (`src/recon_lite_chess/eval/distill.py`) is stubbed:
+- `load_from_traces()`: collect (position, stockfish_eval) pairs
+- `train_distilled_eval()`: train lightweight NN to mimic Stockfish
+- `DistilledEvaluator.evaluate()`: fast ML-based evaluation
+
+This is planned for M5: Distillation & Full-Game Eval.
