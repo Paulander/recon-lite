@@ -243,3 +243,211 @@ def snapshot_bandit(state: BanditStateDict) -> Dict[str, Any]:
     # Filter out empty parents
     return {k: v for k, v in result.items() if v}
 
+
+# ---------------------------------------------------------------------------
+# M4: Bandit Priors for cross-game statistics
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class BanditPriors:
+    """
+    Cross-game bandit priors for initializing arm statistics.
+
+    Stores aggregated statistics across multiple episodes that can be used
+    to initialize bandit state at the start of a new game.
+
+    Attributes:
+        arm_stats: parent_id -> child_id -> {pulls, sum_reward, mean_reward}
+        total_episodes: Number of episodes these priors were computed from
+        decay_factor: Factor applied when merging new data (0.9 = 10% decay)
+    """
+
+    arm_stats: Dict[str, Dict[str, Dict[str, float]]] = field(default_factory=dict)
+    total_episodes: int = 0
+    decay_factor: float = 0.9
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "arm_stats": self.arm_stats,
+            "total_episodes": self.total_episodes,
+            "decay_factor": self.decay_factor,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "BanditPriors":
+        return cls(
+            arm_stats=data.get("arm_stats", {}),
+            total_episodes=data.get("total_episodes", 0),
+            decay_factor=data.get("decay_factor", 0.9),
+        )
+
+
+def init_bandit_state_with_priors(
+    parent_children: Dict[str, List[str]],
+    priors: Optional[BanditPriors] = None,
+    prior_weight: float = 0.5,
+) -> BanditStateDict:
+    """
+    Initialize bandit state with optional priors from previous games.
+
+    Args:
+        parent_children: Mapping from parent node id to list of child node ids
+        priors: Optional BanditPriors from previous games
+        prior_weight: How much to weight priors (0 = ignore, 1 = full prior)
+
+    Returns:
+        Nested dict: parent_id -> child_id -> BanditArmState
+    """
+    state: BanditStateDict = {}
+
+    for parent_id, children in parent_children.items():
+        state[parent_id] = {}
+        for child_id in children:
+            arm = BanditArmState(child_id=child_id)
+
+            # Apply priors if available
+            if priors and prior_weight > 0:
+                parent_priors = priors.arm_stats.get(parent_id, {})
+                child_prior = parent_priors.get(child_id, {})
+
+                if child_prior:
+                    # Initialize with weighted prior statistics
+                    # Use "virtual" pulls to bias initial estimates
+                    prior_pulls = child_prior.get("pulls", 0)
+                    prior_mean = child_prior.get("mean_reward", 0.0)
+
+                    # Scale prior influence by weight
+                    effective_pulls = int(prior_pulls * prior_weight)
+                    if effective_pulls > 0:
+                        arm.pulls = effective_pulls
+                        arm.sum_reward = prior_mean * effective_pulls
+                        arm.sum_sq_reward = (prior_mean ** 2) * effective_pulls
+
+            state[parent_id][child_id] = arm
+
+    return state
+
+
+def export_priors(state: BanditStateDict) -> BanditPriors:
+    """
+    Export current bandit state as priors for future games.
+
+    Args:
+        state: Current bandit state dict
+
+    Returns:
+        BanditPriors with aggregated statistics
+    """
+    priors = BanditPriors()
+
+    for parent_id, arms in state.items():
+        priors.arm_stats[parent_id] = {}
+        for child_id, arm in arms.items():
+            if arm.pulls > 0:
+                priors.arm_stats[parent_id][child_id] = {
+                    "pulls": arm.pulls,
+                    "sum_reward": round(arm.sum_reward, 4),
+                    "mean_reward": round(arm.mean_reward(), 4),
+                }
+
+    priors.total_episodes = 1
+    return priors
+
+
+def merge_priors(
+    old_priors: BanditPriors,
+    new_priors: BanditPriors,
+    decay: float = 0.9,
+) -> BanditPriors:
+    """
+    Merge new priors into existing priors with decay.
+
+    This allows gradual updating of cross-game statistics while
+    preventing old data from dominating forever.
+
+    Args:
+        old_priors: Existing priors to update
+        new_priors: New priors to merge in
+        decay: Factor to apply to old statistics (0.9 = 10% decay)
+
+    Returns:
+        Merged BanditPriors
+    """
+    merged = BanditPriors(decay_factor=decay)
+
+    # Get all parent/child combinations
+    all_parents = set(old_priors.arm_stats.keys()) | set(new_priors.arm_stats.keys())
+
+    for parent_id in all_parents:
+        merged.arm_stats[parent_id] = {}
+
+        old_arms = old_priors.arm_stats.get(parent_id, {})
+        new_arms = new_priors.arm_stats.get(parent_id, {})
+        all_children = set(old_arms.keys()) | set(new_arms.keys())
+
+        for child_id in all_children:
+            old_stats = old_arms.get(child_id, {})
+            new_stats = new_arms.get(child_id, {})
+
+            # Decay old stats and add new
+            old_pulls = old_stats.get("pulls", 0) * decay
+            old_sum = old_stats.get("sum_reward", 0.0) * decay
+
+            new_pulls = new_stats.get("pulls", 0)
+            new_sum = new_stats.get("sum_reward", 0.0)
+
+            total_pulls = old_pulls + new_pulls
+            total_sum = old_sum + new_sum
+
+            if total_pulls > 0:
+                merged.arm_stats[parent_id][child_id] = {
+                    "pulls": round(total_pulls, 2),
+                    "sum_reward": round(total_sum, 4),
+                    "mean_reward": round(total_sum / total_pulls, 4),
+                }
+
+    merged.total_episodes = old_priors.total_episodes + new_priors.total_episodes
+    return merged
+
+
+def save_priors(priors: BanditPriors, path: "Path") -> None:
+    """
+    Save bandit priors to a JSON file.
+
+    Args:
+        priors: Priors to save
+        path: Output file path
+    """
+    import json
+    from pathlib import Path as PathType
+
+    if not isinstance(path, PathType):
+        path = PathType(path)
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as fh:
+        json.dump(priors.to_dict(), fh, indent=2)
+
+
+def load_priors(path: "Path") -> BanditPriors:
+    """
+    Load bandit priors from a JSON file.
+
+    Args:
+        path: Input file path
+
+    Returns:
+        Loaded BanditPriors
+    """
+    import json
+    from pathlib import Path as PathType
+
+    if not isinstance(path, PathType):
+        path = PathType(path)
+
+    with path.open("r", encoding="utf-8") as fh:
+        data = json.load(fh)
+
+    return BanditPriors.from_dict(data)
+

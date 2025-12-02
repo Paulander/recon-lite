@@ -18,6 +18,10 @@ class NetworkVisualization {
         this.edgeWeights = {};      // current edge weights from frame
         this.edgeDeltas = {};       // recent weight changes (positive/negative)
         this.banditStats = {};      // bandit statistics per parent
+        // M4: Track baseline weights for consolidation visualization
+        this.edgeWBase = {};        // baseline weights (w_base) from consolidation
+        this.edgeWBaseInitial = {}; // initial w_base for drift calculation
+        this.showWBaseMode = 'combined'; // 'combined' | 'baseline' | 'delta'
     }
 
     normalizeId(id) {
@@ -387,7 +391,7 @@ class NetworkVisualization {
         this.externalEdges = edges;
     }
 
-    // M3: Update plasticity visualization data from frame
+    // M3/M4: Update plasticity and consolidation visualization data from frame
     updatePlasticityData(frame) {
         if (!frame) return;
 
@@ -411,6 +415,66 @@ class NetworkVisualization {
         // Extract bandit stats from frame.env.bandit_stats or frame.bandit_stats
         const banditStats = frame.bandit_stats || (frame.env && frame.env.bandit_stats) || {};
         this.banditStats = { ...banditStats };
+
+        // M4: Extract w_base from consolidation data
+        const wBase = frame.w_base || (frame.env && frame.env.w_base) || {};
+        Object.entries(wBase).forEach(([key, value]) => {
+            // Store initial w_base for drift calculation (only first time)
+            if (!(key in this.edgeWBaseInitial)) {
+                this.edgeWBaseInitial[key] = value;
+            }
+            this.edgeWBase[key] = value;
+        });
+    }
+
+    // M4: Set the w_base display mode
+    setWBaseMode(mode) {
+        if (['combined', 'baseline', 'delta'].includes(mode)) {
+            this.showWBaseMode = mode;
+            if (this.lastFrame) {
+                this.draw();
+            }
+        }
+    }
+
+    // M4: Get edge color based on w_base drift from initial
+    getEdgeWBaseDriftColor(edgeKey, baseColor) {
+        const wBase = this.edgeWBase[edgeKey];
+        const wInit = this.edgeWBaseInitial[edgeKey];
+
+        if (wBase === undefined || wInit === undefined) return baseColor;
+
+        const drift = wBase - wInit;
+        if (Math.abs(drift) < 0.01) return baseColor;
+
+        // Purple for increased w_base, orange for decreased
+        if (drift > 0) {
+            const intensity = Math.min(1, Math.abs(drift) * 2);
+            return `rgba(147, 51, 234, ${0.3 + intensity * 0.7})`; // purple-600
+        } else {
+            const intensity = Math.min(1, Math.abs(drift) * 2);
+            return `rgba(249, 115, 22, ${0.3 + intensity * 0.7})`; // orange-500
+        }
+    }
+
+    // M4: Get display weight based on mode
+    getDisplayWeight(edgeKey) {
+        const wBase = this.edgeWBase[edgeKey];
+        const wCurrent = this.edgeWeights[edgeKey];
+        const wInit = this.edgeWBaseInitial[edgeKey];
+
+        switch (this.showWBaseMode) {
+            case 'baseline':
+                return wBase !== undefined ? wBase : (wCurrent !== undefined ? wCurrent : 1.0);
+            case 'delta':
+                if (wBase !== undefined && wInit !== undefined) {
+                    return wBase - wInit; // Show drift from initial
+                }
+                return 0;
+            case 'combined':
+            default:
+                return wCurrent !== undefined ? wCurrent : (wBase !== undefined ? wBase : 1.0);
+        }
     }
 
     // M3: Get edge color based on recent weight changes
@@ -759,14 +823,26 @@ class NetworkVisualization {
             const isNewReq = requestSet.has(dst);
             const colorMap = { SUB: '#94a3b8', POR: '#1e88e5', RET: '#8e24aa', SUR: '#90a4ae' };
 
-            // M3: Build edge key for plasticity lookup
+            // M3/M4: Build edge key for plasticity lookup
             const edgeKey = `${src}->${dst}:${etype}`;
 
-            // M3: Check for plasticity-based coloring
+            // M3: Check for plasticity-based coloring (fast deltas)
             let baseColor = isNewReq ? '#1e88e5' : (dstState === 'TRUE' || dstState === 'CONFIRMED') ? '#2e7d32' : (colorMap[etype] || '#cbd5e1');
             const plasticityColor = this.getEdgePlasticityColor(edgeKey, baseColor);
             const hasPlasticityChange = plasticityColor !== baseColor;
-            this.ctx.strokeStyle = hasPlasticityChange ? plasticityColor : baseColor;
+
+            // M4: Check for w_base drift coloring (slow consolidation)
+            const wBaseDriftColor = this.getEdgeWBaseDriftColor(edgeKey, baseColor);
+            const hasWBaseDrift = wBaseDriftColor !== baseColor;
+
+            // Priority: fast plasticity > w_base drift > base color
+            if (hasPlasticityChange) {
+                this.ctx.strokeStyle = plasticityColor;
+            } else if (hasWBaseDrift) {
+                this.ctx.strokeStyle = wBaseDriftColor;
+            } else {
+                this.ctx.strokeStyle = baseColor;
+            }
 
             // M3: Apply weight-based thickness multiplier
             const weightMultiplier = this.getEdgeWeightMultiplier(edgeKey);

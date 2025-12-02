@@ -266,3 +266,97 @@ def snapshot_plasticity(state: Dict[str, EdgePlasticityState]) -> Dict[str, Any]
         if es.eligibility != 0.0 or es.delta_sum != 0.0
     }
 
+
+# ---------------------------------------------------------------------------
+# M4: Episode summary extraction for consolidation
+# ---------------------------------------------------------------------------
+
+
+def extract_episode_summary(
+    plasticity_state: Optional[Dict[str, EdgePlasticityState]],
+    bandit_state: Optional[Dict[str, Dict[str, Any]]],
+    tick_records: Optional[List[Any]],
+    result: Optional[str],
+) -> "EpisodeSummary":
+    """
+    Extract an EpisodeSummary from episode data for M4 consolidation.
+
+    Args:
+        plasticity_state: Fast plasticity state dict (edge_key -> EdgePlasticityState)
+        bandit_state: Bandit state dict (parent_id -> child_id -> BanditArmState)
+        tick_records: List of TickRecord objects from the episode
+        result: Game result string (e.g., "1-0", "0-1", "1/2-1/2")
+
+    Returns:
+        EpisodeSummary with aggregated episode data
+    """
+    # Import here to avoid circular dependency
+    from ..trace_db import EpisodeSummary, BanditArmSummary, outcome_to_score
+
+    # Extract edge delta sums from plasticity state
+    edge_delta_sums: Dict[str, float] = {}
+    if plasticity_state:
+        for key, es in plasticity_state.items():
+            if es.delta_sum != 0.0:
+                edge_delta_sums[key] = es.delta_sum
+
+    # Extract bandit statistics
+    bandit_stats: Dict[str, Dict[str, BanditArmSummary]] = {}
+    if bandit_state:
+        for parent_id, arms in bandit_state.items():
+            bandit_stats[parent_id] = {}
+            for child_id, arm in arms.items():
+                # Handle both BanditArmState objects and dicts
+                if hasattr(arm, "pulls"):
+                    pulls = arm.pulls
+                    sum_reward = arm.sum_reward
+                    mean_reward = arm.mean_reward() if callable(getattr(arm, "mean_reward", None)) else 0.0
+                else:
+                    pulls = arm.get("pulls", 0)
+                    sum_reward = arm.get("sum_reward", 0.0)
+                    mean_reward = sum_reward / pulls if pulls > 0 else 0.0
+
+                if pulls > 0:
+                    bandit_stats[parent_id][child_id] = BanditArmSummary(
+                        pulls=pulls,
+                        sum_reward=sum_reward,
+                        mean_reward=mean_reward,
+                    )
+
+    # Compute reward statistics from tick records
+    total_reward = 0.0
+    reward_count = 0
+    phase_usage: Dict[str, int] = {}
+
+    if tick_records:
+        for tick in tick_records:
+            # Handle both TickRecord objects and dicts
+            if hasattr(tick, "reward_tick"):
+                reward_tick = tick.reward_tick
+                phase = tick.phase_estimate
+            else:
+                reward_tick = tick.get("reward_tick")
+                phase = tick.get("phase_estimate")
+
+            if reward_tick is not None:
+                total_reward += reward_tick
+                reward_count += 1
+
+            if phase:
+                phase_usage[phase] = phase_usage.get(phase, 0) + 1
+
+    avg_reward = total_reward / reward_count if reward_count > 0 else 0.0
+
+    # Compute outcome score
+    outcome_score = outcome_to_score(result)
+
+    return EpisodeSummary(
+        edge_delta_sums=edge_delta_sums,
+        bandit_stats=bandit_stats,
+        avg_reward_tick=avg_reward,
+        total_reward_tick=total_reward,
+        reward_tick_count=reward_count,
+        phase_usage=phase_usage,
+        outcome_score=outcome_score,
+    )
+

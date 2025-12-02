@@ -70,18 +70,29 @@ from recon_lite.plasticity import (
     apply_fast_update,
     reset_episode as reset_plasticity_episode,
     snapshot_plasticity,
+    extract_episode_summary,
 )
 from recon_lite.plasticity.bandit import (
     BanditConfig,
+    BanditPriors,
     init_bandit_state,
+    init_bandit_state_with_priors,
     choose_child,
     assign_reward,
     reset_bandit_episode,
     snapshot_bandit,
+    load_priors as load_bandit_priors,
+    save_priors as save_bandit_priors,
+    export_priors as export_bandit_priors,
+    merge_priors as merge_bandit_priors,
 )
 from recon_lite.plasticity.modulation import (
     ModulationConfig,
     compute_modulators,
+)
+from recon_lite.plasticity.consolidate import (
+    ConsolidationConfig,
+    ConsolidationEngine,
 )
 from recon_lite_chess.eval.heuristic import (
     eval_position,
@@ -118,6 +129,12 @@ DEFAULT_PLASTICITY_LAMBDA = 0.8
 
 # M3 bandit defaults
 DEFAULT_BANDIT_C_EXPLORE = 1.0
+
+# M4 consolidation defaults
+DEFAULT_CONSOLIDATE_ETA = 0.01
+DEFAULT_CONSOLIDATE_MIN_EPISODES = 10
+DEFAULT_CONSOLIDATE_OUTCOME_WEIGHT = 0.5
+DEFAULT_CONSOLIDATE_MAX_BASE_DELTA = 0.5
 
 # KRK edges eligible for fast plasticity (POR edges within phases)
 KRK_PLASTICITY_EDGES = [
@@ -873,7 +890,14 @@ def play_persistent_game(initial_fen: str | None = None,
                          bandit_enabled: bool = False,
                          bandit_c_explore: float = DEFAULT_BANDIT_C_EXPLORE,
                          # M3 eval mode
-                         eval_mode: str = "heuristic") -> dict:
+                         eval_mode: str = "heuristic",
+                         # M4 consolidation parameters
+                         consolidation_enabled: bool = False,
+                         consolidation_pack: Optional[Path] = None,
+                         bandit_priors_path: Optional[Path] = None,
+                         consolidation_eta: float = DEFAULT_CONSOLIDATE_ETA,
+                         consolidation_min_episodes: int = DEFAULT_CONSOLIDATE_MIN_EPISODES,
+                         consolidation_engine: Optional[ConsolidationEngine] = None) -> dict:
     if split_logs:
         viz_logger = RunLogger()
         debug_logger = RunLogger()
@@ -956,18 +980,53 @@ def play_persistent_game(initial_fen: str | None = None,
     )
     plasticity_state = init_plasticity_state(g, KRK_PLASTICITY_EDGES) if plasticity_enabled else {}
 
-    # M3: Initialize bandit state
+    # M3: Initialize bandit state (with optional M4 priors)
     bandit_config = BanditConfig(
         c_explore=bandit_c_explore,
         enabled=bandit_enabled,
     )
-    bandit_state = init_bandit_state(KRK_BANDIT_PARENTS) if bandit_enabled else {}
+    bandit_priors: Optional[BanditPriors] = None
+    if bandit_enabled and bandit_priors_path and bandit_priors_path.exists():
+        try:
+            bandit_priors = load_bandit_priors(bandit_priors_path)
+        except Exception:
+            bandit_priors = None
+    if bandit_enabled:
+        if bandit_priors:
+            bandit_state = init_bandit_state_with_priors(KRK_BANDIT_PARENTS, bandit_priors, prior_weight=0.5)
+        else:
+            bandit_state = init_bandit_state(KRK_BANDIT_PARENTS)
+    else:
+        bandit_state = {}
 
     # M3: Modulation config
     modulation_config = ModulationConfig(
         eta_base=plasticity_eta,
         c_explore_base=bandit_c_explore,
     )
+
+    # M4: Initialize or use provided consolidation engine
+    consolidation_config = ConsolidationConfig(
+        eta_consolidate=consolidation_eta,
+        min_episodes=consolidation_min_episodes,
+        enabled=consolidation_enabled,
+    )
+    if consolidation_engine is not None:
+        consol_engine = consolidation_engine
+    elif consolidation_enabled:
+        consol_engine = ConsolidationEngine(consolidation_config)
+        # Load existing consolidation state if available
+        if consolidation_pack and consolidation_pack.exists():
+            try:
+                consol_engine.load_state(consolidation_pack)
+            except Exception:
+                pass
+        # Initialize from graph
+        consol_engine.init_from_graph(g)
+        # Apply w_base to graph at game start
+        consol_engine.apply_w_base_to_graph(g)
+    else:
+        consol_engine = None
 
     # M3: Track last eval for reward computation
     last_eval: Optional[float] = None
@@ -1238,14 +1297,59 @@ def play_persistent_game(initial_fen: str | None = None,
         "final_fen": board.fen(),
     }
 
+    # M4: Extract episode summary for consolidation
+    game_result = board.result() if board.is_game_over() else None
+    episode_summary = None
+    if plasticity_enabled or bandit_enabled:
+        episode_summary = extract_episode_summary(
+            plasticity_state if plasticity_enabled else None,
+            bandit_state if bandit_enabled else None,
+            tick_records,
+            game_result,
+        )
+
+    # M4: Accumulate episode for consolidation
+    if consol_engine and episode_summary:
+        consol_engine.accumulate_episode(episode_summary)
+        # Check if we should apply consolidation
+        if consol_engine.should_apply():
+            applied_deltas = consol_engine.apply_to_graph(g)
+            if applied_deltas:
+                result["consolidation_applied"] = len(applied_deltas)
+            # Save updated state if pack path provided
+            if consolidation_pack:
+                try:
+                    consol_engine.save_state(consolidation_pack)
+                except Exception:
+                    pass
+
+    # M4: Update bandit priors if enabled
+    if bandit_enabled and bandit_state and bandit_priors_path:
+        try:
+            new_priors = export_bandit_priors(bandit_state)
+            if bandit_priors:
+                merged = merge_bandit_priors(bandit_priors, new_priors, decay=0.95)
+            else:
+                merged = new_priors
+            save_bandit_priors(merged, bandit_priors_path)
+        except Exception:
+            pass
+
+    # M3: Reset plasticity and bandit for next episode
+    if plasticity_enabled and plasticity_state:
+        reset_plasticity_episode(plasticity_state, g)
+    if bandit_enabled and bandit_state:
+        reset_bandit_episode(bandit_state)
+
     if trace_db is not None:
         ep_id = trace_episode_id or f"krk-{seed or 0}"
         ep = EpisodeRecord(
             episode_id=ep_id,
-            result=board.result() if board.is_game_over() else None,
+            result=game_result,
             ticks=tick_records,
             pack_meta=pack_meta,
             notes={"plies": plies, "ticks": total_ticks},
+            summary=episode_summary,
         )
         trace_db.add_episode(ep)
     if sf_engine is not None:
@@ -1373,10 +1477,31 @@ def main():
     parser.add_argument("--bandit-c-explore", type=float, default=DEFAULT_BANDIT_C_EXPLORE, help="Exploration coefficient for UCB")
     # M3 eval mode
     parser.add_argument("--eval-mode", choices=["heuristic", "stockfish"], default="heuristic", help="Evaluation mode for reward computation")
+    # M4 consolidation arguments
+    parser.add_argument("--consolidate", action="store_true", help="Enable M4 slow consolidation (cross-game weight updates)")
+    parser.add_argument("--consolidate-pack", type=Path, default=None, help="Path to load/save consolidation state")
+    parser.add_argument("--bandit-priors", type=Path, default=None, help="Path to load/save bandit priors")
+    parser.add_argument("--consolidate-eta", type=float, default=DEFAULT_CONSOLIDATE_ETA, help="Consolidation learning rate")
+    parser.add_argument("--consolidate-min-episodes", type=int, default=DEFAULT_CONSOLIDATE_MIN_EPISODES, help="Minimum episodes before consolidation")
     # Single graph; demo uses the shared KRK network
     args = parser.parse_args()
 
     if args.batch and args.batch > 0:
+        # M4: Create shared consolidation engine for batch mode
+        consol_engine = None
+        if args.consolidate:
+            consol_config = ConsolidationConfig(
+                eta_consolidate=args.consolidate_eta,
+                min_episodes=args.consolidate_min_episodes,
+                enabled=True,
+            )
+            consol_engine = ConsolidationEngine(consol_config)
+            if args.consolidate_pack and args.consolidate_pack.exists():
+                try:
+                    consol_engine.load_state(args.consolidate_pack)
+                except Exception:
+                    pass
+
         run_batch(
             args.batch,
             max_plies=args.max_plies,
@@ -1404,7 +1529,21 @@ def main():
             bandit_enabled=args.bandit,
             bandit_c_explore=args.bandit_c_explore,
             eval_mode=args.eval_mode,
+            # M4 consolidation
+            consolidation_enabled=args.consolidate,
+            consolidation_pack=args.consolidate_pack,
+            bandit_priors_path=args.bandit_priors,
+            consolidation_eta=args.consolidate_eta,
+            consolidation_min_episodes=args.consolidate_min_episodes,
+            consolidation_engine=consol_engine,
         )
+
+        # M4: Save final consolidation state after batch
+        if consol_engine and args.consolidate_pack:
+            try:
+                consol_engine.save_state(args.consolidate_pack)
+            except Exception:
+                pass
     else:
         start_fen = args.fen if args.fen else "4k3/6K1/8/8/8/8/R7/8 w - - 0 1"
         trace_db = TraceDB(args.trace_out) if args.trace_out else None
@@ -1438,6 +1577,12 @@ def main():
             bandit_enabled=args.bandit,
             bandit_c_explore=args.bandit_c_explore,
             eval_mode=args.eval_mode,
+            # M4 consolidation
+            consolidation_enabled=args.consolidate,
+            consolidation_pack=args.consolidate_pack,
+            bandit_priors_path=args.bandit_priors,
+            consolidation_eta=args.consolidate_eta,
+            consolidation_min_episodes=args.consolidate_min_episodes,
         )
         if trace_db:
             trace_db.flush()

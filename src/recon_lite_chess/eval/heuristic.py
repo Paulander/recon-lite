@@ -108,6 +108,191 @@ def _mobility_score(board: chess.Board) -> float:
         return (opponent_moves - current_moves) * 0.01
 
 
+def _pawn_structure_score(board: chess.Board) -> float:
+    """
+    Evaluate pawn structure: doubled, isolated, and passed pawns.
+
+    Returns score in pawn units (positive = white better structure).
+    """
+    score = 0.0
+
+    for color in [chess.WHITE, chess.BLACK]:
+        sign = 1 if color == chess.WHITE else -1
+        pawns = board.pieces(chess.PAWN, color)
+
+        # Count pawns per file for doubled pawn detection
+        file_counts = [0] * 8
+        for sq in pawns:
+            file_counts[chess.square_file(sq)] += 1
+
+        for sq in pawns:
+            file = chess.square_file(sq)
+            rank = chess.square_rank(sq)
+
+            # Doubled pawns penalty
+            if file_counts[file] > 1:
+                score -= sign * 0.15
+
+            # Isolated pawn penalty (no friendly pawns on adjacent files)
+            has_neighbor = False
+            if file > 0 and file_counts[file - 1] > 0:
+                has_neighbor = True
+            if file < 7 and file_counts[file + 1] > 0:
+                has_neighbor = True
+            if not has_neighbor:
+                score -= sign * 0.2
+
+            # Passed pawn bonus (no enemy pawns blocking or attacking)
+            is_passed = True
+            enemy_pawns = board.pieces(chess.PAWN, not color)
+            for enemy_sq in enemy_pawns:
+                enemy_file = chess.square_file(enemy_sq)
+                enemy_rank = chess.square_rank(enemy_sq)
+
+                # Check if enemy pawn is in front (blocking) or on adjacent file
+                if abs(enemy_file - file) <= 1:
+                    if color == chess.WHITE and enemy_rank > rank:
+                        is_passed = False
+                        break
+                    elif color == chess.BLACK and enemy_rank < rank:
+                        is_passed = False
+                        break
+
+            if is_passed:
+                # Bonus increases as pawn advances
+                if color == chess.WHITE:
+                    advance = rank - 1  # rank 1 = 0, rank 7 = 6
+                else:
+                    advance = 6 - rank  # rank 6 = 0, rank 0 = 6
+                score += sign * (0.1 + advance * 0.1)
+
+    return score
+
+
+def _piece_activity_score(board: chess.Board) -> float:
+    """
+    Evaluate piece activity: centralization and outpost bonuses.
+
+    Returns score in pawn units (positive = white more active).
+    """
+    score = 0.0
+
+    # Center squares and extended center
+    center_squares = {chess.D4, chess.D5, chess.E4, chess.E5}
+    extended_center = {
+        chess.C3, chess.C4, chess.C5, chess.C6,
+        chess.D3, chess.D4, chess.D5, chess.D6,
+        chess.E3, chess.E4, chess.E5, chess.E6,
+        chess.F3, chess.F4, chess.F5, chess.F6,
+    }
+
+    for color in [chess.WHITE, chess.BLACK]:
+        sign = 1 if color == chess.WHITE else -1
+
+        # Knight centralization
+        for sq in board.pieces(chess.KNIGHT, color):
+            if sq in center_squares:
+                score += sign * 0.2
+            elif sq in extended_center:
+                score += sign * 0.1
+
+            # Knight outpost bonus (on rank 4-6 for white, 3-5 for black, protected by pawn)
+            rank = chess.square_rank(sq)
+            file = chess.square_file(sq)
+            is_outpost = False
+
+            if color == chess.WHITE and 3 <= rank <= 5:
+                # Check if protected by friendly pawn
+                if file > 0:
+                    pawn_sq = chess.square(file - 1, rank - 1)
+                    if board.piece_at(pawn_sq) == chess.Piece(chess.PAWN, chess.WHITE):
+                        is_outpost = True
+                if file < 7:
+                    pawn_sq = chess.square(file + 1, rank - 1)
+                    if board.piece_at(pawn_sq) == chess.Piece(chess.PAWN, chess.WHITE):
+                        is_outpost = True
+            elif color == chess.BLACK and 2 <= rank <= 4:
+                if file > 0:
+                    pawn_sq = chess.square(file - 1, rank + 1)
+                    if board.piece_at(pawn_sq) == chess.Piece(chess.PAWN, chess.BLACK):
+                        is_outpost = True
+                if file < 7:
+                    pawn_sq = chess.square(file + 1, rank + 1)
+                    if board.piece_at(pawn_sq) == chess.Piece(chess.PAWN, chess.BLACK):
+                        is_outpost = True
+
+            if is_outpost:
+                score += sign * 0.15
+
+        # Bishop pair bonus
+        bishops = board.pieces(chess.BISHOP, color)
+        if len(bishops) >= 2:
+            score += sign * 0.3
+
+        # Rook on open/semi-open file
+        for sq in board.pieces(chess.ROOK, color):
+            file = chess.square_file(sq)
+            own_pawns_on_file = len([
+                p for p in board.pieces(chess.PAWN, color)
+                if chess.square_file(p) == file
+            ])
+            enemy_pawns_on_file = len([
+                p for p in board.pieces(chess.PAWN, not color)
+                if chess.square_file(p) == file
+            ])
+
+            if own_pawns_on_file == 0:
+                if enemy_pawns_on_file == 0:
+                    score += sign * 0.2  # Open file
+                else:
+                    score += sign * 0.1  # Semi-open file
+
+        # Rook on 7th rank bonus
+        for sq in board.pieces(chess.ROOK, color):
+            rank = chess.square_rank(sq)
+            if (color == chess.WHITE and rank == 6) or (color == chess.BLACK and rank == 1):
+                score += sign * 0.2
+
+    return score
+
+
+def _tactical_tension_score(board: chess.Board) -> float:
+    """
+    Evaluate tactical tension: hanging pieces and attack counts.
+
+    Returns score in pawn units (positive = white has better tension).
+    """
+    score = 0.0
+
+    for color in [chess.WHITE, chess.BLACK]:
+        sign = 1 if color == chess.WHITE else -1
+
+        for sq, piece in board.piece_map().items():
+            if piece.color != color:
+                continue
+            if piece.piece_type == chess.KING:
+                continue
+
+            # Count attackers and defenders
+            attackers = board.attackers(not color, sq)
+            defenders = board.attackers(color, sq)
+
+            num_attackers = len(attackers)
+            num_defenders = len(defenders)
+
+            # Hanging piece penalty (attacked and not defended)
+            if num_attackers > 0 and num_defenders == 0:
+                piece_value = PIECE_VALUES.get(piece.piece_type, 0) / 100.0
+                score -= sign * piece_value * 0.3
+
+            # Under-defended piece penalty (more attackers than defenders)
+            elif num_attackers > num_defenders:
+                piece_value = PIECE_VALUES.get(piece.piece_type, 0) / 100.0
+                score -= sign * piece_value * 0.1
+
+    return score
+
+
 def _endgame_factor(board: chess.Board) -> float:
     """
     Compute endgame factor (0 = opening, 1 = pure endgame).
@@ -143,7 +328,7 @@ def _krk_specific_score(board: chess.Board) -> float:
     black_pieces = [pt for pt, c in piece_types if c == chess.BLACK]
 
     is_krk = (
-        sorted(white_pieces) == [chess.KING, chess.ROOK]
+        sorted(white_pieces) == sorted([chess.KING, chess.ROOK])
         and sorted(black_pieces) == [chess.KING]
     )
 
@@ -166,12 +351,20 @@ def _krk_specific_score(board: chess.Board) -> float:
     return center_dist * 0.3
 
 
-def eval_position(board: chess.Board) -> float:
+def eval_position(
+    board: chess.Board,
+    include_pawn_structure: bool = True,
+    include_piece_activity: bool = True,
+    include_tactical_tension: bool = False,
+) -> float:
     """
     Evaluate a chess position using heuristics.
 
     Args:
         board: The chess board to evaluate
+        include_pawn_structure: Include pawn structure evaluation
+        include_piece_activity: Include piece activity evaluation
+        include_tactical_tension: Include tactical tension evaluation (slower)
 
     Returns:
         Evaluation in pawn units (positive = white advantage)
@@ -191,7 +384,7 @@ def eval_position(board: chess.Board) -> float:
     # Weight by endgame factor
     eg_factor = _endgame_factor(board)
 
-    # In endgame, king safety matters less, KRK bonus matters more
+    # Base score
     score = (
         material
         + king_safety * (1.0 - eg_factor * 0.5)
@@ -199,7 +392,48 @@ def eval_position(board: chess.Board) -> float:
         + krk_bonus * eg_factor
     )
 
+    # Optional components (M4 expansion)
+    if include_pawn_structure:
+        pawn_structure = _pawn_structure_score(board)
+        score += pawn_structure * (1.0 - eg_factor * 0.3)
+
+    if include_piece_activity:
+        piece_activity = _piece_activity_score(board)
+        score += piece_activity * (1.0 - eg_factor * 0.2)
+
+    if include_tactical_tension:
+        tactical = _tactical_tension_score(board)
+        score += tactical
+
     return score
+
+
+def eval_position_fast(board: chess.Board) -> float:
+    """
+    Fast evaluation using only material, king safety, and mobility.
+
+    Suitable for high-frequency calls where speed is critical.
+    """
+    return eval_position(
+        board,
+        include_pawn_structure=False,
+        include_piece_activity=False,
+        include_tactical_tension=False,
+    )
+
+
+def eval_position_full(board: chess.Board) -> float:
+    """
+    Full evaluation including all components.
+
+    More accurate but slower than eval_position_fast.
+    """
+    return eval_position(
+        board,
+        include_pawn_structure=True,
+        include_piece_activity=True,
+        include_tactical_tension=True,
+    )
 
 
 def compute_reward_tick(
