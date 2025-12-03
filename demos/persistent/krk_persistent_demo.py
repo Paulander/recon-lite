@@ -1032,9 +1032,11 @@ def play_persistent_game(initial_fen: str | None = None,
     last_eval: Optional[float] = None
     episode_reward_sum = 0.0
 
-    def _log_snapshot(*, note: str, env_payload: dict, thoughts: str = "", new_requests=None, include_engine: bool = False):
+    def _log_snapshot(*, note: str, env_payload: dict, thoughts: str = "", new_requests=None, include_engine: bool = False, include_binding: bool = True):
         if viz_logger is None:
             return
+        if include_binding and env.get("binding"):
+            env_payload = {**env_payload, "binding": env.get("binding")}
         viz_logger.snapshot(
             engine=engine if include_engine else None,
             note=note,
@@ -1067,6 +1069,8 @@ def play_persistent_game(initial_fen: str | None = None,
             if opp_move_obj is not None and opp_move_obj in board.legal_moves:
                 board.push(opp_move_obj)
                 opp_uci = opp_move_obj.uci()
+                # Update binding after opponent move for visualization
+                env["binding"] = _update_binding_table(binding_table, board)
                 _log_snapshot(
                     note=f"Opponent ply {plies}: {opp_uci}",
                     env_payload={"fen": board.fen(), "ply": plies, "opponents_move": opp_uci},
@@ -1077,7 +1081,7 @@ def play_persistent_game(initial_fen: str | None = None,
                     debug_logger.snapshot(
                         engine=None,
                         note=f"Opponent ply {plies}: {opp_uci}",
-                        env={"fen": board.fen(), "ply": plies, "opponents_move": opp_uci},
+                        env={"fen": board.fen(), "ply": plies, "opponents_move": opp_uci, "binding": env.get("binding")},
                         thoughts="Opponent move (persistent)",
                         new_requests=[],
                         latents=env.get("phase_latents"),
@@ -1116,7 +1120,7 @@ def play_persistent_game(initial_fen: str | None = None,
                 debug_logger.snapshot(
                     engine=None,
                     note="decision_proposals",
-                    env={"ply": plies + 1, "proposals": ordered},
+                    env={"ply": plies + 1, "proposals": ordered, "binding": env.get("binding")},
                     thoughts="Collected leg2 proposals",
                     new_requests=[],
                     latents=env.get("phase_latents"),
@@ -1168,6 +1172,8 @@ def play_persistent_game(initial_fen: str | None = None,
                     "reason": "safety fallback",
                 }
                 move_uci = fallback
+                # Update binding for fallback visualization
+                env["binding"] = _update_binding_table(binding_table, board)
                 _log_snapshot(
                     note=f"FALLBACK applied: {fallback}",
                     env_payload={"fen": board.fen(), "ply": plies + 1, "fallback": True},
@@ -1178,7 +1184,7 @@ def play_persistent_game(initial_fen: str | None = None,
                     debug_logger.snapshot(
                         engine=None,
                         note=f"FALLBACK applied: {fallback}",
-                        env={"fen": board.fen(), "ply": plies + 1, "fallback": True},
+                        env={"fen": board.fen(), "ply": plies + 1, "fallback": True, "binding": env.get("binding")},
                         thoughts="No acceptable proposal; applying fallback",
                         new_requests=[],
                         latents=env.get("phase_latents"),
@@ -1253,7 +1259,7 @@ def play_persistent_game(initial_fen: str | None = None,
                 debug_logger.snapshot(
                     engine=None,
                     note=f"Applied move {plies}: {move_uci}",
-                    env={"fen": board.fen(), "ply": plies, "recons_move": move_uci},
+                    env={"fen": board.fen(), "ply": plies, "recons_move": move_uci, "binding": env.get("binding")},
                     thoughts=f"Applied {move_uci} (persistent)",
                     new_requests=[],
                     latents=env.get("phase_latents"),
