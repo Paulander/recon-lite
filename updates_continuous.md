@@ -314,11 +314,143 @@ uv run python demos/experiments/pack_tournament.py --mode krk \
   --pack weights/krk_consol_new.json --runs 100
 ```
 
-### Stubs for M5
+---
 
-The **distillation module** (`src/recon_lite_chess/eval/distill.py`) is stubbed:
+## M5 (Implemented 2024-12): Structure Discovery & Script Induction
+
+Goal: Move from "tune existing scripts" to "propose and vet new ones" with trust-based pruning/promotion, while keeping explainability and safety.
+
+### What's New in M5
+
+#### 1. Motif Extraction (`src/recon_lite/motifs/`)
+
+- **BindingDescriptor**: Compact schema for "interesting patches" extracted from traces
+- **Extractors**: Functions to analyze board positions for tactical/structural patterns
+- **CLI**: `demos/experiments/extract_motifs.py` to extract motifs from trace files
+
+```bash
+uv run python demos/experiments/extract_motifs.py \
+  --traces reports/*.json --out reports/motifs/extracted.jsonl --stats
+```
+
+#### 2. Clustering & Script Proposals
+
+- **Motif Clustering**: `demos/experiments/cluster_motifs.py` groups patterns by type and context
+- **Script Proposals**: `demos/experiments/propose_scripts.py` generates candidate subgraph diffs
+- **Human Review**: `tools/review_proposal.py` for accept/reject workflow
+
+```bash
+# Cluster extracted motifs
+uv run python demos/experiments/cluster_motifs.py \
+  --motifs reports/motifs/extracted.jsonl --out reports/motifs/clusters.json
+
+# Generate script proposals
+uv run python demos/experiments/propose_scripts.py \
+  --clusters reports/motifs/clusters.json --out proposals/
+
+# Review proposals
+uv run python tools/review_proposal.py --list proposals/
+uv run python tools/review_proposal.py --proposal proposals/fork_v1.yaml --action accept
+```
+
+#### 3. Trust Scoring & Pruning (`src/recon_lite/trust/`)
+
+- **NodeTrustScore** and **EdgeTrustScore**: Track activation counts, rewards, and variance
+- **Trust formula**: `trust = α * norm(activations) + β * norm(reward) - γ * norm(variance)`
+- **Actions**: `freeze` (disable plasticity), `remove` (candidate for deletion), `promote` (boost weight)
+
+```bash
+uv run python tools/trust_report.py \
+  --traces demos/outputs/persistent/*.json \
+  --out reports/trust.json
+```
+
+#### 4. Tactical Subgraph (`src/recon_lite_chess/scripts/tactics.py`)
+
+New nodes for tactical pattern detection:
+- **Sensors**: `detect_fork`, `detect_pin`, `detect_hanging`
+- **Actuators**: `exploit_fork`, `capture_hanging`, `protect_hanging`
+- **Weight pack**: `weights/subgraphs/tactics_weight_pack.swp`
+
+#### 5. Rook Endgame Subgraph (`src/recon_lite_chess/scripts/rook_endgame.py`)
+
+Implements classic rook endgame techniques:
+- Lucena position detection and bridge-building
+- Philidor defense
+- King cutoff moves
+- **Weight pack**: `weights/subgraphs/rook_weight_pack.swp`
+
+#### 6. Extended Nightly Pipeline
+
+`demos/experiments/nightly_runner.py` now supports:
+- Motif extraction after trace generation
+- Trust scoring with incremental generation tracking
+- Combined report generation
+
+Config example (`configs/nightly/m5_full.json`):
+```json
+{
+  "mode": "krk",
+  "motif_extraction": {"enabled": true, "reward_threshold": 0.3},
+  "trust_scoring": {"enabled": true, "promote_threshold": 0.8},
+  "consolidation": {"enabled": true}
+}
+```
+
+#### 7. Benchmark Suites
+
+- `data/benchmarks/tactics_suite.fen`: Fork, pin, hanging piece positions
+- `data/benchmarks/rook_endgame_suite.fen`: Lucena, Philidor, cutoff positions
+- `demos/experiments/benchmark_eval.py`: Evaluate success rate on finding best moves
+
+```bash
+uv run python demos/experiments/benchmark_eval.py \
+  --suite data/benchmarks/tactics_suite.fen --out reports/benchmarks/tactics.json -v
+```
+
+#### 8. Versioning
+
+Weight pack manifest in `weights/manifest.json`:
+```json
+{
+  "tactics": {"current": "weights/subgraphs/tactics_weight_pack.swp", "generation": 1},
+  "rook_endgame": {"current": "weights/subgraphs/rook_weight_pack.swp", "generation": 1}
+}
+```
+
+### M5 File Summary
+
+**New modules**:
+- `src/recon_lite/motifs/` - Descriptors, extractors
+- `src/recon_lite/trust/` - Trust scoring
+- `src/recon_lite_chess/scripts/tactics.py`
+- `src/recon_lite_chess/scripts/rook_endgame.py`
+
+**New CLIs**:
+- `demos/experiments/extract_motifs.py`
+- `demos/experiments/cluster_motifs.py`
+- `demos/experiments/propose_scripts.py`
+- `demos/experiments/benchmark_eval.py`
+- `tools/trust_report.py`
+- `tools/review_proposal.py`
+
+**New data**:
+- `data/benchmarks/tactics_suite.fen`
+- `data/benchmarks/rook_endgame_suite.fen`
+- `weights/subgraphs/tactics_weight_pack.swp`
+- `weights/subgraphs/rook_weight_pack.swp`
+- `weights/manifest.json`
+
+**Tests**:
+- `tests/test_motif_extraction.py` (20 tests)
+- `tests/test_trust_scoring.py` (25 tests)
+- `tests/test_tactics_subgraph.py` (14 tests)
+
+### Stubs for M6
+
+The **distillation module** (`src/recon_lite_chess/eval/distill.py`) remains stubbed:
 - `load_from_traces()`: collect (position, stockfish_eval) pairs
 - `train_distilled_eval()`: train lightweight NN to mimic Stockfish
 - `DistilledEvaluator.evaluate()`: fast ML-based evaluation
 
-This is planned for M5: Distillation & Full-Game Eval.
+This is planned for M6: Distillation & Full-Game Eval.
