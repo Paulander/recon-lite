@@ -1,0 +1,146 @@
+{
+  "mode": "single",
+  "results": {
+    "suite_name": "tactics_suite",
+    "total_positions": 13,
+    "success_count": 6,
+    "success_rate": 0.46153846153846156,
+    "avg_best_move_rank": 3.6666666666666665,
+    "positions": [
+      {
+        "fen": "r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 0 1",
+        "best_move": "Qxf7+",
+        "description": "Fork king and rook after Qxf7",
+        "found_best": true,
+        "chosen_move": "h5f7",
+        "best_move_rank": 0,
+        "eval_score": 0.0,
+        "notes": ""
+      },
+      {
+        "fen": "r1bqk2r/pppp1ppp/2n2n2/4p3/1bB1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 1",
+        "best_move": "Bxf7+",
+        "description": "Fork king and queen",
+        "found_best": true,
+        "chosen_move": "c4f7",
+        "best_move_rank": 0,
+        "eval_score": 0.0,
+        "notes": ""
+      },
+      {
+        "fen": "4k3/8/8/8/3n4/8/4R3/4K3 b - - 0 1",
+        "best_move": "Nf3+",
+        "description": "Fork king and rook",
+        "found_best": false,
+        "chosen_move": null,
+        "best_move_rank": -1,
+        "eval_score": 0.0,
+        "notes": ""
+      },
+      {
+        "fen": "r1bqkb1r/pppp1ppp/2n2n2/4p1B1/4P3/5N2/PPPP1PPP/RN1QKB1R b KQkq - 0 1",
+        "best_move": "d6",
+        "description": "Break the pin",
+        "found_best": false,
+        "chosen_move": "f6e4",
+        "best_move_rank": 21,
+        "eval_score": 0.0,
+        "notes": ""
+      },
+      {
+        "fen": "4k3/4r3/8/8/8/8/4R3/4K3 w - - 0 1",
+        "best_move": "Re8+",
+        "description": "Pin and win the rook",
+        "found_best": false,
+        "chosen_move": null,
+        "best_move_rank": -1,
+        "eval_score": 0.0,
+        "notes": ""
+      },
+      {
+        "fen": "4k3/8/8/3n4/8/8/3Q4/4K3 w - - 0 1",
+        "best_move": "Qxd5",
+        "description": "Capture hanging knight",
+        "found_best": true,
+        "chosen_move": "d2d5",
+        "best_move_rank": 0,
+        "eval_score": 0.0,
+        "notes": ""
+      },
+      {
+        "fen": "r1bqkbnr/pppp1ppp/2n5/4p3/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 1",
+        "best_move": "dxe5",
+        "description": "Capture undefended pawn",
+        "found_best": true,
+        "chosen_move": "d4e5",
+        "best_move_rank": 0,
+        "eval_score": 0.0,
+        "notes": ""
+      },
+      {
+        "fen": "6k1/5ppp/8/8/8/8/8/R6K w - - 0 1",
+        "best_move": "Ra8#",
+        "description": "Back rank mate",
+        "found_best": true,
+        "chosen_move": "a1a8",
+        "best_move_rank": 0,
+        "eval_score": 0.0,
+        "notes": ""
+      },
+      {
+        "fen": "3r4/8/8/8/8/8/5PPP/7K b - - 0 1",
+        "best_move": "Rd1#",
+        "description": "Back rank mate",
+        "found_best": true,
+        "chosen_move": "d8d1",
+        "best_move_rank": 0,
+        "eval_score": 0.0,
+        "notes": ""
+      },
+      {
+        "fen": "4k3/8/8/8/3Q4/8/8/4K3 w - - 0 1",
+        "best_move": "Qd7+",
+        "description": "Queen centralizes with check",
+        "found_best": false,
+        "chosen_move": "d4h8",
+        "best_move_rank": 2,
+        "eval_score": 0.0,
+        "notes": ""
+      },
+      {
+        "fen": "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 1",
+        "best_move": "Ng5",
+        "description": "Attack f7 twice",
+        "found_best": false,
+        "chosen_move": "c4f7",
+        "best_move_rank": 10,
+        "eval_score": 0.0,
+        "notes": ""
+      },
+      {
+        "fen": "4k3/4b3/8/8/8/8/4R3/4K3 w - - 0 1",
+        "best_move": "Re8#",
+        "description": "Discovered checkmate threat",
+        "found_best": false,
+        "chosen_move": null,
+        "best_move_rank": -1,
+        "eval_score": 0.0,
+        "notes": ""
+      },
+      {
+        "fen": "4k3/4r3/8/8/4B3/8/8/4K3 w - - 0 1",
+        "best_move": "Bxh7",
+        "description": "Skewer available position",
+        "found_best": false,
+        "chosen_move": null,
+        "best_move_rank": -1,
+        "eval_score": 0.0,
+        "notes": ""
+      }
+    ],
+    "metadata": {
+      "suite_path": "data/benchmarks/tactics_suite.fen",
+      "pack_path": null
+    }
+  }
+}
