@@ -1,0 +1,14 @@
+{
+  "$comment": "Fast KRK nightly config - quick validation runs (5-10 min)",
+  "mode": "krk",
+  "fen_file": "data/endgames/krk/random.fen",
+  "runs_per_block": 20,
+  "blocks": 3,
+  "max_plies": 60,
+  "max_ticks": 100,
+  "packs": ["weights/krk_phase_weight_pack.swp"],
+  "engine": null,
+  "depth": 2,
+  "out_dir": "reports/nightly/krk_fast"
+}
+
