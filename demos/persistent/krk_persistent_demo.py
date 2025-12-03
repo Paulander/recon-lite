@@ -674,6 +674,13 @@ def _decision_cycle(engine: ReConEngine,
         if debug_logger is not None:
             debug_payload = dict(view_env)
             debug_payload.update(dbg)
+            # M3: Include plasticity data in debug output
+            if env.get("m3_weight_deltas"):
+                debug_payload["m3_weight_deltas"] = env["m3_weight_deltas"]
+            if env.get("m3_reward_tick") is not None:
+                debug_payload["m3_reward_tick"] = env["m3_reward_tick"]
+            if env.get("m3_modulators"):
+                debug_payload["m3_modulators"] = env["m3_modulators"]
             debug_logger.snapshot(
                 engine=engine,
                 note=f"Persistent eval tick {ticks} (ply {plies+1})",
