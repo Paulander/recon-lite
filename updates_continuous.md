@@ -446,11 +446,186 @@ Weight pack manifest in `weights/manifest.json`:
 - `tests/test_trust_scoring.py` (25 tests)
 - `tests/test_tactics_subgraph.py` (14 tests)
 
-### Stubs for M6
+---
 
-The **distillation module** (`src/recon_lite_chess/eval/distill.py`) remains stubbed:
-- `load_from_traces()`: collect (position, stockfish_eval) pairs
-- `train_distilled_eval()`: train lightweight NN to mimic Stockfish
-- `DistilledEvaluator.evaluate()`: fast ML-based evaluation
+## M6 (Implemented 2025-12): Full-Game Architecture & Multi-Scale Dynamics
 
-This is planned for M6: Distillation & Full-Game Eval.
+**Goal**: Restructure ReCoN around a time-scale goal hierarchy with fan-in sensor terminals, plan persistence, and full-game capability from opening to checkmate.
+
+### Key Features
+
+#### 1. Fan-In Terminals (ReCoN Extension)
+Sensor terminals can have multiple parent scripts querying them:
+
+```python
+# Multiple plans query the same sensor
+g.add_edge("DevelopMinorPieces", "CenterControlSensor", LinkType.SUB)
+g.add_edge("ControlCenter", "CenterControlSensor", LinkType.SUB)  # Fan-in
+
+# Graph tracks all parents
+parents = g.all_parents("CenterControlSensor")  # ["DevelopMinorPieces", "ControlCenter"]
+g.is_fanin_terminal("CenterControlSensor")  # True
+```
+
+#### 2. Goal Hierarchy
+```
+ULTIMATE (WIN/DRAW/SURVIVE)
+    ↓
+STRATEGIC (AttackKing, Simplify, Develop...)
+    ↓  
+TACTICAL (Forks, Pins, Hanging pieces)
+    ↓
+SENSORS (Material, Phase, KingSafety...)
+```
+
+#### 3. Plan Persistence via Activation
+Plans maintain activation over time (inertia and decay):
+
+```python
+from recon_lite.dynamics.persistence import apply_persistence_to_node
+
+# Evidence accumulates with inertia, decays over time
+apply_persistence_to_node(plan_node, evidence=0.7)
+
+# Check if plan is active
+from recon_lite.dynamics.persistence import is_plan_active
+is_plan_active(plan_node)  # True if accumulated >= threshold
+```
+
+#### 4. Soft Phase Gating
+Phase is continuous weights, not hard gates:
+
+```python
+from recon_lite_chess.sensors.phase import estimate_phase
+phase = estimate_phase(board)  # PhaseWeights(opening=0.2, middlegame=0.6, endgame=0.2)
+```
+
+#### 5. Full Game Demo
+Play complete games from starting position:
+
+```bash
+uv run python demos/persistent/full_game_demo.py --max-moves 200
+uv run python demos/persistent/full_game_demo.py --vs-random --output game.json
+```
+
+### M6 File Summary
+
+**New/Modified modules**:
+- `src/recon_lite/graph.py` - Fan-in support for terminals
+- `src/recon_lite/dynamics/persistence.py` - Plan persistence logic
+- `src/recon_lite_chess/goals/ultimate.py` - WIN/DRAW/SURVIVE assessment
+- `src/recon_lite_chess/goals/strategic.py` - Strategic plan definitions
+- `src/recon_lite_chess/sensors/material.py` - Material category sensor
+- `src/recon_lite_chess/sensors/phase.py` - Soft phase sensor
+- `src/recon_lite_chess/scripts/opening.py` - Opening plans and sensors
+- `src/recon_lite_chess/scripts/middlegame.py` - Middlegame plans and sensors
+
+**New demos**:
+- `demos/persistent/full_game_demo.py` - Full game from start to finish
+
+**Updated specs**:
+- `specs/macrograph_v1.json` - M6 goal hierarchy with fan-in
+
+**Tests** (47 passing):
+- `tests/test_fanin_terminals.py`
+- `tests/test_goal_hierarchy.py`
+- `tests/test_persistence.py`
+- `tests/test_opening_middlegame.py`
+
+---
+
+## M7 (Implemented 2025-12): Distillation & Evaluation Upgrade
+
+**Goal**: Train a lightweight neural network to mimic Stockfish for fast, accurate evaluation without runtime engine dependency.
+
+### Key Features
+
+#### 1. Feature Extraction
+Extract ~77 features from chess positions for ML training:
+
+```python
+from recon_lite_chess.eval.features import extract_features
+
+board = chess.Board()
+fv = extract_features(board)
+print(f"Features: {len(fv)}")  # 77 features
+print(fv.feature_names)  # ["mat_w_P", "mat_w_N", ...]
+```
+
+Features include:
+- Material counts (12)
+- Material balance (7)
+- Piece positions (16)
+- King positions (8)
+- Pawn structure (12)
+- King safety (8)
+- Mobility (4)
+- Phase indicators (4)
+- Tactical features (6)
+
+#### 2. Stockfish Data Collection
+Collect training data by annotating positions with Stockfish:
+
+```bash
+# From random positions
+uv run python tools/collect_stockfish_evals.py \
+  --random 5000 --depth 15 --out data/distillation/evals.jsonl
+
+# From game traces
+uv run python tools/collect_stockfish_evals.py \
+  --traces reports/*.jsonl --out data/distillation/evals.jsonl
+
+# From PGN games
+uv run python tools/collect_stockfish_evals.py \
+  --pgn games.pgn --out data/distillation/evals.jsonl
+```
+
+#### 3. Model Training
+Train distilled model (supports PyTorch or sklearn backend):
+
+```bash
+uv run python tools/train_distilled_eval.py \
+  --data data/distillation/evals.jsonl \
+  --out weights/distilled_eval.pt \
+  --epochs 100 --lr 0.001 --hidden 256,128
+```
+
+#### 4. Integrated Evaluation
+Use distilled model in EvalManager:
+
+```python
+from recon_lite_chess.eval import EvalMode, EvalConfig, EvalManager
+
+# Pure distilled mode
+config = EvalConfig(
+    mode=EvalMode.DISTILLED,
+    distilled_model_path="weights/distilled_eval.pt"
+)
+manager = EvalManager(config)
+result = manager.evaluate(board)
+
+# Distilled + tactical bonuses
+config = EvalConfig(mode=EvalMode.DISTILLED_HYBRID, ...)
+```
+
+### M7 File Summary
+
+**New modules**:
+- `src/recon_lite_chess/eval/features.py` - Feature extraction for ML
+- `tools/train_distilled_eval.py` - Model training script
+
+**Modified**:
+- `src/recon_lite_chess/eval/distill.py` - Now fully implemented
+- `src/recon_lite_chess/eval/manager.py` - DISTILLED and DISTILLED_HYBRID modes
+
+**Tests** (17 passing):
+- `tests/test_distillation.py`
+
+### M7 Acceptance Criteria
+
+- [x] Feature extraction produces consistent 77-feature vectors
+- [x] Data collection tool supports traces, PGN, FENs, and random positions
+- [x] Training script supports both PyTorch and sklearn backends
+- [x] EvalManager supports DISTILLED and DISTILLED_HYBRID modes
+- [ ] 10,000+ positions collected (user task)
+- [ ] Model achieves >0.85 correlation with Stockfish (depends on training data)

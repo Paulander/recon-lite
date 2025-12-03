@@ -1,10 +1,11 @@
 """
-Evaluation Manager (M4)
+Evaluation Manager (M4/M7)
 
 Unified interface for chess position evaluation that supports multiple backends:
 - Heuristic: Fast, CPU-only evaluation
 - Stockfish: Accurate, requires external engine
-- Distilled: Future ML-based evaluation (stub for now)
+- Distilled: ML-based evaluation trained on Stockfish (M7)
+- Hybrid: Heuristic with occasional Stockfish validation
 
 Provides caching and logging of evaluation sources.
 """
@@ -13,6 +14,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum, auto
+from pathlib import Path
 from typing import Any, Dict, Optional, TYPE_CHECKING
 
 import chess
@@ -30,8 +32,9 @@ class EvalMode(Enum):
     HEURISTIC = auto()  # Default heuristic with pawn structure + activity
     HEURISTIC_FULL = auto()  # Full heuristic including tactical tension
     STOCKFISH = auto()  # External Stockfish engine
-    DISTILLED = auto()  # ML-based distilled eval (future)
+    DISTILLED = auto()  # ML-based distilled eval (M7)
     HYBRID = auto()  # Heuristic with occasional Stockfish validation
+    DISTILLED_HYBRID = auto()  # Distilled with heuristic tactical bonuses
 
 
 @dataclass
@@ -46,6 +49,8 @@ class EvalConfig:
     cache_max_size: int = 10000
     log_source: bool = False
     hybrid_sample_rate: float = 0.1  # Fraction of positions to validate with SF
+    # M7: Distilled model path
+    distilled_model_path: Optional[str] = None
 
 
 @dataclass
@@ -67,26 +72,57 @@ class EvalManager:
         manager = EvalManager(EvalConfig(mode=EvalMode.HEURISTIC))
         result = manager.evaluate(board)
         print(f"Score: {result.score} (from {result.source.name})")
+        
+    M7 Distilled mode:
+        manager = EvalManager(EvalConfig(
+            mode=EvalMode.DISTILLED,
+            distilled_model_path="weights/distilled_eval.pt"
+        ))
     """
 
     def __init__(self, config: Optional[EvalConfig] = None):
         self.config = config or EvalConfig()
         self._cache: Dict[str, EvalResult] = {}
         self._sf_engine: Optional["chess.engine.SimpleEngine"] = None
+        self._distilled_eval = None  # M7: Distilled evaluator
         self._stats = {
             "total_evals": 0,
             "cache_hits": 0,
             "heuristic_evals": 0,
             "stockfish_evals": 0,
+            "distilled_evals": 0,  # M7
             # M4: Hybrid mode tracking
             "hybrid_validations": 0,
             "hybrid_error_sum": 0.0,
             "hybrid_error_abs_sum": 0.0,
         }
+        
+        # M7: Initialize distilled evaluator if configured
+        if self.config.distilled_model_path:
+            self._init_distilled()
 
     def _get_cache_key(self, board: chess.Board) -> str:
         """Generate cache key from board position."""
         return board.fen()
+
+    def _init_distilled(self) -> bool:
+        """Initialize distilled evaluator if model path is set."""
+        if self._distilled_eval is not None:
+            return self._distilled_eval.is_loaded()
+        
+        if not self.config.distilled_model_path:
+            return False
+        
+        try:
+            from .distill import DistilledEvaluator
+            path = Path(self.config.distilled_model_path)
+            if path.exists():
+                self._distilled_eval = DistilledEvaluator(path)
+                return self._distilled_eval.is_loaded()
+        except Exception as e:
+            print(f"Failed to load distilled model: {e}")
+        
+        return False
 
     def _init_stockfish(self) -> bool:
         """Initialize Stockfish engine if needed."""
@@ -185,6 +221,52 @@ class EvalManager:
 
         return heuristic_result
 
+    def _eval_distilled(self, board: chess.Board) -> EvalResult:
+        """Evaluate using distilled model (M7)."""
+        if not self._init_distilled():
+            # Fallback to heuristic
+            result = self._eval_heuristic(board)
+            result.meta["fallback"] = "distilled_unavailable"
+            return result
+        
+        try:
+            score = self._distilled_eval.evaluate(board)
+            self._stats["distilled_evals"] += 1
+            return EvalResult(
+                score=score,
+                source=EvalMode.DISTILLED,
+                meta={"model": self.config.distilled_model_path},
+            )
+        except Exception as e:
+            result = self._eval_heuristic(board)
+            result.meta["fallback"] = f"distilled_error: {e}"
+            return result
+
+    def _eval_distilled_hybrid(self, board: chess.Board) -> EvalResult:
+        """Evaluate using distilled with heuristic tactical bonuses (M7)."""
+        # Get distilled base eval
+        distilled_result = self._eval_distilled(board)
+        
+        if distilled_result.source != EvalMode.DISTILLED:
+            # Fallback happened, return as-is
+            return distilled_result
+        
+        # Add tactical bonuses from heuristic
+        from .heuristic import _tactical_tension_score
+        tactical_bonus = _tactical_tension_score(board)
+        
+        # Blend: primarily distilled, with small tactical adjustment
+        combined_score = distilled_result.score + tactical_bonus * 0.2
+        
+        return EvalResult(
+            score=combined_score,
+            source=EvalMode.DISTILLED_HYBRID,
+            meta={
+                "distilled_score": distilled_result.score,
+                "tactical_bonus": tactical_bonus,
+            },
+        )
+
     def evaluate(self, board: chess.Board) -> EvalResult:
         """
         Evaluate a chess position.
@@ -218,9 +300,11 @@ class EvalManager:
         elif self.config.mode == EvalMode.HYBRID:
             result = self._eval_hybrid(board)
         elif self.config.mode == EvalMode.DISTILLED:
-            # Stub: fall back to heuristic
-            result = self._eval_heuristic(board)
-            result.meta["distilled_stub"] = True
+            # M7: Use distilled evaluator if available
+            result = self._eval_distilled(board)
+        elif self.config.mode == EvalMode.DISTILLED_HYBRID:
+            # M7: Distilled with tactical bonuses
+            result = self._eval_distilled_hybrid(board)
         else:
             result = self._eval_heuristic(board)
 

@@ -143,7 +143,12 @@ class ReConEngine:
         return satisfied_count == len(roots)
 
     def _update_terminals(self, env: Dict[str, Any], now_requested: Dict[str, bool]):
-        """Handle state transitions for terminal nodes."""
+        """Handle state transitions for terminal nodes.
+        
+        Fan-in terminals (sensors with multiple parents):
+        - When confirmed, the confirmation is broadcast to ALL parents
+        - Each parent independently evaluates if its children are done
+        """
         for nid, node in self.g.nodes.items():
             if node.ntype == NodeType.TERMINAL:
                 if node.state == NodeState.REQUESTED:
@@ -162,6 +167,9 @@ class ReConEngine:
                             node.state = NodeState.FAILED
                 elif node.state == NodeState.TRUE:
                     node.state = NodeState.CONFIRMED
+                    # For fan-in terminals: confirmation is automatically visible
+                    # to all parents via the node.state; no special broadcast needed
+                    # since _children_confirmed_sequence_done checks child states directly
 
 # Process script nodes to request their children when in a requestable state
     def _process_script_requests(self, now_requested: Dict[str, bool]):

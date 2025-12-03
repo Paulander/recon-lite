@@ -63,13 +63,19 @@ class Graph:
         self.edges: List[Edge] = []
         self.out: Dict[Tuple[str, LinkType], List[str]] = {}
         self.inc: Dict[Tuple[str, LinkType], List[str]] = {}
+        # Single parent for scripts (1:1), but terminals can have multiple (fan-in)
         self.parent: Dict[str, Optional[str]] = {}
+        # For fan-in terminals: track all parents that can query them
+        self.parents_fanin: Dict[str, List[str]] = {}
 
     def add_node(self, node: Node):
         if node.nid in self.nodes:
             raise ValueError(f"Duplicate node id: {node.nid}")
         self.nodes[node.nid] = node
         self.parent[node.nid] = None
+        # Initialize fan-in list for terminals
+        if node.ntype == NodeType.TERMINAL:
+            self.parents_fanin[node.nid] = []
 
     def add_edge(self, src: str, dst: str, ltype: LinkType):
         if src not in self.nodes or dst not in self.nodes:
@@ -102,15 +108,44 @@ class Graph:
         self.out.setdefault((src, ltype), []).append(dst)
         self.inc.setdefault((dst, ltype), []).append(src)
         if ltype == LinkType.SUB:
-            if self.parent[dst] is not None:
-                raise ValueError(f"Node {dst} already has a parent {self.parent[dst]}")
-            self.parent[dst] = src
+            dst_node = self.nodes[dst]
+            # Fan-in allowed for TERMINAL nodes (sensors can have multiple parents)
+            # Scripts must have exactly one parent (1:1)
+            if dst_node.ntype == NodeType.TERMINAL:
+                # Track all parents for fan-in terminals
+                if dst not in self.parents_fanin:
+                    self.parents_fanin[dst] = []
+                self.parents_fanin[dst].append(src)
+                # Keep first parent as primary for backward compatibility
+                if self.parent[dst] is None:
+                    self.parent[dst] = src
+            else:
+                # Script nodes: enforce single parent
+                if self.parent[dst] is not None:
+                    raise ValueError(f"Script node {dst} already has a parent {self.parent[dst]}")
+                self.parent[dst] = src
 
     def children(self, nid: str) -> List[str]:
         return list(self.out.get((nid, LinkType.SUB), []))
 
     def parent_of(self, nid: str) -> Optional[str]:
+        """Return the primary parent (first parent for fan-in terminals)."""
         return self.parent.get(nid, None)
+
+    def all_parents(self, nid: str) -> List[str]:
+        """Return all parents for fan-in terminals, or [parent] for scripts."""
+        if nid in self.parents_fanin and self.parents_fanin[nid]:
+            return list(self.parents_fanin[nid])
+        p = self.parent.get(nid)
+        return [p] if p else []
+
+    def is_fanin_terminal(self, nid: str) -> bool:
+        """Check if a node is a terminal with multiple parents (fan-in)."""
+        return (
+            nid in self.nodes
+            and self.nodes[nid].ntype == NodeType.TERMINAL
+            and len(self.parents_fanin.get(nid, [])) > 1
+        )
 
     def predecessors(self, nid: str) -> List[str]:
         return list(self.inc.get((nid, LinkType.POR), []))

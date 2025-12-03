@@ -4,7 +4,8 @@ Evaluation functions for chess positions in ReCoN-lite.
 This package provides:
 - heuristic: Material + king safety + mobility + pawn structure + piece activity
 - manager: Unified evaluation interface supporting multiple backends
-- distill: Future ML-based distilled evaluation (stub)
+- distill: ML-based distilled evaluation trained on Stockfish (M7)
+- features: Feature extraction for ML models (M7)
 """
 
 from .heuristic import (
@@ -27,6 +28,11 @@ from .distill import (
     DistilledEvaluator,
     train_distilled_eval,
 )
+from .features import (
+    extract_features,
+    FeatureVector,
+    FEATURE_COUNT,
+)
 
 __all__ = [
     # heuristic
@@ -46,5 +52,9 @@ __all__ = [
     "DistillationDataset",
     "DistilledEvaluator",
     "train_distilled_eval",
+    # features
+    "extract_features",
+    "FeatureVector",
+    "FEATURE_COUNT",
 ]
 
