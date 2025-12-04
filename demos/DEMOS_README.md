@@ -1,120 +1,141 @@
 # ReCoN Demos - Learning Progression
 
-This directory contains demos that showcase ReCoN's capabilities, building from basic concepts to advanced interactive applications.
+This directory contains demos that showcase ReCoN's capabilities, from basic concepts to full game play with learning.
 
-## 🎯 Demo Hierarchy & Learning Path
+## 📁 Directory Structure
 
-### 1. **`sequence_demo.py`** - Core ReCoN Fundamentals
-**What it shows:** Basic ReCoN execution with SUB/POR links
-- ✅ Node types: SCRIPT, TERMINAL
-- ✅ Link types: SUB (hierarchy), POR (sequence)
-- ✅ Execution flow: Requests → Confirmation → Propagation
-- ✅ Logging: JSON snapshots with `tick`, `nodes`, `thoughts`
-- **Purpose:** Validate ReCoN engine works correctly
-- **Skills learned:** Basic graph structure, execution semantics
-
----
-
-### 2. **`krk_checkmate_demo.py`** - Static Chess Position Analysis
-**What it shows:** ReCoN analyzing chess positions (evaluation mode)
-- ✅ Chess domain integration: `python-chess` library
-- ✅ Terminal evaluators: `on_edge()`, `box_size()`, `opposition()`, `is_mate()`
-- ✅ KRK strategy phases: Drive to edge → Shrink box → Opposition → Mate
-- ✅ Static evaluation: Same position analyzed repeatedly
-- **Purpose:** Chess position analysis without making moves
-- **Skills learned:** Domain-specific terminals, multi-phase strategies
-- **Current state:** ✅ Working - evaluates but doesn't play
-
----
-
-### 3. **`krk_play_demo.py`** - Interactive Chess Player ("Dumb" Mode)
-**What it shows:** ReCoN playing full chess games with alternating moves
-- ✅ **Move generators:** `KingDriveMoves`, `RandomLegalMoves` (actuators)
-- ✅ **Game loop:** ReCoN move → Opponent move → Repeat
-- ✅ **Fresh graphs:** Rebuild KRK graph each move (stateless)
-- ✅ **Random opponent:** Simple legal move selection
-- ✅ **Complete games:** Play until checkmate/stalemate
-- **Purpose:** First working chess-playing ReCoN
-- **Skills learned:** Actuators, game loops, interactive execution
-- **Approach:** "Dumb" - stateless between moves
-
----
-
-### 4. **`krk_super_play_demo.py`** (Future) - Persistent Chess Player
-**What it shows:** Advanced ReCoN with internal state between moves
-- 🔄 **Persistent graphs:** Maintain state across moves
-- 🔄 **Super-ReCoN:** Top-level orchestrator with KRK subgraph
-- 🔄 **WAIT sensors:** Detect opponent moves without rebuild
-- 🔄 **Learning ready:** Weight updates between moves
-- **Purpose:** Sophisticated chess player with memory
-- **Skills learned:** State persistence, multi-level graphs, learning integration
-
----
-
-## 🔄 Evolution: From Evaluation to Playing
-
-| Demo | Mode | Moves Made | Graph Persistence | Opponent | Learning |
-|------|------|------------|-------------------|----------|----------|
-| `sequence_demo` | Abstract | 0 | N/A | None | None |
-| `krk_checkmate_demo` | Evaluation | 0 | Per-run | None | None |
-| `krk_play_demo` | Interactive | ✅ Full games | Per-move | Random | None |
-| `krk_super_play_demo` | Advanced | ✅ Full games | Persistent | Random/Self | ✅ Ready |
-
----
-
-## 🎮 Current Status & What Works
-
-### ✅ **Working Now:**
-- **Static evaluation:** `krk_checkmate_demo.py` analyzes KRK positions
-- **Interactive playing:** `krk_play_demo.py` plays complete chess games
-- **Visualization:** `enhanced_visualization.html` shows execution
-- **Logging:** JSON output with move-by-move data
-
-### 🔄 **Next Steps:**
-- **Persistent state:** Keep ReCoN reasoning between moves
-- **Learning integration:** Update move selection weights
-- **Opponent sophistication:** Beyond random moves
-
----
-
-## 📊 Key Concepts Demonstrated
-
-### **Terminal Types:**
-- **Evaluators:** `on_edge()`, `is_mate()` - analyze board state
-- **Actuators:** `KingDriveMoves()`, `RandomLegalMoves()` - choose moves
-
-### **Execution Patterns:**
-- **Static:** Same position, multiple evaluations
-- **Interactive:** Alternating moves, fresh graphs
-- **Persistent:** Maintain state across moves
-
-### **Data Flow:**
-- **Environment:** `{"board": chess.Board, "chosen_move": None}`
-- **Actuators set:** `env["chosen_move"] = "e2e4"`
-- **Engine applies:** `board.push_uci(env["chosen_move"])`
-
----
-
-## 🚀 Running the Demos
-
-```bash
-# 1. Basic ReCoN validation
-uv run python demos/sequence_demo.py
-
-# 2. Chess position evaluation
-uv run python demos/krk_checkmate_demo.py
-
-# 3. Interactive chess playing
-uv run python demos/krk_play_demo.py
-
-# 4. View results
-# Open demos/visualization/enhanced_visualization.html
+```
+demos/
+├── evaluation/       # Static position evaluation demos
+├── experiments/      # Training and batch evaluation tools
+├── gameplay/         # Full game playing demos
+├── persistent/       # Stateful demos with learning (M3-M7)
+├── shared/           # Shared network builders
+├── testing/          # Test utilities
+└── visualization/    # HTML/JS visualization suite
 ```
 
----
+## 🎯 Demo Types by Milestone
 
-## 🎓Summary/Outlook
+### M1-M2: Core ReCoN & KRK Endgame
 
-I tried to "build" up from simple to more advanced examples. However later it "branches out" 
-a bit too much. But in  a nutshell: 
-The first example just shows a 
+| Demo | Purpose |
+|------|---------|
+| `evaluation/sequence_demo.py` | Basic ReCoN execution validation |
+| `evaluation/krk_checkmate_demo.py` | Static KRK position analysis |
+| `gameplay/krk_play_demo.py` | Interactive KRK game playing |
+
+### M3-M4: Plasticity & Consolidation
+
+| Demo | Purpose |
+|------|---------|
+| `persistent/krk_persistent_demo.py` | KRK with fast plasticity & slow consolidation |
+| `persistent/kpk_persistent_demo.py` | KPK with batch training support (M8) |
+| `experiments/batch_eval.py` | Batch evaluation with timeout handling (M8) |
+| `experiments/pack_tournament.py` | Compare weight pack performance |
+
+### M5: Structure Discovery
+
+| Demo | Purpose |
+|------|---------|
+| `experiments/extract_motifs.py` | Extract patterns from game traces |
+| `experiments/cluster_motifs.py` | Cluster similar patterns |
+| `experiments/propose_scripts.py` | Generate candidate script proposals |
+| `experiments/benchmark_eval.py` | Evaluate against benchmark suites |
+
+### M6-M7: Full Game Architecture
+
+| Demo | Purpose |
+|------|---------|
+| `persistent/full_game_demo.py` | Complete games with goal hierarchy |
+| `gameplay/full_game_macro.py` | Macrograph-driven full game |
+
+## 🚀 Quick Start
+
+### Play a Full Game (M6)
+```bash
+# Play against random opponent
+uv run python demos/persistent/full_game_demo.py --vs-random --max-moves 100
+
+# With trained weights
+uv run python demos/persistent/full_game_demo.py \
+  --vs-random --weights weights/nightly/krk_consol.json
+
+# Output visualization data
+uv run python demos/persistent/full_game_demo.py \
+  --vs-random --output game.json --viz
+```
+
+### Train KRK with Consolidation (M4)
+```bash
+# Batch training with consolidation
+uv run python demos/persistent/krk_persistent_demo.py \
+  --batch 50 --plasticity --consolidate \
+  --consolidate-pack weights/nightly/krk_consol.json \
+  --engine /usr/games/stockfish --depth 2
+
+# Evaluate results
+uv run python demos/experiments/batch_eval.py \
+  --mode krk --fen-file data/endgames/krk/random.fen \
+  --runs 100 --episode-timeout 60 -v
+```
+
+### Run Overnight Training (M8)
+```bash
+# Quick test mode (~30 min)
+./scripts/overnight_training.sh --quick
+
+# Full overnight (~6+ hours)
+./scripts/overnight_training.sh
+```
+
+## 📊 Visualization
+
+| View | File | Purpose |
+|------|------|---------|
+| Full Game | `visualization/full_game_view.html` | M6 goal hierarchy visualization |
+| Consolidation | `visualization/consolidation_dashboard.html` | Training progress monitoring |
+| Network | `visualization/chessboard_view.html` | Detailed network + board view |
+| Quick View | `visualization/onepage_view.html` | Simple frame-by-frame viewer |
+
+## 📁 Output Locations
+
+| Type | Location |
+|------|----------|
+| Visualization JSON | `demos/outputs/persistent/` |
+| Trace JSONL | `reports/` |
+| Consolidation State | `weights/nightly/` |
+| Training Reports | `reports/overnight/` |
+
+## 🔧 Key Arguments (Common Across Demos)
+
+| Argument | Purpose |
+|----------|---------|
+| `--batch N` | Run N games in batch mode |
+| `--plasticity` | Enable fast weight updates |
+| `--consolidate` | Enable slow consolidation |
+| `--consolidate-pack PATH` | Load/save consolidation state |
+| `--engine PATH` | Use Stockfish for evaluation |
+| `--depth N` | Stockfish search depth |
+| `--trace-out PATH` | Output JSONL trace |
+| `--output PATH` | Output visualization JSON |
+
+## 📈 Current Capabilities (After M8)
+
+- ✅ Full game play from opening to checkmate
+- ✅ Goal hierarchy (Ultimate → Strategic → Tactical)
+- ✅ Fast plasticity (in-game weight updates)
+- ✅ Slow consolidation (cross-game learning)
+- ✅ Batch training with timeout handling
+- ✅ KRK and KPK endgame training
+- ✅ Multiple visualization options
+- ✅ Automated overnight training
+- ✅ Standardized report generation
+
+## 🔜 Coming in M9-M14
+
+- Pattern recognition ("I've seen this before")
+- Stem cells (emergent sensor discovery)
+- Expert sub-ReCoNs (hierarchical experts)
+- Feature binding & instances
+- Hypothesis testing & creative exploration

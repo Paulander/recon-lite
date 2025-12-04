@@ -1,0 +1,18 @@
+{
+  "version": "1.0",
+  "subgraph": "rook_endgame",
+  "generation": 1,
+  "priorities": {
+    "lucena_priority": 0.95,
+    "philidor_priority": 0.9,
+    "rook_behind_priority": 0.8,
+    "cutoff_priority": 0.85
+  },
+  "edges": {
+    "rook_endgame_root->detect_rook_endgame:SUB": 1.0,
+    "detect_rook_endgame->detect_lucena:POR": 1.0,
+    "detect_lucena->lucena_bridge_selector:POR": 1.0,
+    "detect_rook_endgame->detect_philidor:POR": 1.0,
+    "detect_rook_endgame->cutoff_move_selector:POR": 0.9
+  }
+}

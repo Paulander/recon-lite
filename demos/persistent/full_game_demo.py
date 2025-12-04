@@ -26,6 +26,7 @@ import chess
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from recon_lite.graph import Graph, Node, NodeType, NodeState, LinkType
 from recon_lite.engine import ReConEngine
@@ -63,6 +64,8 @@ from recon_lite_chess.scripts.middlegame import (
     piece_activity_sensor_predicate,
 )
 from recon_lite_chess.eval.heuristic import eval_position
+from recon_lite.plasticity.consolidate import ConsolidationEngine, ConsolidationConfig
+from recon_lite.logger import RunLogger
 
 
 @dataclass
@@ -312,6 +315,11 @@ def play_game(
     max_moves: int = 200,
     vs_random: bool = False,
     verbose: bool = True,
+    weights_path: Optional[Path] = None,
+    krk_weights_path: Optional[Path] = None,
+    kpk_weights_path: Optional[Path] = None,
+    output_viz: bool = False,
+    output_basename: str = "full_game",
 ) -> Tuple[GameState, List[Dict[str, Any]]]:
     """
     Play a complete game using the M6 architecture.
@@ -320,6 +328,11 @@ def play_game(
         max_moves: Maximum number of moves before declaring draw
         vs_random: If True, opponent plays random moves
         verbose: Print progress
+        weights_path: Path to general consolidation weights (applies to main graph)
+        krk_weights_path: Path to KRK-specific consolidation pack
+        kpk_weights_path: Path to KPK-specific consolidation pack
+        output_viz: If True, output visualization JSON
+        output_basename: Base name for output files
         
     Returns:
         Final game state and list of frame data for visualization
@@ -327,6 +340,27 @@ def play_game(
     # Build the graph
     g = build_full_game_graph()
     engine = ReConEngine(g)
+    
+    # M8: Load trained weights from consolidation packs
+    if weights_path and weights_path.exists():
+        try:
+            consol_engine = ConsolidationEngine(ConsolidationConfig(enabled=True))
+            consol_engine.load_state(weights_path)
+            consol_engine.init_from_graph(g)
+            consol_engine.apply_w_base_to_graph(g)
+            if verbose:
+                print(f"Loaded weights from {weights_path}")
+        except Exception as e:
+            if verbose:
+                print(f"Warning: Could not load weights from {weights_path}: {e}")
+    
+    # M8: Initialize logger for visualization output
+    viz_logger = RunLogger() if output_viz else None
+    if viz_logger:
+        viz_logger.attach_graph([
+            {"src": e.src, "dst": e.dst, "type": e.ltype.name, "weight": float(getattr(e, "w", 1.0) or 1.0)}
+            for e in g.edges
+        ])
     
     # Initialize game
     state = GameState(board=chess.Board())
@@ -442,13 +476,28 @@ def main():
     parser.add_argument("--max-moves", type=int, default=200, help="Maximum moves")
     parser.add_argument("--vs-random", action="store_true", help="Play against random")
     parser.add_argument("--output", type=str, help="Output JSON file for visualization")
-    parser.add_argument("--quiet", action="store_true", help="Suppress output")
+    parser.add_argument("--quiet", action="store_true", help="Suppress verbose output (result still printed)")
+    parser.add_argument("--weights", type=str, help="Path to consolidation weights pack to load")
+    parser.add_argument("--krk-weights", type=str, help="Path to KRK consolidation weights")
+    parser.add_argument("--kpk-weights", type=str, help="Path to KPK consolidation weights")
+    parser.add_argument("--json-result", action="store_true", help="Output result as JSON (for parsing)")
+    parser.add_argument("--viz", action="store_true", help="Output visualization JSON files")
+    parser.add_argument("--output-basename", type=str, default="full_game", help="Base name for output files")
     args = parser.parse_args()
+    
+    weights_path = Path(args.weights) if args.weights else None
+    krk_weights_path = Path(args.krk_weights) if args.krk_weights else None
+    kpk_weights_path = Path(args.kpk_weights) if args.kpk_weights else None
     
     state, frames = play_game(
         max_moves=args.max_moves,
         vs_random=args.vs_random,
         verbose=not args.quiet,
+        weights_path=weights_path,
+        krk_weights_path=krk_weights_path,
+        kpk_weights_path=kpk_weights_path,
+        output_viz=args.viz,
+        output_basename=args.output_basename,
     )
     
     if args.output:
@@ -456,7 +505,21 @@ def main():
         out_path.parent.mkdir(parents=True, exist_ok=True)
         with open(out_path, "w") as f:
             json.dump(frames, f, indent=2)
-        print(f"\nVisualization data saved to {out_path}")
+        if not args.quiet:
+            print(f"\nVisualization data saved to {out_path}")
+    
+    # Always output result for parsing by scripts
+    result = state.board.result()
+    if args.json_result:
+        result_data = {
+            "result": result,
+            "moves": len(state.move_history),
+            "outcome": "win" if result == "1-0" else ("loss" if result == "0-1" else "draw" if result == "1/2-1/2" else "unknown"),
+        }
+        print(json.dumps(result_data))
+    else:
+        # Print result on its own line for easy parsing
+        print(f"RESULT:{result}")
 
 
 if __name__ == "__main__":

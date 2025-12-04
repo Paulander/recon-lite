@@ -2,6 +2,8 @@
 """
 Minimal persistent loop for the KPK subgraph with optional tracing.
 Reuses the existing KPK network and per-move selector; no opponent policy beyond random.
+
+M8: Added batch mode and consolidation support matching krk_persistent_demo.py.
 """
 
 from __future__ import annotations
@@ -18,10 +20,39 @@ import chess.engine
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from recon_lite import ReConEngine  # type: ignore  # pylint: disable=wrong-import-position
-from recon_lite.graph import NodeState  # type: ignore  # pylint: disable=wrong-import-position
+from recon_lite.graph import NodeState, LinkType  # type: ignore  # pylint: disable=wrong-import-position
 from recon_lite.logger import RunLogger  # type: ignore  # pylint: disable=wrong-import-position
 from recon_lite.trace_db import EpisodeRecord, TickRecord, TraceDB, pack_fingerprint  # type: ignore  # pylint: disable=wrong-import-position
 from recon_lite_chess.scripts.kpk import build_kpk_network  # type: ignore  # pylint: disable=wrong-import-position
+from recon_lite.plasticity import (
+    PlasticityConfig,
+    init_plasticity_state,
+    update_eligibility,
+    apply_fast_update,
+    reset_episode as reset_plasticity_episode,
+    extract_episode_summary,
+)
+from recon_lite.plasticity.consolidate import (
+    ConsolidationConfig,
+    ConsolidationEngine,
+)
+from recon_lite_chess.eval.heuristic import eval_position, compute_reward_tick
+
+# M8: KPK plasticity defaults (matching KRK)
+DEFAULT_PLASTICITY_ETA = 0.05
+DEFAULT_PLASTICITY_R_MAX = 2.0
+DEFAULT_PLASTICITY_W_MIN = 0.1
+DEFAULT_PLASTICITY_W_MAX = 3.0
+DEFAULT_PLASTICITY_LAMBDA = 0.8
+
+# M8: Consolidation defaults
+DEFAULT_CONSOLIDATE_ETA = 0.01
+DEFAULT_CONSOLIDATE_MIN_EPISODES = 10
+
+# M8: KPK edges eligible for fast plasticity
+KPK_PLASTICITY_EDGES = [
+    # Will be populated from the actual KPK network structure
+]
 
 
 def play_persistent_game(
@@ -36,6 +67,17 @@ def play_persistent_game(
     trace_db: Optional[TraceDB] = None,
     trace_episode_id: Optional[str] = None,
     pack_paths: Optional[list[Path]] = None,
+    # M8: Plasticity parameters
+    plasticity_enabled: bool = False,
+    plasticity_eta: float = DEFAULT_PLASTICITY_ETA,
+    plasticity_r_max: float = DEFAULT_PLASTICITY_R_MAX,
+    plasticity_lambda: float = DEFAULT_PLASTICITY_LAMBDA,
+    # M8: Consolidation parameters
+    consolidation_enabled: bool = False,
+    consolidation_pack: Optional[Path] = None,
+    consolidation_eta: float = DEFAULT_CONSOLIDATE_ETA,
+    consolidation_min_episodes: int = DEFAULT_CONSOLIDATE_MIN_EPISODES,
+    consolidation_engine: Optional[ConsolidationEngine] = None,
 ) -> dict:
     viz_logger = RunLogger()
     debug_logger = RunLogger() if split_logs else viz_logger
@@ -59,6 +101,45 @@ def play_persistent_game(
             sf_engine = chess.engine.SimpleEngine.popen_uci(stockfish_path)
         except Exception:
             sf_engine = None
+
+    # M8: Initialize plasticity
+    plasticity_config = PlasticityConfig(
+        eta_tick=plasticity_eta,
+        r_max=plasticity_r_max,
+        lambda_decay=plasticity_lambda,
+        w_min=DEFAULT_PLASTICITY_W_MIN,
+        w_max=DEFAULT_PLASTICITY_W_MAX,
+        enabled=plasticity_enabled,
+    )
+    # Build plasticity edges from graph
+    kpk_plasticity_edges = []
+    if plasticity_enabled:
+        for e in g.edges:
+            if e.ltype == LinkType.POR:
+                kpk_plasticity_edges.append((e.src, e.dst, e.ltype))
+    plasticity_state = init_plasticity_state(g, kpk_plasticity_edges) if plasticity_enabled else {}
+
+    # M8: Initialize or use provided consolidation engine
+    consolidation_config = ConsolidationConfig(
+        eta_consolidate=consolidation_eta,
+        min_episodes=consolidation_min_episodes,
+        enabled=consolidation_enabled,
+    )
+    if consolidation_engine is not None:
+        consol_engine = consolidation_engine
+    elif consolidation_enabled:
+        consol_engine = ConsolidationEngine(consolidation_config)
+        if consolidation_pack and consolidation_pack.exists():
+            try:
+                consol_engine.load_state(consolidation_pack)
+            except Exception:
+                pass
+        consol_engine.init_from_graph(g)
+        consol_engine.apply_w_base_to_graph(g)
+    else:
+        consol_engine = None
+
+    last_eval: Optional[float] = None
 
     while not board.is_game_over() and plies < max_plies:
         env = {"board": board}
@@ -128,13 +209,50 @@ def play_persistent_game(
             env={"fen": board.fen(), "ply": plies, "move": opp.uci()},
         )
 
+    # M8: Extract episode summary for consolidation
+    game_result = board.result() if board.is_game_over() else None
+    episode_summary = None
+    if plasticity_enabled:
+        episode_summary = extract_episode_summary(
+            plasticity_state if plasticity_enabled else None,
+            None,  # No bandit state for KPK yet
+            tick_records,
+            game_result,
+        )
+
+    # M8: Accumulate episode for consolidation
+    result = {
+        "plies": plies,
+        "game_over": board.is_game_over(),
+        "result": game_result,
+        "final_fen": board.fen(),
+        "checkmate": board.is_checkmate(),
+    }
+    
+    if consol_engine and episode_summary:
+        consol_engine.accumulate_episode(episode_summary)
+        if consol_engine.should_apply():
+            applied_deltas = consol_engine.apply_to_graph(g)
+            if applied_deltas:
+                result["consolidation_applied"] = len(applied_deltas)
+            if consolidation_pack:
+                try:
+                    consol_engine.save_state(consolidation_pack)
+                except Exception:
+                    pass
+
+    # M8: Reset plasticity for next episode
+    if plasticity_enabled and plasticity_state:
+        reset_plasticity_episode(plasticity_state, g)
+
     if trace_db is not None:
         ep = EpisodeRecord(
             episode_id=trace_episode_id or "kpk-persistent",
-            result=board.result() if board.is_game_over() else None,
+            result=game_result,
             ticks=tick_records,
             pack_meta=pack_meta,
             notes={"plies": plies},
+            summary=episode_summary,
         )
         trace_db.add_episode(ep)
     if sf_engine is not None:
@@ -154,7 +272,28 @@ def play_persistent_game(
         combined_path = out_dir / f"{output_basename}_visualization.json"
         viz_logger.to_json(str(combined_path))
 
-    return {"plies": plies, "game_over": board.is_game_over(), "result": board.result(), "final_fen": board.fen()}
+    return result
+
+
+def run_batch(n_games: int = 10, max_plies: int = 100, **play_kwargs) -> dict:
+    """Run N games in batch mode."""
+    stats = {
+        "games": [],
+        "mates": 0,
+        "stalls": 0,
+        "total_mate_plies": 0,
+        "avg_mate_length": None,
+    }
+    for i in range(n_games):
+        res = play_persistent_game(initial_fen=None, max_plies=max_plies, **play_kwargs)
+        stats["games"].append(res)
+        if res.get("checkmate"):
+            stats["mates"] += 1
+            stats["total_mate_plies"] += res.get("plies", 0)
+    if stats["mates"]:
+        stats["avg_mate_length"] = stats["total_mate_plies"] / stats["mates"]
+    print(stats)
+    return stats
 
 
 def main() -> None:
@@ -166,22 +305,94 @@ def main() -> None:
     parser.add_argument("--depth", type=int, default=2, help="Stockfish depth when scoring moves")
     parser.add_argument("--trace-out", type=Path, default=None)
     parser.add_argument("--pack", action="append", type=Path, default=[])
+    parser.add_argument("--output-basename", type=str, default="kpk_persistent", help="Base name for output logs")
+    # M8: Batch mode
+    parser.add_argument("--batch", type=int, default=0, help="Run N games in batch mode")
+    # M8: Plasticity arguments
+    parser.add_argument("--plasticity", action="store_true", help="Enable fast plasticity")
+    parser.add_argument("--plasticity-eta", type=float, default=DEFAULT_PLASTICITY_ETA)
+    parser.add_argument("--plasticity-r-max", type=float, default=DEFAULT_PLASTICITY_R_MAX)
+    parser.add_argument("--plasticity-lambda", type=float, default=DEFAULT_PLASTICITY_LAMBDA)
+    # M8: Consolidation arguments
+    parser.add_argument("--consolidate", action="store_true", help="Enable slow consolidation")
+    parser.add_argument("--consolidate-pack", type=Path, default=None, help="Path to load/save consolidation state")
+    parser.add_argument("--consolidate-eta", type=float, default=DEFAULT_CONSOLIDATE_ETA)
+    parser.add_argument("--consolidate-min-episodes", type=int, default=DEFAULT_CONSOLIDATE_MIN_EPISODES)
     args = parser.parse_args()
 
-    trace_db = TraceDB(args.trace_out) if args.trace_out else None
-    res = play_persistent_game(
-        initial_fen=args.fen,
-        max_plies=args.max_plies,
-        max_ticks_per_move=args.max_ticks,
-        trace_db=trace_db,
-        pack_paths=args.pack,
-        trace_episode_id="kpk-cli",
-        stockfish_path=args.engine,
-        stockfish_depth=args.depth,
-    )
-    if trace_db:
-        trace_db.flush()
-    print(res)
+    if args.batch and args.batch > 0:
+        # M8: Create shared consolidation engine for batch mode
+        consol_engine = None
+        if args.consolidate:
+            consol_config = ConsolidationConfig(
+                eta_consolidate=args.consolidate_eta,
+                min_episodes=args.consolidate_min_episodes,
+                enabled=True,
+            )
+            consol_engine = ConsolidationEngine(consol_config)
+            if args.consolidate_pack and args.consolidate_pack.exists():
+                try:
+                    consol_engine.load_state(args.consolidate_pack)
+                except Exception:
+                    pass
+
+        trace_db = TraceDB(args.trace_out) if args.trace_out else None
+        run_batch(
+            args.batch,
+            max_plies=args.max_plies,
+            max_ticks_per_move=args.max_ticks,
+            output_basename=args.output_basename,
+            stockfish_path=args.engine,
+            stockfish_depth=args.depth,
+            trace_db=trace_db,
+            pack_paths=args.pack,
+            # M8: Plasticity
+            plasticity_enabled=args.plasticity,
+            plasticity_eta=args.plasticity_eta,
+            plasticity_r_max=args.plasticity_r_max,
+            plasticity_lambda=args.plasticity_lambda,
+            # M8: Consolidation
+            consolidation_enabled=args.consolidate,
+            consolidation_pack=args.consolidate_pack,
+            consolidation_eta=args.consolidate_eta,
+            consolidation_min_episodes=args.consolidate_min_episodes,
+            consolidation_engine=consol_engine,
+        )
+        if trace_db:
+            trace_db.flush()
+
+        # M8: Save final consolidation state after batch
+        if consol_engine and args.consolidate_pack:
+            try:
+                consol_engine.save_state(args.consolidate_pack)
+            except Exception:
+                pass
+    else:
+        trace_db = TraceDB(args.trace_out) if args.trace_out else None
+        res = play_persistent_game(
+            initial_fen=args.fen,
+            max_plies=args.max_plies,
+            max_ticks_per_move=args.max_ticks,
+            output_basename=args.output_basename,
+            trace_db=trace_db,
+            pack_paths=args.pack,
+            trace_episode_id="kpk-cli",
+            stockfish_path=args.engine,
+            stockfish_depth=args.depth,
+            # M8: Plasticity
+            plasticity_enabled=args.plasticity,
+            plasticity_eta=args.plasticity_eta,
+            plasticity_r_max=args.plasticity_r_max,
+            plasticity_lambda=args.plasticity_lambda,
+            # M8: Consolidation
+            consolidation_enabled=args.consolidate,
+            consolidation_pack=args.consolidate_pack,
+            consolidation_eta=args.consolidate_eta,
+            consolidation_min_episodes=args.consolidate_min_episodes,
+        )
+        if trace_db:
+            trace_db.flush()
+        print(res)
 
 
 if __name__ == "__main__":

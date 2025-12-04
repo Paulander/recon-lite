@@ -47,6 +47,15 @@ This directory contains multiple visualization approaches for ReCoN networks:
 - **Top Changes**: Table showing largest weight drifts from initial
 - **No Server Required**: Works offline (double-click to open)
 
+### 7. **Full Game View** (`full_game_view.html`) - NEW (M8)
+**Purpose**: Visualize M6 goal hierarchy during full game play
+- **Goal Hierarchy**: Shows Ultimate → Strategic → Tactical layers
+- **Phase Weights**: Live Opening/Middlegame/Endgame progress bar
+- **Active Plans**: Bar chart of currently active strategic plans
+- **Material Balance**: White/Black material tracking
+- **Move History**: Clickable move history with navigation
+- **No Server Required**: Works offline, load JSON via button
+
 
 ## 🚀 Quick Start Guide
 
@@ -114,6 +123,21 @@ consolidation_dashboard.html
 
 # 3. Click "Load State" and select weights/nightly/krk_consol.json
 # 4. Optionally, click "Compare With..." to compare against a baseline
+```
+
+### Option 7: Full Game View (No Server) - NEW (M8)
+**Best for visualizing M6 goal hierarchy and full game play**
+```bash
+# 1. Run full game demo with visualization output
+uv run python demos/persistent/full_game_demo.py \
+  --max-moves 100 --vs-random --output game_viz.json
+
+# 2. Double-click to open
+full_game_view.html
+
+# 3. Click "Load JSON" and select game_viz.json
+# 4. Use arrow keys or buttons to navigate through frames
+# 5. Press Space to auto-play
 ```
 
 ## 📋 Prerequisites

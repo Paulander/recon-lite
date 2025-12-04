@@ -1,0 +1,19 @@
+{
+  "version": "1.0",
+  "subgraph": "tactics",
+  "generation": 1,
+  "priorities": {
+    "fork_priority": 0.9,
+    "pin_priority": 0.8,
+    "hanging_priority": 0.95,
+    "skewer_priority": 0.7
+  },
+  "edges": {
+    "tactics_root->detect_fork:SUB": 1.0,
+    "detect_fork->exploit_fork:POR": 1.0,
+    "tactics_root->detect_pin:SUB": 1.0,
+    "tactics_root->detect_hanging:SUB": 1.0,
+    "detect_hanging->capture_hanging:POR": 1.0,
+    "detect_hanging->protect_hanging:POR": 0.8
+  }
+}

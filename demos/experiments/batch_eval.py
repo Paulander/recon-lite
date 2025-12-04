@@ -5,6 +5,8 @@ Batch evaluator for KRK/KPK subgraphs.
 CPU-friendly by default (random opponent). Optional shallow Stockfish labeling
 lets us score only positions that should be wins (e.g., KPK winning cases) and
 track success against that set. Writes stats plus optional JSONL traces.
+
+Fixed in M8: Added timeout handling per episode to prevent stalling.
 """
 
 from __future__ import annotations
@@ -13,7 +15,9 @@ import argparse
 import json
 import random
 import shutil
+import signal
 import sys
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterable, List, Optional, Tuple
 
@@ -33,6 +37,31 @@ from recon_lite.graph import NodeState
 from recon_lite.trace_db import EpisodeRecord, TickRecord, TraceDB, pack_fingerprint
 from demos.shared.krk_network import build_krk_network
 from recon_lite_chess.scripts.kpk import build_kpk_network
+
+
+class TimeoutError(Exception):
+    """Exception raised when an operation times out."""
+    pass
+
+
+@contextmanager
+def timeout_handler(seconds: int):
+    """Context manager for timeout handling (Unix only, graceful fallback on Windows)."""
+    def signal_handler(signum, frame):
+        raise TimeoutError(f"Operation timed out after {seconds} seconds")
+    
+    # Only use signals on Unix
+    if hasattr(signal, 'SIGALRM'):
+        old_handler = signal.signal(signal.SIGALRM, signal_handler)
+        signal.alarm(seconds)
+        try:
+            yield
+        finally:
+            signal.alarm(0)
+            signal.signal(signal.SIGALRM, old_handler)
+    else:
+        # Windows: no signal-based timeout, just run without timeout
+        yield
 
 
 def _load_fens(path: Path) -> List[str]:
@@ -244,6 +273,8 @@ def evaluate_batch(
     depth: int,
     block_size: int,
     checkpoint_dir: Optional[Path],
+    episode_timeout: int = 60,
+    verbose: bool = False,
 ) -> dict:
     stats = {
         "wins": 0,
@@ -252,6 +283,7 @@ def evaluate_batch(
         "stall": 0,
         "illegal": 0,
         "max_plies": 0,
+        "timeout": 0,
         "games": 0,
         "ticks": 0,
         "expected_win_total": 0,
@@ -266,12 +298,29 @@ def evaluate_batch(
         episode_runner = run_krk_episode if mode == "krk" else run_kpk_episode
         board = chess.Board(fen)
         expected_win = _expected_win(engine, board, depth)
-        result, ticks, episode = episode_runner(
-            fen,
-            max_plies=max_plies,
-            max_ticks_per_move=max_ticks_per_move,
-            pack_paths=pack_paths,
-        )
+        
+        # Run episode with timeout protection
+        try:
+            with timeout_handler(episode_timeout):
+                result, ticks, episode = episode_runner(
+                    fen,
+                    max_plies=max_plies,
+                    max_ticks_per_move=max_ticks_per_move,
+                    pack_paths=pack_paths,
+                )
+        except TimeoutError:
+            result = "timeout"
+            ticks = 0
+            episode = EpisodeRecord(
+                episode_id=f"{mode}-timeout-{random.randint(0, 1_000_000)}",
+                result="timeout",
+                ticks=[],
+                pack_meta=pack_fingerprint(pack_paths),
+                notes={"timeout": episode_timeout, "fen": fen},
+            )
+            if verbose:
+                print(f"  Episode {i+1} timed out on FEN: {fen[:50]}...")
+        
         stats["games"] += 1
         stats["ticks"] += ticks
         if result in stats:
@@ -282,6 +331,9 @@ def evaluate_batch(
                 stats["expected_win_success"] += 1
         if trace_db:
             trace_db.add_episode(episode)
+        
+        if verbose and (i + 1) % 10 == 0:
+            print(f"  Completed {i+1}/{runs} games...")
 
         if block_size > 0 and (i + 1) % block_size == 0:
             block_idx = (i + 1) // block_size
@@ -321,11 +373,17 @@ def main() -> None:
     parser.add_argument("--depth", type=int, default=2, help="Stockfish depth when labeling expected wins.")
     parser.add_argument("--block-size", type=int, default=0, help="Emit block summaries/checkpoints every N games (0 disables).")
     parser.add_argument("--checkpoint-dir", type=Path, default=None, help="Directory to copy pack snapshots per block.")
+    parser.add_argument("--episode-timeout", type=int, default=60, help="Timeout in seconds per episode (default 60).")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Print progress during evaluation.")
     args = parser.parse_args()
 
     fens = _load_fens(args.fen_file)
     if not fens:
         raise SystemExit(f"No FENs found in {args.fen_file}")
+
+    if args.verbose:
+        print(f"Starting batch evaluation: {args.runs} games, mode={args.mode}")
+        print(f"Episode timeout: {args.episode_timeout}s")
 
     stats = evaluate_batch(
         args.mode,
@@ -339,6 +397,8 @@ def main() -> None:
         depth=args.depth,
         block_size=args.block_size,
         checkpoint_dir=args.checkpoint_dir,
+        episode_timeout=args.episode_timeout,
+        verbose=args.verbose,
     )
     print(json.dumps(stats, indent=2))
 
