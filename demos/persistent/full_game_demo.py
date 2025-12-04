@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
-"""M6 Full Game Demo - Play a complete chess game from start to finish.
+"""M6/M8 Full Game Demo - Play a complete chess game from start to finish.
 
-This demo showcases the M6 goal hierarchy:
+This demo showcases the M6 goal hierarchy with M8 stem cell integration:
 - Ultimate goals (WIN/DRAW/SURVIVE) based on position
 - Strategic plans (attack, develop, simplify, etc.)
 - Phase-aware activation (opening → middlegame → endgame)
 - Plan persistence (inertia and decay)
 - Fan-in sensor terminals
+- M8: Stem cell pattern discovery during play
 
 Usage:
     uv run python demos/persistent/full_game_demo.py
     uv run python demos/persistent/full_game_demo.py --max-moves 100 --output game.json
     uv run python demos/persistent/full_game_demo.py --vs-random  # Play against random moves
+    uv run python demos/persistent/full_game_demo.py --stem-cells  # Enable pattern discovery
 """
 
 import argparse
@@ -66,6 +68,7 @@ from recon_lite_chess.scripts.middlegame import (
 from recon_lite_chess.eval.heuristic import eval_position
 from recon_lite.plasticity.consolidate import ConsolidationEngine, ConsolidationConfig
 from recon_lite.logger import RunLogger
+from recon_lite.nodes.stem_cell import StemCellManager, StemCellConfig
 
 
 @dataclass
@@ -77,6 +80,222 @@ class GameState:
     goal_history: List[str] = field(default_factory=list)
     active_plans: List[str] = field(default_factory=list)
     tick: int = 0
+    last_eval: float = 0.0  # Track position eval for reward computation
+
+
+# ============================================================================
+# M8: Feature Extractor for Stem Cells
+# ============================================================================
+
+def extract_board_features(board: chess.Board) -> List[float]:
+    """
+    Extract a 128-dimensional feature vector from a chess position.
+    
+    Features:
+    - Material counts (12 features: 6 piece types x 2 colors)
+    - Pawn structure (16 features: pawns per file x 2 colors)
+    - King safety (8 features: pawn shield, attackers near king)
+    - Piece activity (16 features: mobility per piece type)
+    - Control (32 features: squares controlled)
+    - Center control (4 features: inner center occupation)
+    - Phase indicators (8 features)
+    - Tactical indicators (32 features)
+    
+    Total: 128 features
+    """
+    features = []
+    
+    # === Material (12 features) ===
+    for color in [chess.WHITE, chess.BLACK]:
+        for piece_type in [chess.PAWN, chess.KNIGHT, chess.BISHOP, 
+                          chess.ROOK, chess.QUEEN, chess.KING]:
+            count = len(board.pieces(piece_type, color))
+            # Normalize by typical max (8 pawns, 2 minors, 2 rooks, 1 queen, 1 king)
+            max_counts = {chess.PAWN: 8, chess.KNIGHT: 2, chess.BISHOP: 2,
+                         chess.ROOK: 2, chess.QUEEN: 1, chess.KING: 1}
+            features.append(count / max_counts[piece_type])
+    
+    # === Pawn structure (16 features) ===
+    for color in [chess.WHITE, chess.BLACK]:
+        file_pawns = [0] * 8
+        for sq in board.pieces(chess.PAWN, color):
+            file_pawns[chess.square_file(sq)] += 1
+        features.extend([p / 2.0 for p in file_pawns])  # Max 2 pawns per file
+    
+    # === King safety (8 features) ===
+    for color in [chess.WHITE, chess.BLACK]:
+        king_sq = board.king(color)
+        if king_sq is None:
+            features.extend([0.0, 0.0, 0.0, 0.0])
+            continue
+        
+        king_file = chess.square_file(king_sq)
+        king_rank = chess.square_rank(king_sq)
+        
+        # Pawn shield (3 features)
+        shield = 0
+        shield_rank = king_rank + 1 if color else king_rank - 1
+        if 0 <= shield_rank <= 7:
+            for df in [-1, 0, 1]:
+                f = king_file + df
+                if 0 <= f <= 7:
+                    sq = chess.square(f, shield_rank)
+                    piece = board.piece_at(sq)
+                    if piece and piece.piece_type == chess.PAWN and piece.color == color:
+                        shield += 1
+        features.append(shield / 3.0)
+        
+        # Attackers near king
+        attackers = 0
+        for df in [-2, -1, 0, 1, 2]:
+            for dr in [-2, -1, 0, 1, 2]:
+                f, r = king_file + df, king_rank + dr
+                if 0 <= f <= 7 and 0 <= r <= 7:
+                    sq = chess.square(f, r)
+                    if board.is_attacked_by(not color, sq):
+                        attackers += 1
+        features.append(attackers / 25.0)
+        
+        # King position (centralized vs castled)
+        features.append(abs(king_file - 3.5) / 3.5)
+        features.append(king_rank / 7.0 if color else (7 - king_rank) / 7.0)
+    
+    # === Piece activity (16 features) ===
+    for color in [chess.WHITE, chess.BLACK]:
+        for piece_type in [chess.KNIGHT, chess.BISHOP, chess.ROOK, chess.QUEEN]:
+            total_mobility = 0
+            count = 0
+            for sq in board.pieces(piece_type, color):
+                total_mobility += len(board.attacks(sq))
+                count += 1
+            avg_mobility = total_mobility / count if count > 0 else 0
+            # Normalize by typical max mobility
+            max_mobility = {chess.KNIGHT: 8, chess.BISHOP: 13, 
+                          chess.ROOK: 14, chess.QUEEN: 27}
+            features.append(avg_mobility / max_mobility[piece_type])
+            features.append(count / 2.0)  # Piece count
+    
+    # === Center control (4 features) ===
+    center = [chess.E4, chess.D4, chess.E5, chess.D5]
+    for color in [chess.WHITE, chess.BLACK]:
+        occupation = 0
+        control = 0
+        for sq in center:
+            piece = board.piece_at(sq)
+            if piece and piece.color == color:
+                occupation += 1
+            if board.is_attacked_by(color, sq):
+                control += 1
+        features.append(occupation / 4.0)
+        features.append(control / 4.0)
+    
+    # === Phase indicators (8 features) ===
+    total_material = sum(
+        len(board.pieces(pt, c)) * v 
+        for c in [chess.WHITE, chess.BLACK]
+        for pt, v in [(chess.QUEEN, 9), (chess.ROOK, 5), 
+                      (chess.BISHOP, 3), (chess.KNIGHT, 3)]
+    )
+    features.append(min(1.0, total_material / 62.0))  # Opening indicator
+    features.append(max(0.0, 1.0 - total_material / 31.0))  # Endgame indicator
+    
+    # Development (pieces off back rank)
+    for color in [chess.WHITE, chess.BLACK]:
+        back_rank = 0 if color else 7
+        developed = 0
+        for piece_type in [chess.KNIGHT, chess.BISHOP]:
+            for sq in board.pieces(piece_type, color):
+                if chess.square_rank(sq) != back_rank:
+                    developed += 1
+        features.append(developed / 4.0)
+    
+    # Castling rights
+    features.append(1.0 if board.has_kingside_castling_rights(chess.WHITE) else 0.0)
+    features.append(1.0 if board.has_queenside_castling_rights(chess.WHITE) else 0.0)
+    features.append(1.0 if board.has_kingside_castling_rights(chess.BLACK) else 0.0)
+    features.append(1.0 if board.has_queenside_castling_rights(chess.BLACK) else 0.0)
+    
+    # === Tactical indicators (32 features) ===
+    # Checks and captures available
+    checks = 0
+    captures = 0
+    for move in board.legal_moves:
+        if board.gives_check(move):
+            checks += 1
+        if board.is_capture(move):
+            captures += 1
+    features.append(min(1.0, checks / 5.0))
+    features.append(min(1.0, captures / 10.0))
+    
+    # Hanging pieces (undefended)
+    for color in [chess.WHITE, chess.BLACK]:
+        hanging = 0
+        for sq in chess.SQUARES:
+            piece = board.piece_at(sq)
+            if piece and piece.color == color and piece.piece_type != chess.KING:
+                if board.is_attacked_by(not color, sq) and not board.is_attacked_by(color, sq):
+                    hanging += 1
+        features.append(hanging / 5.0)
+    
+    # Passed pawns
+    for color in [chess.WHITE, chess.BLACK]:
+        passed = 0
+        for pawn_sq in board.pieces(chess.PAWN, color):
+            file = chess.square_file(pawn_sq)
+            rank = chess.square_rank(pawn_sq)
+            is_passed = True
+            
+            for check_file in [file - 1, file, file + 1]:
+                if not (0 <= check_file <= 7):
+                    continue
+                ahead_ranks = range(rank + 1, 8) if color else range(0, rank)
+                for check_rank in ahead_ranks:
+                    check_sq = chess.square(check_file, check_rank)
+                    piece = board.piece_at(check_sq)
+                    if piece and piece.piece_type == chess.PAWN and piece.color != color:
+                        is_passed = False
+                        break
+                if not is_passed:
+                    break
+            if is_passed:
+                passed += 1
+        features.append(passed / 4.0)
+    
+    # Pad to exactly 128 features
+    while len(features) < 128:
+        features.append(0.0)
+    
+    return features[:128]
+
+
+def compute_reward_signal(board: chess.Board, prev_eval: float) -> float:
+    """
+    Compute reward signal based on position evaluation change.
+    
+    Returns a reward in range [-1, 1] based on:
+    - Material changes
+    - Position improvement
+    - Tactical opportunities
+    """
+    # Get current evaluation
+    current_eval = eval_position(board)
+    
+    # Reward is based on evaluation improvement
+    # From the perspective of the side that just moved (which is now not to move)
+    eval_delta = current_eval - prev_eval
+    
+    # Normalize to [-1, 1]
+    reward = max(-1.0, min(1.0, eval_delta / 300.0))
+    
+    # Bonus for checkmate
+    if board.is_checkmate():
+        reward = 1.0 if board.turn == chess.BLACK else -1.0
+    
+    # Small bonus for check
+    if board.is_check():
+        reward += 0.1 if board.turn == chess.BLACK else -0.1
+    
+    return max(-1.0, min(1.0, reward))
 
 
 def build_full_game_graph() -> Graph:
@@ -320,9 +539,11 @@ def play_game(
     kpk_weights_path: Optional[Path] = None,
     output_viz: bool = False,
     output_basename: str = "full_game",
-) -> Tuple[GameState, List[Dict[str, Any]]]:
+    enable_stem_cells: bool = False,
+    stem_cell_path: Optional[Path] = None,
+) -> Tuple[GameState, List[Dict[str, Any]], List[Dict[str, Any]]]:
     """
-    Play a complete game using the M6 architecture.
+    Play a complete game using the M6 architecture with M8 stem cell integration.
     
     Args:
         max_moves: Maximum number of moves before declaring draw
@@ -333,13 +554,48 @@ def play_game(
         kpk_weights_path: Path to KPK-specific consolidation pack
         output_viz: If True, output visualization JSON
         output_basename: Base name for output files
+        enable_stem_cells: If True, use stem cells for pattern discovery
+        stem_cell_path: Path to load/save stem cell state
         
     Returns:
-        Final game state and list of frame data for visualization
+        Final game state, list of frame data for visualization, and discovered patterns
     """
     # Build the graph
     g = build_full_game_graph()
     engine = ReConEngine(g)
+    
+    # M8: Initialize stem cell manager
+    stem_manager = None
+    discovered_patterns: List[Dict[str, Any]] = []
+    
+    if enable_stem_cells:
+        stem_config = StemCellConfig(
+            min_samples=30,      # Fewer samples needed for chess
+            max_samples=200,
+            reward_threshold=0.2,  # Capture positions with notable evaluation change
+            specialization_threshold=0.6,
+            exploration_budget=150,
+        )
+        stem_manager = StemCellManager(
+            max_cells=10,
+            spawn_rate=0.08,  # 8% chance to spawn new cell each tick
+            config=stem_config,
+        )
+        
+        # Load existing stem cell state if provided
+        if stem_cell_path and stem_cell_path.exists():
+            try:
+                stem_manager = StemCellManager.load(stem_cell_path)
+                if verbose:
+                    print(f"Loaded stem cell state from {stem_cell_path}")
+                    print(f"  Active cells: {stem_manager.stats()}")
+            except Exception as e:
+                if verbose:
+                    print(f"Warning: Could not load stem cells from {stem_cell_path}: {e}")
+        
+        # Set feature extractor
+        for cell in stem_manager.cells.values():
+            cell.feature_extractor = extract_board_features
     
     # M8: Load trained weights from consolidation packs
     if weights_path and weights_path.exists():
@@ -364,11 +620,14 @@ def play_game(
     
     # Initialize game
     state = GameState(board=chess.Board())
+    state.last_eval = eval_position(state.board)
     frames: List[Dict[str, Any]] = []
     persistence_config = PersistenceConfig()
     
     if verbose:
         print("Starting full game demo...")
+        if enable_stem_cells:
+            print("Stem cells ENABLED for pattern discovery")
         print(f"Initial position:\n{state.board}\n")
     
     while not state.board.is_game_over() and len(state.move_history) < max_moves:
@@ -433,10 +692,21 @@ def play_game(
         state.goal_history.append(ultimate.goal.name)
         state.active_plans = [p[0] for p in active_plans[:3]]
         
+        # M8: Compute reward and feed to stem cells
+        if stem_manager:
+            reward = compute_reward_signal(state.board, state.last_eval)
+            stem_manager.tick(state.board, reward, tick=state.tick)
+        
+        # Update eval for next reward computation
+        state.last_eval = eval_position(state.board)
+        
         if verbose and len(state.move_history) % 10 == 0:
             print(f"Move {len(state.move_history)}: {san}")
             print(f"  Phase: {phase.dominant_phase()}, Goal: {ultimate.goal.name}")
             print(f"  Active plans: {state.active_plans}")
+            if stem_manager:
+                stats = stem_manager.stats()
+                print(f"  Stem cells: {stats['total_cells']} ({stats['by_state']})")
         
         # Opponent's turn
         if vs_random and not state.board.is_game_over():
@@ -448,13 +718,42 @@ def play_game(
                 state.board.push(opp_move)
                 state.move_history.append(opp_san)
                 state.tick += 1
+                
+                # Stem cells observe opponent's move result too
+                if stem_manager:
+                    reward = compute_reward_signal(state.board, state.last_eval)
+                    stem_manager.tick(state.board, reward, tick=state.tick)
+                    state.last_eval = eval_position(state.board)
         
         # Reset node states for next iteration
         for node in g.nodes.values():
             if node.state != NodeState.INACTIVE:
                 node.state = NodeState.INACTIVE
     
-    # Game over
+    # Game over - process stem cells
+    if stem_manager:
+        # Attempt to specialize ready cells
+        discovered_patterns = stem_manager.specialize_all_ready()
+        
+        # Prune failed cells
+        pruned = stem_manager.prune_failed()
+        
+        if verbose:
+            print(f"\n=== Stem Cell Results ===")
+            print(f"Discovered patterns: {len(discovered_patterns)}")
+            print(f"Pruned cells: {pruned}")
+            print(f"Final stats: {stem_manager.stats()}")
+            
+            for pattern in discovered_patterns:
+                print(f"  - {pattern['sensor_id']}: consistency={pattern['consistency']:.2f}")
+        
+        # Save stem cell state if path provided
+        if stem_cell_path:
+            stem_cell_path.parent.mkdir(parents=True, exist_ok=True)
+            stem_manager.save(stem_cell_path)
+            if verbose:
+                print(f"Saved stem cell state to {stem_cell_path}")
+    
     if verbose:
         print(f"\nGame ended after {len(state.move_history)} moves")
         print(f"Result: {state.board.result()}")
@@ -468,11 +767,11 @@ def play_game(
         )
         print(moves_str)
     
-    return state, frames
+    return state, frames, discovered_patterns
 
 
 def main():
-    parser = argparse.ArgumentParser(description="M6 Full Game Demo")
+    parser = argparse.ArgumentParser(description="M6/M8 Full Game Demo with Stem Cells")
     parser.add_argument("--max-moves", type=int, default=200, help="Maximum moves")
     parser.add_argument("--vs-random", action="store_true", help="Play against random")
     parser.add_argument("--output", type=str, help="Output JSON file for visualization")
@@ -483,13 +782,17 @@ def main():
     parser.add_argument("--json-result", action="store_true", help="Output result as JSON (for parsing)")
     parser.add_argument("--viz", action="store_true", help="Output visualization JSON files")
     parser.add_argument("--output-basename", type=str, default="full_game", help="Base name for output files")
+    # M8: Stem cell options
+    parser.add_argument("--stem-cells", action="store_true", help="Enable stem cell pattern discovery")
+    parser.add_argument("--stem-cell-path", type=str, help="Path to load/save stem cell state")
     args = parser.parse_args()
     
     weights_path = Path(args.weights) if args.weights else None
     krk_weights_path = Path(args.krk_weights) if args.krk_weights else None
     kpk_weights_path = Path(args.kpk_weights) if args.kpk_weights else None
+    stem_cell_path = Path(args.stem_cell_path) if args.stem_cell_path else None
     
-    state, frames = play_game(
+    state, frames, discovered = play_game(
         max_moves=args.max_moves,
         vs_random=args.vs_random,
         verbose=not args.quiet,
@@ -498,6 +801,8 @@ def main():
         kpk_weights_path=kpk_weights_path,
         output_viz=args.viz,
         output_basename=args.output_basename,
+        enable_stem_cells=args.stem_cells,
+        stem_cell_path=stem_cell_path,
     )
     
     if args.output:
@@ -508,6 +813,15 @@ def main():
         if not args.quiet:
             print(f"\nVisualization data saved to {out_path}")
     
+    # Save discovered patterns if any
+    if discovered and args.output_basename:
+        patterns_path = Path(f"weights/discoveries/{args.output_basename}_patterns.json")
+        patterns_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(patterns_path, "w") as f:
+            json.dump(discovered, f, indent=2)
+        if not args.quiet:
+            print(f"Discovered patterns saved to {patterns_path}")
+    
     # Always output result for parsing by scripts
     result = state.board.result()
     if args.json_result:
@@ -515,6 +829,7 @@ def main():
             "result": result,
             "moves": len(state.move_history),
             "outcome": "win" if result == "1-0" else ("loss" if result == "0-1" else "draw" if result == "1/2-1/2" else "unknown"),
+            "discovered_patterns": len(discovered) if discovered else 0,
         }
         print(json.dumps(result_data))
     else:

@@ -196,6 +196,101 @@ else
 fi
 
 # =============================================================================
+log_header "🎯 STEP 4.5: Tactical Micro-Training (M8)"
+# =============================================================================
+
+# Create tactics weights directory
+mkdir -p "$WEIGHTS_DIR/tactics"
+
+# List of tactics to train on
+TACTICS=("fork" "pin" "skewer" "hangingPiece" "backRankMate" "discoveredAttack")
+
+log "Training tactical patterns..."
+
+# First check if we have puzzle data
+if [ -d "$PROJECT_ROOT/data/puzzles" ]; then
+    TACTICS_FOUND=0
+    TACTICS_RESULTS=""
+    
+    for tactic in "${TACTICS[@]}"; do
+        # Look for FEN files for this tactic
+        FEN_FILE=""
+        
+        # Check various possible locations
+        for candidate in \
+            "$PROJECT_ROOT/data/puzzles/$tactic/lichess_$tactic.fen" \
+            "$PROJECT_ROOT/data/puzzles/${tactic,,}/lichess_${tactic,,}.fen" \
+            "$PROJECT_ROOT/data/benchmarks/${tactic}_suite.fen"; do
+            if [ -f "$candidate" ]; then
+                FEN_FILE="$candidate"
+                break
+            fi
+        done
+        
+        if [ -n "$FEN_FILE" ]; then
+            log "  Training $tactic from $FEN_FILE..."
+            
+            # Run tactical evaluation with consolidation
+            result=$(uv run python demos/experiments/tactics_eval.py \
+                --fen-file "$FEN_FILE" \
+                --tactic-type "$tactic" \
+                --limit 200 \
+                --consolidate \
+                --consolidate-pack "$WEIGHTS_DIR/tactics/${tactic}_consol.json" \
+                --output "$REPORTS_DIR/tactics_${tactic}.json" \
+                --quiet 2>&1 | grep "TACTICS_EVAL_RESULT" || echo "")
+            
+            if [ -n "$result" ]; then
+                log "    $result"
+                TACTICS_RESULTS="$TACTICS_RESULTS\n$tactic: $result"
+                ((TACTICS_FOUND++)) || true
+            fi
+        else
+            log "  Skipping $tactic (no FEN file found)"
+        fi
+    done
+    
+    log "Tactical training complete: $TACTICS_FOUND tactics processed"
+    
+    # Also run combined tactics evaluation if available
+    if [ -f "$PROJECT_ROOT/data/puzzles/combined_tactics.fen" ]; then
+        log "  Running combined tactics evaluation..."
+        uv run python demos/experiments/tactics_eval.py \
+            --fen-file "$PROJECT_ROOT/data/puzzles/combined_tactics.fen" \
+            --tactic-type "combined" \
+            --limit 500 \
+            --output "$REPORTS_DIR/tactics_combined.json" \
+            --quiet 2>&1 | tee -a "$LOGS_DIR/overnight_$TIMESTAMP.log" || true
+    fi
+    
+    # Run on built-in tactics suite if no puzzle data found
+    if [ $TACTICS_FOUND -eq 0 ] && [ -f "$PROJECT_ROOT/data/benchmarks/tactics_suite.fen" ]; then
+        log "  Using built-in tactics_suite.fen..."
+        uv run python demos/experiments/tactics_eval.py \
+            --fen-file "$PROJECT_ROOT/data/benchmarks/tactics_suite.fen" \
+            --tactic-type "mixed" \
+            --consolidate \
+            --consolidate-pack "$WEIGHTS_DIR/tactics/mixed_consol.json" \
+            --output "$REPORTS_DIR/tactics_suite.json" \
+            --quiet 2>&1 | tee -a "$LOGS_DIR/overnight_$TIMESTAMP.log" || true
+    fi
+else
+    log "No puzzle data found. Run tools/import_lichess_puzzles.py first for enhanced tactical training."
+    
+    # Fall back to built-in tactics suite
+    if [ -f "$PROJECT_ROOT/data/benchmarks/tactics_suite.fen" ]; then
+        log "  Using built-in tactics_suite.fen..."
+        uv run python demos/experiments/tactics_eval.py \
+            --fen-file "$PROJECT_ROOT/data/benchmarks/tactics_suite.fen" \
+            --tactic-type "mixed" \
+            --consolidate \
+            --consolidate-pack "$WEIGHTS_DIR/tactics/mixed_consol.json" \
+            --output "$REPORTS_DIR/tactics_suite.json" \
+            --quiet 2>&1 | tee -a "$LOGS_DIR/overnight_$TIMESTAMP.log" || true
+    fi
+fi
+
+# =============================================================================
 log_header "📊 STEP 5: AFTER Evaluation (Final Metrics)"
 # =============================================================================
 
@@ -281,6 +376,25 @@ cat > "$REPORT_FILE" << EOF
 - **KRK games:** $KRK_GAMES
 - **KPK games:** $KPK_GAMES
 - **Engine depth:** $DEPTH
+
+## 🎯 Tactical Micro-Training (M8)
+
+Trained tactical patterns from puzzle suites:
+EOF
+
+# Add tactical results to report
+for tactic_result in "$REPORTS_DIR"/tactics_*.json; do
+    if [ -f "$tactic_result" ]; then
+        tactic_name=$(basename "$tactic_result" .json | sed 's/tactics_//')
+        # Extract stats from JSON
+        if command -v python3 &> /dev/null; then
+            stats=$(python3 -c "import json; d=json.load(open('$tactic_result')); s=d.get('stats',{}); print(f\"- **{s.get('total',0)}** positions, **{s.get('accuracy',0)*100:.1f}%** accuracy\")" 2>/dev/null || echo "- Stats unavailable")
+            echo "- \`$tactic_name\`: $stats" >> "$REPORT_FILE"
+        fi
+    fi
+done
+
+cat >> "$REPORT_FILE" << EOF
 
 ## 📁 Files Generated
 
