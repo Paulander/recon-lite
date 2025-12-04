@@ -388,3 +388,62 @@ Although M4 is out of scope for this document, M3 should lay clean hooks:
   - Fold a fraction into persistent `w_base` and reset `Δw_fast` before new games.
 
 
+# Summary after implementation 1 Dec 2025: 
+
+## M3 Fast Plasticity & Bandit Control Implementation Complete
+I've implemented the full M3 plan as specified. Here's a summary of what was created:
+### New Files Created
+  Core Plasticity Module (src/recon_lite/plasticity/):
+  __init__.py - Package exports
+    fast.py - Edge weight adaptation with eligibility traces
+    EdgePlasticityState dataclass
+    PlasticityConfig with tunable parameters
+    init_plasticity_state(), update_eligibility(), apply_fast_update(), reset_episode()
+  bandit.py - UCB-style selection among sibling scripts
+    BanditArmState dataclass
+    BanditConfig with exploration coefficient
+    init_bandit_state(), ucb_score(), choose_child(), assign_reward()
+  modulation.py - Goal-aware parameter scaling
+    ModulationConfig with alpha coefficients
+    Modulators dataclass with risk, urgency, eta_tick_eff, c_explore_eff
+    compute_modulators(), compute_modulators_from_board()
+
+### Heuristic Evaluation (src/recon_lite_chess/eval/):
+  __init__.py - Package exports
+  heuristic.py - Position evaluation for reward computation
+  eval_position() - material + king safety + mobility + KRK bonus
+  compute_reward_tick() - clipped delta from eval changes
+  eval_position_stockfish() - optional Stockfish evaluation
+### Tests:
+tests/test_plasticity.py - 23 unit tests for plasticity, bandit, and modulation
+tests/test_plasticity_integration.py - 12 integration tests with KRK graph
+
+
+### Modified Files
+- KRK Persistent Demo (demos/persistent/krk_persistent_demo.py):
+- Added imports for plasticity, bandit, modulation, and eval modules
+- Added constants for KRK plasticity edges and bandit parents
+### Extended play_persistent_game() with new parameters:
+  --plasticity - Enable fast plasticity
+  --bandit - Enable bandit control
+  --eval-mode {heuristic,stockfish} - Evaluation mode
+  --plasticity-eta, --plasticity-r-max, --plasticity-lambda
+  --bandit-c-explore
+### Modified _decision_cycle() to:
+  Compute eval before/after each tick
+  Update eligibility traces for fired edges
+  Apply fast weight updates with goal modulation
+  Track M3 data in env for logging
+### Network Visualization (demos/visualization/network-visualization.js):
+  Added tracking for edge weights, deltas, and bandit stats
+  Added updatePlasticityData() method
+  Added getEdgePlasticityColor() for green/red tinting based on weight changes
+  Added getEdgeWeightMultiplier() for thickness based on weight
+  Modified edge drawing to use plasticity visualization
+
+## Usage
+Run KRK with plasticity enabled:
+uv run python demos/persistent/krk_persistent_demo.py \  --plasticity \  --bandit \  --eval-mode heuristic
+Or with Stockfish evaluation:
+uv run python demos/persistent/krk_persistent_demo.py \  --plasticity \  --bandit \  --eval-mode stockfish \  --engine /usr/games/stockfish
+All 35 new tests pass, and the implementation is backward-compatible (all new behavior is opt-in via CLI flags).

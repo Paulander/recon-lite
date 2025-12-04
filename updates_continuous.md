@@ -89,3 +89,543 @@ We want the KRK demo to feel like a living ReCoN brain: continuous activations t
 - Tests added for SWP application and subgraph mounting (`tests/test_macro_weight_pack.py`, `tests/test_endgame_components.py`).
 - `MacroEngine` accepts multiple builders to mount all endgame subgraphs cleanly. Visualization unchanged (macrograph-static auto-places new nodes).
 - TraceDB + metrics: KRK persistent emits Tick/Episode traces with pack fingerprints; batch/block runners write traces, checkpoints, per-block viz logs (KRK playback); nightly runner stub added for automation.
+
+---
+
+## Assistant handoff (2025‑12‑01)
+
+This section is a quick orientation for a future AI instance that needs to talk the user through the system (e.g. over voice) without lots of back‑and‑forth.
+
+### 1. Where we are on the roadmap
+
+- M1 (continuous activations, bindings, micro‑ticks) is implemented and tested (`src/recon_lite/core/activations.py`, `src/recon_lite/binding/manager.py`, `src/recon_lite/time/microtick.py`, `tests/test_continuous.py`).
+- M2 / M2.5 (macrograph, SWPs, Stockfish teacher, TraceDB, KRK/KPK tooling) are implemented:
+  - Macrograph: `specs/macrograph_v0.json`, `src/recon_lite/macro_engine.py`, `tests/test_macrograph.py`, `tests/test_macro_weight_pack.py`.
+  - TraceDB schema + helpers: `src/recon_lite/trace_db.py`, `src/recon_lite/macro_trace.py`.
+  - Teachers / eval: `demos/experiments/teacher_stockfish.py`, `demos/experiments/kpk_train.py`.
+  - Evaluation tools: `demos/experiments/batch_eval.py`, `demos/experiments/block_runner.py`, `demos/experiments/pack_tournament.py`.
+  - Persistent KRK/KPK demos with traces: `demos/persistent/krk_persistent_demo.py`, `demos/persistent/kpk_persistent_demo.py`.
+- M3 fast‑plasticity & bandit control is **partially implemented**:
+  - Core modules: `src/recon_lite/plasticity/fast.py`, `bandit.py`, `modulation.py`.
+  - Chess eval used for reward: `src/recon_lite_chess/eval/heuristic.py`.
+  - KRK wiring: `demos/persistent/krk_persistent_demo.py` supports optional plasticity/bandit flags and eval modes.
+  - Tests: `tests/test_plasticity.py`, `tests/test_plasticity_integration.py`.
+- Full M3 consolidation and polishing (e.g. applying plasticity beyond KRK, tuning bandits, tying into full‑game macro) is still ongoing; treat `recon_roadmap_m3_fast_plasticity.md` as the authoritative design.
+
+### 2. Files to skim first (for a new assistant)
+
+When you start a fresh session, read or be ready to reference:
+
+- `recon_roadmap_m2.md` – overall project roadmap from M2.5 upward (big picture).
+- `recon_roadmap_m3_fast_plasticity.md` – detailed M3 spec and status summary (what fast plasticity/bandits should do).
+- `updates_continuous.md` (this file) – history and intent for continuous activations + how KRK is wired.
+- `docs/HOWTO_RUN_TRAIN_EVAL.md` – exact commands the user runs for demos, teachers, and evaluations.
+- `ARCHITECTURE.md` – conceptual ReCoN architecture and terminology.
+- `VIS_SPEC.md` – how the visualization expects bindings/latents/weights.
+
+### 3. Typical commands the user runs
+
+These are the main entry points to confirm the system is healthy and to generate data:
+
+- KRK persistent demo with eval and trace:
+  - `uv run python demos/persistent/krk_persistent_demo.py --engine /usr/games/stockfish --depth 2 --trace-out reports/krk_trace.jsonl`
+- KPK persistent demo:
+  - `uv run python demos/persistent/kpk_persistent_demo.py --engine /usr/games/stockfish --depth 2 --trace-out reports/kpk_trace.jsonl`
+- KRK teacher (macro + phase packs):
+  - `uv run python demos/experiments/teacher_stockfish.py data/endgames/krk/random.fen --engine /usr/games/stockfish --depth 4 --output weights/macro_weight_pack.swp --phase-output weights/krk_phase_weight_pack.swp`
+- Batch evaluation:
+  - `uv run python demos/experiments/batch_eval.py --mode krk --fen-file data/endgames/krk/random.fen --runs 200 --pack weights/krk_phase_weight_pack.swp --engine /usr/games/stockfish --depth 2 --trace-out reports/krk_batch_trace.jsonl`
+- Pack tournament:
+  - `uv run python demos/experiments/pack_tournament.py --mode krk --fen-file data/endgames/krk/random.fen --pack weights/krk_phase_weight_pack.swp --engine /usr/games/stockfish --depth 2 --runs 200 --output reports/krk_pack_tournament.json`
+- Full‑game macro driver:
+  - `uv run python demos/gameplay/full_game_macro.py --engine /usr/games/stockfish --depth 2 --trace-out reports/fullgame_trace.jsonl`
+
+The user cares a lot about **metrics, traces, and viz**. When you suggest steps, try to preserve trace/logging options and explain how to interpret them (e.g. expected win rate, `reward_tick` trends, phase usage).
+
+### 4. Reward and learning signals (for M3/M4)
+
+- Tick‑level reward:
+  - `reward_tick = eval_after − eval_before` in centipawns (clipped).
+  - Eval source:
+    - Stockfish when `--engine` is provided (preferred).
+    - Heuristic eval (`recon_lite_chess.eval.heuristic.eval_position`) when no engine is available.
+  - Only meaningful on ticks where a move is chosen; other ticks may have `reward_tick = null`.
+- Episode‑level reward:
+  - `result` in `EpisodeRecord` (win/draw/loss) and summary stats in `notes`.
+- Fast plasticity:
+  - Implemented as within‑episode updates to edge weights for a whitelisted set of KRK edges; state resets between games.
+- Bandit control:
+  - Implemented (in code) but still needs tuning; used to choose between sibling scripts based on accumulated reward.
+
+When guiding the user, keep this mental model: **M2.5 gives you rich traces; M3 uses those traces online inside KRK; M4 will use them offline to adjust baseline weights across games.**
+
+### 5. What the user is aiming for next
+
+From recent notes and roadmaps, likely next steps the user will ask about:
+
+- Better understanding and tuning of M3 behavior:
+  - Visualizing how weights change during a KRK run (edge thickness/colors).
+  - Comparing “plasticity off” vs “plasticity on” using batch_eval / pack_tournament.
+- Extending plasticity/bandits beyond KRK:
+  - KPK endgames.
+  - Eventually macrograph decisions (phase/plan selection) once KRK/KPK look stable.
+- Moving toward full‑game play:
+  - More endgame subgraphs and heuristics.
+  - Shallow Stockfish teacher plus ReCoN control for opening/middlegame.
+- Laying groundwork for M4:
+  - Summaries per episode (per‑edge Δw_fast, bandit stats) that can be aggregated across traces.
+
+When in doubt, ask the user which **milestone** they want to push (M2.5 polish, M3 tuning, or early M4), and anchor your suggestions to the relevant roadmap file.
+
+---
+
+## M4: Slow Consolidation & Eval Upgrade (2025-12)
+
+M4 carries the fast, within-game adaptations from M3 into a persistent learning layer across games—stabilizing KRK/KPK performance, improving evaluation signals, and producing artifact-ready logs/visuals.
+
+### What's Implemented
+
+#### 1. Episode Summaries & Trace Enrichment (M4.1)
+
+- **EpisodeSummary** in `src/recon_lite/trace_db.py`:
+  - `edge_delta_sums`: cumulative Δw_fast per edge
+  - `bandit_stats`: per-arm pull counts and reward means
+  - `avg_reward_tick`, `total_reward_tick`, `reward_tick_count`
+  - `phase_usage`: count of ticks per phase
+  - `outcome_score`: +1 win, -1 loss, 0 draw
+
+- **extract_episode_summary()** in `src/recon_lite/plasticity/fast.py` aggregates episode data at game end.
+
+- **CLI tools**:
+  - `tools/trace_summarize.py`: aggregate metrics from JSONL traces to JSON/CSV
+  - Usage: `uv run python tools/trace_summarize.py reports/krk_trace.jsonl -o reports/summary.json`
+
+#### 2. Slow Weight Consolidation (M4.2)
+
+- **ConsolidationEngine** in `src/recon_lite/plasticity/consolidate.py`:
+  - `ConsolidationConfig`: `eta_consolidate`, `min_episodes`, `max_base_delta`, `w_min`, `w_max`
+  - `EdgeConsolidationState`: tracks `w_base`, `w_init`, accumulated weighted deltas
+  - `accumulate_episode(summary)`: adds episode data to running statistics
+  - `should_apply()`: checks if enough episodes accumulated
+  - `apply_to_graph(graph)`: updates graph edge weights with consolidated w_base
+  - `save_state()` / `load_state()`: persist to JSON
+  - `export_w_base_pack()`: export as SWP-compatible format
+
+- **Demo integration** in `demos/persistent/krk_persistent_demo.py`:
+  - `--consolidate`: enable slow consolidation
+  - `--consolidate-pack PATH`: load/save consolidation state
+  - `--consolidate-eta FLOAT`: learning rate (default 0.01)
+  - `--consolidate-min-episodes INT`: threshold before applying (default 10)
+
+#### 3. Cross-Game Bandit Refresh (M4.3)
+
+- **BanditPriors** in `src/recon_lite/plasticity/bandit.py`:
+  - Stores aggregated arm statistics across episodes
+  - `init_bandit_state_with_priors()`: warm-start new games with prior knowledge
+  - `export_priors()`, `merge_priors()`, `save_priors()`, `load_priors()`
+
+- **CLI**: `tools/bandit_refresh.py`
+  - Aggregates bandit stats from traces with optional decay
+  - Usage: `uv run python tools/bandit_refresh.py reports/*.jsonl --existing weights/priors.json --decay 0.9 -o weights/priors.json`
+
+- **Demo integration**: `--bandit-priors PATH` in krk_persistent_demo.py
+
+#### 4. Evaluation Upgrade & Hybrid Signals (M4.4)
+
+- **Expanded heuristic** in `src/recon_lite_chess/eval/heuristic.py`:
+  - `_material_score()`: piece values in pawn units
+  - `_king_safety_score()`: castling bonus, exposure penalty, attacker count
+  - `_mobility_score()`: legal move count differential
+  - `_pawn_structure_score()`: doubled, isolated, passed pawn detection
+  - `_piece_activity_score()`: centralization, outposts, bishop pair, rook files
+  - `_tactical_tension_score()`: hanging/under-defended pieces
+  - `_krk_specific_score()`: enemy king distance from center (endgame)
+  - `_endgame_factor()`: material-based phase interpolation
+  - Variants: `eval_position()`, `eval_position_fast()`, `eval_position_full()`
+
+- **EvalManager** in `src/recon_lite_chess/eval/manager.py`:
+  - Unified interface with modes: `HEURISTIC_FAST`, `HEURISTIC`, `HEURISTIC_FULL`, `STOCKFISH`, `HYBRID`, `DISTILLED`
+  - Caching with configurable max size
+  - Statistics tracking (`get_stats()`)
+
+- **Distillation stub** in `src/recon_lite_chess/eval/distill.py`:
+  - Interface defined for future ML-based evaluation
+  - `DistillationConfig`, `DistillationSample`, `DistillationDataset`
+  - `DistilledEvaluator`, `train_distilled_eval()`, `collect_distillation_data()`
+  - Currently raises `NotImplementedError` – placeholder for M5
+
+#### 5. Dashboards & Artifact Hooks (M4.5)
+
+- **CLI tools**:
+  - `tools/consolidate_batch.py`: offline batch consolidation from traces
+  - `tools/report_consolidation.py`: generate markdown reports with checksums and comparisons
+  - `tools/pack_diff.py`: compare two weight packs and show top changes
+
+- **Visualization** in `demos/visualization/network-visualization.js`:
+  - `edgeWBase`: tracks baseline weights from consolidation
+  - `setWBaseMode(mode)`: toggle between "baseline", "delta", "combined" display
+  - `getEdgeWBaseDriftColor()`: color edges by drift from initial weights
+  - Edge thickness/color reflects consolidation state
+
+#### 6. Tests & Benchmarks (M4.6)
+
+- `tests/test_consolidation.py`: 25 tests covering config, state, engine, save/load, bounds
+- `tests/test_eval_light.py`: 32 tests covering all heuristic components and EvalManager
+
+#### 7. Rollout Plan & Safety (M4.7)
+
+- **Versioning**: `save_state()` includes version field; packs have checksums
+- **Comparison**: `tools/pack_diff.py` and `report_consolidation.py --compare` show differences
+- **Validation workflow**:
+  1. Run consolidation on trace subset → produce candidate pack
+  2. Validate via `pack_tournament` vs baseline
+  3. Promote only if metrics improve
+
+### Typical M4 Commands
+
+```bash
+# Run KRK with consolidation enabled (batch of 20 games)
+uv run python demos/persistent/krk_persistent_demo.py \
+  --batch 20 --consolidate --consolidate-pack weights/krk_consol.json \
+  --consolidate-min-episodes 10 --plasticity --bandit \
+  --bandit-priors weights/bandit_priors.json \
+  --trace-out reports/krk_trace.jsonl
+
+# Summarize traces
+uv run python tools/trace_summarize.py reports/krk_trace.jsonl -o reports/summary.json
+
+# Refresh bandit priors with decay
+uv run python tools/bandit_refresh.py reports/*.jsonl \
+  --existing weights/bandit_priors.json --decay 0.9 -o weights/bandit_priors.json
+
+# Batch consolidation from multiple trace files
+uv run python tools/consolidate_batch.py reports/*.jsonl \
+  --existing weights/krk_consol.json --min-episodes 20 -o weights/krk_consol_new.json
+
+# Generate consolidation report
+uv run python tools/report_consolidation.py weights/krk_consol.json -o reports/consol_report.md
+
+# Compare two consolidation packs
+uv run python tools/pack_diff.py weights/krk_consol_old.json weights/krk_consol_new.json
+
+# Validate consolidated pack vs baseline
+uv run python demos/experiments/pack_tournament.py --mode krk \
+  --fen-file data/endgames/krk/random.fen \
+  --pack weights/krk_consol_new.json --runs 100
+```
+
+---
+
+## M5 (Implemented 2024-12): Structure Discovery & Script Induction
+
+Goal: Move from "tune existing scripts" to "propose and vet new ones" with trust-based pruning/promotion, while keeping explainability and safety.
+
+### What's New in M5
+
+#### 1. Motif Extraction (`src/recon_lite/motifs/`)
+
+- **BindingDescriptor**: Compact schema for "interesting patches" extracted from traces
+- **Extractors**: Functions to analyze board positions for tactical/structural patterns
+- **CLI**: `demos/experiments/extract_motifs.py` to extract motifs from trace files
+
+```bash
+uv run python demos/experiments/extract_motifs.py \
+  --traces reports/*.json --out reports/motifs/extracted.jsonl --stats
+```
+
+#### 2. Clustering & Script Proposals
+
+- **Motif Clustering**: `demos/experiments/cluster_motifs.py` groups patterns by type and context
+- **Script Proposals**: `demos/experiments/propose_scripts.py` generates candidate subgraph diffs
+- **Human Review**: `tools/review_proposal.py` for accept/reject workflow
+
+```bash
+# Cluster extracted motifs
+uv run python demos/experiments/cluster_motifs.py \
+  --motifs reports/motifs/extracted.jsonl --out reports/motifs/clusters.json
+
+# Generate script proposals
+uv run python demos/experiments/propose_scripts.py \
+  --clusters reports/motifs/clusters.json --out proposals/
+
+# Review proposals
+uv run python tools/review_proposal.py --list proposals/
+uv run python tools/review_proposal.py --proposal proposals/fork_v1.yaml --action accept
+```
+
+#### 3. Trust Scoring & Pruning (`src/recon_lite/trust/`)
+
+- **NodeTrustScore** and **EdgeTrustScore**: Track activation counts, rewards, and variance
+- **Trust formula**: `trust = α * norm(activations) + β * norm(reward) - γ * norm(variance)`
+- **Actions**: `freeze` (disable plasticity), `remove` (candidate for deletion), `promote` (boost weight)
+
+```bash
+uv run python tools/trust_report.py \
+  --traces demos/outputs/persistent/*.json \
+  --out reports/trust.json
+```
+
+#### 4. Tactical Subgraph (`src/recon_lite_chess/scripts/tactics.py`)
+
+New nodes for tactical pattern detection:
+- **Sensors**: `detect_fork`, `detect_pin`, `detect_hanging`
+- **Actuators**: `exploit_fork`, `capture_hanging`, `protect_hanging`
+- **Weight pack**: `weights/subgraphs/tactics_weight_pack.swp`
+
+#### 5. Rook Endgame Subgraph (`src/recon_lite_chess/scripts/rook_endgame.py`)
+
+Implements classic rook endgame techniques:
+- Lucena position detection and bridge-building
+- Philidor defense
+- King cutoff moves
+- **Weight pack**: `weights/subgraphs/rook_weight_pack.swp`
+
+#### 6. Extended Nightly Pipeline
+
+`demos/experiments/nightly_runner.py` now supports:
+- Motif extraction after trace generation
+- Trust scoring with incremental generation tracking
+- Combined report generation
+
+Config example (`configs/nightly/m5_full.json`):
+```json
+{
+  "mode": "krk",
+  "motif_extraction": {"enabled": true, "reward_threshold": 0.3},
+  "trust_scoring": {"enabled": true, "promote_threshold": 0.8},
+  "consolidation": {"enabled": true}
+}
+```
+
+#### 7. Benchmark Suites
+
+- `data/benchmarks/tactics_suite.fen`: Fork, pin, hanging piece positions
+- `data/benchmarks/rook_endgame_suite.fen`: Lucena, Philidor, cutoff positions
+- `demos/experiments/benchmark_eval.py`: Evaluate success rate on finding best moves
+
+```bash
+uv run python demos/experiments/benchmark_eval.py \
+  --suite data/benchmarks/tactics_suite.fen --out reports/benchmarks/tactics.json -v
+```
+
+#### 8. Versioning
+
+Weight pack manifest in `weights/manifest.json`:
+```json
+{
+  "tactics": {"current": "weights/subgraphs/tactics_weight_pack.swp", "generation": 1},
+  "rook_endgame": {"current": "weights/subgraphs/rook_weight_pack.swp", "generation": 1}
+}
+```
+
+### M5 File Summary
+
+**New modules**:
+- `src/recon_lite/motifs/` - Descriptors, extractors
+- `src/recon_lite/trust/` - Trust scoring
+- `src/recon_lite_chess/scripts/tactics.py`
+- `src/recon_lite_chess/scripts/rook_endgame.py`
+
+**New CLIs**:
+- `demos/experiments/extract_motifs.py`
+- `demos/experiments/cluster_motifs.py`
+- `demos/experiments/propose_scripts.py`
+- `demos/experiments/benchmark_eval.py`
+- `tools/trust_report.py`
+- `tools/review_proposal.py`
+
+**New data**:
+- `data/benchmarks/tactics_suite.fen`
+- `data/benchmarks/rook_endgame_suite.fen`
+- `weights/subgraphs/tactics_weight_pack.swp`
+- `weights/subgraphs/rook_weight_pack.swp`
+- `weights/manifest.json`
+
+**Tests**:
+- `tests/test_motif_extraction.py` (20 tests)
+- `tests/test_trust_scoring.py` (25 tests)
+- `tests/test_tactics_subgraph.py` (14 tests)
+
+---
+
+## M6 (Implemented 2025-12): Full-Game Architecture & Multi-Scale Dynamics
+
+**Goal**: Restructure ReCoN around a time-scale goal hierarchy with fan-in sensor terminals, plan persistence, and full-game capability from opening to checkmate.
+
+### Key Features
+
+#### 1. Fan-In Terminals (ReCoN Extension)
+Sensor terminals can have multiple parent scripts querying them:
+
+```python
+# Multiple plans query the same sensor
+g.add_edge("DevelopMinorPieces", "CenterControlSensor", LinkType.SUB)
+g.add_edge("ControlCenter", "CenterControlSensor", LinkType.SUB)  # Fan-in
+
+# Graph tracks all parents
+parents = g.all_parents("CenterControlSensor")  # ["DevelopMinorPieces", "ControlCenter"]
+g.is_fanin_terminal("CenterControlSensor")  # True
+```
+
+#### 2. Goal Hierarchy
+```
+ULTIMATE (WIN/DRAW/SURVIVE)
+    ↓
+STRATEGIC (AttackKing, Simplify, Develop...)
+    ↓  
+TACTICAL (Forks, Pins, Hanging pieces)
+    ↓
+SENSORS (Material, Phase, KingSafety...)
+```
+
+#### 3. Plan Persistence via Activation
+Plans maintain activation over time (inertia and decay):
+
+```python
+from recon_lite.dynamics.persistence import apply_persistence_to_node
+
+# Evidence accumulates with inertia, decays over time
+apply_persistence_to_node(plan_node, evidence=0.7)
+
+# Check if plan is active
+from recon_lite.dynamics.persistence import is_plan_active
+is_plan_active(plan_node)  # True if accumulated >= threshold
+```
+
+#### 4. Soft Phase Gating
+Phase is continuous weights, not hard gates:
+
+```python
+from recon_lite_chess.sensors.phase import estimate_phase
+phase = estimate_phase(board)  # PhaseWeights(opening=0.2, middlegame=0.6, endgame=0.2)
+```
+
+#### 5. Full Game Demo
+Play complete games from starting position:
+
+```bash
+uv run python demos/persistent/full_game_demo.py --max-moves 200
+uv run python demos/persistent/full_game_demo.py --vs-random --output game.json
+```
+
+### M6 File Summary
+
+**New/Modified modules**:
+- `src/recon_lite/graph.py` - Fan-in support for terminals
+- `src/recon_lite/dynamics/persistence.py` - Plan persistence logic
+- `src/recon_lite_chess/goals/ultimate.py` - WIN/DRAW/SURVIVE assessment
+- `src/recon_lite_chess/goals/strategic.py` - Strategic plan definitions
+- `src/recon_lite_chess/sensors/material.py` - Material category sensor
+- `src/recon_lite_chess/sensors/phase.py` - Soft phase sensor
+- `src/recon_lite_chess/scripts/opening.py` - Opening plans and sensors
+- `src/recon_lite_chess/scripts/middlegame.py` - Middlegame plans and sensors
+
+**New demos**:
+- `demos/persistent/full_game_demo.py` - Full game from start to finish
+
+**Updated specs**:
+- `specs/macrograph_v1.json` - M6 goal hierarchy with fan-in
+
+**Tests** (47 passing):
+- `tests/test_fanin_terminals.py`
+- `tests/test_goal_hierarchy.py`
+- `tests/test_persistence.py`
+- `tests/test_opening_middlegame.py`
+
+---
+
+## M7 (Implemented 2025-12): Distillation & Evaluation Upgrade
+
+**Goal**: Train a lightweight neural network to mimic Stockfish for fast, accurate evaluation without runtime engine dependency.
+
+### Key Features
+
+#### 1. Feature Extraction
+Extract ~77 features from chess positions for ML training:
+
+```python
+from recon_lite_chess.eval.features import extract_features
+
+board = chess.Board()
+fv = extract_features(board)
+print(f"Features: {len(fv)}")  # 77 features
+print(fv.feature_names)  # ["mat_w_P", "mat_w_N", ...]
+```
+
+Features include:
+- Material counts (12)
+- Material balance (7)
+- Piece positions (16)
+- King positions (8)
+- Pawn structure (12)
+- King safety (8)
+- Mobility (4)
+- Phase indicators (4)
+- Tactical features (6)
+
+#### 2. Stockfish Data Collection
+Collect training data by annotating positions with Stockfish:
+
+```bash
+# From random positions
+uv run python tools/collect_stockfish_evals.py \
+  --random 5000 --depth 15 --out data/distillation/evals.jsonl
+
+# From game traces
+uv run python tools/collect_stockfish_evals.py \
+  --traces reports/*.jsonl --out data/distillation/evals.jsonl
+
+# From PGN games
+uv run python tools/collect_stockfish_evals.py \
+  --pgn games.pgn --out data/distillation/evals.jsonl
+```
+
+#### 3. Model Training
+Train distilled model (supports PyTorch or sklearn backend):
+
+```bash
+uv run python tools/train_distilled_eval.py \
+  --data data/distillation/evals.jsonl \
+  --out weights/distilled_eval.pt \
+  --epochs 100 --lr 0.001 --hidden 256,128
+```
+
+#### 4. Integrated Evaluation
+Use distilled model in EvalManager:
+
+```python
+from recon_lite_chess.eval import EvalMode, EvalConfig, EvalManager
+
+# Pure distilled mode
+config = EvalConfig(
+    mode=EvalMode.DISTILLED,
+    distilled_model_path="weights/distilled_eval.pt"
+)
+manager = EvalManager(config)
+result = manager.evaluate(board)
+
+# Distilled + tactical bonuses
+config = EvalConfig(mode=EvalMode.DISTILLED_HYBRID, ...)
+```
+
+### M7 File Summary
+
+**New modules**:
+- `src/recon_lite_chess/eval/features.py` - Feature extraction for ML
+- `tools/train_distilled_eval.py` - Model training script
+
+**Modified**:
+- `src/recon_lite_chess/eval/distill.py` - Now fully implemented
+- `src/recon_lite_chess/eval/manager.py` - DISTILLED and DISTILLED_HYBRID modes
+
+**Tests** (17 passing):
+- `tests/test_distillation.py`
+
+### M7 Acceptance Criteria
+
+- [x] Feature extraction produces consistent 77-feature vectors
+- [x] Data collection tool supports traces, PGN, FENs, and random positions
+- [x] Training script supports both PyTorch and sklearn backends
+- [x] EvalManager supports DISTILLED and DISTILLED_HYBRID modes
+- [ ] 10,000+ positions collected (user task)
+- [ ] Model achieves >0.85 correlation with Stockfish (depends on training data)

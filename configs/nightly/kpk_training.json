@@ -1,0 +1,14 @@
+{
+  "$comment": "KPK pawn endgame training config",
+  "mode": "kpk",
+  "fen_file": "data/endgames/kpk/sample.fen",
+  "runs_per_block": 30,
+  "blocks": 4,
+  "max_plies": 80,
+  "max_ticks": 150,
+  "packs": ["weights/subgraphs/kpk_weight_pack.swp"],
+  "engine": "/usr/games/stockfish",
+  "depth": 2,
+  "out_dir": "reports/nightly/kpk"
+}
+

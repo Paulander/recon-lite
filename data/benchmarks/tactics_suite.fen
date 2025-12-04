@@ -1,0 +1,30 @@
+# Tactical benchmark positions
+# Format: FEN ; best_move ; description
+
+# Knight forks
+r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 0 1 ; Qxf7+ ; Fork king and rook after Qxf7
+r1bqk2r/pppp1ppp/2n2n2/4p3/1bB1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 1 ; Bxf7+ ; Fork king and queen
+4k3/8/8/8/3n4/8/4R3/4K3 b - - 0 1 ; Nf3+ ; Fork king and rook
+
+# Pins
+r1bqkb1r/pppp1ppp/2n2n2/4p1B1/4P3/5N2/PPPP1PPP/RN1QKB1R b KQkq - 0 1 ; d6 ; Break the pin
+4k3/4r3/8/8/8/8/4R3/4K3 w - - 0 1 ; Re8+ ; Pin and win the rook
+
+# Hanging pieces
+4k3/8/8/3n4/8/8/3Q4/4K3 w - - 0 1 ; Qxd5 ; Capture hanging knight
+r1bqkbnr/pppp1ppp/2n5/4p3/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 1 ; dxe5 ; Capture undefended pawn
+
+# Back rank threats
+6k1/5ppp/8/8/8/8/8/R6K w - - 0 1 ; Ra8# ; Back rank mate
+3r4/8/8/8/8/8/5PPP/7K b - - 0 1 ; Rd1# ; Back rank mate
+
+# Double attacks
+4k3/8/8/8/3Q4/8/8/4K3 w - - 0 1 ; Qd7+ ; Queen centralizes with check
+r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 1 ; Ng5 ; Attack f7 twice
+
+# Discovered attacks
+4k3/4b3/8/8/8/8/4R3/4K3 w - - 0 1 ; Re8# ; Discovered checkmate threat
+
+# Skewers
+4k3/4r3/8/8/4B3/8/8/4K3 w - - 0 1 ; Bxh7 ; Skewer available position
+

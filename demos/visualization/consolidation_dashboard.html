@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consolidation Dashboard - ReCoN-lite</title>
+    <style>
+        :root {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-card: #0f3460;
+            --accent: #e94560;
+            --accent-soft: #533483;
+            --text-primary: #eaeaea;
+            --text-secondary: #a0a0a0;
+            --positive: #4ade80;
+            --negative: #f87171;
+            --neutral: #60a5fa;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--bg-card);
+        }
+        
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
+        
+        .file-input {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .file-input input[type="file"] {
+            display: none;
+        }
+        
+        .btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            background: #c73e54;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: var(--bg-card);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--accent-soft);
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--bg-card);
+        }
+        
+        .card-title {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .stat-unit {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-left: 5px;
+        }
+        
+        .stat-change {
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        .stat-change.positive { color: var(--positive); }
+        .stat-change.negative { color: var(--negative); }
+        .stat-change.neutral { color: var(--neutral); }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--bg-card);
+        }
+        
+        th {
+            background: var(--bg-card);
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+        }
+        
+        tr:hover {
+            background: rgba(233, 69, 96, 0.1);
+        }
+        
+        .edge-key {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+        }
+        
+        .delta-positive { color: var(--positive); }
+        .delta-negative { color: var(--negative); }
+        
+        .histogram {
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+        
+        .histogram-bar {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            font-size: 0.8rem;
+        }
+        
+        .histogram-label {
+            width: 120px;
+            text-align: right;
+            padding-right: 10px;
+            font-family: monospace;
+            color: var(--text-secondary);
+        }
+        
+        .histogram-fill {
+            height: 20px;
+            background: linear-gradient(90deg, var(--accent-soft), var(--accent));
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+        
+        .histogram-count {
+            margin-left: 10px;
+            color: var(--text-secondary);
+        }
+        
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .config-item {
+            background: var(--bg-card);
+            padding: 12px;
+            border-radius: 6px;
+        }
+        
+        .config-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+        
+        .config-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: var(--text-secondary);
+        }
+        
+        .empty-state h2 {
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+        
+        #compareSection {
+            display: none;
+        }
+        
+        .compare-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .file-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-right: 15px;
+        }
+        
+        .checksum {
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            background: var(--bg-card);
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 Consolidation Dashboard</h1>
+            <div class="file-input">
+                <label class="btn" for="mainFile">Load State</label>
+                <input type="file" id="mainFile" accept=".json" onchange="loadMainFile(event)">
+                <label class="btn btn-secondary" for="compareFile">Compare With...</label>
+                <input type="file" id="compareFile" accept=".json" onchange="loadCompareFile(event)">
+            </div>
+        </header>
+        
+        <div id="emptyState" class="empty-state">
+            <h2>No Data Loaded</h2>
+            <p>Load a consolidation state JSON file to view the dashboard.</p>
+            <p style="margin-top: 20px; font-size: 0.9rem;">
+                Generate one with:<br>
+                <code style="background: var(--bg-card); padding: 8px 12px; border-radius: 4px; display: inline-block; margin-top: 10px;">
+                    uv run python demos/persistent/krk_persistent_demo.py --consolidate --consolidate-pack weights/krk_consol.json
+                </code>
+            </p>
+        </div>
+        
+        <div id="dashboard" style="display: none;">
+            <!-- Summary Cards -->
+            <div class="grid">
+                <div class="card">
+                    <div class="card-title">Total Episodes</div>
+                    <div class="stat-value" id="totalEpisodes">0</div>
+                    <div class="stat-change neutral" id="episodeChange"></div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Edges Tracked</div>
+                    <div class="stat-value" id="edgesTracked">0</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Pending Episodes</div>
+                    <div class="stat-value" id="pendingEpisodes">0</div>
+                    <div class="stat-change neutral">until next consolidation</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Last Updated</div>
+                    <div class="stat-value" id="lastUpdated" style="font-size: 1.2rem;">—</div>
+                </div>
+            </div>
+            
+            <!-- Configuration -->
+            <div class="section">
+                <h2 class="section-title">Configuration</h2>
+                <div class="config-grid" id="configGrid"></div>
+            </div>
+            
+            <!-- Weight Distribution -->
+            <div class="section">
+                <h2 class="section-title">Weight Distribution (w_base)</h2>
+                <div class="card">
+                    <div id="histogram" class="histogram"></div>
+                    <div style="margin-top: 15px; display: flex; gap: 30px;">
+                        <div><span class="config-label">Min:</span> <span id="wMin">—</span></div>
+                        <div><span class="config-label">Max:</span> <span id="wMax">—</span></div>
+                        <div><span class="config-label">Avg:</span> <span id="wAvg">—</span></div>
+                        <div><span class="config-label">Std:</span> <span id="wStd">—</span></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Top Changes -->
+            <div class="section">
+                <h2 class="section-title">Top Weight Changes (from initial)</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Edge</th>
+                            <th>w_base</th>
+                            <th>w_init</th>
+                            <th>Δ</th>
+                            <th>% Change</th>
+                        </tr>
+                    </thead>
+                    <tbody id="changesTable"></tbody>
+                </table>
+            </div>
+            
+            <!-- Comparison Section -->
+            <div id="compareSection" class="section">
+                <div class="compare-header">
+                    <h2 class="section-title">Comparison</h2>
+                    <span class="file-label">Comparing with: <span id="compareFileName">—</span></span>
+                </div>
+                <div class="grid">
+                    <div class="card">
+                        <div class="card-title">Episode Difference</div>
+                        <div class="stat-value" id="episodeDiff">0</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Edges Changed</div>
+                        <div class="stat-value" id="edgesChanged">0</div>
+                    </div>
+                </div>
+                <h3 style="margin: 20px 0 10px; font-size: 1rem;">Weight Changes Between States</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Edge</th>
+                            <th>Old w_base</th>
+                            <th>New w_base</th>
+                            <th>Δ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="compareTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let mainState = null;
+        let compareState = null;
+        
+        function loadMainFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    mainState = JSON.parse(e.target.result);
+                    renderDashboard();
+                } catch (err) {
+                    alert('Error parsing JSON: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        function loadCompareFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    compareState = JSON.parse(e.target.result);
+                    document.getElementById('compareFileName').textContent = file.name;
+                    renderComparison();
+                } catch (err) {
+                    alert('Error parsing JSON: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        function renderDashboard() {
+            if (!mainState) return;
+            
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            
+            const meta = mainState.consolidation_meta || {};
+            const config = mainState.config || {};
+            const wBase = mainState.w_base || {};
+            const wInit = mainState.w_init || {};
+            
+            // Summary cards
+            document.getElementById('totalEpisodes').textContent = meta.total_episodes || 0;
+            document.getElementById('edgesTracked').textContent = meta.edges_tracked || Object.keys(wBase).length;
+            document.getElementById('pendingEpisodes').textContent = meta.episodes_since_apply || 0;
+            document.getElementById('lastUpdated').textContent = meta.last_apply_time 
+                ? new Date(meta.last_apply_time).toLocaleString() 
+                : '—';
+            
+            // Configuration
+            const configGrid = document.getElementById('configGrid');
+            configGrid.innerHTML = '';
+            const configItems = [
+                { label: 'Learning Rate (η)', value: config.eta_consolidate || 0.01 },
+                { label: 'Min Episodes', value: config.min_episodes || 10 },
+                { label: 'Outcome Weight', value: config.outcome_weight || 0.5 },
+                { label: 'Max Base Delta', value: config.max_base_delta || 0.5 },
+                { label: 'w_min', value: config.w_min || 0.1 },
+                { label: 'w_max', value: config.w_max || 3.0 },
+            ];
+            configItems.forEach(item => {
+                configGrid.innerHTML += `
+                    <div class="config-item">
+                        <div class="config-label">${item.label}</div>
+                        <div class="config-value">${item.value}</div>
+                    </div>
+                `;
+            });
+            
+            // Weight statistics
+            const values = Object.values(wBase);
+            if (values.length > 0) {
+                const min = Math.min(...values);
+                const max = Math.max(...values);
+                const avg = values.reduce((a, b) => a + b, 0) / values.length;
+                const std = Math.sqrt(values.reduce((sum, v) => sum + Math.pow(v - avg, 2), 0) / values.length);
+                
+                document.getElementById('wMin').textContent = min.toFixed(4);
+                document.getElementById('wMax').textContent = max.toFixed(4);
+                document.getElementById('wAvg').textContent = avg.toFixed(4);
+                document.getElementById('wStd').textContent = std.toFixed(4);
+                
+                // Histogram
+                renderHistogram(values, 'histogram');
+            }
+            
+            // Top changes table
+            const changesTable = document.getElementById('changesTable');
+            changesTable.innerHTML = '';
+            
+            const changes = [];
+            for (const [key, wb] of Object.entries(wBase)) {
+                const wi = wInit[key] || wb;
+                const delta = wb - wi;
+                const pct = wi !== 0 ? (delta / wi * 100) : 0;
+                changes.push({ key, wb, wi, delta, pct });
+            }
+            
+            changes.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+            
+            changes.slice(0, 15).forEach(c => {
+                const deltaClass = c.delta > 0 ? 'delta-positive' : (c.delta < 0 ? 'delta-negative' : '');
+                changesTable.innerHTML += `
+                    <tr>
+                        <td class="edge-key">${formatEdgeKey(c.key)}</td>
+                        <td>${c.wb.toFixed(4)}</td>
+                        <td>${c.wi.toFixed(4)}</td>
+                        <td class="${deltaClass}">${c.delta >= 0 ? '+' : ''}${c.delta.toFixed(4)}</td>
+                        <td class="${deltaClass}">${c.pct >= 0 ? '+' : ''}${c.pct.toFixed(1)}%</td>
+                    </tr>
+                `;
+            });
+            
+            if (changes.length === 0 || changes.every(c => Math.abs(c.delta) < 0.001)) {
+                changesTable.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-secondary);">No significant changes from initial weights</td></tr>';
+            }
+        }
+        
+        function renderComparison() {
+            if (!mainState || !compareState) return;
+            
+            document.getElementById('compareSection').style.display = 'block';
+            
+            const mainMeta = mainState.consolidation_meta || {};
+            const compareMeta = compareState.consolidation_meta || {};
+            const mainWBase = mainState.w_base || {};
+            const compareWBase = compareState.w_base || {};
+            
+            // Episode difference
+            const episodeDiff = (mainMeta.total_episodes || 0) - (compareMeta.total_episodes || 0);
+            document.getElementById('episodeDiff').textContent = (episodeDiff >= 0 ? '+' : '') + episodeDiff;
+            
+            // Compute changes
+            const allKeys = new Set([...Object.keys(mainWBase), ...Object.keys(compareWBase)]);
+            const changes = [];
+            
+            allKeys.forEach(key => {
+                const oldW = compareWBase[key] || 1.0;
+                const newW = mainWBase[key] || 1.0;
+                const delta = newW - oldW;
+                if (Math.abs(delta) > 0.001) {
+                    changes.push({ key, oldW, newW, delta });
+                }
+            });
+            
+            document.getElementById('edgesChanged').textContent = changes.length;
+            
+            // Changes table
+            const compareTable = document.getElementById('compareTable');
+            compareTable.innerHTML = '';
+            
+            changes.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+            
+            changes.slice(0, 20).forEach(c => {
+                const deltaClass = c.delta > 0 ? 'delta-positive' : 'delta-negative';
+                compareTable.innerHTML += `
+                    <tr>
+                        <td class="edge-key">${formatEdgeKey(c.key)}</td>
+                        <td>${c.oldW.toFixed(4)}</td>
+                        <td>${c.newW.toFixed(4)}</td>
+                        <td class="${deltaClass}">${c.delta >= 0 ? '+' : ''}${c.delta.toFixed(4)}</td>
+                    </tr>
+                `;
+            });
+            
+            if (changes.length === 0) {
+                compareTable.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">No differences found</td></tr>';
+            }
+        }
+        
+        function renderHistogram(values, elementId) {
+            const bins = 10;
+            const min = Math.min(...values);
+            const max = Math.max(...values);
+            const range = max - min || 1;
+            const binWidth = range / bins;
+            
+            const counts = new Array(bins).fill(0);
+            values.forEach(v => {
+                const idx = Math.min(Math.floor((v - min) / binWidth), bins - 1);
+                counts[idx]++;
+            });
+            
+            const maxCount = Math.max(...counts);
+            const container = document.getElementById(elementId);
+            container.innerHTML = '';
+            
+            counts.forEach((count, i) => {
+                const binStart = min + i * binWidth;
+                const binEnd = min + (i + 1) * binWidth;
+                const width = maxCount > 0 ? (count / maxCount * 100) : 0;
+                
+                container.innerHTML += `
+                    <div class="histogram-bar">
+                        <span class="histogram-label">[${binStart.toFixed(2)}, ${binEnd.toFixed(2)})</span>
+                        <div class="histogram-fill" style="width: ${width}%"></div>
+                        <span class="histogram-count">${count}</span>
+                    </div>
+                `;
+            });
+        }
+        
+        function formatEdgeKey(key) {
+            if (key.includes('->') && key.includes(':')) {
+                const parts = key.split('->');
+                const dstParts = parts[1].split(':');
+                return `${parts[0]} → ${dstParts[0]} (${dstParts[1]})`;
+            }
+            return key;
+        }
+    </script>
+</body>
+</html>

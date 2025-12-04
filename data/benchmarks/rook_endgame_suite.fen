@@ -1,0 +1,34 @@
+# Rook endgame benchmark positions
+# Format: FEN ; best_move ; description
+
+# Lucena position (winning technique)
+1K6/1P6/8/8/8/8/6r1/4k3 w - - 0 1 ; Rc1 ; Build the bridge
+1K6/1P6/8/1R6/8/8/6r1/4k3 w - - 0 1 ; Rb4 ; Bridge building step 2
+1K6/1P6/8/8/1R6/8/6r1/4k3 w - - 0 1 ; Kc7 ; Activate king
+
+# Philidor position (drawing technique)
+8/4P3/8/8/8/2r5/8/4K2k b - - 0 1 ; Rc6 ; Philidor defense - rook to 6th
+8/4P3/2r5/8/4K3/8/8/7k b - - 0 1 ; Rc1 ; Checking from behind
+8/8/8/4Pk2/8/8/r7/4K3 b - - 0 1 ; Ra1+ ; Cut off the king
+
+# Rook behind passed pawn
+8/8/8/4P3/8/8/8/R3K2k w - - 0 1 ; Ra8 ; Rook behind the pawn
+8/8/8/4P3/8/8/r7/4K2k b - - 0 1 ; Ra8 ; Defend from behind
+
+# King cutoff techniques
+8/8/8/8/3R4/8/8/k3K3 w - - 0 1 ; Rd2 ; Cut off the king
+8/8/R7/8/8/8/8/k3K3 w - - 0 1 ; Ra2+ ; Cut and check
+
+# Converting advantage
+8/4P3/8/8/8/8/r7/R3K2k w - - 0 1 ; Ra8 ; Promote with rook support
+1R6/4P3/8/8/8/k7/8/4K3 w - - 0 1 ; e8=Q ; Simple promotion
+8/8/8/3Rk3/8/8/8/4K3 w - - 0 1 ; Kd2 ; Activate the king
+
+# Stalemate avoidance
+8/8/8/8/8/8/R7/k1K5 w - - 0 1 ; Kc2 ; Avoid stalemate, keep winning
+7k/8/6K1/8/8/8/8/7R w - - 0 1 ; Rh1 ; Win without stalemate
+
+# Theoretical draws
+8/8/8/8/8/8/r7/R3K2k w - - 0 1 ; Ra8 ; Hold the draw
+4k3/8/8/8/8/8/r7/R3K3 w - - 0 1 ; Ra8 ; Draw position
+

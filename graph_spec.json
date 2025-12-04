@@ -1,0 +1,1701 @@
+{
+  "version": "0.1",
+  "nodes": [
+    {
+      "id": "GameControl",
+      "label": "GameControl",
+      "group": "control",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "GoalVector",
+      "label": "GoalVector",
+      "group": "goals",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "OutcomeMode",
+      "label": "OutcomeMode",
+      "group": "selector",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "PhaseLayer",
+      "label": "PhaseLayer",
+      "group": "phase",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "PlanHub",
+      "label": "PlanHub",
+      "group": "router",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "PlanOpening",
+      "label": "PlanOpening",
+      "group": "plan_group",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "PlanMiddlegame",
+      "label": "PlanMiddlegame",
+      "group": "plan_group",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "PlanEndgame",
+      "label": "PlanEndgame",
+      "group": "plan_group",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "FeatureHub",
+      "label": "FeatureHub",
+      "group": "features",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "FeatureTactics",
+      "label": "FeatureTactics",
+      "group": "feature_group",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "FeatureStructure",
+      "label": "FeatureStructure",
+      "group": "feature_group",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "FeatureEndgame",
+      "label": "FeatureEndgame",
+      "group": "feature_group",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "MoveSynth",
+      "label": "MoveSynth",
+      "group": "synth",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "LightEval",
+      "label": "LightEval",
+      "group": "eval",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "LearningSupervisor",
+      "label": "LearningSupervisor",
+      "group": "trainer",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "KRKSubgraph",
+      "label": "KRKSubgraph",
+      "group": "subgraph",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "KPKSubgraph",
+      "label": "KPKSubgraph",
+      "group": "subgraph",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "RookTechniquesSubgraph",
+      "label": "RookTechniquesSubgraph",
+      "group": "subgraph",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "king_at_edge",
+      "label": "king_at_edge",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "king_confined",
+      "label": "king_confined",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "barrier_ready",
+      "label": "barrier_ready",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "box_can_shrink",
+      "label": "box_can_shrink",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "can_take_opposition",
+      "label": "can_take_opposition",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "can_deliver_mate",
+      "label": "can_deliver_mate",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "is_stalemate",
+      "label": "is_stalemate",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "cut_established",
+      "label": "cut_established",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "phase0_establish_cut",
+      "label": "phase0_establish_cut",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "phase1_drive_to_edge",
+      "label": "phase1_drive_to_edge",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "phase2_shrink_box",
+      "label": "phase2_shrink_box",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "phase3_take_opposition",
+      "label": "phase3_take_opposition",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "phase4_deliver_mate",
+      "label": "phase4_deliver_mate",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "krk_root",
+      "label": "krk_root",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "choose_phase0",
+      "label": "choose_phase0",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "king_drive_moves",
+      "label": "king_drive_moves",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "confinement_moves",
+      "label": "confinement_moves",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "barrier_placement_moves",
+      "label": "barrier_placement_moves",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "box_shrink_moves",
+      "label": "box_shrink_moves",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "opposition_moves",
+      "label": "opposition_moves",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "mate_moves",
+      "label": "mate_moves",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "random_legal_moves",
+      "label": "random_legal_moves",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "no_progress_watch",
+      "label": "no_progress_watch",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "p0_check",
+      "label": "p0_check",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "p0_move",
+      "label": "p0_move",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "p0_wait",
+      "label": "p0_wait",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "p1_check",
+      "label": "p1_check",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "p1_move",
+      "label": "p1_move",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "p1_wait",
+      "label": "p1_wait",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "p2_check",
+      "label": "p2_check",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "p2_move",
+      "label": "p2_move",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "p2_wait",
+      "label": "p2_wait",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "p3_check",
+      "label": "p3_check",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "p3_move",
+      "label": "p3_move",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "p3_wait",
+      "label": "p3_wait",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "p4_check",
+      "label": "p4_check",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "p4_move",
+      "label": "p4_move",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "p4_wait",
+      "label": "p4_wait",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "wait_after_p0",
+      "label": "wait_after_p0",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "wait_after_p1",
+      "label": "wait_after_p1",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "wait_after_p2",
+      "label": "wait_after_p2",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "wait_after_p3",
+      "label": "wait_after_p3",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "wait_after_p4",
+      "label": "wait_after_p4",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "rook_lost",
+      "label": "rook_lost",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "kpk_material_check",
+      "label": "kpk_material_check",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "kpk_push_window",
+      "label": "kpk_push_window",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "kpk_opposition_probe",
+      "label": "kpk_opposition_probe",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "kpk_promotion_probe",
+      "label": "kpk_promotion_probe",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "kpk_move_selector",
+      "label": "kpk_move_selector",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "kpk_wait_for_change",
+      "label": "kpk_wait_for_change",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "kpk_root",
+      "label": "kpk_root",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "kpk_detect",
+      "label": "kpk_detect",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "kpk_execute",
+      "label": "kpk_execute",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "kpk_finish",
+      "label": "kpk_finish",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "kpk_wait",
+      "label": "kpk_wait",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "rook_cutoff_ready",
+      "label": "rook_cutoff_ready",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "rook_bridge_ready",
+      "label": "rook_bridge_ready",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "rook_ladder_ready",
+      "label": "rook_ladder_ready",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "rook_techniques_summary",
+      "label": "rook_techniques_summary",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "rook_wait_after_cutoff",
+      "label": "rook_wait_after_cutoff",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "rook_wait_after_bridge",
+      "label": "rook_wait_after_bridge",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "rook_wait_after_ladder",
+      "label": "rook_wait_after_ladder",
+      "group": "generic",
+      "kind": "TERMINAL",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "rook_techniques_root",
+      "label": "rook_techniques_root",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "rook_cutoff",
+      "label": "rook_cutoff",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "rook_bridge",
+      "label": "rook_bridge",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "rook_ladder",
+      "label": "rook_ladder",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "rook_cutoff_check",
+      "label": "rook_cutoff_check",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "rook_cutoff_wait",
+      "label": "rook_cutoff_wait",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "rook_bridge_check",
+      "label": "rook_bridge_check",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "rook_bridge_wait",
+      "label": "rook_bridge_wait",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "rook_ladder_check",
+      "label": "rook_ladder_check",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "rook_ladder_wait",
+      "label": "rook_ladder_wait",
+      "group": "generic",
+      "kind": "SCRIPT",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "GameControl",
+      "to": "GoalVector",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "GameControl",
+      "to": "OutcomeMode",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "GameControl",
+      "to": "PhaseLayer",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "PhaseLayer",
+      "to": "PlanHub",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "PlanHub",
+      "to": "PlanOpening",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "PlanHub",
+      "to": "PlanMiddlegame",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "PlanHub",
+      "to": "PlanEndgame",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "PlanEndgame",
+      "to": "KRKSubgraph",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "PlanHub",
+      "to": "FeatureHub",
+      "type": "POR",
+      "weight": 0.9
+    },
+    {
+      "from": "FeatureHub",
+      "to": "PlanHub",
+      "type": "POR",
+      "weight": 0.85
+    },
+    {
+      "from": "FeatureHub",
+      "to": "FeatureTactics",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "FeatureHub",
+      "to": "FeatureStructure",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "FeatureHub",
+      "to": "FeatureEndgame",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "GoalVector",
+      "to": "MoveSynth",
+      "type": "POR",
+      "weight": 0.8
+    },
+    {
+      "from": "PlanHub",
+      "to": "MoveSynth",
+      "type": "POR",
+      "weight": 0.95
+    },
+    {
+      "from": "FeatureHub",
+      "to": "MoveSynth",
+      "type": "POR",
+      "weight": 1.05
+    },
+    {
+      "from": "LightEval",
+      "to": "MoveSynth",
+      "type": "POR",
+      "weight": 0.9
+    },
+    {
+      "from": "GameControl",
+      "to": "MoveSynth",
+      "type": "POR",
+      "weight": 0.6
+    },
+    {
+      "from": "LearningSupervisor",
+      "to": "PlanHub",
+      "type": "POR",
+      "weight": 1.8
+    },
+    {
+      "from": "LearningSupervisor",
+      "to": "MoveSynth",
+      "type": "POR",
+      "weight": 0.4
+    },
+    {
+      "from": "PlanEndgame",
+      "to": "KPKSubgraph",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "PlanEndgame",
+      "to": "RookTechniquesSubgraph",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "krk_root",
+      "to": "phase0_establish_cut",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "krk_root",
+      "to": "phase1_drive_to_edge",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "krk_root",
+      "to": "phase2_shrink_box",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "krk_root",
+      "to": "phase3_take_opposition",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "krk_root",
+      "to": "phase4_deliver_mate",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "krk_root",
+      "to": "no_progress_watch",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "krk_root",
+      "to": "is_stalemate",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "krk_root",
+      "to": "rook_lost",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "phase0_establish_cut",
+      "to": "p0_check",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "phase0_establish_cut",
+      "to": "p0_move",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "phase0_establish_cut",
+      "to": "p0_wait",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "p0_check",
+      "to": "p0_move",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "from": "p0_move",
+      "to": "p0_wait",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "from": "p0_check",
+      "to": "cut_established",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "p0_move",
+      "to": "choose_phase0",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "p0_wait",
+      "to": "wait_after_p0",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "phase0_establish_cut",
+      "to": "phase1_drive_to_edge",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "from": "phase1_drive_to_edge",
+      "to": "phase2_shrink_box",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "from": "phase2_shrink_box",
+      "to": "phase3_take_opposition",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "from": "phase3_take_opposition",
+      "to": "phase4_deliver_mate",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "from": "phase1_drive_to_edge",
+      "to": "p1_check",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "phase1_drive_to_edge",
+      "to": "p1_move",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "phase1_drive_to_edge",
+      "to": "p1_wait",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "p1_check",
+      "to": "p1_move",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "from": "p1_move",
+      "to": "p1_wait",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "from": "p1_check",
+      "to": "king_at_edge",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "p1_move",
+      "to": "king_drive_moves",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "p1_move",
+      "to": "confinement_moves",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "p1_move",
+      "to": "barrier_placement_moves",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "p1_wait",
+      "to": "wait_after_p1",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "phase2_shrink_box",
+      "to": "p2_check",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "phase2_shrink_box",
+      "to": "p2_move",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "phase2_shrink_box",
+      "to": "p2_wait",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "p2_check",
+      "to": "p2_move",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "from": "p2_move",
+      "to": "p2_wait",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "from": "p2_check",
+      "to": "box_can_shrink",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "p2_move",
+      "to": "box_shrink_moves",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "p2_wait",
+      "to": "wait_after_p2",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "phase3_take_opposition",
+      "to": "p3_check",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "phase3_take_opposition",
+      "to": "p3_move",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "phase3_take_opposition",
+      "to": "p3_wait",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "p3_check",
+      "to": "p3_move",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "from": "p3_move",
+      "to": "p3_wait",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "from": "p3_check",
+      "to": "can_take_opposition",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "p3_move",
+      "to": "opposition_moves",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "p3_wait",
+      "to": "wait_after_p3",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "phase4_deliver_mate",
+      "to": "p4_check",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "phase4_deliver_mate",
+      "to": "p4_move",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "phase4_deliver_mate",
+      "to": "p4_wait",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "p4_check",
+      "to": "p4_move",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "from": "p4_move",
+      "to": "p4_wait",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "from": "p4_check",
+      "to": "can_deliver_mate",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "p4_move",
+      "to": "mate_moves",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "p4_wait",
+      "to": "wait_after_p4",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "KRKSubgraph",
+      "to": "king_confined",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "KRKSubgraph",
+      "to": "barrier_ready",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "KRKSubgraph",
+      "to": "krk_root",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "KRKSubgraph",
+      "to": "random_legal_moves",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "kpk_root",
+      "to": "kpk_detect",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "kpk_root",
+      "to": "kpk_execute",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "kpk_root",
+      "to": "kpk_finish",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "kpk_root",
+      "to": "kpk_wait",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "kpk_detect",
+      "to": "kpk_material_check",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "kpk_detect",
+      "to": "kpk_push_window",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "kpk_execute",
+      "to": "kpk_move_selector",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "kpk_execute",
+      "to": "kpk_opposition_probe",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "kpk_finish",
+      "to": "kpk_promotion_probe",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "kpk_wait",
+      "to": "kpk_wait_for_change",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "kpk_detect",
+      "to": "kpk_execute",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "from": "kpk_execute",
+      "to": "kpk_finish",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "from": "kpk_finish",
+      "to": "kpk_wait",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "from": "KPKSubgraph",
+      "to": "kpk_root",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "rook_techniques_root",
+      "to": "rook_cutoff",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "rook_techniques_root",
+      "to": "rook_bridge",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "rook_techniques_root",
+      "to": "rook_ladder",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "rook_techniques_root",
+      "to": "rook_techniques_summary",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "rook_cutoff",
+      "to": "rook_cutoff_check",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "rook_cutoff",
+      "to": "rook_cutoff_wait",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "rook_bridge",
+      "to": "rook_bridge_check",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "rook_bridge",
+      "to": "rook_bridge_wait",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "rook_ladder",
+      "to": "rook_ladder_check",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "rook_ladder",
+      "to": "rook_ladder_wait",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "rook_cutoff_check",
+      "to": "rook_cutoff_ready",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "rook_cutoff_wait",
+      "to": "rook_wait_after_cutoff",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "rook_bridge_check",
+      "to": "rook_bridge_ready",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "rook_bridge_wait",
+      "to": "rook_wait_after_bridge",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "rook_ladder_check",
+      "to": "rook_ladder_ready",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "rook_ladder_wait",
+      "to": "rook_wait_after_ladder",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "from": "rook_cutoff_check",
+      "to": "rook_cutoff_wait",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "from": "rook_bridge_check",
+      "to": "rook_bridge_wait",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "from": "rook_ladder_check",
+      "to": "rook_ladder_wait",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "from": "rook_cutoff",
+      "to": "rook_bridge",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "from": "rook_bridge",
+      "to": "rook_ladder",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "from": "RookTechniquesSubgraph",
+      "to": "rook_techniques_root",
+      "type": "SUB",
+      "weight": 1.0
+    }
+  ],
+  "node_state_colors": {
+    "INACTIVE": "#555555",
+    "REQUESTED": "#007bff",
+    "WAITING": "#ff9800",
+    "TRUE": "#cddc39",
+    "CONFIRMED": "#4caf50",
+    "FAILED": "#f44336"
+  }
+}

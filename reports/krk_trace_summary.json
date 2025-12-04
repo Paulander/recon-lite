@@ -1,0 +1,22 @@
+{
+  "total_episodes": 3,
+  "outcomes": {
+    "wins": 3,
+    "losses": 0,
+    "draws": 0,
+    "unknown": 0,
+    "win_rate": 1.0
+  },
+  "ticks": {
+    "total": 20,
+    "avg_per_episode": 6.67
+  },
+  "rewards": {
+    "total": -213.0,
+    "count": 8,
+    "avg": -26.625
+  },
+  "phase_usage": {},
+  "edge_avg_deltas": {},
+  "bandit_stats": {}
+}

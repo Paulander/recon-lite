@@ -1,0 +1,32 @@
+{
+  "version": "1.0",
+  "description": "Weight pack version manifest for M5 structure discovery",
+  "generated_at": "2024-12-03",
+  "packs": {
+    "krk": {
+      "current": "weights/krk_phase_weight_pack.swp",
+      "generation": 1,
+      "previous": null
+    },
+    "kpk": {
+      "current": "weights/subgraphs/kpk_weight_pack.swp",
+      "generation": 1,
+      "previous": null
+    },
+    "tactics": {
+      "current": "weights/subgraphs/tactics_weight_pack.swp",
+      "generation": 1,
+      "previous": null
+    },
+    "rook_endgame": {
+      "current": "weights/subgraphs/rook_weight_pack.swp",
+      "generation": 1,
+      "previous": null
+    }
+  },
+  "notes": {
+    "generation_naming": "Use genXXX suffix for versioned packs (e.g., tactics_gen002.swp)",
+    "rollback": "Use tools/pack_diff.py --rollback to restore previous generation"
+  }
+}
+

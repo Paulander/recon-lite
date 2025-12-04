@@ -39,6 +39,14 @@ This directory contains multiple visualization approaches for ReCoN networks:
 - **Toggle spec**: Load default or supply a custom JSON spec
 - **Zero dependencies**: Works offline; ideal for design reviews
 
+### 6. **Consolidation Dashboard** (`consolidation_dashboard.html`)
+**Purpose**: Monitor slow consolidation training progress (M4)
+- **Load/Compare**: Load consolidation state JSON files, compare two states
+- **Metrics Dashboard**: Total episodes, edges tracked, configuration
+- **Weight Histogram**: Distribution of w_base values with statistics
+- **Top Changes**: Table showing largest weight drifts from initial
+- **No Server Required**: Works offline (double-click to open)
+
 
 ## 🚀 Quick Start Guide
 
@@ -93,6 +101,21 @@ macrograph_view.html
 # Loads ../../specs/macrograph_v0.json by default; drag-drop a custom spec if needed.
 ```
 
+### Option 6: Consolidation Dashboard (No Server)
+**Best for monitoring training progress**
+```bash
+# 1. Run training with consolidation
+uv run python demos/persistent/krk_persistent_demo.py \
+  --batch 20 --plasticity --consolidate \
+  --consolidate-pack weights/nightly/krk_consol.json
+
+# 2. Double-click to open dashboard
+consolidation_dashboard.html
+
+# 3. Click "Load State" and select weights/nightly/krk_consol.json
+# 4. Optionally, click "Compare With..." to compare against a baseline
+```
+
 ## 📋 Prerequisites
 
 - **uv**: Fast Python package manager
@@ -133,15 +156,16 @@ This creates `demos/krk_visualization_data.json` with the ReCoN execution frames
 
 ## 🎯 Key Differences
 
-| Feature | Parent Dashboard | 3D Network | Standalone 3D |
-|---------|------------------|------------|---------------|
-| **Chess Board** | ✅ Yes | ❌ No | ❌ No |
-| **AI Thoughts** | ✅ Yes | ❌ No | ❌ No |
-| **Phase Schematic** | ✅ Yes | ❌ No | ❌ No |
-| **3D Network** | ❌ No (2D) | ✅ Yes | ✅ Yes |
-| **Server Required** | ❌ No | ✅ Yes | ❌ No |
-| **Modular Code** | ❌ Inline | ✅ Yes | ❌ Inline |
-| **Data Source** | JSON file | JS array | JS array |
+| Feature | Parent Dashboard | 3D Network | Standalone 3D | Consolidation Dashboard |
+|---------|------------------|------------|---------------|------------------------|
+| **Chess Board** | ✅ Yes | ❌ No | ❌ No | ❌ No |
+| **AI Thoughts** | ✅ Yes | ❌ No | ❌ No | ❌ No |
+| **Phase Schematic** | ✅ Yes | ❌ No | ❌ No | ❌ No |
+| **Training Metrics** | ❌ No | ❌ No | ❌ No | ✅ Yes |
+| **Weight Histograms** | ❌ No | ❌ No | ❌ No | ✅ Yes |
+| **3D Network** | ❌ No (2D) | ✅ Yes | ✅ Yes | ❌ No |
+| **Server Required** | ❌ No | ✅ Yes | ❌ No | ❌ No |
+| **Data Source** | viz JSON | JS array | JS array | consol JSON |
 
 ## 🛠️ Development
 

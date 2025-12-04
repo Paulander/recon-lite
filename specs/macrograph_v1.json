@@ -1,0 +1,463 @@
+{
+  "version": "1.0",
+  "description": "M6 ReCoN macrograph with goal hierarchy, fan-in terminals, and plan persistence. Adheres to ReCoN paper: only sub/sur/por/ret links, fan-in allowed for sensor terminals.",
+  "design_notes": {
+    "goal_hierarchy": "Ultimate → Strategic → Tactical → Sensors",
+    "fan_in": "Sensor terminals can have multiple parent scripts (fan-in on SUB links)",
+    "persistence": "Plans use activation field to store persistence state (inertia, decay)",
+    "phase_gating": "Soft phase weights modulate plan activations, not hard gates"
+  },
+  "nodes": [
+    {
+      "id": "GameRoot",
+      "type": "script",
+      "layer": "root",
+      "meta": {
+        "description": "Top-level script that orchestrates the entire game"
+      }
+    },
+    {
+      "id": "UltimateGoal",
+      "type": "terminal",
+      "layer": "ultimate",
+      "sensor_type": "ultimate_goal",
+      "fan_in_allowed": true,
+      "meta": {
+        "description": "Assesses WIN/DRAW/SURVIVE based on position"
+      }
+    },
+    {
+      "id": "PhaseSensor",
+      "type": "terminal",
+      "layer": "sensor",
+      "sensor_type": "phase",
+      "fan_in_allowed": true,
+      "meta": {
+        "description": "Soft phase weights (opening/middlegame/endgame)"
+      }
+    },
+    {
+      "id": "MaterialSensor",
+      "type": "terminal",
+      "layer": "sensor",
+      "sensor_type": "material",
+      "fan_in_allowed": true,
+      "meta": {
+        "description": "Material balance and category detection"
+      }
+    },
+    {
+      "id": "WinStrategy",
+      "type": "script",
+      "layer": "ultimate",
+      "goal": "WIN",
+      "meta": {
+        "description": "Strategy branch for winning positions"
+      }
+    },
+    {
+      "id": "DrawStrategy",
+      "type": "script",
+      "layer": "ultimate",
+      "goal": "DRAW",
+      "meta": {
+        "description": "Strategy branch for equal/defensive positions"
+      }
+    },
+    {
+      "id": "SurviveStrategy",
+      "type": "script",
+      "layer": "ultimate",
+      "goal": "SURVIVE",
+      "meta": {
+        "description": "Strategy branch for losing positions"
+      }
+    },
+    {
+      "id": "OpeningPhase",
+      "type": "script",
+      "layer": "phase",
+      "phase": "opening",
+      "meta": {
+        "description": "Opening phase plans container"
+      }
+    },
+    {
+      "id": "MiddlegamePhase",
+      "type": "script",
+      "layer": "phase",
+      "phase": "middlegame",
+      "meta": {
+        "description": "Middlegame phase plans container"
+      }
+    },
+    {
+      "id": "EndgamePhase",
+      "type": "script",
+      "layer": "phase",
+      "phase": "endgame",
+      "meta": {
+        "description": "Endgame phase plans container (KRK, KPK, etc.)"
+      }
+    },
+    {
+      "id": "DevelopMinorPieces",
+      "type": "script",
+      "layer": "strategic",
+      "category": "OPENING",
+      "inertia": 0.7,
+      "decay": 0.1
+    },
+    {
+      "id": "CastleEarly",
+      "type": "script",
+      "layer": "strategic",
+      "category": "OPENING",
+      "inertia": 0.6,
+      "decay": 0.15
+    },
+    {
+      "id": "ControlCenter",
+      "type": "script",
+      "layer": "strategic",
+      "category": "OPENING",
+      "inertia": 0.7,
+      "decay": 0.1
+    },
+    {
+      "id": "AttackKingPlan",
+      "type": "script",
+      "layer": "strategic",
+      "category": "MIDDLEGAME",
+      "inertia": 0.8,
+      "decay": 0.1
+    },
+    {
+      "id": "ImproveWorstPiecePlan",
+      "type": "script",
+      "layer": "strategic",
+      "category": "MIDDLEGAME",
+      "inertia": 0.6,
+      "decay": 0.15
+    },
+    {
+      "id": "CreateWeaknessPlan",
+      "type": "script",
+      "layer": "strategic",
+      "category": "MIDDLEGAME",
+      "inertia": 0.7,
+      "decay": 0.1
+    },
+    {
+      "id": "SimplifyPlan",
+      "type": "script",
+      "layer": "strategic",
+      "category": "MIDDLEGAME",
+      "inertia": 0.5,
+      "decay": 0.2
+    },
+    {
+      "id": "KRKSubgraph",
+      "type": "subgraph",
+      "mount": "krk",
+      "layer": "technique",
+      "meta": {
+        "weight_pack": "weights/subgraphs/krk_weight_pack.swp"
+      }
+    },
+    {
+      "id": "KPKSubgraph",
+      "type": "subgraph",
+      "mount": "kpk",
+      "layer": "technique",
+      "meta": {
+        "weight_pack": "weights/subgraphs/kpk_weight_pack.swp"
+      }
+    },
+    {
+      "id": "TacticsSubgraph",
+      "type": "subgraph",
+      "mount": "tactics",
+      "layer": "tactical",
+      "meta": {
+        "enabled": true,
+        "weight_pack": "weights/subgraphs/tactics_weight_pack.swp"
+      }
+    },
+    {
+      "id": "RookEndgameSubgraph",
+      "type": "subgraph",
+      "mount": "rook_endgame",
+      "layer": "technique",
+      "meta": {
+        "enabled": true,
+        "weight_pack": "weights/subgraphs/rook_weight_pack.swp"
+      }
+    },
+    {
+      "id": "DevelopmentSensor",
+      "type": "terminal",
+      "layer": "sensor",
+      "sensor_type": "development",
+      "fan_in_allowed": true
+    },
+    {
+      "id": "CastlingSensor",
+      "type": "terminal",
+      "layer": "sensor",
+      "sensor_type": "castling",
+      "fan_in_allowed": true
+    },
+    {
+      "id": "CenterControlSensor",
+      "type": "terminal",
+      "layer": "sensor",
+      "sensor_type": "center_control",
+      "fan_in_allowed": true
+    },
+    {
+      "id": "KingSafetySensor",
+      "type": "terminal",
+      "layer": "sensor",
+      "sensor_type": "king_safety",
+      "fan_in_allowed": true
+    },
+    {
+      "id": "PieceActivitySensor",
+      "type": "terminal",
+      "layer": "sensor",
+      "sensor_type": "piece_activity",
+      "fan_in_allowed": true
+    },
+    {
+      "id": "StructureSensor",
+      "type": "terminal",
+      "layer": "sensor",
+      "sensor_type": "structure",
+      "fan_in_allowed": true
+    },
+    {
+      "id": "ForkDetector",
+      "type": "terminal",
+      "layer": "tactical_sensor",
+      "sensor_type": "fork",
+      "fan_in_allowed": true
+    },
+    {
+      "id": "PinDetector",
+      "type": "terminal",
+      "layer": "tactical_sensor",
+      "sensor_type": "pin",
+      "fan_in_allowed": true
+    },
+    {
+      "id": "HangingDetector",
+      "type": "terminal",
+      "layer": "tactical_sensor",
+      "sensor_type": "hanging",
+      "fan_in_allowed": true
+    }
+  ],
+  "edges": [
+    {
+      "from": "GameRoot",
+      "to": "UltimateGoal",
+      "kind": "sub",
+      "note": "Root queries ultimate goal assessment"
+    },
+    {
+      "from": "GameRoot",
+      "to": "PhaseSensor",
+      "kind": "sub",
+      "note": "Root queries phase"
+    },
+    {
+      "from": "GameRoot",
+      "to": "MaterialSensor",
+      "kind": "sub",
+      "note": "Root queries material"
+    },
+    {
+      "from": "GameRoot",
+      "to": "WinStrategy",
+      "kind": "sub"
+    },
+    {
+      "from": "GameRoot",
+      "to": "DrawStrategy",
+      "kind": "sub"
+    },
+    {
+      "from": "GameRoot",
+      "to": "SurviveStrategy",
+      "kind": "sub"
+    },
+    {
+      "from": "WinStrategy",
+      "to": "AttackKingPlan",
+      "kind": "sub"
+    },
+    {
+      "from": "WinStrategy",
+      "to": "TacticsSubgraph",
+      "kind": "sub"
+    },
+    {
+      "from": "DrawStrategy",
+      "to": "OpeningPhase",
+      "kind": "sub"
+    },
+    {
+      "from": "DrawStrategy",
+      "to": "MiddlegamePhase",
+      "kind": "sub"
+    },
+    {
+      "from": "SurviveStrategy",
+      "to": "SimplifyPlan",
+      "kind": "sub"
+    },
+    {
+      "from": "OpeningPhase",
+      "to": "DevelopMinorPieces",
+      "kind": "sub"
+    },
+    {
+      "from": "OpeningPhase",
+      "to": "CastleEarly",
+      "kind": "sub"
+    },
+    {
+      "from": "OpeningPhase",
+      "to": "ControlCenter",
+      "kind": "sub"
+    },
+    {
+      "from": "MiddlegamePhase",
+      "to": "AttackKingPlan",
+      "kind": "sub"
+    },
+    {
+      "from": "MiddlegamePhase",
+      "to": "ImproveWorstPiecePlan",
+      "kind": "sub"
+    },
+    {
+      "from": "MiddlegamePhase",
+      "to": "CreateWeaknessPlan",
+      "kind": "sub"
+    },
+    {
+      "from": "MiddlegamePhase",
+      "to": "SimplifyPlan",
+      "kind": "sub"
+    },
+    {
+      "from": "EndgamePhase",
+      "to": "KRKSubgraph",
+      "kind": "sub"
+    },
+    {
+      "from": "EndgamePhase",
+      "to": "KPKSubgraph",
+      "kind": "sub"
+    },
+    {
+      "from": "EndgamePhase",
+      "to": "RookEndgameSubgraph",
+      "kind": "sub"
+    },
+    {
+      "from": "DevelopMinorPieces",
+      "to": "DevelopmentSensor",
+      "kind": "sub",
+      "note": "Fan-in: shared sensor"
+    },
+    {
+      "from": "DevelopMinorPieces",
+      "to": "CenterControlSensor",
+      "kind": "sub",
+      "note": "Fan-in: shared sensor"
+    },
+    {
+      "from": "CastleEarly",
+      "to": "CastlingSensor",
+      "kind": "sub"
+    },
+    {
+      "from": "ControlCenter",
+      "to": "CenterControlSensor",
+      "kind": "sub",
+      "note": "Fan-in: same sensor as DevelopMinorPieces"
+    },
+    {
+      "from": "AttackKingPlan",
+      "to": "KingSafetySensor",
+      "kind": "sub",
+      "note": "Fan-in: shared sensor"
+    },
+    {
+      "from": "AttackKingPlan",
+      "to": "ForkDetector",
+      "kind": "sub",
+      "note": "Fan-in: tactical sensor"
+    },
+    {
+      "from": "ImproveWorstPiecePlan",
+      "to": "PieceActivitySensor",
+      "kind": "sub"
+    },
+    {
+      "from": "CreateWeaknessPlan",
+      "to": "StructureSensor",
+      "kind": "sub"
+    },
+    {
+      "from": "SimplifyPlan",
+      "to": "MaterialSensor",
+      "kind": "sub",
+      "note": "Fan-in: same sensor as GameRoot"
+    },
+    {
+      "from": "TacticsSubgraph",
+      "to": "ForkDetector",
+      "kind": "sub",
+      "note": "Fan-in: same sensor as AttackKingPlan"
+    },
+    {
+      "from": "TacticsSubgraph",
+      "to": "PinDetector",
+      "kind": "sub"
+    },
+    {
+      "from": "TacticsSubgraph",
+      "to": "HangingDetector",
+      "kind": "sub"
+    }
+  ],
+  "policies": {
+    "GameRoot": {"confirm_policy": "or"},
+    "WinStrategy": {"confirm_policy": "or"},
+    "DrawStrategy": {"confirm_policy": "or"},
+    "SurviveStrategy": {"confirm_policy": "or"},
+    "OpeningPhase": {"confirm_policy": "or"},
+    "MiddlegamePhase": {"confirm_policy": "or"},
+    "EndgamePhase": {"confirm_policy": "or"}
+  },
+  "weight_packs": [
+    "weights/macro_weight_pack.swp",
+    "weights/macro_threshold_pack.swp",
+    "weights/phase_layer_pack.swp",
+    "weights/subgraphs/krk_weight_pack.swp",
+    "weights/subgraphs/kpk_weight_pack.swp",
+    "weights/subgraphs/tactics_weight_pack.swp",
+    "weights/subgraphs/rook_weight_pack.swp"
+  ],
+  "feature_flags": {
+    "TACTICS_ENABLED": true,
+    "ROOK_ENDGAME_ENABLED": true,
+    "FAN_IN_TERMINALS": true,
+    "PLAN_PERSISTENCE": true,
+    "SOFT_PHASE_GATING": true
+  }
+}

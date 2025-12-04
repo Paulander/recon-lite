@@ -139,6 +139,24 @@
       "id": "RookTechniquesSubgraph",
       "type": "subgraph",
       "mount": "rook_techniques"
+    },
+    {
+      "id": "TacticsSubgraph",
+      "type": "subgraph",
+      "mount": "tactics",
+      "meta": {
+        "enabled": true,
+        "weight_pack": "weights/subgraphs/tactics_weight_pack.swp"
+      }
+    },
+    {
+      "id": "RookEndgameSubgraph",
+      "type": "subgraph",
+      "mount": "rook_endgame",
+      "meta": {
+        "enabled": true,
+        "weight_pack": "weights/subgraphs/rook_weight_pack.swp"
+      }
     }
   ],
   "edges": [
@@ -273,6 +291,18 @@
       "to": "RookTechniquesSubgraph",
       "kind": "sub",
       "weight": 1.0
+    },
+    {
+      "from": "FeatureTactics",
+      "to": "TacticsSubgraph",
+      "kind": "sub",
+      "weight": 1.0
+    },
+    {
+      "from": "FeatureEndgame",
+      "to": "RookEndgameSubgraph",
+      "kind": "sub",
+      "weight": 1.0
     }
   ],
   "notes": {
@@ -280,7 +310,13 @@
     "weight_packs": [
       "weights/macro_weight_pack.swp",
       "weights/macro_threshold_pack.swp",
-      "weights/phase_layer_pack.swp"
-    ]
+      "weights/phase_layer_pack.swp",
+      "weights/subgraphs/tactics_weight_pack.swp",
+      "weights/subgraphs/rook_weight_pack.swp"
+    ],
+    "feature_flags": {
+      "TACTICS_ENABLED": true,
+      "ROOK_ENDGAME_ENABLED": true
+    }
   }
 }

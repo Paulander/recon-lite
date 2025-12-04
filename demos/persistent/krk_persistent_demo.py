@@ -63,6 +63,42 @@ from recon_lite_chess.predicates import (
     would_cause_threefold,
 )
 from recon_lite.trace_db import EpisodeRecord, TickRecord, TraceDB, pack_fingerprint
+from recon_lite.plasticity import (
+    PlasticityConfig,
+    init_plasticity_state,
+    update_eligibility,
+    apply_fast_update,
+    reset_episode as reset_plasticity_episode,
+    snapshot_plasticity,
+    extract_episode_summary,
+)
+from recon_lite.plasticity.bandit import (
+    BanditConfig,
+    BanditPriors,
+    init_bandit_state,
+    init_bandit_state_with_priors,
+    choose_child,
+    assign_reward,
+    reset_bandit_episode,
+    snapshot_bandit,
+    load_priors as load_bandit_priors,
+    save_priors as save_bandit_priors,
+    export_priors as export_bandit_priors,
+    merge_priors as merge_bandit_priors,
+)
+from recon_lite.plasticity.modulation import (
+    ModulationConfig,
+    compute_modulators,
+)
+from recon_lite.plasticity.consolidate import (
+    ConsolidationConfig,
+    ConsolidationEngine,
+)
+from recon_lite_chess.eval.heuristic import (
+    eval_position,
+    compute_reward_tick,
+    eval_position_stockfish,
+)
 
 PHASE_SEQUENCE = ["phase0", "phase1", "phase2", "phase3", "phase4"]
 PHASE_SCRIPT_IDS = {
@@ -83,6 +119,47 @@ PHASE_PREFIXES = {
 DEFAULT_MICROTICK_STEPS = 5
 DEFAULT_MICROTICK_ETA = 0.3
 DEFAULT_LATENT_LOG_STRIDE = 1
+
+# M3 plasticity defaults
+DEFAULT_PLASTICITY_ETA = 0.05
+DEFAULT_PLASTICITY_R_MAX = 2.0
+DEFAULT_PLASTICITY_W_MIN = 0.1
+DEFAULT_PLASTICITY_W_MAX = 3.0
+DEFAULT_PLASTICITY_LAMBDA = 0.8
+
+# M3 bandit defaults
+DEFAULT_BANDIT_C_EXPLORE = 1.0
+
+# M4 consolidation defaults
+DEFAULT_CONSOLIDATE_ETA = 0.01
+DEFAULT_CONSOLIDATE_MIN_EPISODES = 10
+DEFAULT_CONSOLIDATE_OUTCOME_WEIGHT = 0.5
+DEFAULT_CONSOLIDATE_MAX_BASE_DELTA = 0.5
+
+# KRK edges eligible for fast plasticity (POR edges within phases)
+KRK_PLASTICITY_EDGES = [
+    # Phase internal POR edges (check -> move -> wait sequences)
+    ("p0_check", "p0_move", LinkType.POR),
+    ("p0_move", "p0_wait", LinkType.POR),
+    ("p1_check", "p1_move", LinkType.POR),
+    ("p1_move", "p1_wait", LinkType.POR),
+    ("p2_check", "p2_move", LinkType.POR),
+    ("p2_move", "p2_wait", LinkType.POR),
+    ("p3_check", "p3_move", LinkType.POR),
+    ("p3_move", "p3_wait", LinkType.POR),
+    ("p4_check", "p4_move", LinkType.POR),
+    ("p4_move", "p4_wait", LinkType.POR),
+    # Phase sequencing POR edges
+    ("phase0_establish_cut", "phase1_drive_to_edge", LinkType.POR),
+    ("phase1_drive_to_edge", "phase2_shrink_box", LinkType.POR),
+    ("phase2_shrink_box", "phase3_take_opposition", LinkType.POR),
+    ("phase3_take_opposition", "phase4_deliver_mate", LinkType.POR),
+]
+
+# KRK bandit parents and their children (for UCB selection)
+KRK_BANDIT_PARENTS = {
+    "p1_move": ["king_drive_moves", "confinement_moves", "barrier_placement_moves"],
+}
 
 
 def _build_basic_krk_graph() -> Graph:
@@ -446,7 +523,16 @@ def _decision_cycle(engine: ReConEngine,
                     phase_microticks: int,
                     phase_eta: float,
                     latent_log_stride: int,
-                    use_blended_actuator: bool) -> tuple[dict | None, list[dict], int]:
+                    use_blended_actuator: bool,
+                    # M3 plasticity/bandit parameters
+                    plasticity_state: Optional[dict] = None,
+                    plasticity_config: Optional[PlasticityConfig] = None,
+                    bandit_state: Optional[dict] = None,
+                    bandit_config: Optional[BanditConfig] = None,
+                    modulation_config: Optional[ModulationConfig] = None,
+                    last_eval: Optional[float] = None,
+                    sf_engine: Optional["chess.engine.SimpleEngine"] = None,
+                    eval_mode: str = "heuristic") -> tuple[dict | None, list[dict], int, Optional[float]]:
     env["board"] = board
     env["chosen_move"] = None
     proposals: list[dict] = []
@@ -454,11 +540,22 @@ def _decision_cycle(engine: ReConEngine,
     min_index = 3 if env.get("stage", 0) >= 1 else 0
     ensure_phase_states(phase_states)
 
+    # M3: Track eval for reward computation
+    current_eval = last_eval
+
     while ticks < tick_watchdog and not board.is_game_over():
         ticks += 1
         env.pop("blended_candidates", None)
         binding_snapshot = _update_binding_table(binding_table, board)
         env["binding"] = binding_snapshot
+
+        # M3: Compute eval before tick (for reward computation)
+        if plasticity_config and plasticity_config.enabled:
+            if current_eval is None:
+                if eval_mode == "stockfish" and sf_engine is not None:
+                    current_eval = eval_position_stockfish(board, sf_engine)
+                else:
+                    current_eval = eval_position(board)
 
         if phase_microticks > 0:
             env["microticks"] = _make_microtick_config(
@@ -480,6 +577,56 @@ def _decision_cycle(engine: ReConEngine,
         now_req = engine.step(env)
         phase_latent_values = activation_snapshot(phase_states)
         env["phase_latents"] = phase_latent_values
+
+        # M3: Compute reward and apply plasticity updates
+        reward_tick = None
+        if plasticity_config and plasticity_config.enabled and plasticity_state:
+            # Compute new eval
+            if eval_mode == "stockfish" and sf_engine is not None:
+                new_eval = eval_position_stockfish(board, sf_engine)
+            else:
+                new_eval = eval_position(board)
+
+            if current_eval is not None:
+                reward_tick = compute_reward_tick(current_eval, new_eval, plasticity_config.r_max)
+
+                # Build fired_edges from current node states
+                fired_edges = []
+                for e in engine.g.edges:
+                    src_node = engine.g.nodes.get(e.src)
+                    dst_node = engine.g.nodes.get(e.dst)
+                    if src_node and dst_node:
+                        # Edge "fired" if both nodes are active/confirmed
+                        if src_node.state in (NodeState.TRUE, NodeState.CONFIRMED, NodeState.WAITING):
+                            if dst_node.state in (NodeState.REQUESTED, NodeState.WAITING, NodeState.TRUE, NodeState.CONFIRMED):
+                                fired_edges.append({"src": e.src, "dst": e.dst, "ltype": e.ltype.name})
+
+                # Update eligibility traces
+                update_eligibility(plasticity_state, fired_edges, plasticity_config.lambda_decay)
+
+                # Compute modulators from goal_vector
+                goal_vector = env.get("goal_vector", {})
+                if not goal_vector:
+                    # Build a simple goal_vector from board
+                    goal_vector = {"phase_progress": phase_latent_values.get("phase4", 0.0)}
+                modulators = compute_modulators(goal_vector, modulation_config)
+
+                # Apply fast update
+                deltas = apply_fast_update(
+                    plasticity_state,
+                    engine.g,
+                    reward_tick,
+                    modulators.eta_tick_eff,
+                    plasticity_config,
+                )
+
+                # Store in env for logging
+                env["m3_reward_tick"] = reward_tick
+                env["m3_modulators"] = modulators.to_dict()
+                if deltas:
+                    env["m3_weight_deltas"] = deltas
+
+            current_eval = new_eval
 
         log_latents = latent_log_stride > 0 and (ticks % latent_log_stride == 0)
         latents_payload = phase_latent_values if log_latents else None
@@ -527,6 +674,13 @@ def _decision_cycle(engine: ReConEngine,
         if debug_logger is not None:
             debug_payload = dict(view_env)
             debug_payload.update(dbg)
+            # M3: Include plasticity data in debug output
+            if env.get("m3_weight_deltas"):
+                debug_payload["m3_weight_deltas"] = env["m3_weight_deltas"]
+            if env.get("m3_reward_tick") is not None:
+                debug_payload["m3_reward_tick"] = env["m3_reward_tick"]
+            if env.get("m3_modulators"):
+                debug_payload["m3_modulators"] = env["m3_modulators"]
             debug_logger.snapshot(
                 engine=engine,
                 note=f"Persistent eval tick {ticks} (ply {plies+1})",
@@ -613,7 +767,7 @@ def _decision_cycle(engine: ReConEngine,
                 latents=env.get("phase_latents"),
                 macro=env.get("macro_frame"),
             )
-    return selected, ordered, ticks
+    return selected, ordered, ticks, current_eval
 
 
 def _update_stage(env: dict, board: chess.Board) -> int:
@@ -733,7 +887,24 @@ def play_persistent_game(initial_fen: str | None = None,
                          use_blended_actuator: bool = False,
                          trace_db: Optional["TraceDB"] = None,
                          trace_episode_id: Optional[str] = None,
-                         pack_paths: Optional[list[Path]] = None) -> dict:
+                         pack_paths: Optional[list[Path]] = None,
+                         # M3 plasticity parameters
+                         plasticity_enabled: bool = False,
+                         plasticity_eta: float = DEFAULT_PLASTICITY_ETA,
+                         plasticity_r_max: float = DEFAULT_PLASTICITY_R_MAX,
+                         plasticity_lambda: float = DEFAULT_PLASTICITY_LAMBDA,
+                         # M3 bandit parameters
+                         bandit_enabled: bool = False,
+                         bandit_c_explore: float = DEFAULT_BANDIT_C_EXPLORE,
+                         # M3 eval mode
+                         eval_mode: str = "heuristic",
+                         # M4 consolidation parameters
+                         consolidation_enabled: bool = False,
+                         consolidation_pack: Optional[Path] = None,
+                         bandit_priors_path: Optional[Path] = None,
+                         consolidation_eta: float = DEFAULT_CONSOLIDATE_ETA,
+                         consolidation_min_episodes: int = DEFAULT_CONSOLIDATE_MIN_EPISODES,
+                         consolidation_engine: Optional[ConsolidationEngine] = None) -> dict:
     if split_logs:
         viz_logger = RunLogger()
         debug_logger = RunLogger()
@@ -805,9 +976,74 @@ def play_persistent_game(initial_fen: str | None = None,
         "use_blended_actuator": use_blended_actuator,
     })
 
-    def _log_snapshot(*, note: str, env_payload: dict, thoughts: str = "", new_requests=None, include_engine: bool = False):
+    # M3: Initialize plasticity state
+    plasticity_config = PlasticityConfig(
+        eta_tick=plasticity_eta,
+        r_max=plasticity_r_max,
+        lambda_decay=plasticity_lambda,
+        w_min=DEFAULT_PLASTICITY_W_MIN,
+        w_max=DEFAULT_PLASTICITY_W_MAX,
+        enabled=plasticity_enabled,
+    )
+    plasticity_state = init_plasticity_state(g, KRK_PLASTICITY_EDGES) if plasticity_enabled else {}
+
+    # M3: Initialize bandit state (with optional M4 priors)
+    bandit_config = BanditConfig(
+        c_explore=bandit_c_explore,
+        enabled=bandit_enabled,
+    )
+    bandit_priors: Optional[BanditPriors] = None
+    if bandit_enabled and bandit_priors_path and bandit_priors_path.exists():
+        try:
+            bandit_priors = load_bandit_priors(bandit_priors_path)
+        except Exception:
+            bandit_priors = None
+    if bandit_enabled:
+        if bandit_priors:
+            bandit_state = init_bandit_state_with_priors(KRK_BANDIT_PARENTS, bandit_priors, prior_weight=0.5)
+        else:
+            bandit_state = init_bandit_state(KRK_BANDIT_PARENTS)
+    else:
+        bandit_state = {}
+
+    # M3: Modulation config
+    modulation_config = ModulationConfig(
+        eta_base=plasticity_eta,
+        c_explore_base=bandit_c_explore,
+    )
+
+    # M4: Initialize or use provided consolidation engine
+    consolidation_config = ConsolidationConfig(
+        eta_consolidate=consolidation_eta,
+        min_episodes=consolidation_min_episodes,
+        enabled=consolidation_enabled,
+    )
+    if consolidation_engine is not None:
+        consol_engine = consolidation_engine
+    elif consolidation_enabled:
+        consol_engine = ConsolidationEngine(consolidation_config)
+        # Load existing consolidation state if available
+        if consolidation_pack and consolidation_pack.exists():
+            try:
+                consol_engine.load_state(consolidation_pack)
+            except Exception:
+                pass
+        # Initialize from graph
+        consol_engine.init_from_graph(g)
+        # Apply w_base to graph at game start
+        consol_engine.apply_w_base_to_graph(g)
+    else:
+        consol_engine = None
+
+    # M3: Track last eval for reward computation
+    last_eval: Optional[float] = None
+    episode_reward_sum = 0.0
+
+    def _log_snapshot(*, note: str, env_payload: dict, thoughts: str = "", new_requests=None, include_engine: bool = False, include_binding: bool = True):
         if viz_logger is None:
             return
+        if include_binding and env.get("binding"):
+            env_payload = {**env_payload, "binding": env.get("binding")}
         viz_logger.snapshot(
             engine=engine if include_engine else None,
             note=note,
@@ -840,6 +1076,8 @@ def play_persistent_game(initial_fen: str | None = None,
             if opp_move_obj is not None and opp_move_obj in board.legal_moves:
                 board.push(opp_move_obj)
                 opp_uci = opp_move_obj.uci()
+                # Update binding after opponent move for visualization
+                env["binding"] = _update_binding_table(binding_table, board)
                 _log_snapshot(
                     note=f"Opponent ply {plies}: {opp_uci}",
                     env_payload={"fen": board.fen(), "ply": plies, "opponents_move": opp_uci},
@@ -850,7 +1088,7 @@ def play_persistent_game(initial_fen: str | None = None,
                     debug_logger.snapshot(
                         engine=None,
                         note=f"Opponent ply {plies}: {opp_uci}",
-                        env={"fen": board.fen(), "ply": plies, "opponents_move": opp_uci},
+                        env={"fen": board.fen(), "ply": plies, "opponents_move": opp_uci, "binding": env.get("binding")},
                         thoughts="Opponent move (persistent)",
                         new_requests=[],
                         latents=env.get("phase_latents"),
@@ -889,7 +1127,7 @@ def play_persistent_game(initial_fen: str | None = None,
                 debug_logger.snapshot(
                     engine=None,
                     note="decision_proposals",
-                    env={"ply": plies + 1, "proposals": ordered},
+                    env={"ply": plies + 1, "proposals": ordered, "binding": env.get("binding")},
                     thoughts="Collected leg2 proposals",
                     new_requests=[],
                     latents=env.get("phase_latents"),
@@ -901,7 +1139,7 @@ def play_persistent_game(initial_fen: str | None = None,
                 phase_tag = PHASE_SEQUENCE[min_index]
             _prime_phase(g, phase_tag, min_index=min_index)
             local_watchdog = min(tick_watchdog, 60)
-            selected, ordered, ticks = _decision_cycle(
+            selected, ordered, ticks, last_eval = _decision_cycle(
                 engine,
                 board,
                 env,
@@ -916,6 +1154,15 @@ def play_persistent_game(initial_fen: str | None = None,
                 phase_eta=phase_eta,
                 latent_log_stride=latent_log_stride,
                 use_blended_actuator=use_blended_actuator,
+                # M3 plasticity/bandit
+                plasticity_state=plasticity_state,
+                plasticity_config=plasticity_config,
+                bandit_state=bandit_state,
+                bandit_config=bandit_config,
+                modulation_config=modulation_config,
+                last_eval=last_eval,
+                sf_engine=sf_engine,
+                eval_mode=eval_mode,
             )
             move_record = selected
             move_uci = move_record["move"] if move_record else None
@@ -932,6 +1179,8 @@ def play_persistent_game(initial_fen: str | None = None,
                     "reason": "safety fallback",
                 }
                 move_uci = fallback
+                # Update binding for fallback visualization
+                env["binding"] = _update_binding_table(binding_table, board)
                 _log_snapshot(
                     note=f"FALLBACK applied: {fallback}",
                     env_payload={"fen": board.fen(), "ply": plies + 1, "fallback": True},
@@ -942,7 +1191,7 @@ def play_persistent_game(initial_fen: str | None = None,
                     debug_logger.snapshot(
                         engine=None,
                         note=f"FALLBACK applied: {fallback}",
-                        env={"fen": board.fen(), "ply": plies + 1, "fallback": True},
+                        env={"fen": board.fen(), "ply": plies + 1, "fallback": True, "binding": env.get("binding")},
                         thoughts="No acceptable proposal; applying fallback",
                         new_requests=[],
                         latents=env.get("phase_latents"),
@@ -1017,7 +1266,7 @@ def play_persistent_game(initial_fen: str | None = None,
                 debug_logger.snapshot(
                     engine=None,
                     note=f"Applied move {plies}: {move_uci}",
-                    env={"fen": board.fen(), "ply": plies, "recons_move": move_uci},
+                    env={"fen": board.fen(), "ply": plies, "recons_move": move_uci, "binding": env.get("binding")},
                     thoughts=f"Applied {move_uci} (persistent)",
                     new_requests=[],
                     latents=env.get("phase_latents"),
@@ -1061,14 +1310,59 @@ def play_persistent_game(initial_fen: str | None = None,
         "final_fen": board.fen(),
     }
 
+    # M4: Extract episode summary for consolidation
+    game_result = board.result() if board.is_game_over() else None
+    episode_summary = None
+    if plasticity_enabled or bandit_enabled:
+        episode_summary = extract_episode_summary(
+            plasticity_state if plasticity_enabled else None,
+            bandit_state if bandit_enabled else None,
+            tick_records,
+            game_result,
+        )
+
+    # M4: Accumulate episode for consolidation
+    if consol_engine and episode_summary:
+        consol_engine.accumulate_episode(episode_summary)
+        # Check if we should apply consolidation
+        if consol_engine.should_apply():
+            applied_deltas = consol_engine.apply_to_graph(g)
+            if applied_deltas:
+                result["consolidation_applied"] = len(applied_deltas)
+            # Save updated state if pack path provided
+            if consolidation_pack:
+                try:
+                    consol_engine.save_state(consolidation_pack)
+                except Exception:
+                    pass
+
+    # M4: Update bandit priors if enabled
+    if bandit_enabled and bandit_state and bandit_priors_path:
+        try:
+            new_priors = export_bandit_priors(bandit_state)
+            if bandit_priors:
+                merged = merge_bandit_priors(bandit_priors, new_priors, decay=0.95)
+            else:
+                merged = new_priors
+            save_bandit_priors(merged, bandit_priors_path)
+        except Exception:
+            pass
+
+    # M3: Reset plasticity and bandit for next episode
+    if plasticity_enabled and plasticity_state:
+        reset_plasticity_episode(plasticity_state, g)
+    if bandit_enabled and bandit_state:
+        reset_bandit_episode(bandit_state)
+
     if trace_db is not None:
         ep_id = trace_episode_id or f"krk-{seed or 0}"
         ep = EpisodeRecord(
             episode_id=ep_id,
-            result=board.result() if board.is_game_over() else None,
+            result=game_result,
             ticks=tick_records,
             pack_meta=pack_meta,
             notes={"plies": plies, "ticks": total_ticks},
+            summary=episode_summary,
         )
         trace_db.add_episode(ep)
     if sf_engine is not None:
@@ -1120,7 +1414,7 @@ def preview_decision(board: chess.Board,
             phase_tag = PHASE_SEQUENCE[min_index]
         _prime_phase(g, phase_tag, min_index=min_index)
 
-    decision, proposals, ticks = _decision_cycle(
+    decision, proposals, ticks, _ = _decision_cycle(
         engine,
         board,
         env,
@@ -1186,10 +1480,41 @@ def main():
     parser.add_argument("--depth", type=int, default=2, help="Stockfish depth when scoring moves")
     parser.add_argument("--trace-out", type=Path, default=None, help="Optional JSONL trace output (EpisodeRecord/TickRecord).")
     parser.add_argument("--pack", action="append", type=Path, default=[], help="Weight pack path(s) to fingerprint in traces.")
+    # M3 plasticity arguments
+    parser.add_argument("--plasticity", action="store_true", help="Enable M3 fast plasticity (within-game edge weight adaptation)")
+    parser.add_argument("--plasticity-eta", type=float, default=DEFAULT_PLASTICITY_ETA, help="Base learning rate for plasticity updates")
+    parser.add_argument("--plasticity-r-max", type=float, default=DEFAULT_PLASTICITY_R_MAX, help="Reward clipping bound for plasticity")
+    parser.add_argument("--plasticity-lambda", type=float, default=DEFAULT_PLASTICITY_LAMBDA, help="Eligibility trace decay factor")
+    # M3 bandit arguments
+    parser.add_argument("--bandit", action="store_true", help="Enable M3 bandit control (UCB selection among sibling scripts)")
+    parser.add_argument("--bandit-c-explore", type=float, default=DEFAULT_BANDIT_C_EXPLORE, help="Exploration coefficient for UCB")
+    # M3 eval mode
+    parser.add_argument("--eval-mode", choices=["heuristic", "stockfish"], default="heuristic", help="Evaluation mode for reward computation")
+    # M4 consolidation arguments
+    parser.add_argument("--consolidate", action="store_true", help="Enable M4 slow consolidation (cross-game weight updates)")
+    parser.add_argument("--consolidate-pack", type=Path, default=None, help="Path to load/save consolidation state")
+    parser.add_argument("--bandit-priors", type=Path, default=None, help="Path to load/save bandit priors")
+    parser.add_argument("--consolidate-eta", type=float, default=DEFAULT_CONSOLIDATE_ETA, help="Consolidation learning rate")
+    parser.add_argument("--consolidate-min-episodes", type=int, default=DEFAULT_CONSOLIDATE_MIN_EPISODES, help="Minimum episodes before consolidation")
     # Single graph; demo uses the shared KRK network
     args = parser.parse_args()
 
     if args.batch and args.batch > 0:
+        # M4: Create shared consolidation engine for batch mode
+        consol_engine = None
+        if args.consolidate:
+            consol_config = ConsolidationConfig(
+                eta_consolidate=args.consolidate_eta,
+                min_episodes=args.consolidate_min_episodes,
+                enabled=True,
+            )
+            consol_engine = ConsolidationEngine(consol_config)
+            if args.consolidate_pack and args.consolidate_pack.exists():
+                try:
+                    consol_engine.load_state(args.consolidate_pack)
+                except Exception:
+                    pass
+
         run_batch(
             args.batch,
             max_plies=args.max_plies,
@@ -1209,7 +1534,29 @@ def main():
             use_blended_actuator=args.use_blended_actuator,
             stockfish_path=args.engine,
             stockfish_depth=args.depth,
+            # M3 plasticity/bandit
+            plasticity_enabled=args.plasticity,
+            plasticity_eta=args.plasticity_eta,
+            plasticity_r_max=args.plasticity_r_max,
+            plasticity_lambda=args.plasticity_lambda,
+            bandit_enabled=args.bandit,
+            bandit_c_explore=args.bandit_c_explore,
+            eval_mode=args.eval_mode,
+            # M4 consolidation
+            consolidation_enabled=args.consolidate,
+            consolidation_pack=args.consolidate_pack,
+            bandit_priors_path=args.bandit_priors,
+            consolidation_eta=args.consolidate_eta,
+            consolidation_min_episodes=args.consolidate_min_episodes,
+            consolidation_engine=consol_engine,
         )
+
+        # M4: Save final consolidation state after batch
+        if consol_engine and args.consolidate_pack:
+            try:
+                consol_engine.save_state(args.consolidate_pack)
+            except Exception:
+                pass
     else:
         start_fen = args.fen if args.fen else "4k3/6K1/8/8/8/8/R7/8 w - - 0 1"
         trace_db = TraceDB(args.trace_out) if args.trace_out else None
@@ -1235,6 +1582,20 @@ def main():
             pack_paths=args.pack,
             stockfish_path=args.engine,
             stockfish_depth=args.depth,
+            # M3 plasticity/bandit
+            plasticity_enabled=args.plasticity,
+            plasticity_eta=args.plasticity_eta,
+            plasticity_r_max=args.plasticity_r_max,
+            plasticity_lambda=args.plasticity_lambda,
+            bandit_enabled=args.bandit,
+            bandit_c_explore=args.bandit_c_explore,
+            eval_mode=args.eval_mode,
+            # M4 consolidation
+            consolidation_enabled=args.consolidate,
+            consolidation_pack=args.consolidate_pack,
+            bandit_priors_path=args.bandit_priors,
+            consolidation_eta=args.consolidate_eta,
+            consolidation_min_episodes=args.consolidate_min_episodes,
         )
         if trace_db:
             trace_db.flush()
