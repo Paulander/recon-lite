@@ -24,19 +24,32 @@ class NetworkLayoutEngine {
         this.isDragging = false;
         this.dragNode = null;
         
-        // Colors
+        // State colors - matching old demo (network-visualization.js)
         this.colors = {
-            INACTIVE: '#6e7681',
-            ACTIVE: '#58a6ff',
-            REQUESTED: '#d29922',
-            TRUE: '#3fb950',
-            CONFIRMED: '#3fb950',
-            FAILED: '#f85149',
-            SUPPRESSED: '#a371f7',
-            edge: '#30363d',
-            edgeActive: '#58a6ff',
-            text: '#c9d1d9',
+            INACTIVE: '#cfd8dc',
+            REQUESTED: '#64b5f6',
+            ACTIVE: '#90caf9',
+            SUPPRESSED: '#b0bec5',
+            WAITING: '#ffd54f',
+            TRUE: '#81c784',
+            CONFIRMED: '#34d399',
+            FAILED: '#e57373',
+            edge: '#94a3b8',
+            edgeActive: '#1e88e5',
+            text: '#2f3a44',
             background: '#0d1117',
+        };
+        
+        // Border colors for emphasis - matching old demo
+        this.borderColors = {
+            INACTIVE: '#90a4ae',
+            REQUESTED: '#1e88e5',
+            ACTIVE: '#1976d2',
+            SUPPRESSED: '#607d8b',
+            WAITING: '#f9a825',
+            TRUE: '#2e7d32',
+            CONFIRMED: '#047857',
+            FAILED: '#b71c1c',
         };
         
         // Layer colors for clustered view
@@ -48,6 +61,25 @@ class NetworkLayoutEngine {
             sensors: '#3fb950',
             unknown: '#6e7681',
         };
+        
+        // Subgraph colors
+        this.subgraphColors = {
+            main: '#ffffff',
+            krk: '#f85149',
+            kpk: '#d29922',
+            tactics: '#a371f7',
+            tactics_fork: '#a371f7',
+            tactics_pin: '#8b5cf6',
+            tactics_skewer: '#7c3aed',
+            tactics_hangingPiece: '#6d28d9',
+            tactics_backRankMate: '#ff6b6b',
+            tactics_discoveredAttack: '#f59e0b',
+            tactics_doubleCheck: '#ef4444',
+            tactics_smotheredMate: '#ec4899',
+        };
+        
+        this.collapsedSubgraphs = {};
+        this.nodeRadius = 12;
         
         this.setupCanvas();
         this.setupInteraction();
@@ -106,16 +138,29 @@ class NetworkLayoutEngine {
     }
     
     setData(frame) {
-        // Extract nodes and edges from frame
+        // Extract nodes and edges from frame (with subgraph support)
         this.nodes = [];
         this.edges = [];
+        this.subgraphs = frame.subgraphs || {};
+        this.collapsedSubgraphs = this.collapsedSubgraphs || {};
         
         if (frame.nodes) {
             for (const [nodeId, nodeData] of Object.entries(frame.nodes)) {
+                const subgraph = nodeData.subgraph || 'main';
+                
+                // Skip internal nodes of collapsed subgraphs
+                if (this.collapsedSubgraphs[subgraph] && !nodeId.endsWith('_root')) {
+                    continue;
+                }
+                
                 this.nodes.push({
                     id: nodeId,
                     state: nodeData.state || 'INACTIVE',
                     layer: nodeData.layer || 'unknown',
+                    subgraph: subgraph,
+                    activation: nodeData.activation || 0,
+                    p_value: nodeData.p_value || 0,
+                    detected: nodeData.detected || false,
                 });
             }
         }
@@ -126,8 +171,38 @@ class NetworkLayoutEngine {
                 dst: e.dst,
                 type: e.type,
                 weight: e.weight || 1.0,
-            }));
+                trace: e.trace || 0,
+            })).filter(e => {
+                // Filter edges for collapsed subgraphs
+                const srcNode = this.nodes.find(n => n.id === e.src);
+                const dstNode = this.nodes.find(n => n.id === e.dst);
+                return srcNode && dstNode;
+            });
         }
+    }
+    
+    toggleSubgraphCollapse(subgraph) {
+        this.collapsedSubgraphs[subgraph] = !this.collapsedSubgraphs[subgraph];
+    }
+    
+    setAllSubgraphsCollapsed(collapsed) {
+        for (const sg of Object.keys(this.subgraphs)) {
+            this.collapsedSubgraphs[sg] = collapsed;
+        }
+    }
+    
+    getSubgraphColor(subgraph) {
+        // Direct match
+        if (this.subgraphColors[subgraph]) {
+            return this.subgraphColors[subgraph];
+        }
+        
+        // Check if it's a tactic subgraph
+        if (subgraph.startsWith('tactics_')) {
+            return '#a371f7'; // Default purple for tactics
+        }
+        
+        return '#ffffff'; // Default white
     }
     
     computeLayout(layoutType) {
@@ -153,47 +228,102 @@ class NetworkLayoutEngine {
         const height = this.canvas.height;
         const padding = 60;
         
-        // Group nodes by layer
-        const layers = {
-            root: [],
-            ultimate: [],
-            strategic: [],
-            tactical: [],
-            sensors: [],
-            unknown: [],
-        };
+        // Build adjacency for parent → child traversal (based on actual edges)
+        const children = {};  // parent -> [children]
+        for (const edge of this.edges) {
+            if (!children[edge.src]) children[edge.src] = [];
+            children[edge.src].push(edge.dst);
+        }
         
-        for (const node of this.nodes) {
-            const layer = node.layer || 'unknown';
-            if (layers[layer]) {
-                layers[layer].push(node);
-            } else {
-                layers.unknown.push(node);
+        // Find root nodes (nodes with no incoming edges)
+        const hasParent = new Set(this.edges.map(e => e.dst));
+        const roots = this.nodes.filter(n => !hasParent.has(n.id)).map(n => n.id);
+        
+        // BFS to assign depth levels - ensures parent is always above child
+        const depth = {};
+        const queue = [...roots];
+        roots.forEach(r => depth[r] = 0);
+        
+        while (queue.length > 0) {
+            const nodeId = queue.shift();
+            const nodeChildren = children[nodeId] || [];
+            for (const child of nodeChildren) {
+                // Only set depth if not already set (first path wins)
+                // OR if this path gives a deeper depth (ensures parent->child)
+                const newDepth = depth[nodeId] + 1;
+                if (depth[child] === undefined || depth[child] < newDepth) {
+                    depth[child] = newDepth;
+                    queue.push(child);
+                }
             }
         }
         
-        // Compute Y positions for each layer
-        const layerOrder = ['root', 'ultimate', 'strategic', 'tactical', 'sensors', 'unknown'];
-        const activeLayers = layerOrder.filter(l => layers[l].length > 0);
-        const layerHeight = (height - 2 * padding) / Math.max(1, activeLayers.length - 1 || 1);
+        // Handle orphan nodes (no edges) - put at depth 0
+        for (const node of this.nodes) {
+            if (depth[node.id] === undefined) {
+                depth[node.id] = 0;
+            }
+        }
         
-        // Position nodes
-        activeLayers.forEach((layerName, layerIdx) => {
-            const layerNodes = layers[layerName];
-            const y = padding + layerIdx * layerHeight;
+        // Group nodes by depth
+        const levels = {};
+        for (const node of this.nodes) {
+            const d = depth[node.id];
+            if (!levels[d]) levels[d] = [];
+            levels[d].push(node);
+        }
+        
+        const maxDepth = Math.max(0, ...Object.keys(levels).map(Number));
+        const levelHeight = (height - 2 * padding) / Math.max(1, maxDepth);
+        
+        // Dynamic node radius based on total nodes
+        const totalNodes = this.nodes.length;
+        const nodeRadius = totalNodes < 30 ? 20 : (totalNodes < 100 ? 12 : (totalNodes < 200 ? 8 : 5));
+        this.nodeRadius = nodeRadius;
+        
+        // Position nodes by depth level
+        for (const [levelStr, levelNodes] of Object.entries(levels)) {
+            const level = parseInt(levelStr);
+            const y = padding + level * levelHeight;
             
-            layerNodes.forEach((node, nodeIdx) => {
-                const xSpacing = (width - 2 * padding) / Math.max(1, layerNodes.length);
-                const x = padding + xSpacing * (nodeIdx + 0.5);
-                
-                this.nodePositions[node.id] = {
-                    x,
-                    y,
-                    layer: layerName,
-                    state: node.state,
-                };
+            // Group by subgraph within level for better organization
+            const bySubgraph = {};
+            levelNodes.forEach(node => {
+                const sg = node.subgraph || 'main';
+                if (!bySubgraph[sg]) bySubgraph[sg] = [];
+                bySubgraph[sg].push(node);
             });
-        });
+            
+            // Sort subgraphs: 'main' first, then alphabetically
+            const subgraphNames = Object.keys(bySubgraph).sort((a, b) => {
+                if (a === 'main') return -1;
+                if (b === 'main') return 1;
+                return a.localeCompare(b);
+            });
+            
+            let xOffset = padding;
+            const segmentWidth = (width - 2 * padding) / Math.max(1, subgraphNames.length);
+            
+            subgraphNames.forEach((sgName) => {
+                const sgNodes = bySubgraph[sgName];
+                const xSpacing = segmentWidth / Math.max(1, sgNodes.length);
+                
+                sgNodes.forEach((node, nodeIdx) => {
+                    const x = xOffset + xSpacing * (nodeIdx + 0.5);
+                    
+                    this.nodePositions[node.id] = {
+                        x,
+                        y,
+                        depth: level,
+                        subgraph: node.subgraph,
+                        state: node.state,
+                        activation: node.activation,
+                    };
+                });
+                
+                xOffset += segmentWidth;
+            });
+        }
     }
     
     computeForceLayout() {
@@ -396,7 +526,9 @@ class NetworkLayoutEngine {
             }
         }
         
-        // Draw nodes
+        // Draw nodes with dynamic sizing and activation glow
+        const baseRadius = this.nodeRadius || 12;
+        
         for (const node of this.nodes) {
             const pos = this.nodePositions[node.id];
             if (!pos) continue;
@@ -406,8 +538,38 @@ class NetworkLayoutEngine {
                 continue;
             }
             
-            const color = this.colors[pos.state] || this.colors.INACTIVE;
-            const radius = pos.state === 'INACTIVE' ? 12 : 16;
+            const activation = node.activation || pos.activation || 0;
+            const detected = node.detected || false;
+            
+            // Get color based on state
+            let color = this.colors[pos.state] || this.colors.INACTIVE;
+            
+            // Override for partial activation (yellow glow)
+            if (pos.state === 'INACTIVE' && activation > 0) {
+                const alpha = Math.min(1, activation);
+                color = `rgba(255, 235, 59, ${alpha})`;
+            }
+            
+            // Size based on state and activation
+            let radius = pos.state === 'INACTIVE' ? baseRadius * 0.8 : baseRadius;
+            if (activation > 0.5) radius *= 1.2;
+            
+            // Activation glow
+            if (activation > 0.1) {
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, radius + 5, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 235, 59, ${activation * 0.3})`;
+                ctx.fill();
+            }
+            
+            // Detected indicator for tactics
+            if (detected) {
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, radius + 3, 0, Math.PI * 2);
+                ctx.strokeStyle = '#3fb950';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
             
             // Node circle
             ctx.beginPath();
@@ -415,9 +577,12 @@ class NetworkLayoutEngine {
             ctx.fillStyle = color;
             ctx.fill();
             
-            // Border
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 2;
+            // Border with state-based color (like old demo)
+            const state = pos.state || 'INACTIVE';
+            const borderColor = this.borderColors[state] || this.borderColors.INACTIVE;
+            const isActive = ['REQUESTED', 'WAITING', 'ACTIVE', 'TRUE', 'CONFIRMED'].includes(state);
+            ctx.strokeStyle = borderColor;
+            ctx.lineWidth = isActive ? 3 : 2;
             ctx.stroke();
             
             // Label
@@ -521,4 +686,5 @@ function renderNetwork(frame, layoutType) {
 
 // Initialize on load
 document.addEventListener('DOMContentLoaded', initNetworkLayout);
+
 

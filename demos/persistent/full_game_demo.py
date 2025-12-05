@@ -71,10 +71,25 @@ from recon_lite_chess.scripts.tactics import (
     detect_pins,
     detect_hanging_pieces,
     detect_back_rank_weakness,
+    detect_skewers,
+    detect_discovered_attacks,
+    get_fork_moves,
+    get_pin_exploit_moves,
+    get_skewer_moves,
+    get_capture_hanging_moves,
 )
 from recon_lite.plasticity.consolidate import ConsolidationEngine, ConsolidationConfig
 from recon_lite.logger import RunLogger
 from recon_lite.nodes.stem_cell import StemCellManager, StemCellConfig, StemCellState
+
+# Import unified graph building
+from recon_lite_chess.graph import (
+    build_unified_graph,
+    compute_subgraph_gates,
+    compute_tactics_context_weights,
+    TACTIC_TYPES,
+)
+from recon_lite_chess.graph.unified_builder import load_all_weights, get_subgraph_summary
 
 
 @dataclass
@@ -530,16 +545,120 @@ def build_full_game_graph() -> Graph:
     return g
 
 
+def run_parallel_tactics(
+    board: chess.Board,
+    g: Graph,
+    context_weights: Dict[str, float],
+) -> List[Dict[str, Any]]:
+    """
+    Run all tactics detectors in parallel with context-weighted scoring.
+    
+    Args:
+        board: Current board position
+        g: Graph with tactic detector nodes
+        context_weights: Context multipliers for each tactic type
+        
+    Returns:
+        List of TacticResult dicts with moves and weights
+    """
+    results = []
+    
+    # Detection functions for each tactic type
+    # Returns (detected: bool, moves: List[str]) - moves as UCI strings
+    def _safe_moves_to_uci(moves):
+        """Convert moves to UCI strings safely."""
+        result = []
+        for m in moves:
+            if hasattr(m, 'uci'):
+                result.append(m.uci())
+            elif isinstance(m, str):
+                result.append(m)
+        return result
+    
+    tactic_detectors = {
+        "fork": lambda b: (len(detect_forks(b)) > 0, _safe_moves_to_uci(get_fork_moves(b))),
+        "pin": lambda b: (len(detect_pins(b)) > 0, _safe_moves_to_uci(get_pin_exploit_moves(b))),
+        "skewer": lambda b: (len(detect_skewers(b)) > 0, _safe_moves_to_uci(get_skewer_moves(b))),
+        "hangingPiece": lambda b: (
+            len(detect_hanging_pieces(b).get("enemy_hanging", [])) > 0,
+            _safe_moves_to_uci(get_capture_hanging_moves(b))
+        ),
+        "discoveredAttack": lambda b: (len(detect_discovered_attacks(b)) > 0, []),
+        "backRankMate": lambda b: (detect_back_rank_weakness(b), []),
+    }
+    
+    for tactic_type in TACTIC_TYPES:
+        detector_node_id = f"detect_{tactic_type}"
+        
+        # Check if detector exists in graph
+        if detector_node_id not in g.nodes:
+            continue
+        
+        # Run detection (if we have a function for it)
+        detector_fn = tactic_detectors.get(tactic_type)
+        if not detector_fn:
+            # For tactics without explicit detectors, skip
+            continue
+        
+        try:
+            detected, moves = detector_fn(board)
+        except Exception:
+            detected, moves = False, []
+        
+        if not detected:
+            continue
+        
+        # Get learned edge weight from graph
+        learned_weight = 1.0
+        for edge in g.edges:
+            if edge.src == "tactics_root" and edge.dst == detector_node_id:
+                learned_weight = float(getattr(edge, "w", 1.0) or 1.0)
+                break
+        
+        # Apply context multiplier
+        context_mult = context_weights.get(tactic_type, context_weights.get("base", 1.0))
+        final_weight = learned_weight * context_mult
+        
+        # Update node state for visualization
+        g.nodes[detector_node_id].state = NodeState.ACTIVE
+        g.nodes[detector_node_id].meta["detected"] = True
+        g.nodes[detector_node_id].meta["activation"] = min(1.0, final_weight)
+        
+        results.append({
+            "tactic": tactic_type,
+            "moves": moves,
+            "learned_weight": learned_weight,
+            "context_weight": context_mult,
+            "final_weight": final_weight,
+        })
+    
+    return results
+
+
 def select_move(
     board: chess.Board,
     goal: UltimateGoal,
     phase_weights: Dict[str, float],
     active_plans: List[Tuple[str, float]],
+    tactic_results: Optional[List[Dict[str, Any]]] = None,
 ) -> Optional[chess.Move]:
     """
-    Select a move based on active plans and goal.
+    Select a move based on active plans, goal, and tactical opportunities.
     
-    Combines move candidates from different plans weighted by their activation.
+    Integrates:
+    - Opening/middlegame heuristics
+    - Strategic plan activations
+    - Parallel tactics detection results
+    
+    Args:
+        board: Current board position
+        goal: Ultimate goal (WIN/DRAW/SURVIVE)
+        phase_weights: Game phase weights
+        active_plans: List of (plan_id, activation) tuples
+        tactic_results: Results from parallel tactics scan
+        
+    Returns:
+        Selected chess.Move or None
     """
     if not board.legal_moves:
         return None
@@ -549,13 +668,28 @@ def select_move(
     # Get phase for candidate generation
     dominant_phase = max(phase_weights.keys(), key=lambda k: phase_weights[k])
     
-    # Collect candidates from opening heuristics
+    # === Phase 1: Integrate tactical move suggestions ===
+    if tactic_results:
+        for result in tactic_results:
+            moves = result.get("moves", [])
+            weight = result.get("final_weight", 1.0)
+            
+            for move_uci in moves:
+                try:
+                    move = chess.Move.from_uci(move_uci)
+                    if move in board.legal_moves:
+                        # Tactics get high priority
+                        move_scores[move] = move_scores.get(move, 0) + weight * 2.0
+                except Exception:
+                    continue
+    
+    # === Phase 2: Collect candidates from opening heuristics ===
     if dominant_phase == "opening" or phase_weights.get("opening", 0) > 0.3:
         opening_candidates = get_opening_move_candidates(board)
         for move, reason, score in opening_candidates:
             move_scores[move] = move_scores.get(move, 0) + score * phase_weights.get("opening", 0.5)
     
-    # Collect candidates from middlegame heuristics
+    # === Phase 3: Collect candidates from middlegame heuristics ===
     if dominant_phase == "middlegame" or phase_weights.get("middlegame", 0) > 0.3:
         for plan_id, activation in active_plans[:3]:  # Top 3 plans
             plan_type = "general"
@@ -570,7 +704,7 @@ def select_move(
             for move, reason, score in mg_candidates:
                 move_scores[move] = move_scores.get(move, 0) + score * activation
     
-    # Add base score for captures
+    # === Phase 4: Add base score for captures ===
     for move in board.legal_moves:
         if board.is_capture(move):
             captured = board.piece_at(move.to_square)
@@ -581,7 +715,7 @@ def select_move(
                 }.get(captured.piece_type, 0)
                 move_scores[move] = move_scores.get(move, 0) + value * 0.5
     
-    # Fallback: if no candidates, use heuristic eval
+    # === Fallback: if no candidates, use heuristic eval ===
     if not move_scores:
         best_move = None
         best_eval = float('-inf')
@@ -630,27 +764,49 @@ def play_game(
     output_basename: str = "full_game",
     enable_stem_cells: bool = False,
     stem_cell_path: Optional[Path] = None,
+    use_unified_graph: bool = True,
 ) -> Tuple[GameState, List[Dict[str, Any]], List[Dict[str, Any]]]:
     """
-    Play a complete game using the M6 architecture with M8 stem cell integration.
+    Play a complete game using the unified ReCoN architecture.
     
     Args:
         max_moves: Maximum number of moves before declaring draw
         vs_random: If True, opponent plays random moves
         verbose: Print progress
-        weights_path: Path to general consolidation weights (applies to main graph)
-        krk_weights_path: Path to KRK-specific consolidation pack
-        kpk_weights_path: Path to KPK-specific consolidation pack
+        weights_path: Path to weights directory (default: weights/latest/)
+        krk_weights_path: Path to KRK-specific consolidation pack (legacy)
+        kpk_weights_path: Path to KPK-specific consolidation pack (legacy)
         output_viz: If True, output visualization JSON
         output_basename: Base name for output files
         enable_stem_cells: If True, use stem cells for pattern discovery
         stem_cell_path: Path to load/save stem cell state
+        use_unified_graph: If True, use unified graph with all subgraphs
         
     Returns:
         Final game state, list of frame data for visualization, and discovered patterns
     """
-    # Build the graph
-    g = build_full_game_graph()
+    # Build the unified graph (includes KRK, KPK, and all tactics)
+    if use_unified_graph:
+        g = build_unified_graph(
+            include_endgames=True,
+            include_tactics=True,
+            include_sensors=True,
+        )
+        
+        # Load all weights from weights directory
+        weights_dir = weights_path.parent if weights_path else Path("weights/latest")
+        weight_stats = load_all_weights(g, weights_dir)
+        
+        if verbose:
+            subgraph_summary = get_subgraph_summary(g)
+            print(f"Built unified graph:")
+            for sg_name, sg_info in subgraph_summary.items():
+                print(f"  {sg_name}: {sg_info['node_count']} nodes, {sg_info.get('edge_count', 0)} edges")
+            print(f"Weights loaded: {weight_stats}")
+    else:
+        # Legacy: use flat graph
+        g = build_full_game_graph()
+    
     engine = ReConEngine(g)
     
     # M8: Initialize stem cell manager
@@ -735,6 +891,17 @@ def play_game(
         phase = estimate_phase(state.board)
         material = assess_material(state.board)
         
+        # Compute subgraph gates for endgames
+        subgraph_gates = compute_subgraph_gates(state.board)
+        
+        # Update subgraph activation in graph metadata
+        if "krk_root" in g.nodes:
+            g.nodes["krk_root"].meta["gate"] = subgraph_gates.get("krk", 0.0)
+            g.nodes["krk_root"].meta["activation"] = subgraph_gates.get("krk", 0.0)
+        if "kpk_root" in g.nodes:
+            g.nodes["kpk_root"].meta["gate"] = subgraph_gates.get("kpk", 0.0)
+            g.nodes["kpk_root"].meta["activation"] = subgraph_gates.get("kpk", 0.0)
+        
         # Update persistence for strategic plans
         goal_plans = get_active_plans_for_goal(ultimate.goal.name, phase.as_dict())
         
@@ -747,12 +914,20 @@ def play_game(
         # Get active plans with their competition weights
         active_plans = get_active_plans(g.nodes, layer="strategic", config=persistence_config)
         
-        # Select move
+        # Run parallel tactics detection with context weighting
+        context_weights = compute_tactics_context_weights(
+            ultimate_goal=ultimate.goal.name,
+            phase=phase.as_dict(),
+        )
+        tactic_results = run_parallel_tactics(state.board, g, context_weights)
+        
+        # Select move (now includes tactical results)
         move = select_move(
             state.board,
             ultimate.goal,
             phase.as_dict(),
             active_plans,
+            tactic_results=tactic_results,
         )
         
         if move is None:
@@ -770,11 +945,21 @@ def play_game(
                 "material": material.as_dict(),
                 "active_plans": active_plans[:5],
             },
-            # Network state for visualization
+            # Enhanced network state for visualization
             "nodes": {
                 node_id: {
+                    # Basic state
                     "state": node.state.name if hasattr(node.state, 'name') else str(node.state),
                     "layer": node.meta.get("layer", "unknown") if hasattr(node, 'meta') else "unknown",
+                    "subgraph": node.meta.get("subgraph", "main") if hasattr(node, 'meta') else "main",
+                    # Activation & persistence values
+                    "activation": node.meta.get("activation", 0.0) if hasattr(node, 'meta') else 0.0,
+                    "p_value": getattr(node, "p_value", 0.0),
+                    "eligibility": getattr(node, "eligibility", 0.0),
+                    # Terminal outputs
+                    "last_output": node.meta.get("last_output") if hasattr(node, 'meta') else None,
+                    "confidence": node.meta.get("confidence", 1.0) if hasattr(node, 'meta') else 1.0,
+                    "detected": node.meta.get("detected", False) if hasattr(node, 'meta') else False,
                 }
                 for node_id, node in g.nodes.items()
             },
@@ -784,11 +969,33 @@ def play_game(
                     "dst": e.dst,
                     "type": e.ltype.name if hasattr(e.ltype, 'name') else str(e.ltype),
                     "weight": float(getattr(e, "w", 1.0) or 1.0),
+                    "trace": getattr(e, "trace", 0.0),
                 }
                 for e in g.edges
             ],
+            # Subgraph metadata for visualization grouping
+            "subgraphs": {
+                "krk": {
+                    "gate": subgraph_gates.get("krk", 0.0),
+                    "active": subgraph_gates.get("krk", 0.0) > 0.1,
+                    "node_count": sum(1 for n in g.nodes.values() if n.meta.get("subgraph") == "krk"),
+                },
+                "kpk": {
+                    "gate": subgraph_gates.get("kpk", 0.0),
+                    "active": subgraph_gates.get("kpk", 0.0) > 0.1,
+                    "node_count": sum(1 for n in g.nodes.values() if n.meta.get("subgraph") == "kpk"),
+                },
+                "tactics": {
+                    "active": True,
+                    "detected": [r["tactic"] for r in tactic_results],
+                    "context_weights": context_weights,
+                    "node_count": sum(1 for n in g.nodes.values() if "tactics" in str(n.meta.get("subgraph", ""))),
+                },
+            },
             # Board tags for overlay visualization
             "board_tags": generate_board_tags(state.board),
+            # Tactics detection results
+            "tactics": tactic_results,
             # Stem cell status
             "stem_cells": [
                 {
