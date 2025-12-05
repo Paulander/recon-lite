@@ -1,51 +1,78 @@
 #!/bin/bash
 # =============================================================================
-# ReCoN-lite Overnight Training Script
+# ReCoN-lite Overnight Training Script (Modular Version)
 # =============================================================================
 # 
-# This script:
-# 1. Backs up ALL current weights (so you can restore/compare later)
-# 2. Runs BEFORE evaluation (baseline metrics)
-# 3. Runs staged training: KRK → KPK → full-game eval
-# 4. Saves intermediate weight snapshots
-# 5. Runs AFTER evaluation (final metrics)
-# 6. Generates comprehensive comparison report
+# This script runs modular overnight training:
+# 1. BEFORE Evaluation: 50 full games vs random (baseline win rate)
+# 2. Modular Training:
+#    - Tactics training (each pattern type independently)
+#    - KRK endgame training
+#    - KPK endgame training
+#    - Full game training with plasticity/consolidation
+# 3. AFTER Evaluation: 50 full games vs random (final win rate)
+# 4. Generates comprehensive comparison report
 #
-# Usage: ./scripts/overnight_training.sh [--quick] [--engine /path/to/stockfish]
+# Usage: ./scripts/overnight_training.sh [--quick] [--skip-eval] [--engine /path/to/stockfish]
 #   --quick: Smaller batches for testing (~30 min)
+#   --skip-eval: Skip BEFORE/AFTER full-game evaluation
 #   --engine: Path to Stockfish (default: /usr/games/stockfish)
 #
 # =============================================================================
 
-set -e  # Exit on error
 set -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+START_TIME=$(date +%s)
 
-# Configuration - adjust these for longer runs
+# Configuration
 QUICK_MODE=false
+SKIP_EVAL=false
 ENGINE="/usr/games/stockfish"
-KRK_GAMES=2000         # ~1.5 hours with Stockfish depth 2
-KPK_GAMES=100          # ~1 hour
-FULLGAME_EVAL=50       # For before/after comparison
-DEPTH=2
+
+# Training parameters (normal mode)
+KRK_GAMES=100
+KPK_GAMES=200
+FULLGAME_GAMES=100
+FULLGAME_EVAL=50       # 50 games before/after for win rate
+TACTICS_LIMIT=200      # Positions per tactic type
+
+# Stockfish depth configuration (higher = more accurate but slower)
+# - Depth 2: Fast (~10ms/pos), good for endgames where volume matters
+# - Depth 6: Medium (~100ms/pos), good for tactics (2-3 move combos)
+# - Depth 10+: Slow (~1s/pos), good for final validation
+ENDGAME_DEPTH=2        # KRK/KPK training - depth matters less, volume matters more
+TACTICS_DEPTH=6        # Tactics validation - needs to see 2-3 move combos
+FULLGAME_DEPTH=4       # Full game training - balance speed and accuracy
+
+GAME_TIMEOUT=180       # 3 minutes max per game
 
 # Directories
 WEIGHTS_DIR="$PROJECT_ROOT/weights"
 BACKUP_DIR="$WEIGHTS_DIR/backups/$TIMESTAMP"
 REPORTS_DIR="$PROJECT_ROOT/reports/overnight/$TIMESTAMP"
 LOGS_DIR="$PROJECT_ROOT/logs"
+CHECKPOINT_FILE="$REPORTS_DIR/checkpoint.txt"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
         --quick)
             QUICK_MODE=true
-            KRK_GAMES=20
-            KPK_GAMES=10
+            KRK_GAMES=50
+            KPK_GAMES=20
+            FULLGAME_GAMES=20
             FULLGAME_EVAL=10
+            TACTICS_LIMIT=50
+            ENDGAME_DEPTH=2
+            TACTICS_DEPTH=4
+            FULLGAME_DEPTH=2
+            shift
+            ;;
+        --skip-eval)
+            SKIP_EVAL=true
             shift
             ;;
         --engine)
@@ -54,13 +81,14 @@ while [[ $# -gt 0 ]]; do
             ;;
         *)
             echo "Unknown option: $1"
+            echo "Usage: $0 [--quick] [--skip-eval] [--engine PATH]"
             exit 1
             ;;
     esac
 done
 
 # Create directories
-mkdir -p "$BACKUP_DIR" "$REPORTS_DIR" "$LOGS_DIR"
+mkdir -p "$BACKUP_DIR" "$REPORTS_DIR" "$LOGS_DIR" "$WEIGHTS_DIR/nightly" "$WEIGHTS_DIR/tactics" "$WEIGHTS_DIR/latest/tactics"
 
 # Logging functions
 log() {
@@ -68,10 +96,65 @@ log() {
 }
 
 log_header() {
-    echo ""
-    echo "=============================================================================="
+    echo "" | tee -a "$LOGS_DIR/overnight_$TIMESTAMP.log"
+    echo "==============================================================================" | tee -a "$LOGS_DIR/overnight_$TIMESTAMP.log"
     log "$1"
-    echo "=============================================================================="
+    echo "==============================================================================" | tee -a "$LOGS_DIR/overnight_$TIMESTAMP.log"
+}
+
+save_checkpoint() {
+    echo "$1" > "$CHECKPOINT_FILE"
+    log "  [CHECKPOINT] $1"
+}
+
+safe_increment() {
+    local var_name=$1
+    local current_val=${!var_name}
+    eval "$var_name=$((current_val + 1))"
+}
+
+calc_percentage() {
+    local num=$1
+    local denom=$2
+    if [ "$denom" -gt 0 ] 2>/dev/null; then
+        echo "scale=1; $num * 100 / $denom" | bc 2>/dev/null || echo "0"
+    else
+        echo "0"
+    fi
+}
+
+# Run full game evaluation with new trainer
+run_full_game_eval() {
+    local n_games=$1
+    local weights_path=$2
+    local output_file=$3
+    
+    local wins=0
+    local losses=0
+    local draws=0
+    
+    # Use the new full_game_train.py for evaluation
+    local weight_arg=""
+    if [ -n "$weights_path" ] && [ -f "$weights_path" ]; then
+        weight_arg="--consolidate-pack $weights_path"
+    fi
+    
+    local result=$(timeout $((GAME_TIMEOUT * n_games)) uv run python demos/persistent/full_game_train.py \
+        --batch "$n_games" \
+        --vs-random \
+        --max-moves 150 \
+        --quiet \
+        $weight_arg 2>&1 | tail -1)
+    
+    # Parse JSON result
+    if echo "$result" | grep -q '"wins"'; then
+        wins=$(echo "$result" | grep -o '"wins":[0-9]*' | cut -d':' -f2)
+        losses=$(echo "$result" | grep -o '"losses":[0-9]*' | cut -d':' -f2)
+        draws=$(echo "$result" | grep -o '"draws":[0-9]*' | cut -d':' -f2)
+    fi
+    
+    echo "wins=$wins,losses=$losses,draws=$draws" > "$output_file"
+    echo "$wins"
 }
 
 cd "$PROJECT_ROOT"
@@ -82,319 +165,376 @@ log_header "🌙 OVERNIGHT TRAINING - Starting at $(date)"
 
 log "Configuration:"
 log "  Quick mode: $QUICK_MODE"
+log "  Skip evaluation: $SKIP_EVAL"
 log "  Engine: $ENGINE"
 log "  KRK games: $KRK_GAMES"
 log "  KPK games: $KPK_GAMES"
-log "  Full-game eval: $FULLGAME_EVAL"
+log "  Full-game training: $FULLGAME_GAMES"
+log "  Full-game eval: $FULLGAME_EVAL games (before/after)"
+log "  Tactics positions: $TACTICS_LIMIT per type"
+log "  Stockfish depths: endgame=$ENDGAME_DEPTH, tactics=$TACTICS_DEPTH, fullgame=$FULLGAME_DEPTH"
 log "  Backup dir: $BACKUP_DIR"
 log "  Reports dir: $REPORTS_DIR"
+
+save_checkpoint "STARTED"
 
 # =============================================================================
 log_header "📦 STEP 1: Backing Up Initial Weights"
 # =============================================================================
 
-# Save FIRST weight pack - the one we want to compare against
 log "Copying consolidation state..."
 if [ -f "$WEIGHTS_DIR/nightly/krk_consol.json" ]; then
     cp "$WEIGHTS_DIR/nightly/krk_consol.json" "$BACKUP_DIR/krk_consol_FIRST.json"
     log "  Saved: krk_consol_FIRST.json"
 fi
 
+if [ -f "$WEIGHTS_DIR/nightly/fullgame_consol.json" ]; then
+    cp "$WEIGHTS_DIR/nightly/fullgame_consol.json" "$BACKUP_DIR/fullgame_consol_FIRST.json"
+    log "  Saved: fullgame_consol_FIRST.json"
+fi
+
 # Backup all weight packs
-for pack in "$WEIGHTS_DIR"/*.swp "$WEIGHTS_DIR/subgraphs"/*.swp; do
+for pack in "$WEIGHTS_DIR"/*.swp "$WEIGHTS_DIR/subgraphs"/*.swp "$WEIGHTS_DIR/tactics"/*.json; do
     if [ -f "$pack" ]; then
-        cp "$pack" "$BACKUP_DIR/"
+        cp "$pack" "$BACKUP_DIR/" 2>/dev/null || true
         log "  Backed up: $(basename "$pack")"
     fi
 done
 
 log "Initial backup complete."
+save_checkpoint "BACKUP_COMPLETE"
 
 # =============================================================================
-log_header "📊 STEP 2: BEFORE Evaluation (Baseline Metrics)"
+# PHASE 1: BEFORE Evaluation
 # =============================================================================
 
-log "Running KRK baseline evaluation..."
-uv run python demos/experiments/batch_eval.py \
-    --mode krk \
-    --fen-file data/endgames/krk/random.fen \
-    --runs 50 \
-    --max-plies 100 \
-    --engine "$ENGINE" --depth "$DEPTH" \
-    --trace-out "$REPORTS_DIR/krk_BEFORE.jsonl" \
-    > "$REPORTS_DIR/krk_BEFORE_stats.txt" 2>&1 || true
-
-log "Running full-game vs random baseline..."
 BEFORE_WINS=0
-BEFORE_DRAWS=0
 BEFORE_LOSSES=0
-for i in $(seq 1 $FULLGAME_EVAL); do
-    # Use --json-result for reliable parsing
-    result=$(uv run python demos/persistent/full_game_demo.py \
-        --max-moves 200 --vs-random --quiet --json-result 2>&1 | grep -o '"outcome":"[^"]*"' | cut -d'"' -f4 || echo "unknown")
-    case "$result" in
-        "win") ((BEFORE_WINS++)) ;;
-        "loss") ((BEFORE_LOSSES++)) ;;
-        "draw") ((BEFORE_DRAWS++)) ;;
-        *)
-            # Fallback: try parsing RESULT: format
-            result_line=$(uv run python demos/persistent/full_game_demo.py \
-                --max-moves 200 --vs-random --quiet 2>&1 | grep "RESULT:" | tail -1 || echo "")
-            case "$result_line" in
-                *"1-0"*) ((BEFORE_WINS++)) ;;
-                *"0-1"*) ((BEFORE_LOSSES++)) ;;
-                *"1/2-1/2"*) ((BEFORE_DRAWS++)) ;;
-            esac
-            ;;
-    esac
-    log "  Game $i: $result"
-done
-BEFORE_WIN_RATE=$(echo "scale=2; $BEFORE_WINS * 100 / $FULLGAME_EVAL" | bc 2>/dev/null || echo "0")
-log "Full-game BEFORE: $BEFORE_WINS wins, $BEFORE_DRAWS draws, $BEFORE_LOSSES losses ($BEFORE_WIN_RATE% win rate)"
-echo "wins: $BEFORE_WINS, draws: $BEFORE_DRAWS, losses: $BEFORE_LOSSES, win_rate: $BEFORE_WIN_RATE%" > "$REPORTS_DIR/fullgame_BEFORE.txt"
+BEFORE_DRAWS=0
+BEFORE_WIN_RATE="0"
+
+if [ "$SKIP_EVAL" = false ]; then
+    log_header "📊 PHASE 1: BEFORE Evaluation ($FULLGAME_EVAL full games)"
+    
+    log "Running $FULLGAME_EVAL games vs random (baseline)..."
+    BEFORE_WINS=$(run_full_game_eval "$FULLGAME_EVAL" "" "$REPORTS_DIR/fullgame_BEFORE.txt")
+    
+    # Read back the results
+    if [ -f "$REPORTS_DIR/fullgame_BEFORE.txt" ]; then
+        eval $(cat "$REPORTS_DIR/fullgame_BEFORE.txt" | tr ',' '\n')
+        BEFORE_LOSSES=${losses:-0}
+        BEFORE_DRAWS=${draws:-0}
+    fi
+    
+    BEFORE_WIN_RATE=$(calc_percentage $BEFORE_WINS $FULLGAME_EVAL)
+    log "Full-game BEFORE: $BEFORE_WINS wins, $BEFORE_DRAWS draws, $BEFORE_LOSSES losses ($BEFORE_WIN_RATE% win rate)"
+    
+    save_checkpoint "BEFORE_EVAL_COMPLETE"
+else
+    log_header "📊 PHASE 1: SKIPPED (--skip-eval)"
+fi
 
 # =============================================================================
-log_header "🎓 STEP 3: KRK Training"
+log_header "🎓 PHASE 2A: Tactics Training (Modular)"
+# =============================================================================
+
+TACTICS=("fork" "pin" "skewer" "hangingPiece" "backRankMate" "discoveredAttack" 
+         "attraction" "deflection" "doubleCheck" "smotheredMate" "trappedPiece" "quietMove" "sacrifice")
+TACTICS_TRAINED=0
+TACTICS_DETECTED=0
+
+log "Training tactical patterns..."
+
+for tactic in "${TACTICS[@]}"; do
+    FEN_FILE=""
+    
+    # Check various possible locations
+    for candidate in \
+        "$PROJECT_ROOT/data/puzzles/$tactic/lichess_$tactic.fen" \
+        "$PROJECT_ROOT/data/puzzles/${tactic,,}/lichess_${tactic,,}.fen"; do
+        if [ -f "$candidate" ]; then
+            FEN_FILE="$candidate"
+            break
+        fi
+    done
+    
+    if [ -n "$FEN_FILE" ]; then
+        log "  Training $tactic from $FEN_FILE..."
+        
+        result=$(timeout 300 uv run python demos/experiments/tactics_eval.py \
+            --fen-file "$FEN_FILE" \
+            --tactic-type "$tactic" \
+            --limit "$TACTICS_LIMIT" \
+            --consolidate \
+            --consolidate-pack "$WEIGHTS_DIR/tactics/${tactic}_consol.json" \
+            --engine "$ENGINE" --depth "$TACTICS_DEPTH" \
+            --output "$REPORTS_DIR/tactics_${tactic}.json" \
+            --quiet 2>&1 | grep "TACTICS_EVAL_RESULT" || echo "")
+        
+        if [ -n "$result" ]; then
+            log "    $result"
+            safe_increment TACTICS_TRAINED
+            # Parse detected count
+            detected=$(echo "$result" | grep -o 'detected=[0-9]*' | cut -d'=' -f2 || echo "0")
+            TACTICS_DETECTED=$((TACTICS_DETECTED + detected))
+        fi
+    else
+        log "  Skipping $tactic (no FEN file found)"
+    fi
+done
+
+log "Tactical training complete: $TACTICS_TRAINED tactics types, $TACTICS_DETECTED patterns detected"
+save_checkpoint "TACTICS_TRAINING_COMPLETE"
+
+# =============================================================================
+log_header "🎓 PHASE 2B: KRK Endgame Training"
 # =============================================================================
 
 log "Training KRK with $KRK_GAMES games..."
+
 uv run python demos/persistent/krk_persistent_demo.py \
     --batch "$KRK_GAMES" \
     --plasticity \
     --bandit \
     --consolidate \
     --consolidate-pack "$WEIGHTS_DIR/nightly/krk_consol.json" \
-    --engine "$ENGINE" --depth "$DEPTH" \
+    --engine "$ENGINE" --depth "$ENDGAME_DEPTH" \
     --trace-out "$REPORTS_DIR/krk_training.jsonl" \
     --output-basename "krk_overnight_$TIMESTAMP" \
-    2>&1 | tee -a "$LOGS_DIR/overnight_$TIMESTAMP.log"
+    2>&1 | tee -a "$LOGS_DIR/overnight_$TIMESTAMP.log" || log "KRK training encountered issues"
 
-# Checkpoint after KRK
-log "Saving KRK checkpoint..."
-cp "$WEIGHTS_DIR/nightly/krk_consol.json" "$BACKUP_DIR/krk_consol_after_KRK.json"
+if [ -f "$WEIGHTS_DIR/nightly/krk_consol.json" ]; then
+    cp "$WEIGHTS_DIR/nightly/krk_consol.json" "$BACKUP_DIR/krk_consol_after_KRK.json"
+    log "  Checkpoint saved: krk_consol_after_KRK.json"
+fi
 
-# Generate KRK report
-log "Generating KRK training report..."
-uv run python tools/report_consolidation.py "$WEIGHTS_DIR/nightly/krk_consol.json" \
-    -o "$REPORTS_DIR/krk_consolidation.md" 2>&1 || true
+save_checkpoint "KRK_TRAINING_COMPLETE"
 
 # =============================================================================
-log_header "🎓 STEP 4: KPK Training"
+log_header "🎓 PHASE 2C: KPK Endgame Training"
 # =============================================================================
 
 log "Training KPK with $KPK_GAMES games..."
-# Check if KPK persistent demo exists and has training support
-if [ -f "$PROJECT_ROOT/demos/persistent/kpk_persistent_demo.py" ]; then
-    uv run python demos/persistent/kpk_persistent_demo.py \
-        --batch "$KPK_GAMES" \
-        --engine "$ENGINE" --depth "$DEPTH" \
-        --trace-out "$REPORTS_DIR/kpk_training.jsonl" \
-        --output-basename "kpk_overnight_$TIMESTAMP" \
-        2>&1 | tee -a "$LOGS_DIR/overnight_$TIMESTAMP.log" || log "KPK training skipped (not fully implemented)"
-else
-    log "KPK persistent demo not found, skipping..."
-fi
+
+uv run python demos/persistent/kpk_persistent_demo.py \
+    --batch "$KPK_GAMES" \
+    --plasticity \
+    --consolidate \
+    --consolidate-pack "$WEIGHTS_DIR/nightly/kpk_consol.json" \
+    --engine "$ENGINE" --depth "$ENDGAME_DEPTH" \
+    --trace-out "$REPORTS_DIR/kpk_training.jsonl" \
+    --output-basename "kpk_overnight_$TIMESTAMP" \
+    2>&1 | tee -a "$LOGS_DIR/overnight_$TIMESTAMP.log" || log "KPK training encountered issues"
+
+save_checkpoint "KPK_TRAINING_COMPLETE"
 
 # =============================================================================
-log_header "🎯 STEP 4.5: Tactical Micro-Training (M8)"
+log_header "🎓 PHASE 2D: Full Game Training"
 # =============================================================================
 
-# Create tactics weights directory
-mkdir -p "$WEIGHTS_DIR/tactics"
+log "Training full games with $FULLGAME_GAMES games..."
 
-# List of tactics to train on
-TACTICS=("fork" "pin" "skewer" "hangingPiece" "backRankMate" "discoveredAttack")
+uv run python demos/persistent/full_game_train.py \
+    --batch "$FULLGAME_GAMES" \
+    --plasticity \
+    --consolidate \
+    --consolidate-pack "$WEIGHTS_DIR/nightly/fullgame_consol.json" \
+    --stem-cells \
+    --stem-cell-path "$WEIGHTS_DIR/nightly/stem_cells.json" \
+    --engine "$ENGINE" \
+    --depth "$FULLGAME_DEPTH" \
+    --trace-out "$REPORTS_DIR/fullgame_training.jsonl" \
+    --output-json "$REPORTS_DIR/fullgame_training_stats.json" \
+    2>&1 | tee -a "$LOGS_DIR/overnight_$TIMESTAMP.log" || log "Full game training encountered issues"
 
-log "Training tactical patterns..."
+save_checkpoint "FULLGAME_TRAINING_COMPLETE"
 
-# First check if we have puzzle data
-if [ -d "$PROJECT_ROOT/data/puzzles" ]; then
-    TACTICS_FOUND=0
-    TACTICS_RESULTS=""
+# =============================================================================
+log_header "🧬 PHASE 2E: Pattern Promotion (Stem Cells)"
+# =============================================================================
+
+log "Promoting discovered patterns from stem cells..."
+
+PROMOTED_COUNT=0
+if [ -f "$WEIGHTS_DIR/nightly/stem_cells.json" ]; then
+    promotion_result=$(uv run python tools/promote_patterns.py \
+        --stem-cells "$WEIGHTS_DIR/nightly/stem_cells.json" \
+        --output-dir "$WEIGHTS_DIR/promoted" \
+        --min-consistency 0.6 \
+        2>&1 | tee -a "$LOGS_DIR/overnight_$TIMESTAMP.log" | grep "PROMOTION_RESULT" || echo "")
     
-    for tactic in "${TACTICS[@]}"; do
-        # Look for FEN files for this tactic
-        FEN_FILE=""
-        
-        # Check various possible locations
-        for candidate in \
-            "$PROJECT_ROOT/data/puzzles/$tactic/lichess_$tactic.fen" \
-            "$PROJECT_ROOT/data/puzzles/${tactic,,}/lichess_${tactic,,}.fen" \
-            "$PROJECT_ROOT/data/benchmarks/${tactic}_suite.fen"; do
-            if [ -f "$candidate" ]; then
-                FEN_FILE="$candidate"
-                break
-            fi
-        done
-        
-        if [ -n "$FEN_FILE" ]; then
-            log "  Training $tactic from $FEN_FILE..."
-            
-            # Run tactical evaluation with consolidation
-            result=$(uv run python demos/experiments/tactics_eval.py \
-                --fen-file "$FEN_FILE" \
-                --tactic-type "$tactic" \
-                --limit 200 \
-                --consolidate \
-                --consolidate-pack "$WEIGHTS_DIR/tactics/${tactic}_consol.json" \
-                --output "$REPORTS_DIR/tactics_${tactic}.json" \
-                --quiet 2>&1 | grep "TACTICS_EVAL_RESULT" || echo "")
-            
-            if [ -n "$result" ]; then
-                log "    $result"
-                TACTICS_RESULTS="$TACTICS_RESULTS\n$tactic: $result"
-                ((TACTICS_FOUND++)) || true
-            fi
-        else
-            log "  Skipping $tactic (no FEN file found)"
-        fi
-    done
-    
-    log "Tactical training complete: $TACTICS_FOUND tactics processed"
-    
-    # Also run combined tactics evaluation if available
-    if [ -f "$PROJECT_ROOT/data/puzzles/combined_tactics.fen" ]; then
-        log "  Running combined tactics evaluation..."
-        uv run python demos/experiments/tactics_eval.py \
-            --fen-file "$PROJECT_ROOT/data/puzzles/combined_tactics.fen" \
-            --tactic-type "combined" \
-            --limit 500 \
-            --output "$REPORTS_DIR/tactics_combined.json" \
-            --quiet 2>&1 | tee -a "$LOGS_DIR/overnight_$TIMESTAMP.log" || true
+    if [ -n "$promotion_result" ]; then
+        PROMOTED_COUNT=$(echo "$promotion_result" | grep -o 'promoted=[0-9]*' | cut -d'=' -f2 || echo "0")
     fi
     
-    # Run on built-in tactics suite if no puzzle data found
-    if [ $TACTICS_FOUND -eq 0 ] && [ -f "$PROJECT_ROOT/data/benchmarks/tactics_suite.fen" ]; then
-        log "  Using built-in tactics_suite.fen..."
-        uv run python demos/experiments/tactics_eval.py \
-            --fen-file "$PROJECT_ROOT/data/benchmarks/tactics_suite.fen" \
-            --tactic-type "mixed" \
-            --consolidate \
-            --consolidate-pack "$WEIGHTS_DIR/tactics/mixed_consol.json" \
-            --output "$REPORTS_DIR/tactics_suite.json" \
-            --quiet 2>&1 | tee -a "$LOGS_DIR/overnight_$TIMESTAMP.log" || true
+    log "Promoted $PROMOTED_COUNT patterns from stem cells"
+    
+    # Backup promoted patterns
+    if [ -d "$WEIGHTS_DIR/promoted" ]; then
+        cp -r "$WEIGHTS_DIR/promoted" "$BACKUP_DIR/promoted_$TIMESTAMP" 2>/dev/null || true
     fi
 else
-    log "No puzzle data found. Run tools/import_lichess_puzzles.py first for enhanced tactical training."
-    
-    # Fall back to built-in tactics suite
-    if [ -f "$PROJECT_ROOT/data/benchmarks/tactics_suite.fen" ]; then
-        log "  Using built-in tactics_suite.fen..."
-        uv run python demos/experiments/tactics_eval.py \
-            --fen-file "$PROJECT_ROOT/data/benchmarks/tactics_suite.fen" \
-            --tactic-type "mixed" \
-            --consolidate \
-            --consolidate-pack "$WEIGHTS_DIR/tactics/mixed_consol.json" \
-            --output "$REPORTS_DIR/tactics_suite.json" \
-            --quiet 2>&1 | tee -a "$LOGS_DIR/overnight_$TIMESTAMP.log" || true
-    fi
+    log "No stem cells file found - skipping pattern promotion"
 fi
 
+save_checkpoint "PATTERN_PROMOTION_COMPLETE"
+
 # =============================================================================
-log_header "📊 STEP 5: AFTER Evaluation (Final Metrics)"
+# PHASE 3: AFTER Evaluation
 # =============================================================================
 
-log "Running KRK final evaluation..."
-uv run python demos/experiments/batch_eval.py \
-    --mode krk \
-    --fen-file data/endgames/krk/random.fen \
-    --runs 50 \
-    --max-plies 100 \
-    --engine "$ENGINE" --depth "$DEPTH" \
-    --trace-out "$REPORTS_DIR/krk_AFTER.jsonl" \
-    > "$REPORTS_DIR/krk_AFTER_stats.txt" 2>&1 || true
-
-log "Running full-game vs random final (with trained weights)..."
 AFTER_WINS=0
-AFTER_DRAWS=0
 AFTER_LOSSES=0
-for i in $(seq 1 $FULLGAME_EVAL); do
-    # Use --json-result for reliable parsing, and --weights to use trained consolidation pack
-    result=$(uv run python demos/persistent/full_game_demo.py \
-        --max-moves 200 --vs-random --quiet --json-result \
-        --weights "$WEIGHTS_DIR/nightly/krk_consol.json" 2>&1 | grep -o '"outcome":"[^"]*"' | cut -d'"' -f4 || echo "unknown")
-    case "$result" in
-        "win") ((AFTER_WINS++)) ;;
-        "loss") ((AFTER_LOSSES++)) ;;
-        "draw") ((AFTER_DRAWS++)) ;;
-        *)
-            # Fallback: try parsing RESULT: format
-            result_line=$(uv run python demos/persistent/full_game_demo.py \
-                --max-moves 200 --vs-random --quiet \
-                --weights "$WEIGHTS_DIR/nightly/krk_consol.json" 2>&1 | grep "RESULT:" | tail -1 || echo "")
-            case "$result_line" in
-                *"1-0"*) ((AFTER_WINS++)) ;;
-                *"0-1"*) ((AFTER_LOSSES++)) ;;
-                *"1/2-1/2"*) ((AFTER_DRAWS++)) ;;
-            esac
-            ;;
-    esac
-    log "  Game $i: $result"
+AFTER_DRAWS=0
+AFTER_WIN_RATE="0"
+
+if [ "$SKIP_EVAL" = false ]; then
+    log_header "📊 PHASE 3: AFTER Evaluation ($FULLGAME_EVAL full games)"
+    
+    log "Running $FULLGAME_EVAL games vs random (with trained weights)..."
+    AFTER_WINS=$(run_full_game_eval "$FULLGAME_EVAL" "$WEIGHTS_DIR/nightly/fullgame_consol.json" "$REPORTS_DIR/fullgame_AFTER.txt")
+    
+    # Read back the results
+    if [ -f "$REPORTS_DIR/fullgame_AFTER.txt" ]; then
+        eval $(cat "$REPORTS_DIR/fullgame_AFTER.txt" | tr ',' '\n')
+        AFTER_LOSSES=${losses:-0}
+        AFTER_DRAWS=${draws:-0}
+    fi
+    
+    AFTER_WIN_RATE=$(calc_percentage $AFTER_WINS $FULLGAME_EVAL)
+    log "Full-game AFTER: $AFTER_WINS wins, $AFTER_DRAWS draws, $AFTER_LOSSES losses ($AFTER_WIN_RATE% win rate)"
+    
+    save_checkpoint "AFTER_EVAL_COMPLETE"
+fi
+
+# =============================================================================
+log_header "📦 PHASE 4: Saving Final Weights"
+# =============================================================================
+
+log "Saving final weight packs..."
+if [ -f "$WEIGHTS_DIR/nightly/krk_consol.json" ]; then
+    cp "$WEIGHTS_DIR/nightly/krk_consol.json" "$BACKUP_DIR/krk_consol_FINAL.json"
+    log "  Saved: krk_consol_FINAL.json"
+fi
+
+if [ -f "$WEIGHTS_DIR/nightly/fullgame_consol.json" ]; then
+    cp "$WEIGHTS_DIR/nightly/fullgame_consol.json" "$BACKUP_DIR/fullgame_consol_FINAL.json"
+    log "  Saved: fullgame_consol_FINAL.json"
+fi
+
+if [ -f "$WEIGHTS_DIR/nightly/kpk_consol.json" ]; then
+    cp "$WEIGHTS_DIR/nightly/kpk_consol.json" "$BACKUP_DIR/kpk_consol_FINAL.json"
+    log "  Saved: kpk_consol_FINAL.json"
+fi
+
+# Update weights/latest/ with trained weights
+log "Updating latest weights (weights/latest/)..."
+if [ -f "$WEIGHTS_DIR/nightly/krk_consol.json" ]; then
+    cp "$WEIGHTS_DIR/nightly/krk_consol.json" "$WEIGHTS_DIR/latest/krk_consol.json"
+    log "  Latest: krk_consol.json"
+fi
+if [ -f "$WEIGHTS_DIR/nightly/kpk_consol.json" ]; then
+    cp "$WEIGHTS_DIR/nightly/kpk_consol.json" "$WEIGHTS_DIR/latest/kpk_consol.json"
+    log "  Latest: kpk_consol.json"
+fi
+if [ -f "$WEIGHTS_DIR/nightly/fullgame_consol.json" ]; then
+    cp "$WEIGHTS_DIR/nightly/fullgame_consol.json" "$WEIGHTS_DIR/latest/fullgame_consol.json"
+    log "  Latest: fullgame_consol.json"
+fi
+if [ -f "$WEIGHTS_DIR/nightly/stem_cells.json" ]; then
+    cp "$WEIGHTS_DIR/nightly/stem_cells.json" "$WEIGHTS_DIR/latest/stem_cells.json"
+    log "  Latest: stem_cells.json"
+fi
+
+# Copy all tactic weights to latest
+for tactic_weight in "$WEIGHTS_DIR/tactics"/*.json; do
+    if [ -f "$tactic_weight" ]; then
+        cp "$tactic_weight" "$WEIGHTS_DIR/latest/tactics/"
+        log "  Latest: tactics/$(basename "$tactic_weight")"
+    fi
 done
-AFTER_WIN_RATE=$(echo "scale=2; $AFTER_WINS * 100 / $FULLGAME_EVAL" | bc 2>/dev/null || echo "0")
-log "Full-game AFTER: $AFTER_WINS wins, $AFTER_DRAWS draws, $AFTER_LOSSES losses ($AFTER_WIN_RATE% win rate)"
-echo "wins: $AFTER_WINS, draws: $AFTER_DRAWS, losses: $AFTER_LOSSES, win_rate: $AFTER_WIN_RATE%" > "$REPORTS_DIR/fullgame_AFTER.txt"
+
+log "Latest weights updated. Use 'weights/latest/' for full_game_demo.py"
+
+save_checkpoint "WEIGHTS_SAVED"
 
 # =============================================================================
-log_header "📦 STEP 6: Saving Final Weights"
-# =============================================================================
-
-log "Saving final weight pack..."
-cp "$WEIGHTS_DIR/nightly/krk_consol.json" "$BACKUP_DIR/krk_consol_FINAL.json"
-
-# =============================================================================
-log_header "📈 STEP 7: Generating Comparison Report"
+log_header "📈 PHASE 5: Generating Report"
 # =============================================================================
 
 REPORT_FILE="$REPORTS_DIR/overnight_summary.md"
+END_TIME=$(date +%s)
+DURATION=$((END_TIME - START_TIME))
+DURATION_MIN=$((DURATION / 60))
+
+WINS_CHANGE=$((AFTER_WINS - BEFORE_WINS))
 
 cat > "$REPORT_FILE" << EOF
 # 🌙 Overnight Training Report
 
 **Generated:** $(date)
-**Duration:** Started $TIMESTAMP
+**Started:** $TIMESTAMP
+**Duration:** ${DURATION_MIN} minutes
 
-## 📦 Weight Packs for Comparison
-
-| Pack | Path |
-|------|------|
-| **FIRST (before training)** | \`$BACKUP_DIR/krk_consol_FIRST.json\` |
-| **FINAL (after training)** | \`$BACKUP_DIR/krk_consol_FINAL.json\` |
-| **After KRK** | \`$BACKUP_DIR/krk_consol_after_KRK.json\` |
-
-## 📊 Full-Game Win Rate vs Random
+## 📊 Win Rate Comparison (vs Random)
 
 | Metric | BEFORE | AFTER | Change |
 |--------|--------|-------|--------|
-| **Wins** | $BEFORE_WINS | $AFTER_WINS | $(($AFTER_WINS - $BEFORE_WINS)) |
-| **Draws** | $BEFORE_DRAWS | $AFTER_DRAWS | $(($AFTER_DRAWS - $BEFORE_DRAWS)) |
-| **Losses** | $BEFORE_LOSSES | $AFTER_LOSSES | $(($AFTER_LOSSES - $BEFORE_LOSSES)) |
+| **Games** | $FULLGAME_EVAL | $FULLGAME_EVAL | - |
+| **Wins** | $BEFORE_WINS | $AFTER_WINS | $WINS_CHANGE |
+| **Losses** | $BEFORE_LOSSES | $AFTER_LOSSES | $((AFTER_LOSSES - BEFORE_LOSSES)) |
+| **Draws** | $BEFORE_DRAWS | $AFTER_DRAWS | $((AFTER_DRAWS - BEFORE_DRAWS)) |
 | **Win Rate** | ${BEFORE_WIN_RATE}% | ${AFTER_WIN_RATE}% | $(echo "$AFTER_WIN_RATE - $BEFORE_WIN_RATE" | bc)% |
 
 ## 🎓 Training Summary
 
+### Endgame Training
 - **KRK games:** $KRK_GAMES
 - **KPK games:** $KPK_GAMES
-- **Engine depth:** $DEPTH
+- **Engine depth:** $ENDGAME_DEPTH (endgames), $FULLGAME_DEPTH (full games), $TACTICS_DEPTH (tactics)
 
-## 🎯 Tactical Micro-Training (M8)
+### Full Game Training
+- **Games trained:** $FULLGAME_GAMES
+- **Stem cells:** Enabled
+- **Patterns promoted:** $PROMOTED_COUNT
 
-Trained tactical patterns from puzzle suites:
+### Tactical Training
+- **Tactic types trained:** $TACTICS_TRAINED
+- **Total patterns detected:** $TACTICS_DETECTED
+- **Positions per type:** $TACTICS_LIMIT
+
 EOF
 
-# Add tactical results to report
+# Add per-tactic results
+echo "## 🎯 Tactical Results" >> "$REPORT_FILE"
+echo "" >> "$REPORT_FILE"
+
 for tactic_result in "$REPORTS_DIR"/tactics_*.json; do
     if [ -f "$tactic_result" ]; then
         tactic_name=$(basename "$tactic_result" .json | sed 's/tactics_//')
-        # Extract stats from JSON
-        if command -v python3 &> /dev/null; then
-            stats=$(python3 -c "import json; d=json.load(open('$tactic_result')); s=d.get('stats',{}); print(f\"- **{s.get('total',0)}** positions, **{s.get('accuracy',0)*100:.1f}%** accuracy\")" 2>/dev/null || echo "- Stats unavailable")
-            echo "- \`$tactic_name\`: $stats" >> "$REPORT_FILE"
-        fi
+        stats=$(python3 -c "
+import json
+try:
+    d=json.load(open('$tactic_result'))
+    s=d.get('stats',{})
+    print(f\"- **{s.get('total',0)}** positions, **{s.get('accuracy',0)*100:.1f}%** accuracy\")
+except:
+    print('- Stats unavailable')
+" 2>/dev/null || echo "- Stats unavailable")
+        echo "- \`$tactic_name\`: $stats" >> "$REPORT_FILE"
     fi
 done
 
 cat >> "$REPORT_FILE" << EOF
+
+## 📦 Weight Packs
+
+| Pack | Path |
+|------|------|
+| KRK (before) | \`$BACKUP_DIR/krk_consol_FIRST.json\` |
+| KRK (after) | \`$BACKUP_DIR/krk_consol_FINAL.json\` |
+| Full Game | \`$BACKUP_DIR/fullgame_consol_FINAL.json\` |
+| KPK | \`$BACKUP_DIR/kpk_consol_FINAL.json\` |
 
 ## 📁 Files Generated
 
@@ -404,22 +544,11 @@ cat >> "$REPORT_FILE" << EOF
 
 ## 🔍 Compare Weight Changes
 
-Run this command to see what changed:
 \`\`\`bash
+# KRK changes
 uv run python tools/pack_diff.py \\
   $BACKUP_DIR/krk_consol_FIRST.json \\
   $BACKUP_DIR/krk_consol_FINAL.json
-\`\`\`
-
-## 🎮 Replay Games with Different Packs
-
-To compare gameplay:
-\`\`\`bash
-# With FIRST (before training)
-uv run python demos/persistent/full_game_demo.py \\
-  --vs-random --max-moves 200
-
-# Manual comparison - load different consolidation packs
 \`\`\`
 
 EOF
@@ -432,25 +561,10 @@ if [ -f "$BACKUP_DIR/krk_consol_FIRST.json" ] && [ -f "$BACKUP_DIR/krk_consol_FI
     uv run python tools/pack_diff.py \
         "$BACKUP_DIR/krk_consol_FIRST.json" \
         "$BACKUP_DIR/krk_consol_FINAL.json" \
-        >> "$REPORT_FILE" 2>&1 || log "Pack diff failed (non-critical)"
+        >> "$REPORT_FILE" 2>&1 || log "  Pack diff failed (non-critical)"
 fi
 
-# Trace summary
-log "Generating trace summaries..."
-if [ -f "$REPORTS_DIR/krk_training.jsonl" ]; then
-    uv run python tools/trace_summarize.py \
-        "$REPORTS_DIR/krk_training.jsonl" \
-        -o "$REPORTS_DIR/krk_trace_summary.json" 2>&1 || true
-fi
-
-# M8.4: Generate standardized nightly report
-log "Generating standardized nightly report..."
-uv run python tools/generate_nightly_report.py \
-    --consol "$BACKUP_DIR/krk_consol_FINAL.json" \
-    --traces "$REPORTS_DIR/krk_training.jsonl" \
-    --first-consol "$BACKUP_DIR/krk_consol_FIRST.json" \
-    --title "Overnight Training Report - $TIMESTAMP" \
-    -o "$REPORTS_DIR/nightly_report.md" 2>&1 || true
+save_checkpoint "COMPLETE"
 
 # =============================================================================
 log_header "✅ OVERNIGHT TRAINING COMPLETE"
@@ -458,15 +572,19 @@ log_header "✅ OVERNIGHT TRAINING COMPLETE"
 
 log ""
 log "Results:"
+log "  Duration: ${DURATION_MIN} minutes"
 log "  Full-game win rate: ${BEFORE_WIN_RATE}% → ${AFTER_WIN_RATE}%"
+log "  Tactics types trained: $TACTICS_TRAINED"
 log ""
 log "Files saved:"
 log "  Report: $REPORT_FILE"
-log "  Weights FIRST: $BACKUP_DIR/krk_consol_FIRST.json"
-log "  Weights FINAL: $BACKUP_DIR/krk_consol_FINAL.json"
+log "  KRK weights: $BACKUP_DIR/krk_consol_FINAL.json"
+log "  Full game weights: $BACKUP_DIR/fullgame_consol_FINAL.json"
 log "  Full log: $LOGS_DIR/overnight_$TIMESTAMP.log"
 log ""
 log "🌅 Training finished at $(date)"
 
 # Show the summary report
+echo ""
+echo "==================== SUMMARY ===================="
 cat "$REPORT_FILE"

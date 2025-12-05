@@ -58,9 +58,22 @@ def detect_forks(board: chess.Board) -> List[Dict[str, Any]]:
     Detect potential fork opportunities.
     
     Returns list of fork opportunities with attacking piece, targets, and best move.
+    A fork is when a piece attacks two or more enemy pieces simultaneously.
+    
+    Targets can be: King, Queen, Rook, Bishop, Knight (not pawns unless undefended).
     """
     forks = []
     turn = board.turn
+    
+    # Piece values for ranking fork quality
+    PIECE_VALUES = {
+        chess.KING: 1000,
+        chess.QUEEN: 9,
+        chess.ROOK: 5,
+        chess.BISHOP: 3,
+        chess.KNIGHT: 3,
+        chess.PAWN: 1,
+    }
     
     # Check each of our pieces that could create a fork
     for sq in chess.SQUARES:
@@ -80,18 +93,23 @@ def detect_forks(board: chess.Board) -> List[Dict[str, Any]]:
             new_sq = move.to_square
             attacks = board.attacks(new_sq)
             valuable_targets = []
+            total_value = 0
             
             for target_sq in attacks:
                 target = board.piece_at(target_sq)
                 if target and target.color != turn:
-                    if target.piece_type in (chess.QUEEN, chess.ROOK, chess.KING):
+                    # Include all pieces except pawns (unless the pawn is undefended)
+                    if target.piece_type != chess.PAWN or not board.is_attacked_by(not turn, target_sq):
                         valuable_targets.append({
                             "square": chess.square_name(target_sq),
                             "piece": target.symbol(),
+                            "value": PIECE_VALUES.get(target.piece_type, 0),
                         })
+                        total_value += PIECE_VALUES.get(target.piece_type, 0)
             
             board.pop()
             
+            # A fork requires attacking at least 2 pieces
             if len(valuable_targets) >= 2:
                 forks.append({
                     "move": move.uci(),
@@ -99,7 +117,11 @@ def detect_forks(board: chess.Board) -> List[Dict[str, Any]]:
                     "from": chess.square_name(sq),
                     "to": chess.square_name(move.to_square),
                     "targets": valuable_targets,
+                    "total_value": total_value,
                 })
+    
+    # Sort by total value attacked (best forks first)
+    forks.sort(key=lambda f: f.get("total_value", 0), reverse=True)
     
     return forks
 
@@ -470,6 +492,294 @@ def _piece_value_tactical(piece_type: chess.PieceType) -> int:
 
 
 # ============================================================================
+# Additional Tactic Detection (for Lichess puzzle coverage)
+# ============================================================================
+
+def detect_double_check(board: chess.Board) -> List[Dict[str, Any]]:
+    """
+    Detect moves that give double check.
+    
+    A double check occurs when two pieces attack the king simultaneously,
+    usually through a discovered attack where the moving piece also gives check.
+    """
+    double_checks = []
+    turn = board.turn
+    
+    for move in board.legal_moves:
+        board.push(move)
+        
+        if board.is_check():
+            # Count the number of pieces giving check
+            checking_pieces = list(board.checkers())
+            if len(checking_pieces) >= 2:
+                double_checks.append({
+                    "move": move.uci(),
+                    "checking_pieces": [chess.square_name(sq) for sq in checking_pieces],
+                    "num_checkers": len(checking_pieces),
+                })
+        
+        board.pop()
+    
+    return double_checks
+
+
+def detect_smothered_mate(board: chess.Board) -> List[Dict[str, Any]]:
+    """
+    Detect smothered mate opportunities.
+    
+    A smothered mate occurs when a knight checkmates a king that is
+    completely surrounded by its own pieces.
+    """
+    smothered_mates = []
+    turn = board.turn
+    enemy = not turn
+    enemy_king = board.king(enemy)
+    
+    if enemy_king is None:
+        return []
+    
+    for move in board.legal_moves:
+        # Only consider knight moves for smothered mate
+        piece = board.piece_at(move.from_square)
+        if not piece or piece.piece_type != chess.KNIGHT:
+            continue
+        
+        board.push(move)
+        
+        if board.is_checkmate():
+            # Check if king is smothered (surrounded by own pieces)
+            king_neighbors = list(board.attacks(enemy_king))
+            all_blocked = True
+            for sq in chess.SQUARES:
+                # Check squares adjacent to king
+                if chess.square_distance(enemy_king, sq) == 1:
+                    blocker = board.piece_at(sq)
+                    if not blocker or blocker.color != enemy:
+                        # Square is empty or has enemy piece (not smothered)
+                        if sq != move.to_square:  # The knight giving check is ok
+                            all_blocked = False
+                            break
+            
+            if all_blocked:
+                smothered_mates.append({
+                    "move": move.uci(),
+                    "knight_from": chess.square_name(move.from_square),
+                    "knight_to": chess.square_name(move.to_square),
+                    "king_sq": chess.square_name(enemy_king),
+                })
+        
+        board.pop()
+    
+    return smothered_mates
+
+
+def detect_trapped_piece(board: chess.Board) -> List[Dict[str, Any]]:
+    """
+    Detect enemy pieces that are trapped (have no safe squares to move to).
+    """
+    trapped = []
+    turn = board.turn
+    enemy = not turn
+    
+    for sq in chess.SQUARES:
+        piece = board.piece_at(sq)
+        if not piece or piece.color != enemy:
+            continue
+        if piece.piece_type in (chess.KING, chess.PAWN):
+            continue  # Kings and pawns handled differently
+        
+        # Count safe squares this piece can move to
+        safe_squares = 0
+        piece_value = _piece_value_tactical(piece.piece_type)
+        
+        # Find all squares this piece attacks
+        for move in board.legal_moves:
+            continue  # We need opponent's moves
+        
+        # Simulate opponent's turn to check their mobility
+        board.push(chess.Move.null())  # Null move to flip turn
+        
+        for move in board.legal_moves:
+            if move.from_square != sq:
+                continue
+            
+            # Check if the destination is safe
+            board.push(move)
+            # After move, is piece under attack by less valuable pieces?
+            attacker_squares = board.attackers(turn, move.to_square)
+            min_attacker_value = 100
+            for att_sq in attacker_squares:
+                att_piece = board.piece_at(att_sq)
+                if att_piece:
+                    min_attacker_value = min(min_attacker_value, _piece_value_tactical(att_piece.piece_type))
+            
+            if not attacker_squares or min_attacker_value >= piece_value:
+                safe_squares += 1
+            
+            board.pop()
+        
+        board.pop()  # Undo null move
+        
+        if safe_squares == 0:
+            trapped.append({
+                "square": chess.square_name(sq),
+                "piece": piece.symbol(),
+                "piece_value": piece_value,
+            })
+    
+    return trapped
+
+
+def detect_attraction(board: chess.Board) -> List[Dict[str, Any]]:
+    """
+    Detect attraction tactics - moves that force enemy piece to bad square.
+    
+    An attraction typically uses a sacrifice to lure a piece to a square
+    where it can be exploited (fork, pin, etc.).
+    """
+    attractions = []
+    turn = board.turn
+    
+    for move in board.legal_moves:
+        # Look for captures or checks that attract pieces
+        if not board.is_capture(move) and not board.gives_check(move):
+            continue
+        
+        board.push(move)
+        
+        # If opponent recaptures, check if there's a follow-up tactic
+        if board.is_check():
+            # The king is attracted - might be a follow-up
+            attractions.append({
+                "move": move.uci(),
+                "type": "check_attraction",
+                "attracts": "king",
+            })
+        elif move.to_square and board.piece_at(move.to_square):
+            # We just moved somewhere - could attract a recapture
+            # Check if recapture leads to problems
+            for response in board.legal_moves:
+                if response.to_square == move.to_square:
+                    board.push(response)
+                    # After recapture, do we have tactics?
+                    forks = detect_forks(board)
+                    if forks:
+                        board.pop()
+                        attractions.append({
+                            "move": move.uci(),
+                            "type": "fork_attraction",
+                            "attracts": chess.square_name(response.from_square),
+                            "follow_up": forks[0]["move"] if forks else None,
+                        })
+                        break
+                    board.pop()
+        
+        board.pop()
+    
+    return attractions
+
+
+def detect_sacrifice(board: chess.Board) -> List[Dict[str, Any]]:
+    """
+    Detect sacrifices - moves where we give up material for compensation.
+    
+    A sacrifice is typically a move where we capture with a piece worth more,
+    or put a piece on a square where it can be taken for less than its value,
+    but gain something in return (checkmate, material, etc.).
+    """
+    sacrifices = []
+    turn = board.turn
+    
+    for move in board.legal_moves:
+        piece = board.piece_at(move.from_square)
+        if not piece:
+            continue
+        
+        our_value = _piece_value_tactical(piece.piece_type)
+        
+        # Check if we're giving up material
+        captured = board.piece_at(move.to_square)
+        captured_value = _piece_value_tactical(captured.piece_type) if captured else 0
+        
+        board.push(move)
+        
+        # Is our piece now under attack by lesser pieces?
+        attackers = board.attackers(not turn, move.to_square)
+        under_attack_by_lesser = False
+        for att_sq in attackers:
+            att_piece = board.piece_at(att_sq)
+            if att_piece and _piece_value_tactical(att_piece.piece_type) < our_value:
+                under_attack_by_lesser = True
+                break
+        
+        # Is this a sacrifice? (giving more than taking, or putting piece en prise)
+        is_sacrifice = (under_attack_by_lesser and not board.is_checkmate()) or \
+                      (captured_value < our_value - 2 and under_attack_by_lesser)
+        
+        # But it might be good if it leads to checkmate
+        leads_to_mate = board.is_checkmate()
+        gives_check = board.is_check()
+        
+        board.pop()
+        
+        if is_sacrifice or (gives_check and under_attack_by_lesser):
+            sacrifices.append({
+                "move": move.uci(),
+                "piece": piece.symbol(),
+                "piece_value": our_value,
+                "captured_value": captured_value,
+                "gives_check": gives_check,
+                "leads_to_mate": leads_to_mate,
+            })
+    
+    return sacrifices
+
+
+def detect_quiet_move(board: chess.Board) -> List[Dict[str, Any]]:
+    """
+    Detect quiet moves - non-capturing, non-checking moves that improve position.
+    
+    In puzzles, quiet moves are often the hardest to find as they don't
+    have obvious tactical consequences.
+    """
+    quiet_moves = []
+    turn = board.turn
+    
+    for move in board.legal_moves:
+        # Must be non-capture, non-check
+        if board.is_capture(move):
+            continue
+        if board.gives_check(move):
+            continue
+        
+        # But should have some purpose - threatening something
+        board.push(move)
+        
+        # After the move, do we threaten anything new?
+        piece = board.piece_at(move.to_square)
+        if piece:
+            attacks = board.attacks(move.to_square)
+            threatening = []
+            for sq in attacks:
+                target = board.piece_at(sq)
+                if target and target.color != turn:
+                    threatening.append({
+                        "square": chess.square_name(sq),
+                        "piece": target.symbol(),
+                    })
+            
+            if threatening:
+                quiet_moves.append({
+                    "move": move.uci(),
+                    "threatens": threatening,
+                })
+        
+        board.pop()
+    
+    return quiet_moves
+
+
+# ============================================================================
 # Tactical Move Generators
 # ============================================================================
 
@@ -602,6 +912,59 @@ def get_discovered_attack_moves(board: chess.Board) -> List[chess.Move]:
             pass
     
     return moves
+
+
+def get_double_check_moves(board: chess.Board) -> List[chess.Move]:
+    """Get moves that give double check."""
+    double_checks = detect_double_check(board)
+    return [chess.Move.from_uci(dc["move"]) for dc in double_checks]
+
+
+def get_smothered_mate_moves(board: chess.Board) -> List[chess.Move]:
+    """Get moves that deliver smothered mate."""
+    smothered = detect_smothered_mate(board)
+    return [chess.Move.from_uci(sm["move"]) for sm in smothered]
+
+
+def get_trapped_piece_moves(board: chess.Board) -> List[chess.Move]:
+    """Get moves that exploit trapped pieces."""
+    trapped = detect_trapped_piece(board)
+    moves = []
+    
+    # Find moves that attack trapped pieces
+    for t in trapped:
+        sq = chess.parse_square(t["square"])
+        for move in board.legal_moves:
+            if move.to_square == sq:  # Capture the trapped piece
+                moves.append(move)
+            # Or moves that attack the trapped piece
+            board.push(move)
+            if sq in board.attacks(move.to_square):
+                if move not in moves:
+                    moves.append(move)
+            board.pop()
+    
+    return moves
+
+
+def get_attraction_moves(board: chess.Board) -> List[chess.Move]:
+    """Get moves that create attraction."""
+    attractions = detect_attraction(board)
+    return [chess.Move.from_uci(a["move"]) for a in attractions]
+
+
+def get_sacrifice_moves(board: chess.Board) -> List[chess.Move]:
+    """Get moves that are sacrifices."""
+    sacrifices = detect_sacrifice(board)
+    # Prioritize sacrifices that lead to checkmate
+    sacrifices.sort(key=lambda s: (s.get("leads_to_mate", False), s.get("gives_check", False)), reverse=True)
+    return [chess.Move.from_uci(s["move"]) for s in sacrifices]
+
+
+def get_quiet_moves(board: chess.Board) -> List[chess.Move]:
+    """Get quiet moves that have tactical purpose."""
+    quiet = detect_quiet_move(board)
+    return [chess.Move.from_uci(q["move"]) for q in quiet]
 
 
 # ============================================================================

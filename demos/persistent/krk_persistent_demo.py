@@ -11,6 +11,7 @@ Runs a single ReCoN engine instance across the whole game.
 
 import argparse
 from collections import deque
+import gc
 import chess
 import chess.engine
 import sys
@@ -1434,6 +1435,7 @@ def preview_decision(board: chess.Board,
 
 
 def run_batch(n_games: int = 10, max_plies: int = 200, **play_kwargs) -> dict:
+    """Run N games in batch mode with memory management."""
     stats = {
         "games": [],
         "mates": 0,
@@ -1451,6 +1453,10 @@ def run_batch(n_games: int = 10, max_plies: int = 200, **play_kwargs) -> dict:
         if res.get("rook_lost"):
             stats["rook_losses"] += 1
         # No explicit stall flag in persistent; watchdog fallback is logged only
+        
+        # Memory management: clean up between games
+        gc.collect()
+        
     if stats["mates"]:
         stats["avg_mate_length"] = stats["total_mate_plies"]/stats["mates"]
     print(stats)

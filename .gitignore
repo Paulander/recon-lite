@@ -8,6 +8,11 @@ __pycache__/
 # logs / artifacts
 demos/sequence_log.json
 demos/outputs/
+logs/
+
+# Weights - keep latest and promoted, ignore discoveries (raw data)
+weights/discoveries/
+weights/backups/
 
 #useless windows files
-*.Zone.Identifier
+*.Zone.Identifierdata/puzzles/lichess_puzzles.csv.bz2

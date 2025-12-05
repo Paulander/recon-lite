@@ -66,9 +66,15 @@ from recon_lite_chess.scripts.middlegame import (
     piece_activity_sensor_predicate,
 )
 from recon_lite_chess.eval.heuristic import eval_position
+from recon_lite_chess.scripts.tactics import (
+    detect_forks,
+    detect_pins,
+    detect_hanging_pieces,
+    detect_back_rank_weakness,
+)
 from recon_lite.plasticity.consolidate import ConsolidationEngine, ConsolidationConfig
 from recon_lite.logger import RunLogger
-from recon_lite.nodes.stem_cell import StemCellManager, StemCellConfig
+from recon_lite.nodes.stem_cell import StemCellManager, StemCellConfig, StemCellState
 
 
 @dataclass
@@ -296,6 +302,89 @@ def compute_reward_signal(board: chess.Board, prev_eval: float) -> float:
         reward += 0.1 if board.turn == chess.BLACK else -0.1
     
     return max(-1.0, min(1.0, reward))
+
+
+def generate_board_tags(board: chess.Board) -> Dict[str, Any]:
+    """
+    Generate board overlay tags for visualization.
+    
+    Returns a dict with:
+    - squares: dict mapping square names to lists of tags
+    - arrows: list of arrow specs {from, to, color, label}
+    """
+    tags = {
+        "squares": {},
+        "arrows": [],
+    }
+    
+    # Add attacked squares
+    for sq in chess.SQUARES:
+        sq_name = chess.square_name(sq)
+        sq_tags = []
+        
+        # Check if attacked by white
+        if board.is_attacked_by(chess.WHITE, sq):
+            sq_tags.append("attacked_by_white")
+        if board.is_attacked_by(chess.BLACK, sq):
+            sq_tags.append("attacked_by_black")
+        
+        # Center squares
+        if sq in [chess.D4, chess.D5, chess.E4, chess.E5]:
+            sq_tags.append("center")
+        
+        # King zones
+        for color in [chess.WHITE, chess.BLACK]:
+            king_sq = board.king(color)
+            if king_sq is not None:
+                king_file = chess.square_file(king_sq)
+                king_rank = chess.square_rank(king_sq)
+                sq_file = chess.square_file(sq)
+                sq_rank = chess.square_rank(sq)
+                
+                if abs(sq_file - king_file) <= 1 and abs(sq_rank - king_rank) <= 1:
+                    color_name = "white" if color == chess.WHITE else "black"
+                    sq_tags.append(f"{color_name}_king_zone")
+        
+        if sq_tags:
+            tags["squares"][sq_name] = sq_tags
+    
+    # Detect tactical patterns and add arrows
+    try:
+        # Forks
+        forks = detect_forks(board)
+        for fork in forks[:3]:  # Limit to top 3
+            if fork.get("forking_square") and fork.get("targets"):
+                forking_sq = fork["forking_square"]
+                for target in fork["targets"][:2]:
+                    tags["arrows"].append({
+                        "from": forking_sq,
+                        "to": target,
+                        "color": "red",
+                        "label": "fork",
+                    })
+        
+        # Pins
+        pins = detect_pins(board)
+        for pin in pins[:3]:
+            if pin.get("pinned_square") and pin.get("pinning_piece_square"):
+                tags["arrows"].append({
+                    "from": pin["pinning_piece_square"],
+                    "to": pin["pinned_square"],
+                    "color": "orange",
+                    "label": "pin",
+                })
+        
+        # Hanging pieces
+        hanging = detect_hanging_pieces(board)
+        for sq in hanging.get("enemy_hanging", [])[:3]:
+            if sq in tags["squares"]:
+                tags["squares"][sq].append("hanging")
+            else:
+                tags["squares"][sq] = ["hanging"]
+    except Exception:
+        pass  # Don't fail on detection errors
+    
+    return tags
 
 
 def build_full_game_graph() -> Graph:
@@ -681,6 +770,35 @@ def play_game(
                 "material": material.as_dict(),
                 "active_plans": active_plans[:5],
             },
+            # Network state for visualization
+            "nodes": {
+                node_id: {
+                    "state": node.state.name if hasattr(node.state, 'name') else str(node.state),
+                    "layer": node.meta.get("layer", "unknown") if hasattr(node, 'meta') else "unknown",
+                }
+                for node_id, node in g.nodes.items()
+            },
+            "edges": [
+                {
+                    "src": e.src,
+                    "dst": e.dst,
+                    "type": e.ltype.name if hasattr(e.ltype, 'name') else str(e.ltype),
+                    "weight": float(getattr(e, "w", 1.0) or 1.0),
+                }
+                for e in g.edges
+            ],
+            # Board tags for overlay visualization
+            "board_tags": generate_board_tags(state.board),
+            # Stem cell status
+            "stem_cells": [
+                {
+                    "id": cell_id,
+                    "state": cell.state.name if hasattr(cell.state, 'name') else str(cell.state),
+                    "samples": len(cell.samples),
+                    "exploration_ticks": cell.exploration_ticks,
+                }
+                for cell_id, cell in (stem_manager.cells.items() if stem_manager else {})
+            ] if stem_manager else [],
         }
         frames.append(frame)
         
@@ -776,21 +894,56 @@ def main():
     parser.add_argument("--vs-random", action="store_true", help="Play against random")
     parser.add_argument("--output", type=str, help="Output JSON file for visualization")
     parser.add_argument("--quiet", action="store_true", help="Suppress verbose output (result still printed)")
-    parser.add_argument("--weights", type=str, help="Path to consolidation weights pack to load")
-    parser.add_argument("--krk-weights", type=str, help="Path to KRK consolidation weights")
-    parser.add_argument("--kpk-weights", type=str, help="Path to KPK consolidation weights")
+    parser.add_argument("--weights", type=str, help="Path to consolidation weights (default: weights/latest/fullgame_consol.json)")
+    parser.add_argument("--krk-weights", type=str, help="Path to KRK weights (default: weights/latest/krk_consol.json)")
+    parser.add_argument("--kpk-weights", type=str, help="Path to KPK weights (default: weights/latest/kpk_consol.json)")
     parser.add_argument("--json-result", action="store_true", help="Output result as JSON (for parsing)")
     parser.add_argument("--viz", action="store_true", help="Output visualization JSON files")
     parser.add_argument("--output-basename", type=str, default="full_game", help="Base name for output files")
     # M8: Stem cell options
     parser.add_argument("--stem-cells", action="store_true", help="Enable stem cell pattern discovery")
-    parser.add_argument("--stem-cell-path", type=str, help="Path to load/save stem cell state")
+    parser.add_argument("--stem-cell-path", type=str, help="Path to stem cells (default: weights/latest/stem_cells.json)")
     args = parser.parse_args()
     
-    weights_path = Path(args.weights) if args.weights else None
-    krk_weights_path = Path(args.krk_weights) if args.krk_weights else None
-    kpk_weights_path = Path(args.kpk_weights) if args.kpk_weights else None
-    stem_cell_path = Path(args.stem_cell_path) if args.stem_cell_path else None
+    # Use weights/latest/ by default if available (updated after each nightly run)
+    latest_dir = Path("weights/latest")
+    
+    if args.weights:
+        weights_path = Path(args.weights)
+    elif (latest_dir / "fullgame_consol.json").exists():
+        weights_path = latest_dir / "fullgame_consol.json"
+    else:
+        weights_path = None
+    
+    if args.krk_weights:
+        krk_weights_path = Path(args.krk_weights)
+    elif (latest_dir / "krk_consol.json").exists():
+        krk_weights_path = latest_dir / "krk_consol.json"
+    else:
+        krk_weights_path = None
+    
+    if args.kpk_weights:
+        kpk_weights_path = Path(args.kpk_weights)
+    elif (latest_dir / "kpk_consol.json").exists():
+        kpk_weights_path = latest_dir / "kpk_consol.json"
+    else:
+        kpk_weights_path = None
+    
+    if args.stem_cell_path:
+        stem_cell_path = Path(args.stem_cell_path)
+    elif (latest_dir / "stem_cells.json").exists():
+        stem_cell_path = latest_dir / "stem_cells.json"
+    else:
+        stem_cell_path = None
+    
+    # Log which weights are being loaded
+    if not args.quiet:
+        print("Loading weights:")
+        print(f"  Full game: {weights_path or 'None'}")
+        print(f"  KRK:       {krk_weights_path or 'None'}")
+        print(f"  KPK:       {kpk_weights_path or 'None'}")
+        print(f"  Stem cells: {stem_cell_path or 'None'}")
+        print()
     
     state, frames, discovered = play_game(
         max_moves=args.max_moves,

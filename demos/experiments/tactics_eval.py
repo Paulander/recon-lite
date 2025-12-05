@@ -38,8 +38,9 @@ import chess
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from recon_lite.graph import Graph, Node, NodeType
+from recon_lite.graph import Graph, Node, NodeType, LinkType
 from recon_lite.plasticity.consolidate import ConsolidationEngine, ConsolidationConfig
+from recon_lite.trace_db import EpisodeSummary
 from recon_lite_chess.scripts.tactics import (
     detect_forks,
     detect_pins,
@@ -47,12 +48,24 @@ from recon_lite_chess.scripts.tactics import (
     detect_hanging_pieces,
     detect_back_rank_weakness,
     detect_discovered_attacks,
+    detect_double_check,
+    detect_smothered_mate,
+    detect_trapped_piece,
+    detect_attraction,
+    detect_sacrifice,
+    detect_quiet_move,
     get_fork_moves,
     get_pin_exploit_moves,
     get_skewer_moves,
     get_capture_hanging_moves,
     get_back_rank_moves,
     get_discovered_attack_moves,
+    get_double_check_moves,
+    get_smothered_mate_moves,
+    get_trapped_piece_moves,
+    get_attraction_moves,
+    get_sacrifice_moves,
+    get_quiet_moves,
     build_tactics_network,
 )
 
@@ -141,6 +154,59 @@ TACTIC_HANDLERS = {
     "discovered": {
         "detect": detect_discovered_attacks,
         "get_moves": get_discovered_attack_moves,
+        "check_detected": lambda result: len(result) > 0,
+    },
+    # Additional tactic types for Lichess puzzle coverage
+    "doubleCheck": {
+        "detect": detect_double_check,
+        "get_moves": get_double_check_moves,
+        "check_detected": lambda result: len(result) > 0,
+    },
+    "smotheredMate": {
+        "detect": detect_smothered_mate,
+        "get_moves": get_smothered_mate_moves,
+        "check_detected": lambda result: len(result) > 0,
+    },
+    "trappedPiece": {
+        "detect": detect_trapped_piece,
+        "get_moves": get_trapped_piece_moves,
+        "check_detected": lambda result: len(result) > 0,
+    },
+    "attraction": {
+        "detect": detect_attraction,
+        "get_moves": get_attraction_moves,
+        "check_detected": lambda result: len(result) > 0,
+    },
+    "sacrifice": {
+        "detect": detect_sacrifice,
+        "get_moves": get_sacrifice_moves,
+        "check_detected": lambda result: len(result) > 0,
+    },
+    "quietMove": {
+        "detect": detect_quiet_move,
+        "get_moves": get_quiet_moves,
+        "check_detected": lambda result: len(result) > 0,
+    },
+    # Fallback handlers for patterns we don't have specific detectors for yet
+    # These use the sacrifice detector as a general catch-all
+    "deflection": {
+        "detect": detect_sacrifice,
+        "get_moves": get_sacrifice_moves,
+        "check_detected": lambda result: len(result) > 0,
+    },
+    "interference": {
+        "detect": detect_quiet_move,
+        "get_moves": get_quiet_moves,
+        "check_detected": lambda result: len(result) > 0,
+    },
+    "exposedKing": {
+        "detect": detect_discovered_attacks,
+        "get_moves": get_discovered_attack_moves,
+        "check_detected": lambda result: len(result) > 0,
+    },
+    "zugzwang": {
+        "detect": detect_quiet_move,
+        "get_moves": get_quiet_moves,
         "check_detected": lambda result: len(result) > 0,
     },
 }
@@ -285,6 +351,8 @@ def apply_training_reward(
     """
     Apply plasticity reward based on tactic result.
     
+    Uses EpisodeSummary to accumulate edge deltas for consolidation.
+    
     Returns reward value applied.
     """
     # Determine reward
@@ -306,18 +374,32 @@ def apply_training_reward(
         "back_rank": ["detect_back_rank", "exploit_back_rank"],
         "discoveredAttack": ["detect_discovered", "exploit_discovered"],
         "discovered": ["detect_discovered", "exploit_discovered"],
+        "doubleCheck": ["detect_double_check", "exploit_double_check"],
+        "smotheredMate": ["detect_smothered_mate", "exploit_smothered_mate"],
+        "trappedPiece": ["detect_trapped_piece", "exploit_trapped_piece"],
+        "attraction": ["detect_attraction", "exploit_attraction"],
+        "sacrifice": ["detect_sacrifice", "exploit_sacrifice"],
+        "quietMove": ["detect_quiet_move", "exploit_quiet_move"],
     }
     
     nodes = tactic_node_map.get(result.tactic_type, [])
     
-    # Apply reward to relevant edges
+    # Build edge delta dict for this "episode" (single position)
+    edge_deltas = {}
     for node_id in nodes:
-        if node_id in graph.nodes:
-            consol_engine.update_edge_weight(
-                f"tactics_root->{node_id}",
-                reward,
-                signal_type="reward",
-            )
+        # Use SUB edge type to match graph structure
+        edge_key = f"tactics_root->{node_id}:SUB"
+        edge_deltas[edge_key] = reward
+    
+    # Create episode summary and accumulate
+    summary = EpisodeSummary(
+        edge_delta_sums=edge_deltas,
+        outcome_score=reward,
+        avg_reward_tick=reward,
+        total_reward_tick=reward,
+        reward_tick_count=1,
+    )
+    consol_engine.accumulate_episode(summary)
     
     return reward
 
@@ -333,6 +415,8 @@ def main():
     parser.add_argument("--consolidate-pack", type=str, help="Path to consolidation state file")
     parser.add_argument("--output", type=str, help="Output JSON file for results")
     parser.add_argument("--quiet", action="store_true", help="Suppress verbose output")
+    parser.add_argument("--engine", type=str, help="Path to Stockfish for move validation (optional)")
+    parser.add_argument("--depth", type=int, default=6, help="Engine search depth for validation (default: 6)")
     args = parser.parse_args()
     
     verbose = not args.quiet
@@ -428,13 +512,22 @@ def main():
             for result in results:
                 apply_training_reward(result, consol_engine, graph)
     
-    # Save consolidation state
+    # Apply accumulated consolidation and save state
     if consol_engine and args.consolidate_pack:
         pack_path = Path(args.consolidate_pack)
         pack_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Apply consolidation to graph (updates w_base values)
+        if consol_engine.should_apply() and graph:
+            applied = consol_engine.apply_to_graph(graph)
+            if verbose:
+                print(f"Applied consolidation to {len(applied)} edges")
+        
         consol_engine.save_state(pack_path)
         if verbose:
-            print(f"\nSaved consolidation state to {pack_path}")
+            print(f"Saved consolidation state to {pack_path}")
+            print(f"  Total episodes accumulated: {consol_engine.total_episodes}")
+            print(f"  Edges tracked: {len(consol_engine.edge_states)}")
     
     # Print summary
     if verbose:

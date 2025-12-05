@@ -9,6 +9,7 @@ M8: Added batch mode and consolidation support matching krk_persistent_demo.py.
 from __future__ import annotations
 
 import argparse
+import gc
 import random
 import sys
 from pathlib import Path
@@ -16,6 +17,78 @@ from typing import Optional
 
 import chess
 import chess.engine
+
+
+def create_random_kpk_board(white_to_move: bool = True) -> str:
+    """
+    Create a random KPK position (K+P vs K) for training.
+    
+    Rules:
+    - White has King + Pawn, Black has only King
+    - Pawn is on ranks 2-6 (not on promotion rank, not on starting row for more variety)
+    - Kings are not adjacent
+    - Position is legal (not in check if it's opponent's turn to create position)
+    
+    Args:
+        white_to_move: Whether white should move first
+        
+    Returns:
+        str: FEN string of the random KPK position
+    """
+    max_attempts = 100
+    
+    for _ in range(max_attempts):
+        # Place white pawn on ranks 2-6 (indices 1-5), files a-h
+        pawn_file = random.randint(0, 7)  # a-h
+        pawn_rank = random.randint(2, 5)  # ranks 3-6 (more interesting than rank 2)
+        pawn_sq = chess.square(pawn_file, pawn_rank)
+        
+        # Place white king - not on pawn square, preferably supporting the pawn
+        available_for_wk = [sq for sq in chess.SQUARES if sq != pawn_sq]
+        # Prefer squares near the pawn for more realistic positions
+        near_pawn = [sq for sq in available_for_wk 
+                     if abs(chess.square_file(sq) - pawn_file) <= 2 
+                     and chess.square_rank(sq) >= pawn_rank - 1]
+        if near_pawn:
+            wk_sq = random.choice(near_pawn)
+        else:
+            wk_sq = random.choice(available_for_wk)
+        
+        # Place black king - not on pawn or white king, not adjacent to white king
+        def is_adjacent(sq1, sq2):
+            return abs(chess.square_file(sq1) - chess.square_file(sq2)) <= 1 and \
+                   abs(chess.square_rank(sq1) - chess.square_rank(sq2)) <= 1
+        
+        available_for_bk = [sq for sq in chess.SQUARES 
+                           if sq != pawn_sq and sq != wk_sq and not is_adjacent(sq, wk_sq)]
+        
+        if not available_for_bk:
+            continue
+            
+        # Prefer black king in front of the pawn (more realistic defense)
+        blocking_squares = [sq for sq in available_for_bk 
+                          if chess.square_rank(sq) > pawn_rank
+                          and abs(chess.square_file(sq) - pawn_file) <= 1]
+        if blocking_squares and random.random() < 0.7:
+            bk_sq = random.choice(blocking_squares)
+        else:
+            bk_sq = random.choice(available_for_bk)
+        
+        # Build the board and validate
+        board = chess.Board(None)
+        board.set_piece_at(wk_sq, chess.Piece(chess.KING, chess.WHITE))
+        board.set_piece_at(pawn_sq, chess.Piece(chess.PAWN, chess.WHITE))
+        board.set_piece_at(bk_sq, chess.Piece(chess.KING, chess.BLACK))
+        board.turn = chess.WHITE if white_to_move else chess.BLACK
+        
+        # Validate position
+        if board.is_valid():
+            # Make sure it's not already game over
+            if not board.is_game_over():
+                return board.fen()
+    
+    # Fallback: simple known valid position
+    return "8/8/4k3/8/8/4K3/4P3/8 w - - 0 1"
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
@@ -82,7 +155,11 @@ def play_persistent_game(
     viz_logger = RunLogger()
     debug_logger = RunLogger() if split_logs else viz_logger
 
-    board = chess.Board(initial_fen) if initial_fen else chess.Board()
+    # Use provided FEN or generate random KPK position
+    if initial_fen:
+        board = chess.Board(initial_fen)
+    else:
+        board = chess.Board(create_random_kpk_board(white_to_move=True))
     g = build_kpk_network()
     eng = ReConEngine(g)
     g.nodes["kpk_root"].state = NodeState.REQUESTED
@@ -276,13 +353,14 @@ def play_persistent_game(
 
 
 def run_batch(n_games: int = 10, max_plies: int = 100, **play_kwargs) -> dict:
-    """Run N games in batch mode."""
+    """Run N games in batch mode with memory management."""
     stats = {
         "games": [],
         "mates": 0,
         "stalls": 0,
         "total_mate_plies": 0,
         "avg_mate_length": None,
+        "promotions": 0,
     }
     for i in range(n_games):
         res = play_persistent_game(initial_fen=None, max_plies=max_plies, **play_kwargs)
@@ -290,6 +368,14 @@ def run_batch(n_games: int = 10, max_plies: int = 100, **play_kwargs) -> dict:
         if res.get("checkmate"):
             stats["mates"] += 1
             stats["total_mate_plies"] += res.get("plies", 0)
+        # Check for pawn promotion (indicated by piece on 8th rank in final FEN)
+        final_fen = res.get("final_fen", "")
+        if "Q" in final_fen.split()[0]:  # Queen from promotion
+            stats["promotions"] += 1
+        
+        # Memory management: clean up between games
+        gc.collect()
+        
     if stats["mates"]:
         stats["avg_mate_length"] = stats["total_mate_plies"] / stats["mates"]
     print(stats)

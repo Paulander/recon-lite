@@ -1,0 +1,14 @@
+{
+  "wins": 0,
+  "losses": 0,
+  "draws": 0,
+  "stall": 29,
+  "illegal": 0,
+  "max_plies": 0,
+  "timeout": 0,
+  "games": 30,
+  "ticks": 6178,
+  "expected_win_total": 30,
+  "expected_win_success": 1,
+  "blocks": []
+}
