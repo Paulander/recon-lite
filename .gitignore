@@ -16,3 +16,6 @@ weights/backups/
 
 #useless windows files
 *.Zone.Identifierdata/puzzles/lichess_puzzles.csv.bz2
+data/puzzles/lichess_puzzles.csv.bz2
+.cursor/
+game.json
