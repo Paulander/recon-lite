@@ -101,6 +101,12 @@ from recon_lite_chess.scripts.tactics import (
     get_back_rank_moves,
 )
 from recon_lite_chess.eval.heuristic import eval_position, compute_reward_tick
+from recon_lite_chess.graph import (
+    build_unified_graph,
+    load_all_weights,
+    get_active_edge_traces,
+    reset_edge_traces,
+)
 
 # Import the graph builder from full_game_demo
 from demos.persistent.full_game_demo import (
@@ -123,17 +129,18 @@ DEFAULT_CONSOLIDATE_MIN_EPISODES = 10
 
 
 def get_trainable_edges(graph: Graph) -> List[Tuple[str, str, LinkType]]:
-    """Get edges that should be trained with plasticity."""
+    """
+    Get ALL edges that should be trained with plasticity.
+    
+    The whole network learns - not just specific edge types.
+    Every edge that is marked for consolidation will be trained.
+    """
     edges = []
     for e in graph.edges:
-        # Train POR edges (sequential/temporal)
-        if e.ltype == LinkType.POR:
+        # Train ALL edges marked for consolidation
+        meta = getattr(e, 'meta', {})
+        if meta.get("consolidate", True):  # Default to True if not marked
             edges.append((e.src, e.dst, e.ltype))
-        # Train some SUB edges (hierarchy)
-        elif e.ltype == LinkType.SUB:
-            # Only train SUB edges for strategy selection
-            if "Strategy" in e.src or "Plan" in e.src:
-                edges.append((e.src, e.dst, e.ltype))
     return edges
 
 
@@ -153,6 +160,7 @@ def compute_stockfish_eval(board: chess.Board, engine: chess.engine.SimpleEngine
 def play_training_game(
     game_id: int,
     *,
+    initial_fen: Optional[str] = None,
     max_moves: int = 200,
     vs_random: bool = True,
     verbose: bool = False,
@@ -172,9 +180,16 @@ def play_training_game(
     Returns:
         Dict with game results and training stats
     """
-    # Build the graph
-    g = build_full_game_graph()
+    # Build the unified graph (includes ALL subgraphs: strategic, KRK, KPK, tactics)
+    g = build_unified_graph(
+        include_endgames=True,
+        include_tactics=True,
+        include_sensors=True,
+    )
     engine = ReConEngine(g)
+    
+    # Reset all edge traces at start of game
+    reset_edge_traces(g)
     
     # Initialize plasticity
     plasticity_state = {}
@@ -201,8 +216,11 @@ def play_training_game(
         for cell in stem_manager.cells.values():
             cell.feature_extractor = extract_board_features
     
-    # Initialize game state
-    state = GameState(board=chess.Board())
+    # Initialize game state (optionally from FEN)
+    if initial_fen:
+        state = GameState(board=chess.Board(initial_fen))
+    else:
+        state = GameState(board=chess.Board())
     state.last_eval = eval_position(state.board)
     
     tick_records: List[TickRecord] = []
@@ -232,15 +250,22 @@ def play_training_game(
         now_requested = engine.step(env)
         state.tick += 1
         
-        # Collect fired edges for plasticity
-        if plasticity_enabled:
-            for e in g.edges:
-                src_node = g.nodes.get(e.src)
-                dst_node = g.nodes.get(e.dst)
-                if src_node and dst_node:
-                    if src_node.state in (NodeState.TRUE, NodeState.CONFIRMED) and \
-                       dst_node.state == NodeState.REQUESTED:
-                        fired_edges.append({"src": e.src, "dst": e.dst, "ltype": e.ltype.name})
+        # Collect fired edges and update traces for FULL NETWORK consolidation
+        # This tracks ALL edges that fire, not just plasticity edges
+        for e in g.edges:
+            src_node = g.nodes.get(e.src)
+            dst_node = g.nodes.get(e.dst)
+            if src_node and dst_node:
+                if src_node.state in (NodeState.TRUE, NodeState.CONFIRMED) and \
+                   dst_node.state == NodeState.REQUESTED:
+                    # Record for plasticity
+                    fired_edges.append({"src": e.src, "dst": e.dst, "ltype": e.ltype.name})
+                    
+                    # Accumulate edge trace for consolidation (learning signal)
+                    # This is the key change: ALL edges accumulate traces
+                    if not hasattr(e, 'trace'):
+                        e.trace = 0.0
+                    e.trace += 1.0  # Increment trace when edge fires
         
         # Get assessments
         ultimate = assess_ultimate_goal(state.board, state.board.turn)
@@ -352,6 +377,10 @@ def play_training_game(
     elif game_result == "0-1":
         outcome_score = -1.0
     
+    # Gather ALL active edge traces for consolidation
+    # This tracks the entire network, not just specific edges
+    active_traces = get_active_edge_traces(g, threshold=0.01)
+    
     episode_summary = None
     if plasticity_enabled:
         episode_summary = extract_episode_summary(
@@ -361,9 +390,26 @@ def play_training_game(
             game_result,
         )
     
-    # Accumulate for consolidation
-    if consolidation_engine and episode_summary:
-        consolidation_engine.accumulate_episode(episode_summary)
+    # Accumulate for consolidation using ALL edge traces
+    if consolidation_engine:
+        # Create episode summary with all active edge deltas
+        edge_delta_sums = {}
+        for edge_key, trace_value in active_traces.items():
+            # Scale trace by outcome: winning reinforces active edges, losing penalizes
+            edge_delta_sums[edge_key] = trace_value * outcome_score
+        
+        # If plasticity ran, merge its deltas too
+        if episode_summary and hasattr(episode_summary, 'edge_delta_sums'):
+            for k, v in episode_summary.edge_delta_sums.items():
+                edge_delta_sums[k] = edge_delta_sums.get(k, 0.0) + v
+        
+        # Build comprehensive episode summary
+        full_summary = EpisodeSummary(
+            outcome_score=outcome_score,
+            avg_reward_tick=total_reward / max(1, len(tick_records)),
+            edge_delta_sums=edge_delta_sums,
+        )
+        consolidation_engine.accumulate_episode(full_summary)
     
     # Reset plasticity for next game
     if plasticity_enabled and plasticity_state:
@@ -402,6 +448,7 @@ def play_training_game(
 def run_batch_training(
     n_games: int,
     *,
+    initial_fens: Optional[List[str]] = None,
     max_moves: int = 200,
     vs_random: bool = True,
     verbose: bool = True,
@@ -514,8 +561,14 @@ def run_batch_training(
         print()
     
     for i in range(n_games):
+        # Get initial FEN if provided
+        game_fen = None
+        if initial_fens and i < len(initial_fens):
+            game_fen = initial_fens[i]
+        
         result = play_training_game(
             game_id=i + 1,
+            initial_fen=game_fen,
             max_moves=max_moves,
             vs_random=vs_random,
             verbose=verbose,
@@ -547,11 +600,15 @@ def run_batch_training(
         
         # Apply consolidation periodically
         if consol_engine and consol_engine.should_apply():
-            # Build a dummy graph to apply consolidation
-            g = build_full_game_graph()
+            # Build a unified graph to apply consolidation
+            g = build_unified_graph(
+                include_endgames=True,
+                include_tactics=True,
+                include_sensors=True,
+            )
             applied = consol_engine.apply_to_graph(g)
             if verbose and applied:
-                print(f"  [Consolidation] Applied {len(applied)} weight updates")
+                print(f"  [Consolidation] Applied {len(applied)} weight updates to full network")
         
         # Memory management
         gc.collect()
@@ -610,6 +667,7 @@ def main():
     parser.add_argument("--vs-random", action="store_true", default=True, help="Play against random opponent")
     parser.add_argument("--quiet", action="store_true", help="Suppress verbose output")
     parser.add_argument("--quick", action="store_true", help="Quick mode (fewer games, less depth)")
+    parser.add_argument("--fen-file", type=Path, help="File with starting FENs (one per line)")
     
     # Stockfish
     parser.add_argument("--engine", type=str, help="Path to Stockfish")
@@ -641,10 +699,20 @@ def main():
         args.max_moves = 100
         args.depth = 1
     
+    # Load FENs from file if provided
+    initial_fens = None
+    if args.fen_file and args.fen_file.exists():
+        with open(args.fen_file) as f:
+            initial_fens = [line.strip() for line in f if line.strip()]
+        # Adjust batch size to match FEN count if FENs are provided
+        if initial_fens:
+            args.batch = min(args.batch, len(initial_fens))
+    
     verbose = not args.quiet
     
     stats = run_batch_training(
         n_games=args.batch,
+        initial_fens=initial_fens,
         max_moves=args.max_moves,
         vs_random=args.vs_random,
         verbose=verbose,

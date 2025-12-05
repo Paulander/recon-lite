@@ -45,7 +45,7 @@ from recon_lite_chess import (
     create_confinement_moves, create_barrier_placement_moves
 )
 from recon_lite_chess.krk_nodes import wire_default_krk
-from recon_lite_chess.strategy import (
+from recon_lite_chess.krk_strategy import (
     compute_phase_logits,
     ensure_phase_states,
     neutral_outcome_mode,

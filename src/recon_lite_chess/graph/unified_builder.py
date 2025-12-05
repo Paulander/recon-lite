@@ -58,6 +58,7 @@ def build_unified_graph(
     if include_endgames:
         _integrate_krk_subgraph(g)
         _integrate_kpk_subgraph(g)
+        _integrate_kqk_subgraph(g)
     
     # 3. Integrate tactics subgraphs
     if include_tactics:
@@ -65,6 +66,9 @@ def build_unified_graph(
     
     # 4. Wire strategic connections
     _wire_strategic_connections(g)
+    
+    # 5. Mark all edges for consolidation tracking
+    _mark_edges_for_consolidation(g)
     
     return g
 
@@ -348,6 +352,100 @@ def _integrate_kpk_subgraph(g: Graph) -> None:
     g.add_edge(f"{prefix}wait", f"{prefix}wait_for_change", LinkType.SUB)
 
 
+def _integrate_kqk_subgraph(g: Graph) -> None:
+    """
+    Integrate KQK endgame subgraph with prefixed node IDs.
+    
+    King + Queen vs King endgame.
+    """
+    prefix = "kqk_"
+    
+    # KQK Root (gated by MaterialSensor)
+    kqk_root = Node(f"{prefix}root", NodeType.SCRIPT, meta={
+        "layer": "endgame",
+        "subgraph": "kqk",
+        "gate_source": "EndgameDetector",
+    })
+    g.add_node(kqk_root)
+    
+    # Connect to main graph
+    g.add_edge("GameRoot", f"{prefix}root", LinkType.SUB)
+    
+    # KQK Phase nodes
+    phases = [
+        ("phase1_drive", "Drive enemy king to edge"),
+        ("phase2_corner", "Push king to corner"),
+        ("phase3_mate", "Deliver checkmate"),
+    ]
+    
+    for phase_id, desc in phases:
+        node = Node(f"{prefix}{phase_id}", NodeType.SCRIPT, meta={
+            "layer": "endgame_phase",
+            "subgraph": "kqk",
+            "description": desc,
+        })
+        g.add_node(node)
+        g.add_edge(f"{prefix}root", f"{prefix}{phase_id}", LinkType.SUB)
+    
+    # Phase sequencing (POR)
+    g.add_edge(f"{prefix}phase1_drive", f"{prefix}phase2_corner", LinkType.POR)
+    g.add_edge(f"{prefix}phase2_corner", f"{prefix}phase3_mate", LinkType.POR)
+    
+    # KQK Evaluators (terminals)
+    evaluators = [
+        "material_check",
+        "edge_detector",
+        "corner_detector",
+        "mate_detector",
+        "restriction_eval",
+    ]
+    
+    for eval_id in evaluators:
+        node = Node(f"{prefix}{eval_id}", NodeType.TERMINAL, meta={
+            "layer": "endgame_terminal",
+            "subgraph": "kqk",
+        })
+        g.add_node(node)
+    
+    # KQK Move generators
+    move_gens = [
+        "drive_moves",
+        "approach_moves",
+        "mate_moves",
+        "move_selector",
+    ]
+    
+    for mg_id in move_gens:
+        node = Node(f"{prefix}{mg_id}", NodeType.TERMINAL, meta={
+            "layer": "endgame_actuator",
+            "subgraph": "kqk",
+        })
+        g.add_node(node)
+    
+    # Internal phase wiring
+    g.add_edge(f"{prefix}phase1_drive", f"{prefix}edge_detector", LinkType.SUB)
+    g.add_edge(f"{prefix}phase1_drive", f"{prefix}restriction_eval", LinkType.SUB)
+    g.add_edge(f"{prefix}phase1_drive", f"{prefix}drive_moves", LinkType.SUB)
+    
+    g.add_edge(f"{prefix}phase2_corner", f"{prefix}corner_detector", LinkType.SUB)
+    g.add_edge(f"{prefix}phase2_corner", f"{prefix}approach_moves", LinkType.SUB)
+    
+    g.add_edge(f"{prefix}phase3_mate", f"{prefix}mate_detector", LinkType.SUB)
+    g.add_edge(f"{prefix}phase3_mate", f"{prefix}mate_moves", LinkType.SUB)
+    
+    # Global move selector (fallback)
+    g.add_edge(f"{prefix}root", f"{prefix}move_selector", LinkType.SUB)
+    g.add_edge(f"{prefix}root", f"{prefix}material_check", LinkType.SUB)
+    
+    # Add wait node
+    wait_node = Node(f"{prefix}wait", NodeType.TERMINAL, meta={
+        "layer": "endgame_terminal",
+        "subgraph": "kqk",
+    })
+    g.add_node(wait_node)
+    g.add_edge(f"{prefix}root", f"{prefix}wait", LinkType.SUB)
+
+
 def _integrate_tactics_subgraphs(g: Graph) -> None:
     """
     Integrate all tactical pattern subgraphs.
@@ -439,6 +537,121 @@ def _wire_strategic_connections(g: Graph) -> None:
                 g.add_edge(plan_id, sensor_id, LinkType.SUB)
 
 
+def _get_edge_subgraph(g: Graph, src: str, dst: str) -> str:
+    """Determine which subgraph an edge belongs to."""
+    src_node = g.nodes.get(src)
+    dst_node = g.nodes.get(dst)
+    
+    # Both nodes must exist
+    if not src_node or not dst_node:
+        return "main"
+    
+    # Check node subgraphs
+    src_sg = src_node.meta.get("subgraph", "main")
+    dst_sg = dst_node.meta.get("subgraph", "main")
+    
+    # If both are same subgraph, use that
+    if src_sg == dst_sg:
+        return src_sg
+    
+    # Cross-subgraph edges belong to the parent subgraph
+    # (e.g., GameRoot->krk_root is a "main" edge)
+    if src_sg == "main":
+        return "main"
+    
+    return src_sg
+
+
+def _mark_edges_for_consolidation(g: Graph) -> None:
+    """
+    Mark all edges in the graph for consolidation tracking.
+    
+    This enables the two-speed learning system to train the entire network:
+    - Fast plasticity: within-game, per-tick eligibility traces
+    - Slow consolidation: cross-game, baseline weight updates
+    
+    Each edge gets metadata:
+    - consolidate: bool - whether to track this edge
+    - subgraph: str - which subgraph this edge belongs to (for grouped save/load)
+    - edge_key: str - canonical key for edge identification
+    """
+    for edge in g.edges:
+        # Generate canonical edge key
+        edge_key = f"{edge.src}->{edge.dst}:{edge.ltype.name}"
+        
+        # Determine subgraph
+        subgraph = _get_edge_subgraph(g, edge.src, edge.dst)
+        
+        # Mark for consolidation
+        edge.meta = getattr(edge, 'meta', {}) or {}
+        edge.meta["consolidate"] = True
+        edge.meta["subgraph"] = subgraph
+        edge.meta["edge_key"] = edge_key
+        
+        # Initialize trace if not present
+        if not hasattr(edge, 'trace'):
+            edge.trace = 0.0
+
+
+def get_edges_for_consolidation(g: Graph, subgraph: Optional[str] = None) -> List[Tuple[str, float]]:
+    """
+    Get all edges marked for consolidation with their current weights.
+    
+    Args:
+        g: The graph
+        subgraph: Optional filter by subgraph name (None = all edges)
+        
+    Returns:
+        List of (edge_key, weight) tuples
+    """
+    edges = []
+    
+    for edge in g.edges:
+        meta = getattr(edge, 'meta', {})
+        
+        if not meta.get("consolidate", False):
+            continue
+        
+        if subgraph and meta.get("subgraph") != subgraph:
+            continue
+        
+        edge_key = meta.get("edge_key", f"{edge.src}->{edge.dst}:{edge.ltype.name}")
+        edges.append((edge_key, float(edge.w)))
+    
+    return edges
+
+
+def get_active_edge_traces(g: Graph, threshold: float = 0.01) -> Dict[str, float]:
+    """
+    Get edges with active traces above threshold.
+    
+    This is used for accumulating episode data during consolidation.
+    
+    Args:
+        g: The graph
+        threshold: Minimum trace value to include
+        
+    Returns:
+        Dict mapping edge_key to trace value
+    """
+    active = {}
+    
+    for edge in g.edges:
+        trace = getattr(edge, 'trace', 0.0)
+        if trace > threshold:
+            meta = getattr(edge, 'meta', {})
+            edge_key = meta.get("edge_key", f"{edge.src}->{edge.dst}:{edge.ltype.name}")
+            active[edge_key] = trace
+    
+    return active
+
+
+def reset_edge_traces(g: Graph) -> None:
+    """Reset all edge traces to 0 (called between games)."""
+    for edge in g.edges:
+        edge.trace = 0.0
+
+
 def load_all_weights(g: Graph, weights_dir: Path) -> Dict[str, int]:
     """
     Load weights for all subgraphs from a directory.
@@ -448,6 +661,7 @@ def load_all_weights(g: Graph, weights_dir: Path) -> Dict[str, int]:
         ├── fullgame_consol.json
         ├── krk_consol.json
         ├── kpk_consol.json
+        ├── kqk_consol.json
         └── tactics/
             ├── fork_consol.json
             ├── pin_consol.json
@@ -464,6 +678,7 @@ def load_all_weights(g: Graph, weights_dir: Path) -> Dict[str, int]:
         "fullgame": 0,
         "krk": 0,
         "kpk": 0,
+        "kqk": 0,
         "tactics": 0,
     }
     
@@ -483,6 +698,11 @@ def load_all_weights(g: Graph, weights_dir: Path) -> Dict[str, int]:
     kpk_path = weights_dir / "kpk_consol.json"
     if kpk_path.exists():
         stats["kpk"] = _apply_weight_file(g, kpk_path, prefix="kpk_")
+    
+    # KQK subgraph weights
+    kqk_path = weights_dir / "kqk_consol.json"
+    if kqk_path.exists():
+        stats["kqk"] = _apply_weight_file(g, kqk_path, prefix="kqk_")
     
     # Tactics weights (16 files)
     tactics_dir = weights_dir / "tactics"

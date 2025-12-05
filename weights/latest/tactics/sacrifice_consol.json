@@ -22,8 +22,8 @@
     "detect_back_rank->exploit_back_rank:POR": 1.0,
     "tactics_root->detect_discovered:SUB": 1.0,
     "detect_discovered->exploit_discovered:POR": 1.0,
-    "tactics_root->detect_sacrifice:SUB": 1.004548,
-    "tactics_root->exploit_sacrifice:SUB": 1.004548
+    "tactics_root->detect_sacrifice:SUB": 1.007794,
+    "tactics_root->exploit_sacrifice:SUB": 1.007794
   },
   "w_init": {
     "tactics_root->detect_fork:SUB": 1.0,
@@ -43,9 +43,9 @@
     "tactics_root->exploit_sacrifice:SUB": 1.0
   },
   "consolidation_meta": {
-    "total_episodes": 2000,
+    "total_episodes": 2150,
     "episodes_since_apply": 0,
-    "last_apply_time": "2025-12-05T11:03:15.182890",
+    "last_apply_time": "2025-12-05T14:50:21.944329",
     "edges_tracked": 15
   }
 }

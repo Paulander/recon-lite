@@ -90,11 +90,22 @@ def analyze_material(board: chess.Board) -> MaterialInfo:
           counts["white_knights"] == 0 and black_material == 0):
         pattern = "KPK"
     
+    # KQK pattern: White K+Q, Black K only
+    elif (counts["white_queens"] == 1 and counts["white_rooks"] == 0 and
+          counts["white_bishops"] == 0 and counts["white_knights"] == 0 and
+          counts["white_pawns"] == 0 and black_material == 0):
+        pattern = "KQK"
+    
     # Mirror patterns (Black has material, White has only King)
     elif (counts["black_rooks"] == 1 and counts["black_queens"] == 0 and
           counts["black_bishops"] == 0 and counts["black_knights"] == 0 and
           counts["black_pawns"] == 0 and white_material == 0):
         pattern = "KRK"  # From Black's perspective
+    
+    elif (counts["black_queens"] == 1 and counts["black_rooks"] == 0 and
+          counts["black_bishops"] == 0 and counts["black_knights"] == 0 and
+          counts["black_pawns"] == 0 and white_material == 0):
+        pattern = "KQK"  # From Black's perspective
     
     elif (counts["black_pawns"] >= 1 and counts["black_queens"] == 0 and
           counts["black_rooks"] == 0 and counts["black_bishops"] == 0 and
@@ -131,6 +142,7 @@ def compute_subgraph_gates(
     gates = {
         "krk": 0.0,
         "kpk": 0.0,
+        "kqk": 0.0,
     }
     
     # === HARD GATE: If in opening, endgame subgraphs are OFF ===
@@ -169,6 +181,18 @@ def compute_subgraph_gates(
                        material.white_queens + material.black_queens)
         if total_pieces <= 2:
             gates["kpk"] = 0.3
+    
+    # KQK: Exact pattern match = full activation
+    if material.pattern == "KQK":
+        gates["kqk"] = 1.0
+    # Pre-activation: Endgame with queen present and low material
+    elif material.is_endgame and (material.white_queens > 0 or material.black_queens > 0):
+        total_non_queen = (material.white_knights + material.white_bishops +
+                          material.black_knights + material.black_bishops +
+                          material.white_rooks + material.black_rooks +
+                          material.white_pawns + material.black_pawns)
+        if total_non_queen <= 2:
+            gates["kqk"] = 0.3
     
     return gates
 

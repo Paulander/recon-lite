@@ -11,7 +11,7 @@
   "w_base": {
     "tactics_root->detect_fork:SUB": 1.0,
     "detect_fork->exploit_fork:POR": 1.0,
-    "tactics_root->detect_pin:SUB": 1.0082,
+    "tactics_root->detect_pin:SUB": 1.0,
     "detect_pin->exploit_pin:POR": 1.0,
     "tactics_root->detect_hanging:SUB": 1.0,
     "detect_hanging->capture_hanging:POR": 1.0,
@@ -21,8 +21,7 @@
     "tactics_root->detect_back_rank:SUB": 1.0,
     "detect_back_rank->exploit_back_rank:POR": 1.0,
     "tactics_root->detect_discovered:SUB": 1.0,
-    "detect_discovered->exploit_discovered:POR": 1.0,
-    "tactics_root->exploit_pin:SUB": 1.0082
+    "detect_discovered->exploit_discovered:POR": 1.0
   },
   "w_init": {
     "tactics_root->detect_fork:SUB": 1.0,
@@ -37,13 +36,12 @@
     "tactics_root->detect_back_rank:SUB": 1.0,
     "detect_back_rank->exploit_back_rank:POR": 1.0,
     "tactics_root->detect_discovered:SUB": 1.0,
-    "detect_discovered->exploit_discovered:POR": 1.0,
-    "tactics_root->exploit_pin:SUB": 1.0
+    "detect_discovered->exploit_discovered:POR": 1.0
   },
   "consolidation_meta": {
-    "total_episodes": 2650,
+    "total_episodes": 0,
     "episodes_since_apply": 0,
-    "last_apply_time": "2025-12-05T14:50:20.485689",
-    "edges_tracked": 14
+    "last_apply_time": null,
+    "edges_tracked": 13
   }
 }
