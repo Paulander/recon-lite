@@ -111,9 +111,17 @@ def analyze_material(board: chess.Board) -> MaterialInfo:
     )
 
 
-def compute_subgraph_gates(board: chess.Board) -> Dict[str, float]:
+def compute_subgraph_gates(
+    board: chess.Board,
+    phase: Optional[Dict[str, float]] = None,
+) -> Dict[str, float]:
     """
-    Compute activation weights for endgame subgraphs based on material.
+    Compute activation weights for endgame subgraphs based on material and phase.
+    
+    Args:
+        board: Current board position
+        phase: Optional phase weights {"opening": 0.x, "middlegame": 0.x, "endgame": 0.x}
+               If provided, opening phase will hard-gate endgame subgraphs OFF.
     
     Returns:
         Dict mapping subgraph name to gate weight (0.0 to 1.0)
@@ -124,6 +132,24 @@ def compute_subgraph_gates(board: chess.Board) -> Dict[str, float]:
         "krk": 0.0,
         "kpk": 0.0,
     }
+    
+    # === HARD GATE: If in opening, endgame subgraphs are OFF ===
+    # This prevents the engine from wasting computation on endgame logic
+    # when there's a full board of pieces to deal with.
+    if phase:
+        opening_weight = phase.get("opening", 0)
+        if opening_weight > 0.5:
+            # Opening phase dominates - keep endgames fully gated
+            return gates
+        
+        # Even in middlegame, reduce endgame pre-activation
+        middlegame_weight = phase.get("middlegame", 0)
+        if middlegame_weight > 0.6 and not material.is_endgame:
+            # Still in middlegame, no endgame patterns detected
+            return gates
+    
+    # === MATERIAL-BASED GATING ===
+    # Only activate endgame subgraphs when material indicates endgame
     
     # KRK: Exact pattern match = full activation
     if material.pattern == "KRK":

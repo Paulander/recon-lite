@@ -78,6 +78,11 @@ from recon_lite_chess.scripts.tactics import (
     get_skewer_moves,
     get_capture_hanging_moves,
 )
+from recon_lite_chess.strategy_layer.move_generators import (
+    get_moves_for_plan,
+    select_weighted_move,
+    PlanMoveCandidate,
+)
 from recon_lite.plasticity.consolidate import ConsolidationEngine, ConsolidationConfig
 from recon_lite.logger import RunLogger
 from recon_lite.nodes.stem_cell import StemCellManager, StemCellConfig, StemCellState
@@ -683,13 +688,30 @@ def select_move(
                 except Exception:
                     continue
     
-    # === Phase 2: Collect candidates from opening heuristics ===
+    # === Phase 2: Collect candidates from strategic plan move generators ===
+    # This replaces the old opening/middlegame heuristics with unified plan-based generation
+    strategic_candidates: List[PlanMoveCandidate] = []
+    
+    for plan_id, activation in active_plans:
+        if activation < 0.1:
+            continue  # Skip low-activation plans
+        
+        # Get moves for this strategic plan
+        plan_candidates = get_moves_for_plan(board, plan_id, activation)
+        strategic_candidates.extend(plan_candidates)
+    
+    # Add strategic candidates to move scores
+    for candidate in strategic_candidates:
+        move_scores[candidate.move] = move_scores.get(candidate.move, 0) + candidate.final_score
+    
+    # === Phase 3: Opening-specific heuristics (as supplement) ===
     if dominant_phase == "opening" or phase_weights.get("opening", 0) > 0.3:
         opening_candidates = get_opening_move_candidates(board)
         for move, reason, score in opening_candidates:
-            move_scores[move] = move_scores.get(move, 0) + score * phase_weights.get("opening", 0.5)
+            # Scale by opening phase weight
+            move_scores[move] = move_scores.get(move, 0) + score * phase_weights.get("opening", 0.5) * 0.5
     
-    # === Phase 3: Collect candidates from middlegame heuristics ===
+    # === Phase 4: Middlegame-specific heuristics (as supplement) ===
     if dominant_phase == "middlegame" or phase_weights.get("middlegame", 0) > 0.3:
         for plan_id, activation in active_plans[:3]:  # Top 3 plans
             plan_type = "general"
@@ -702,7 +724,8 @@ def select_move(
             
             mg_candidates = get_middlegame_move_candidates(board, plan=plan_type)
             for move, reason, score in mg_candidates:
-                move_scores[move] = move_scores.get(move, 0) + score * activation
+                # Scale to avoid double-counting with strategic plans
+                move_scores[move] = move_scores.get(move, 0) + score * activation * 0.3
     
     # === Phase 4: Add base score for captures ===
     for move in board.legal_moves:
@@ -891,8 +914,8 @@ def play_game(
         phase = estimate_phase(state.board)
         material = assess_material(state.board)
         
-        # Compute subgraph gates for endgames
-        subgraph_gates = compute_subgraph_gates(state.board)
+        # Compute subgraph gates for endgames (with phase-aware gating)
+        subgraph_gates = compute_subgraph_gates(state.board, phase=phase.as_dict())
         
         # Update subgraph activation in graph metadata
         if "krk_root" in g.nodes:

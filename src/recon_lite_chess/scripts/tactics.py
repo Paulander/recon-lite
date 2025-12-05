@@ -7,17 +7,53 @@ Handles:
 - Skewer detection and exploitation
 - Back rank weakness detection and exploitation
 - Discovered attack detection and exploitation
+
+MLP-enhanced detection is available for:
+- Back rank mate (backRankMate)
+- Double check (doubleCheck)
+- Smothered mate (smotheredMate)
 """
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import chess
 
 from recon_lite import Graph, LinkType, Node, NodeType, NodeState
+
+
+# ============================================================================
+# MLP Detector Integration
+# ============================================================================
+
+def _get_mlp_detector(tactic_type: str):
+    """Get MLP detector if available, returns None if not loaded."""
+    try:
+        from recon_lite_chess.tactics.mlp_detector import get_mlp_detector
+        return get_mlp_detector(tactic_type)
+    except ImportError:
+        return None
+    except Exception:
+        return None
+
+
+def _try_mlp_detection(board: chess.Board, tactic_type: str) -> Tuple[bool, float]:
+    """
+    Try MLP-based detection for a tactic.
+    
+    Returns (detected, confidence) if MLP available, (False, 0.0) otherwise.
+    """
+    detector = _get_mlp_detector(tactic_type)
+    if detector is None:
+        return False, 0.0
+    
+    try:
+        return detector.detect(board)
+    except Exception:
+        return False, 0.0
 
 
 # Configuration cache
@@ -260,16 +296,38 @@ def detect_skewers(board: chess.Board) -> List[Dict[str, Any]]:
     return skewers
 
 
-def detect_back_rank_weakness(board: chess.Board) -> Dict[str, Any]:
+def detect_back_rank_weakness(board: chess.Board, use_mlp: bool = True) -> Dict[str, Any]:
     """
     Detect if enemy has back rank weakness (king trapped with no escape).
+    
+    Uses MLP-based detection if available, falls back to heuristics.
     
     Returns dict with:
     - has_weakness: bool
     - king_sq: enemy king square
     - escape_squares: list of potential escape squares (should be empty for weakness)
     - attacking_moves: legal moves that exploit the weakness
+    - detection_method: "mlp" or "heuristic"
     """
+    # Try MLP detection first
+    if use_mlp:
+        mlp_detected, confidence = _try_mlp_detection(board, "backRankMate")
+        if mlp_detected:
+            # MLP detected pattern - get moves from heuristic
+            result = _detect_back_rank_weakness_heuristic(board)
+            result["detection_method"] = "mlp"
+            result["mlp_confidence"] = confidence
+            result["has_weakness"] = True
+            return result
+    
+    # Fall back to heuristic detection
+    result = _detect_back_rank_weakness_heuristic(board)
+    result["detection_method"] = "heuristic"
+    return result
+
+
+def _detect_back_rank_weakness_heuristic(board: chess.Board) -> Dict[str, Any]:
+    """Heuristic-based back rank weakness detection."""
     turn = board.turn
     enemy = not turn
     
@@ -495,13 +553,33 @@ def _piece_value_tactical(piece_type: chess.PieceType) -> int:
 # Additional Tactic Detection (for Lichess puzzle coverage)
 # ============================================================================
 
-def detect_double_check(board: chess.Board) -> List[Dict[str, Any]]:
+def detect_double_check(board: chess.Board, use_mlp: bool = True) -> List[Dict[str, Any]]:
     """
     Detect moves that give double check.
+    
+    Uses MLP-based detection if available, falls back to heuristics.
     
     A double check occurs when two pieces attack the king simultaneously,
     usually through a discovered attack where the moving piece also gives check.
     """
+    # Try MLP detection first
+    if use_mlp:
+        mlp_detected, confidence = _try_mlp_detection(board, "doubleCheck")
+        if mlp_detected:
+            # MLP detected pattern - get moves from heuristic
+            result = _detect_double_check_heuristic(board)
+            # Mark as MLP-detected
+            for item in result:
+                item["detection_method"] = "mlp"
+                item["mlp_confidence"] = confidence
+            return result
+    
+    # Fall back to heuristic detection
+    return _detect_double_check_heuristic(board)
+
+
+def _detect_double_check_heuristic(board: chess.Board) -> List[Dict[str, Any]]:
+    """Heuristic-based double check detection."""
     double_checks = []
     turn = board.turn
     
@@ -516,6 +594,7 @@ def detect_double_check(board: chess.Board) -> List[Dict[str, Any]]:
                     "move": move.uci(),
                     "checking_pieces": [chess.square_name(sq) for sq in checking_pieces],
                     "num_checkers": len(checking_pieces),
+                    "detection_method": "heuristic",
                 })
         
         board.pop()
@@ -523,13 +602,33 @@ def detect_double_check(board: chess.Board) -> List[Dict[str, Any]]:
     return double_checks
 
 
-def detect_smothered_mate(board: chess.Board) -> List[Dict[str, Any]]:
+def detect_smothered_mate(board: chess.Board, use_mlp: bool = True) -> List[Dict[str, Any]]:
     """
     Detect smothered mate opportunities.
+    
+    Uses MLP-based detection if available, falls back to heuristics.
     
     A smothered mate occurs when a knight checkmates a king that is
     completely surrounded by its own pieces.
     """
+    # Try MLP detection first
+    if use_mlp:
+        mlp_detected, confidence = _try_mlp_detection(board, "smotheredMate")
+        if mlp_detected:
+            # MLP detected pattern - get moves from heuristic
+            result = _detect_smothered_mate_heuristic(board)
+            # Mark as MLP-detected
+            for item in result:
+                item["detection_method"] = "mlp"
+                item["mlp_confidence"] = confidence
+            return result
+    
+    # Fall back to heuristic detection
+    return _detect_smothered_mate_heuristic(board)
+
+
+def _detect_smothered_mate_heuristic(board: chess.Board) -> List[Dict[str, Any]]:
+    """Heuristic-based smothered mate detection."""
     smothered_mates = []
     turn = board.turn
     enemy = not turn
@@ -566,6 +665,7 @@ def detect_smothered_mate(board: chess.Board) -> List[Dict[str, Any]]:
                     "knight_from": chess.square_name(move.from_square),
                     "knight_to": chess.square_name(move.to_square),
                     "king_sq": chess.square_name(enemy_king),
+                    "detection_method": "heuristic",
                 })
         
         board.pop()

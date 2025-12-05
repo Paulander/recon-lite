@@ -647,9 +647,9 @@
             
             // Material
             const material = env.material || {};
-            document.getElementById('white-material').textContent = material.white || 39;
-            document.getElementById('black-material').textContent = material.black || 39;
-            const balance = (material.white || 0) - (material.black || 0);
+            document.getElementById('white-material').textContent = material.white_material || 39;
+            document.getElementById('black-material').textContent = material.black_material || 39;
+            const balance = (material.white_material || 0) - (material.black_material || 0);
             const balanceEl = document.getElementById('material-balance');
             balanceEl.textContent = balance >= 0 ? '+' + balance : balance;
             balanceEl.style.color = balance > 0 ? 'var(--accent-green)' : balance < 0 ? 'var(--accent-red)' : 'var(--text-secondary)';
