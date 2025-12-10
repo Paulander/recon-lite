@@ -22,8 +22,8 @@
     "detect_back_rank->exploit_back_rank:POR": 1.0,
     "tactics_root->detect_discovered:SUB": 1.0,
     "detect_discovered->exploit_discovered:POR": 1.0,
-    "tactics_root->detect_double_check:SUB": 1.0063,
-    "tactics_root->exploit_double_check:SUB": 1.0063
+    "tactics_root->detect_double_check:SUB": 1.0072,
+    "tactics_root->exploit_double_check:SUB": 1.0072
   },
   "w_init": {
     "tactics_root->detect_fork:SUB": 1.0,
@@ -43,9 +43,9 @@
     "tactics_root->exploit_double_check:SUB": 1.0
   },
   "consolidation_meta": {
-    "total_episodes": 2150,
+    "total_episodes": 2200,
     "episodes_since_apply": 0,
-    "last_apply_time": "2025-12-05T14:50:21.382561",
+    "last_apply_time": "2025-12-05T17:45:12.972223",
     "edges_tracked": 15
   }
 }

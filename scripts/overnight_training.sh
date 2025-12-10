@@ -7,8 +7,9 @@
 # 1. BEFORE Evaluation: 50 full games vs random (baseline win rate)
 # 2. Modular Training:
 #    - Tactics training (each pattern type independently)
-#    - KRK endgame training
-#    - KPK endgame training
+#    - KRK endgame training (King + Rook vs King)
+#    - KPK endgame training (King + Pawn vs King)
+#    - KQK endgame training (King + Queen vs King)
 #    - Full game training with plasticity/consolidation
 # 3. AFTER Evaluation: 50 full games vs random (final win rate)
 # 4. Generates comprehensive comparison report
@@ -35,6 +36,7 @@ ENGINE="/usr/games/stockfish"
 # Training parameters (normal mode)
 KRK_GAMES=100
 KPK_GAMES=200
+KQK_GAMES=100          # King+Queen vs King endgame
 FULLGAME_GAMES=100
 FULLGAME_EVAL=50       # 50 games before/after for win rate
 TACTICS_LIMIT=200      # Positions per tactic type
@@ -63,6 +65,7 @@ while [[ $# -gt 0 ]]; do
             QUICK_MODE=true
             KRK_GAMES=50
             KPK_GAMES=20
+            KQK_GAMES=20
             FULLGAME_GAMES=20
             FULLGAME_EVAL=10
             TACTICS_LIMIT=50
@@ -146,11 +149,15 @@ run_full_game_eval() {
         --quiet \
         $weight_arg 2>&1 | tail -1)
     
-    # Parse JSON result
+    # Parse JSON result - use sed to extract values more robustly
     if echo "$result" | grep -q '"wins"'; then
-        wins=$(echo "$result" | grep -o '"wins":[0-9]*' | cut -d':' -f2)
-        losses=$(echo "$result" | grep -o '"losses":[0-9]*' | cut -d':' -f2)
-        draws=$(echo "$result" | grep -o '"draws":[0-9]*' | cut -d':' -f2)
+        wins=$(echo "$result" | sed -n 's/.*"wins": *\([0-9]*\).*/\1/p')
+        losses=$(echo "$result" | sed -n 's/.*"losses": *\([0-9]*\).*/\1/p')
+        draws=$(echo "$result" | sed -n 's/.*"draws": *\([0-9]*\).*/\1/p')
+        # Default to 0 if empty
+        wins=${wins:-0}
+        losses=${losses:-0}
+        draws=${draws:-0}
     fi
     
     echo "wins=$wins,losses=$losses,draws=$draws" > "$output_file"
@@ -329,7 +336,71 @@ uv run python demos/persistent/kpk_persistent_demo.py \
 save_checkpoint "KPK_TRAINING_COMPLETE"
 
 # =============================================================================
-log_header "🎓 PHASE 2D: Full Game Training"
+log_header "🎓 PHASE 2D: KQK Endgame Training"
+# =============================================================================
+
+log "Training KQK (Queen mate) with $KQK_GAMES games..."
+
+# First, create the KQK persistent demo script if it doesn't exist
+if [ ! -f "demos/persistent/kqk_persistent_demo.py" ]; then
+    log "  Creating KQK persistent demo..."
+    uv run python -c "
+from pathlib import Path
+import sys
+sys.path.insert(0, 'src')
+from recon_lite_chess.scripts.kqk import create_random_kqk_board
+# Just test that imports work
+print('KQK module OK')
+" 2>&1 || log "    Warning: KQK module import test failed"
+fi
+
+# Use full_game_train.py for KQK training with KQK-specific positions
+# We'll generate KQK FENs and train with them
+uv run python -c "
+import sys
+sys.path.insert(0, 'src')
+import json
+import random
+
+from pathlib import Path
+
+# Generate random KQK positions
+from recon_lite_chess.scripts.kqk import create_random_kqk_board
+
+n_games = $KQK_GAMES
+positions = []
+for _ in range(n_games):
+    fen = create_random_kqk_board(white_to_move=random.choice([True, False]))
+    positions.append(fen)
+
+# Save positions for training
+output_path = Path('$REPORTS_DIR/kqk_positions.txt')
+output_path.parent.mkdir(parents=True, exist_ok=True)
+output_path.write_text('\n'.join(positions))
+print(f'Generated {len(positions)} KQK positions')
+" 2>&1 | tee -a "$LOGS_DIR/overnight_$TIMESTAMP.log"
+
+# Train using full game trainer with KQK positions (uses the generated FEN file)
+uv run python demos/persistent/full_game_train.py \
+    --batch "$KQK_GAMES" \
+    --fen-file "$REPORTS_DIR/kqk_positions.txt" \
+    --plasticity \
+    --consolidate \
+    --consolidate-pack "$WEIGHTS_DIR/nightly/kqk_consol.json" \
+    --engine "$ENGINE" --depth "$ENDGAME_DEPTH" \
+    --max-moves 60 \
+    --quiet \
+    2>&1 | tee -a "$LOGS_DIR/overnight_$TIMESTAMP.log" || log "KQK training encountered issues"
+
+if [ -f "$WEIGHTS_DIR/nightly/kqk_consol.json" ]; then
+    cp "$WEIGHTS_DIR/nightly/kqk_consol.json" "$BACKUP_DIR/kqk_consol_after_KQK.json"
+    log "  Checkpoint saved: kqk_consol_after_KQK.json"
+fi
+
+save_checkpoint "KQK_TRAINING_COMPLETE"
+
+# =============================================================================
+log_header "🎓 PHASE 2E: Full Game Training"
 # =============================================================================
 
 log "Training full games with $FULLGAME_GAMES games..."
@@ -427,6 +498,11 @@ if [ -f "$WEIGHTS_DIR/nightly/kpk_consol.json" ]; then
     log "  Saved: kpk_consol_FINAL.json"
 fi
 
+if [ -f "$WEIGHTS_DIR/nightly/kqk_consol.json" ]; then
+    cp "$WEIGHTS_DIR/nightly/kqk_consol.json" "$BACKUP_DIR/kqk_consol_FINAL.json"
+    log "  Saved: kqk_consol_FINAL.json"
+fi
+
 # Update weights/latest/ with trained weights
 log "Updating latest weights (weights/latest/)..."
 if [ -f "$WEIGHTS_DIR/nightly/krk_consol.json" ]; then
@@ -436,6 +512,10 @@ fi
 if [ -f "$WEIGHTS_DIR/nightly/kpk_consol.json" ]; then
     cp "$WEIGHTS_DIR/nightly/kpk_consol.json" "$WEIGHTS_DIR/latest/kpk_consol.json"
     log "  Latest: kpk_consol.json"
+fi
+if [ -f "$WEIGHTS_DIR/nightly/kqk_consol.json" ]; then
+    cp "$WEIGHTS_DIR/nightly/kqk_consol.json" "$WEIGHTS_DIR/latest/kqk_consol.json"
+    log "  Latest: kqk_consol.json"
 fi
 if [ -f "$WEIGHTS_DIR/nightly/fullgame_consol.json" ]; then
     cp "$WEIGHTS_DIR/nightly/fullgame_consol.json" "$WEIGHTS_DIR/latest/fullgame_consol.json"

@@ -16,13 +16,13 @@
     "tactics_root->detect_hanging:SUB": 1.0,
     "detect_hanging->capture_hanging:POR": 1.0,
     "detect_hanging->protect_hanging:POR": 1.0,
-    "tactics_root->detect_skewer:SUB": 1.006685,
+    "tactics_root->detect_skewer:SUB": 1.013197,
     "detect_skewer->exploit_skewer:POR": 1.0,
     "tactics_root->detect_back_rank:SUB": 1.0,
     "detect_back_rank->exploit_back_rank:POR": 1.0,
     "tactics_root->detect_discovered:SUB": 1.0,
     "detect_discovered->exploit_discovered:POR": 1.0,
-    "tactics_root->exploit_skewer:SUB": 1.006685
+    "tactics_root->exploit_skewer:SUB": 1.013197
   },
   "w_init": {
     "tactics_root->detect_fork:SUB": 1.0,
@@ -41,9 +41,9 @@
     "tactics_root->exploit_skewer:SUB": 1.0
   },
   "consolidation_meta": {
-    "total_episodes": 2500,
+    "total_episodes": 2700,
     "episodes_since_apply": 0,
-    "last_apply_time": "2025-12-05T11:03:10.800263",
+    "last_apply_time": "2025-12-05T17:45:12.209647",
     "edges_tracked": 14
   }
 }

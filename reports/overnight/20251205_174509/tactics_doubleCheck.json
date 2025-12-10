@@ -1,0 +1,418 @@
+{
+  "stats": {
+    "total": 50,
+    "detected": 0,
+    "correct": 0,
+    "detection_rate": 0.0,
+    "accuracy": 0.0,
+    "by_tactic": {
+      "doubleCheck": {
+        "total": 50,
+        "detected": 0,
+        "correct": 0
+      }
+    }
+  },
+  "results": [
+    {
+      "fen": "1r3bk1/5p2/3P1qRP/r1n1p3/ppB5/P2Q1P2/1PP5/1K6 b - - 0 35",
+      "expected": "g8h7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "r3r3/2q1b1pk/p3P1Np/5Qp1/8/3p4/PPp2P2/2R1R1K1 b - - 1 30",
+      "expected": "d3d2",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "r1b2rk1/1p2bppp/pqnp4/3Np3/2B1PP2/PN6/1PP2nPP/R1BQ1R1K w - - 5 13",
+      "expected": "h1g1",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "r4rk1/pp3pbp/6p1/4p3/4P1bP/2NPBn2/PP2KP2/R4B1R w - - 1 16",
+      "expected": "f1h3",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "3r4/1p5p/2kb3R/p4pP1/Prp2P2/K3P1N1/1P6/3R4 w - - 0 34",
+      "expected": "g3f5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "r1b1k1nr/1pq2pbp/p3p1p1/2pB4/P3NP2/6P1/1PPPQ2P/R1B1K2R b KQkq - 0 12",
+      "expected": "e6d5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "r2q1r1k/p1p3pp/5p2/1bbN1P1Q/5R2/1B4B1/PPP3PP/7K b - - 2 21",
+      "expected": "b5e8",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "r4k1r/1pp2pp1/1b1p1P2/pP6/P2P1nq1/1Q3N1p/3N1P2/R1B1RB1K w - - 0 21",
+      "expected": "d2e4",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "r2qkb1r/pp3ppp/4pn2/1N3b2/Q1nP4/5N2/PP3PPP/R1B1R1K1 b kq - 1 11",
+      "expected": "c4b6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "r1bq1rk1/pp1nb1p1/2n1pp1p/3pP3/3P3N/3B4/PPQN1PPP/R1B1R1K1 b - - 1 12",
+      "expected": "f6e5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "r1b1r1k1/1pp1bppp/p1n2n2/3N4/8/P2P3P/BPP2PP1/R1B1K1NR w KQ - 1 12",
+      "expected": "d5c7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "r1b1k2r/1pb2pp1/2p3p1/p2pn1B1/3pP3/P2P3P/BPPN1PPK/R4R2 w kq - 0 18",
+      "expected": "e4d5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "r1b2r2/pp2q1p1/2p4k/2P1n1Pn/4N2P/4P3/PPQ2P2/2R1K2R b K - 0 19",
+      "expected": "h6h7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "r2qk1nr/p4p1b/2n1P1pp/1p1p4/2pP1NQ1/P1P3P1/1P1B1P1P/R3R2K b kq - 0 17",
+      "expected": "g8f6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "2r2rk1/3Q1ppp/pq2p3/1p2N3/1P3P2/P1P5/5nPP/RNB2R1K w - - 3 18",
+      "expected": "h1g1",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "r2qr1k1/ppp2p1p/5pPB/8/6Q1/2Pp4/P1B3PP/bN3K1R b - - 0 19",
+      "expected": "d3c2",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "3r1rk1/q3bppp/2p1p3/1p2B3/1n1P4/3B1P2/PPP2P1P/R5RK b - - 3 21",
+      "expected": "b4d3",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "r7/7p/p5pk/4ppqb/8/1P2N3/P2Q1P1P/5K2 b - - 0 38",
+      "expected": "e5e4",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "r3k2r/4ppbp/2Pp2p1/1B2n3/1p6/1P3P2/1BPQ2PP/q1KR3R w kq - 3 20",
+      "expected": "b2a1",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "R4bk1/5rP1/5pR1/8/2r5/p5P1/1p4K1/8 b - - 0 41",
+      "expected": "b2b1q",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "2r1r3/1p1q1pk1/p4n2/P2ppbN1/2n5/B1P1P2B/1P2Q3/R4KR1 b - - 1 31",
+      "expected": "c4a3",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "7r/6p1/3p4/4p1P1/R1Nnk3/2r5/5P1p/R6K b - - 1 45",
+      "expected": "d4f5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "rnbkr3/ppp1bppp/5n2/3p4/5B2/3P4/PPP1QPPP/RN2KB1R w KQ - 2 9",
+      "expected": "e2f3",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "r3k2r/ppp2pp1/3p1nqp/4p3/2B1P1b1/3PBN2/PPP1QP1K/R5R1 w kq - 10 17",
+      "expected": "h2g2",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "1r2r1k1/5p1p/4b1p1/2p5/1n1b1N2/1P3PPq/P2BK2P/1BRQ3R w - - 9 23",
+      "expected": "f4h3",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "r1bqr1k1/ppp2pb1/2n3Q1/3Np1p1/2B1P3/P7/1PPP1PP1/R1B1K2R b KQ - 0 12",
+      "expected": "f7g6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "r4rk1/1p2bNpp/pq3R2/3Q4/8/P2P4/1PP3PP/R1B4K b - - 0 18",
+      "expected": "e7f6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "4r2k/pp5p/1bp3pB/2n1p1N1/2b1P3/P4P2/1P3KPP/R6R w - - 3 21",
+      "expected": "a1d1",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "6r1/1P6/p3kprN/P2p4/3R4/2PnP1b1/7P/1R3NK1 w - - 0 40",
+      "expected": "h6g8",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "r5rk/1p3Q1P/2p2N2/4pqp1/p4b2/8/P4PK1/R6R b - - 0 33",
+      "expected": "g8g7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "r1bq1rk1/p1pp1ppp/8/2pN1P2/2B1P3/6R1/PP4PP/n1B3K1 b - - 1 15",
+      "expected": "f7f6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "r7/pp4k1/3p2p1/2pPp1q1/2P2n1Q/P5P1/1P3PK1/R4R2 w - - 3 30",
+      "expected": "g2f3",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "r5k1/2q3pp/p2pRr2/N2n1p2/1PB2Q2/8/2P3PP/R5K1 b - - 0 25",
+      "expected": "d5f4",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "4qrk1/pb2RNbp/1p2Q1p1/7n/1Pr2P2/2P5/P5PP/2B2RK1 b - - 2 25",
+      "expected": "e8e7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "r1bq1k1r/pppp2p1/1bn2P1p/6N1/3P4/5Q2/PP3PPP/RNB2RK1 b - - 0 12",
+      "expected": "h6g5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "5rk1/3p3p/2pP2B1/1r6/p2q1B1P/Pb4Q1/1P5K/2R5 b - - 0 42",
+      "expected": "d4f4",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "3Q4/6pk/4pp1p/pPq5/P1p5/6R1/5nPP/5R1K w - - 7 48",
+      "expected": "h1g1",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "2r2rk1/pR3R1p/3P2p1/2P2nN1/1Pq5/P7/3Q2PP/6K1 w - - 1 35",
+      "expected": "f7h7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "r3kb1r/1bq2ppp/p1np4/1p3P2/3BN3/1PP5/1P2Q1PP/R4RK1 b kq - 0 18",
+      "expected": "c6d4",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "5r2/pp3pkp/4qNp1/3p4/3Q4/rP5P/6P1/5R1K b - - 2 30",
+      "expected": "a3b3",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "r3k2r/ppp1bp1p/6p1/4PP1K/2B5/2N5/PP5P/R2R4 w kq - 0 19",
+      "expected": "f5g6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "1n1k3r/6Qp/pq2p3/1p6/8/PB6/1P3nPP/R4R1K w - - 1 20",
+      "expected": "h1g1",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "r1b2bk1/5p1p/3p1nP1/1q2n3/2p1P3/6Q1/PPP1N1PP/R4R1K b - - 0 21",
+      "expected": "f6h5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "r3q1rk/pppb1p1p/3bnp2/7Q/2P1R3/2NB4/PP3PPP/4R1K1 b - - 5 17",
+      "expected": "e8f8",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "r4rk1/1pp3p1/3b1p1p/p2p2nq/3P4/2PN1N1b/PP1Q1PP1/R3RB1K w - - 0 20",
+      "expected": "f3g5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "5Bk1/q4ppp/4p3/3p4/N7/P2n1P2/6PP/2Q4K w - - 0 30",
+      "expected": "c1c8",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "6k1/1b1nB1p1/pq1p3p/1p6/4P1n1/P1N5/1PPQ1rPP/R3R1K1 w - - 0 18",
+      "expected": "d2d6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "8/3r1k1p/p2p2p1/3NnP2/P2QP3/8/3K1Rq1/8 b - - 3 43",
+      "expected": "e5f3",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "5r1k/1Qp3pp/1p1p4/8/3qP3/P4P2/1PP2nPP/R4R1K w - - 3 21",
+      "expected": "h1g1",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    },
+    {
+      "fen": "8/1p4k1/3p4/1NpP1p1Q/PnP1pb2/6rP/1P5K/4RBr1 w - - 2 35",
+      "expected": "h5f5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "doubleCheck"
+    }
+  ]
+}

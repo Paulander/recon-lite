@@ -9,10 +9,10 @@
     "w_max": 3.0
   },
   "w_base": {
-    "p0_check->p0_move:POR": 0.113755,
+    "p0_check->p0_move:POR": 0.1,
     "p0_move->p0_wait:POR": 0.1,
-    "phase0_establish_cut->phase1_drive_to_edge:POR": 0.804587,
-    "p1_check->p1_move:POR": 0.804587
+    "phase0_establish_cut->phase1_drive_to_edge:POR": 0.805505,
+    "p1_check->p1_move:POR": 0.805505
   },
   "w_init": {
     "p0_check->p0_move:POR": 1.0,
@@ -21,9 +21,9 @@
     "p1_check->p1_move:POR": 1.0
   },
   "consolidation_meta": {
-    "total_episodes": 2320,
+    "total_episodes": 2370,
     "episodes_since_apply": 0,
-    "last_apply_time": "2025-12-05T14:55:13.990704",
+    "last_apply_time": "2025-12-05T17:48:09.956935",
     "edges_tracked": 4
   }
 }

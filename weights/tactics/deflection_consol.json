@@ -39,9 +39,9 @@
     "detect_discovered->exploit_discovered:POR": 1.0
   },
   "consolidation_meta": {
-    "total_episodes": 2000,
+    "total_episodes": 2200,
     "episodes_since_apply": 0,
-    "last_apply_time": "2025-12-05T11:03:12.972011",
+    "last_apply_time": "2025-12-05T17:45:12.850948",
     "edges_tracked": 13
   }
 }

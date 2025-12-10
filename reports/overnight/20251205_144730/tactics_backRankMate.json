@@ -1,0 +1,418 @@
+{
+  "stats": {
+    "total": 50,
+    "detected": 0,
+    "correct": 0,
+    "detection_rate": 0.0,
+    "accuracy": 0.0,
+    "by_tactic": {
+      "backRankMate": {
+        "total": 50,
+        "detected": 0,
+        "correct": 0
+      }
+    }
+  },
+  "results": [
+    {
+      "fen": "2r5/pR5p/5p1k/4p3/4r3/B4nPP/PP3P2/1K2R3 w - - 0 27",
+      "expected": "e1e4",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "3r2k1/1q3ppp/p2rp3/Qp1B4/7P/P4P2/1PP3P1/1K1R3R b - - 0 21",
+      "expected": "d6d5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "5QR1/5p1p/1b3qp1/p6k/P2P4/8/1P2rPPP/5RK1 w - - 7 32",
+      "expected": "g8h8",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "3r2k1/6pp/8/5Q2/2pP4/2Pq2P1/5RKP/8 b - - 2 35",
+      "expected": "d3c3",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "6k1/5qp1/2R4p/1pQ1B3/4pP2/8/4rPPP/r1R3K1 w - - 1 32",
+      "expected": "c6c7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "5r1k/3p2bp/p4pp1/qp1br3/4P3/1Q4B1/PP2RPPP/4R1K1 w - - 0 23",
+      "expected": "e4d5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "2r3k1/1p3ppp/p3p3/3pP2Q/2r2b2/P1Pq3P/1P2R2B/5R1K b - - 1 29",
+      "expected": "f4h2",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "5r1k/p1p3p1/7p/4p1r1/2P1Nq2/1P5Q/P5PP/3R2K1 w - - 6 32",
+      "expected": "e4g5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "2rr4/5pkp/2q1p1p1/1b6/p3P3/P3Q3/BP3PPP/2R3K1 w - - 6 28",
+      "expected": "c1c6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "2r4k/pb4pp/1p6/3pP3/3Pn3/2PBq1NQ/PP5P/5R1K b - - 4 23",
+      "expected": "e3d3",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "5rk1/2p3n1/3p3p/pPp5/P1q2bQ1/5R2/6PP/5R1K w - - 0 33",
+      "expected": "f3f4",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "5r1k/p1p2qpp/6b1/1P1nP3/8/1Q2P1R1/PB4PP/3R2K1 w - - 2 26",
+      "expected": "b3d5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "2r2nk1/pb4pp/1p2p3/3pP1q1/3P4/1P3QP1/P2N2B1/5RK1 b - - 1 23",
+      "expected": "b7a6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "3r2k1/5ppp/brn1p3/2Q5/8/Rp1q1NB1/3N1PPP/1R4K1 w - - 1 25",
+      "expected": "c5b6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "4r1k1/3Q2pp/p7/1p1pP3/3qp3/8/PP4PP/5R1K b - - 2 26",
+      "expected": "d4e5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "r4rk1/ppp3pp/1b1pp2n/4p3/1P1PP3/2P1R3/P5PP/RNBQ1q1K w - - 2 15",
+      "expected": "d1f1",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "rn1q1rk1/p1b3pp/2p4N/P2pp3/1pPP1QP1/7P/1P6/R4RK1 b - - 1 22",
+      "expected": "g8h8",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "3r2k1/bp1r1ppp/p2q4/8/4Q3/P6P/1P3PP1/3RRBK1 b - - 2 23",
+      "expected": "d6d1",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "3r2k1/2p2ppp/1p2p3/3P4/2P5/1P2Q2P/2q2PP1/4R1K1 b - - 0 24",
+      "expected": "e6d5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "5rbk/p5b1/1p3NQp/4p3/2PnP3/3P4/PP4PP/5RK1 w - - 1 26",
+      "expected": "f6g8",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "7k/1p3qp1/pbp4p/2P5/4r3/1Q3P2/P1P3PP/7K w - - 0 29",
+      "expected": "b3f7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "1q4k1/1P3ppp/2Q5/P7/8/4p1PP/4nP1K/8 b - - 0 41",
+      "expected": "e3f2",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "3Q1b1k/1p2Br1p/p5p1/2P2q2/1P2R3/P7/5PPP/R5K1 w - - 3 24",
+      "expected": "e7f8",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "3rr1k1/Qpp2pp1/2p4p/6b1/4q3/2P2N2/PP3PPP/R2R2K1 w - - 0 17",
+      "expected": "f3g5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "4r1k1/p2r1p2/1p1Pq1p1/2p3b1/1n5Q/5N2/1P1R1PPP/3R2K1 w - - 0 29",
+      "expected": "f3g5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "3r2k1/6pp/p4n2/1p6/4b3/1N3B2/PPp2PPP/2R3K1 w - - 4 25",
+      "expected": "f3e4",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "5rk1/1p4pp/p1n5/2P1P3/1B2Q3/P7/1q4PP/R5K1 w - - 3 30",
+      "expected": "a1b1",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "1r5r/k1p2p2/p2p4/2nQ2p1/7p/R3P3/1qP2PPP/R5KN w - - 4 27",
+      "expected": "d5f7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "r4r1k/p2R2p1/1p2Q2p/2b5/8/1P4B1/1q3PPP/3R2K1 w - - 1 26",
+      "expected": "g3e5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "4rrk1/pppbQp1p/5npB/3P4/8/2N3R1/P1q2PPP/1R4K1 w - - 2 20",
+      "expected": "e7f6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "5r1k/p5pp/1p6/2N5/4p2q/P7/1PQB1rPP/2R2RK1 w - - 1 28",
+      "expected": "f1f2",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "2r3k1/p3Qp1p/1p2p1p1/4P3/q4P2/6P1/PP5P/1K1R4 w - - 8 30",
+      "expected": "e7d7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "6k1/5p1p/4p1p1/8/2rq4/5Q2/5PPP/2R4K w - - 0 31",
+      "expected": "c1c4",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "3r1rk1/p1Qn1ppp/1p1R4/8/8/Pq2P3/5PPP/3R2K1 w - - 2 22",
+      "expected": "d6d7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "3r3k/6R1/p4P1p/2q1p2P/1pp5/5Q2/PPP5/2K5 w - - 1 33",
+      "expected": "f3f5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "3r2k1/2pq1ppp/R7/1p5R/4P3/1P2rP2/1bP3PP/3Q3K w - - 0 23",
+      "expected": "d1d7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "r1b2rk1/pp2R2p/2p3B1/5Q2/3q1B2/8/PP3PPP/RN4K1 w - - 5 24",
+      "expected": "f4e5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "4r2k/1p4pp/1p3b2/1r6/3P1P2/5K2/6PP/2R1R3 b - - 7 33",
+      "expected": "e8e1",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "2r4k/p3Qpn1/4pNp1/1p4qp/8/1P2N2P/P3PPB1/6K1 w - - 2 34",
+      "expected": "e7f7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "7r/5k1p/p4n2/6R1/3r4/P6Q/1qB2PPP/R5K1 w - - 1 36",
+      "expected": "a1b1",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "r3r1k1/p1p2ppp/8/3p3q/3PnP2/2PNQbR1/PP5P/4R1K1 b - - 7 24",
+      "expected": "e4g3",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "3R3k/6pp/p1q3r1/4rp2/1Q2bR2/P3P3/6PP/6K1 b - - 1 34",
+      "expected": "e5e8",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "3r2k1/5ppp/Qn3q2/p7/8/5N2/5PPP/4R1K1 b - - 1 27",
+      "expected": "d8a8",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "7k/2p3pp/4nq2/p2Rp3/P3P1Q1/2P2P1P/6PK/1r6 b - - 2 32",
+      "expected": "e6f4",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "r5k1/Prq2ppp/8/3QP3/3Pp3/4P3/3B2PP/R5K1 b - - 6 29",
+      "expected": "b7a7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "5rk1/1Q1R1pp1/pb2p2p/1q6/8/2P5/P5PP/5R1K w - - 2 29",
+      "expected": "d7f7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "5rk1/ppR2Rpp/3p4/3P4/8/6PB/Pq5P/7K b - - 0 28",
+      "expected": "f8f7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "4r3/2r1pk1p/3pR1pP/2qP1pP1/pp3P2/8/PPPQ4/1K1R4 w - - 0 31",
+      "expected": "d2d4",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "r4k2/ppp2ppp/2n5/8/3q4/3N4/PP2Q1PP/n2KR3 b - - 1 21",
+      "expected": "c6b4",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    },
+    {
+      "fen": "2r3k1/3r4/2q3pp/1p2N3/p6B/3Q3P/PP3PP1/1K3R2 w - - 1 28",
+      "expected": "d3d7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "backRankMate"
+    }
+  ]
+}

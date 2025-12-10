@@ -336,7 +336,7 @@ def _detect_back_rank_weakness_heuristic(board: chess.Board) -> Dict[str, Any]:
         return {"has_weakness": False}
     
     # Back rank depends on color
-    back_rank = 7 if enemy == chess.WHITE else 0
+    back_rank = 0 if enemy == chess.WHITE else 7
     king_rank = chess.square_rank(enemy_king)
     
     if king_rank != back_rank:
@@ -346,8 +346,8 @@ def _detect_back_rank_weakness_heuristic(board: chess.Board) -> Dict[str, Any]:
     king_file = chess.square_file(enemy_king)
     escape_squares = []
     
-    # Check squares king could move to (one rank forward)
-    escape_rank = back_rank - 1 if enemy == chess.WHITE else back_rank + 1
+    # Squares in front of the king (toward the center)
+    escape_rank = back_rank + 1 if enemy == chess.WHITE else back_rank - 1
     
     for df in [-1, 0, 1]:
         escape_file = king_file + df
@@ -379,21 +379,36 @@ def _detect_back_rank_weakness_heuristic(board: chess.Board) -> Dict[str, Any]:
             if not piece:
                 continue
             
-            # Rook or Queen moving to back rank
-            if piece.piece_type in (chess.ROOK, chess.QUEEN):
-                to_rank = chess.square_rank(move.to_square)
-                if to_rank == back_rank:
-                    # Check if it would give check
-                    board.push(move)
-                    gives_check = board.is_check()
-                    is_mate = board.is_checkmate()
-                    board.pop()
+            # Check if this move gives check on the back rank
+            board.push(move)
+            gives_check = board.is_check()
+            is_mate = board.is_checkmate()
+            board.pop()
+            
+            if gives_check:
+                # Check if the check is on the back rank
+                # This could be:
+                # 1. Rook/Queen moving TO the back rank
+                # 2. Rook/Queen moving ALONG the back rank
+                # 3. Rook/Queen moving FROM the back rank (clearing way)
+                # 4. Any piece giving check that exploits back rank weakness
+                
+                if piece.piece_type in (chess.ROOK, chess.QUEEN):
+                    from_rank = chess.square_rank(move.from_square)
+                    to_rank = chess.square_rank(move.to_square)
                     
-                    if gives_check:
+                    # Moving to back rank, along back rank, or from back rank
+                    if to_rank == back_rank or from_rank == back_rank:
                         attacking_moves.append({
                             "move": move.uci(),
                             "is_mate": is_mate,
                         })
+                elif is_mate:
+                    # Any move that delivers mate (could be discovered check, etc.)
+                    attacking_moves.append({
+                        "move": move.uci(),
+                        "is_mate": is_mate,
+                    })
     
     return {
         "has_weakness": has_weakness,

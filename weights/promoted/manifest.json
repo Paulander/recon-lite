@@ -1,0 +1,63 @@
+{
+  "version": "1.0",
+  "patterns": {
+    "pattern_0001": {
+      "source_cell": "stem_0022",
+      "consistency": 0.6365048138604568,
+      "sample_count": 123,
+      "promoted_at": "2025-12-05T14:55:31.377651",
+      "file": "pattern_0001.json"
+    },
+    "pattern_0002": {
+      "source_cell": "stem_0023",
+      "consistency": 0.6365048138604568,
+      "sample_count": 114,
+      "promoted_at": "2025-12-05T14:55:31.378000",
+      "file": "pattern_0002.json"
+    },
+    "pattern_0003": {
+      "source_cell": "stem_0024",
+      "consistency": 0.6365048138604568,
+      "sample_count": 99,
+      "promoted_at": "2025-12-05T14:55:31.378250",
+      "file": "pattern_0003.json"
+    },
+    "pattern_0004": {
+      "source_cell": "stem_0032",
+      "consistency": 0.6006772919567118,
+      "sample_count": 102,
+      "promoted_at": "2025-12-05T14:55:31.378473",
+      "file": "pattern_0004.json"
+    },
+    "pattern_0005": {
+      "source_cell": "stem_0039",
+      "consistency": 0.6148894928709654,
+      "sample_count": 104,
+      "promoted_at": "2025-12-05T14:55:31.378766",
+      "file": "pattern_0005.json"
+    },
+    "pattern_0006": {
+      "source_cell": "stem_0040",
+      "consistency": 0.6148894928709654,
+      "sample_count": 101,
+      "promoted_at": "2025-12-05T14:55:31.378946",
+      "file": "pattern_0006.json"
+    },
+    "pattern_0007": {
+      "source_cell": "stem_0084",
+      "consistency": 0.6294533301317373,
+      "sample_count": 101,
+      "promoted_at": "2025-12-05T14:55:31.379115",
+      "file": "pattern_0007.json"
+    },
+    "pattern_0008": {
+      "source_cell": "stem_0085",
+      "consistency": 0.6294533301317373,
+      "sample_count": 100,
+      "promoted_at": "2025-12-05T14:55:31.379305",
+      "file": "pattern_0008.json"
+    }
+  },
+  "promoted_count": 8,
+  "last_promotion": "2025-12-05T14:55:31.379305"
+}

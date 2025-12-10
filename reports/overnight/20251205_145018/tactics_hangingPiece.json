@@ -1,0 +1,434 @@
+{
+  "stats": {
+    "total": 50,
+    "detected": 13,
+    "correct": 3,
+    "detection_rate": 0.26,
+    "accuracy": 0.06,
+    "by_tactic": {
+      "hangingPiece": {
+        "total": 50,
+        "detected": 13,
+        "correct": 3
+      }
+    }
+  },
+  "results": [
+    {
+      "fen": "2r3k1/p1q2pp1/Q3p2p/b1Np4/2nP1P2/4P1P1/5K1P/2B1N3 b - - 3 33",
+      "expected": "c7b6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "3r1rk1/1pR3pp/p2bp3/1q2Np2/3P4/1P5Q/5PPP/4R1K1 w - - 2 27",
+      "expected": "c7g7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "r2qk2r/ppp2ppp/2n1b3/1B1N4/3b4/3P3P/P1P1QPP1/1R2K1NR w Kkq - 4 13",
+      "expected": "g1f3",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "r3k2r/p1bN2pp/2p1pp2/3p3b/3P1q2/2N4P/PPPQ1PP1/R3R1K1 w kq - 0 16",
+      "expected": "e1e6",
+      "detected": true,
+      "correct": true,
+      "proposed": [
+        "e1e6"
+      ],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "r1bk3r/ppp1n2p/3pNQ2/8/2BpP2p/8/PPPq2PP/R5K1 b - - 2 21",
+      "expected": "d8d7",
+      "detected": true,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "r2qk2r/pp1n1ppp/4pn2/3p2B1/1b1P4/2N1QN1P/PPb1BPP1/R4RK1 w kq - 0 12",
+      "expected": "c3d5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "2k4r/pp6/3p4/2pBb3/4P2B/2P2bp1/PP1R4/R5K1 w - - 1 32",
+      "expected": "d2g2",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "2r3k1/1p1q1ppp/4p3/Q7/3P4/P1B5/1Pr2PPP/R5K1 b - - 0 22",
+      "expected": "d7d4",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "r2qk2r/2pn1p1n/pp1p2bp/3Pp1bB/PPP1P3/2N1B3/3N2PP/R2Q1RK1 w kq - 3 17",
+      "expected": "h5g6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "rnbqk1nr/ppp1b1pp/3p4/4p3/2B1P3/5N2/PPPP2PP/RNBQK2R w KQkq - 0 6",
+      "expected": "f3e5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "8/6k1/1n6/1K2p1p1/P5P1/1B3r2/1PP5/8 b - - 1 36",
+      "expected": "b6d5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "3r4/ppp1Q3/1b2kP2/8/4qp2/P1Pr4/1P3P2/1K2N3 b - - 5 31",
+      "expected": "e6d5",
+      "detected": true,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "r4rk1/pp3ppp/4p3/3pB1qB/Q1p5/2PbP3/PP1N1P1P/R3K2R w KQ - 0 15",
+      "expected": "e5g7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "r2qk1nr/pb1p3p/1pn2pp1/2b1p3/2BNPP2/4B3/PPP3PP/RN1Q1RK1 w kq - 0 11",
+      "expected": "d4c6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "r4r2/ppk4p/n2N2p1/2p5/4Pb2/2P4P/PP2B2R/1K1R4 w - - 0 25",
+      "expected": "e4e5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "r3r1k1/1p3p1p/p1pq2p1/3pNn2/3P2b1/1PPQ4/P1B2PPP/R3R1K1 b - - 3 27",
+      "expected": "f5g7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "r4rk1/p3b1pp/1qB1bp2/1p2p3/2p2P2/3PR1P1/PPPN3P/R1BQ2K1 w - - 1 16",
+      "expected": "c6a8",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "r1b1r1k1/ppQ2pqp/8/8/4BnPP/5P2/PPP5/2KR3R b - - 0 17",
+      "expected": "c8e6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "r3r1k1/pp3R2/3p1B1P/2pP1b2/1qn5/2N5/PP2QPP1/2K4R w - - 1 24",
+      "expected": "f7f8",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "3r1rk1/1b1n1qn1/pp1Q2p1/2p3Pp/P1P1Pp1N/2P2B1P/5B1K/R4R2 b - - 1 25",
+      "expected": "d7e5",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "f7c4"
+      ],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "1n6/1P2k3/p2Rbpp1/2P1p2p/P1P1P2P/4BPP1/6K1/8 w - - 2 41",
+      "expected": "d6a6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "r1bq1rk1/pp1p1ppp/2n1pn2/4P3/2B5/2B5/PPP2PPP/R2QK1NR b KQ - 0 9",
+      "expected": "c6e5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "8/3k2P1/3Pb3/p1q2p2/1p6/1P4r1/P1P1Q3/1K1R4 w - - 1 39",
+      "expected": "e2e6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "r1r3k1/1QP1qpp1/7p/R3P3/6PP/6K1/p7/B7 b - - 4 42",
+      "expected": "a8a5",
+      "detected": true,
+      "correct": true,
+      "proposed": [
+        "a8a5"
+      ],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "k1r4r/2Qn1p1p/1p1Bpnp1/q7/2BP4/2P5/1PK2P1P/3R2R1 w - - 5 29",
+      "expected": "c7c8",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "4r3/4bpkp/3p2pN/4P1P1/1p2qn1P/5N2/1P1Q1P2/3R2K1 w - - 0 30",
+      "expected": "e5d6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "2kr3r/pp3p2/2p2n2/3qNQ1p/3P2p1/P7/1P3PPP/3R1RK1 b - - 1 21",
+      "expected": "c8b8",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "r2r2k1/5pp1/p3qb1p/1pp5/8/P1N1PQ2/1P1R1PPP/3R2K1 b - - 5 24",
+      "expected": "d8d2",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "r6k/6p1/p6r/1p1Qp1q1/7n/2P1NP1b/PP3R1P/3RN2K b - - 0 33",
+      "expected": "g5e3",
+      "detected": true,
+      "correct": true,
+      "proposed": [
+        "g5e3"
+      ],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "1N4k1/7p/PR1n2r1/1b6/1P3R2/3p3r/1P4P1/4N1K1 w - - 0 45",
+      "expected": "e1d3",
+      "detected": true,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "r2qr1k1/pp3ppp/2pb1nb1/3p4/3Pn1PN/2PBB2P/PPQN1P2/2KR3R b - - 2 14",
+      "expected": "e4f2",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "3q1rk1/5pb1/1p3np1/3b3p/3B3P/1B1PP3/2P1QP2/1N2K1R1 w - - 1 21",
+      "expected": "g1g6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "2r3k1/1b1nqpp1/3Qp2p/1Pp5/2N5/4P3/r3BPPP/1RR3K1 b - - 10 25",
+      "expected": "e7h4",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "a2e2"
+      ],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "3q1r1k/6pp/4Qn2/8/3P1R2/5P2/r6P/2R1B2K b - - 0 32",
+      "expected": "a2h2",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "r1bqkbnr/pp1p1pp1/2n4p/4p3/2BNP3/8/PPP2PPP/RNBQK2R w KQkq - 0 6",
+      "expected": "c4f7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "r7/bp6/4kNQ1/1b2Pp1p/p2R1P1N/P1q2K2/6PP/7R w - - 5 31",
+      "expected": "f3f2",
+      "detected": true,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "7k/6pp/2R1p3/p4p2/Q2rq3/6P1/3K1P2/3R4 w - - 0 47",
+      "expected": "a4d4",
+      "detected": true,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "1rr5/R3p2p/3p2p1/4k3/3RP3/1pP1K3/1P4PP/8 b - - 6 35",
+      "expected": "c8c3",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "3k3r/1Qp1bpp1/4b2p/3pN3/3q4/rP1B4/2P2PPP/1K1R2R1 w - - 0 28",
+      "expected": "e5f7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "r5k1/pp5p/2pN2p1/2P1n3/5Pq1/1P5b/P4RB1/Q5K1 b - - 2 24",
+      "expected": "a8f8",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "2r2r1k/3qbpp1/p6p/1p1ppPPn/3p3N/PB1P3P/1PPQ1P2/2KR3R w - - 1 20",
+      "expected": "g5h6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "r2qnr1k/pppb2pp/2n2b1B/3NN3/8/P5QP/1PP1B1P1/R4RK1 b - - 0 18",
+      "expected": "f6e5",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "g7h6"
+      ],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "8/5r1k/p1qQp1pp/2p5/2P3P1/5nB1/1P3P1P/2R2K2 b - - 12 32",
+      "expected": "f3h2",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "r7/3n2pp/2pkp3/1p2p3/pP2P1P1/1P2KP2/2P1N2P/R7 b - - 0 24",
+      "expected": "a4b3",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "2r2r1k/1ppb2b1/p3q1Bp/2PR4/8/P1N1P3/1PQ2PP1/2K4R w - - 1 21",
+      "expected": "g6f5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "r1b4k/2qnNpbp/pp3np1/3p2B1/B1pP4/2P5/PP1N1PPP/R3Q1K1 w - - 0 17",
+      "expected": "e7d5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "r1b2rk1/p1p2ppp/2pp4/2b3B1/3Nq3/2P4P/PP3PP1/R2Q1RK1 b - - 0 12",
+      "expected": "c8h3",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "2r2rk1/5pp1/p5np/b2p4/3P4/Pq1BPN2/1PR2QPP/3R2K1 w - - 6 26",
+      "expected": "c2c8",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "d3a6"
+      ],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "rk1q3r/4nQpp/p2pB3/1p6/4P3/5P1P/PPP2P2/2KR3R w - - 0 20",
+      "expected": "d1d6",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "f7g7"
+      ],
+      "tactic": "hangingPiece"
+    },
+    {
+      "fen": "r1q1kb1r/5pp1/3p3p/3Ppb2/2N4P/1nP2N2/1P2QPP1/R1B1K2R w KQkq - 3 20",
+      "expected": "c4b6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "hangingPiece"
+    }
+  ]
+}

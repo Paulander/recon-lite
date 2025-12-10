@@ -1,0 +1,469 @@
+{
+  "stats": {
+    "total": 50,
+    "detected": 13,
+    "correct": 2,
+    "detection_rate": 0.26,
+    "accuracy": 0.04,
+    "by_tactic": {
+      "trappedPiece": {
+        "total": 50,
+        "detected": 13,
+        "correct": 2
+      }
+    }
+  },
+  "results": [
+    {
+      "fen": "4r3/5pk1/1p3np1/3p3p/2qQ4/P4N1P/1P3RP1/7K w - - 6 34",
+      "expected": "d4b6",
+      "detected": true,
+      "correct": true,
+      "proposed": [
+        "d4f6",
+        "d4b6",
+        "d4e5",
+        "d4h4",
+        "d4f4",
+        "d4c3"
+      ],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "r3kb1r/pppqpn1p/5p2/3p1bpQ/2PP4/4P1B1/PP3PPP/RN2KB1R w KQkq - 1 11",
+      "expected": "b1c3",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "h5h7",
+        "h5f7",
+        "h5g6"
+      ],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "r1b2rk1/2q2p1p/1p2pbp1/pP6/2P1Q3/P2B1N2/5PPP/3R1RK1 w - - 0 20",
+      "expected": "e4a8",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "r4rk1/pp2bppp/2ppnn2/8/N1P1P3/q1P4P/P2N2PB/R2Q1R1K b - - 0 16",
+      "expected": "a8d8",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "5rk1/4bppp/4b3/1p1pPpPP/2pP4/2P5/rqNQKP2/2RRN3 b - - 5 23",
+      "expected": "e7a3",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "b2c2",
+        "b2c1"
+      ],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "r1bk1bnr/pppp1Bpp/8/3Nq3/3nP3/3P4/PPP2PPP/R1BQK2R b KQ - 0 8",
+      "expected": "g8f6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "r2qr1k1/ppp2ppp/2nbp3/5b2/3P4/2P1BN2/P1PQBPPP/3R1RK1 b - - 7 11",
+      "expected": "d8f6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "r1b2bnr/ppQp3p/2n2q1k/6pP/2B1P3/3P4/PPP2PP1/RNB1K2R w KQ - 1 11",
+      "expected": "c2c3",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "c7d8",
+        "c7c8",
+        "c7b8",
+        "c7d7",
+        "c7b7",
+        "c7c6"
+      ],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "r4r1k/pp4pp/1qpp1b2/4p3/N3P3/3Q4/PPP2PPP/3RR1K1 b - - 3 16",
+      "expected": "b6d4",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "2r3k1/1p2n1p1/p2b2r1/3q1pPQ/3Pp1P1/1P2B2R/P6P/5RK1 b - - 0 22",
+      "expected": "c8f8",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "rn2kbnr/pp2pp1p/1q2b1p1/3pP3/N2P4/5N2/PP3PPP/R1BQKB1R b KQkq - 3 8",
+      "expected": "b6b4",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "rn1q1r1k/pb2n1pp/1p2Qp2/2pp2B1/1bPP4/2NB1N2/PP3PPP/R4RK1 w - - 2 12",
+      "expected": "g5e3",
+      "detected": true,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "3r3r/Qbk5/1p1p3p/1P1qpp2/6p1/2P2NP1/3N1PP1/R4RK1 w - - 1 25",
+      "expected": "a1a6",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "a7b8",
+        "a7a8",
+        "a7b7",
+        "a7b6",
+        "a7a6"
+      ],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "r3k2r/pppqbppp/2n1b3/3p2PQ/1P1Pp2P/2P1P3/P4PB1/RNB1K1NR w KQkq - 1 11",
+      "expected": "a2a4",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "r2qb2r/6k1/p2p1p2/1ppN1Pp1/4P1Q1/2PP3P/P5P1/3R1RK1 w - - 6 29",
+      "expected": "g2g3",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "3r2k1/p3qpp1/1pQ2n1p/3r4/3Bp3/P1P3P1/1P2bPBP/R4RK1 w - - 5 24",
+      "expected": "f1e1",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "8/ppp1kpp1/3b3p/3pn2b/3P1B2/2P4P/PPBN1PP1/5K2 b - - 0 23",
+      "expected": "e5g6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "1Q2n1kr/r4ppp/q7/bbB5/4p3/2P1P3/P3NPPP/RN2K2R w KQ - 8 21",
+      "expected": "c5a7",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "b8e8",
+        "b8d8",
+        "b8c8",
+        "b8a8",
+        "b8e5",
+        "b8b5"
+      ],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "r3kb1r/1p3pp1/p1p1b3/4p1Bp/4P3/2NQ1PP1/PPP2qBP/R6K b kq - 1 16",
+      "expected": "f7f6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "r1b2rk1/pp3ppp/5n2/1N1p4/B7/q6P/P4PP1/2RQR1K1 b - - 3 18",
+      "expected": "a3a2",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "r1bqr3/ppppk1pp/1b3n2/nP2p1NP/4P3/2PP4/P4PP1/RNBQK2R b KQ - 0 11",
+      "expected": "d7d5",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "a5b3"
+      ],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "4rr1k/pp4pp/2p1Bn2/2b1pP1q/8/2NP1R2/PPPB2QP/4K3 b - - 6 20",
+      "expected": "f6d5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "2kr1bnr/pppb2pp/2n1p3/3pP3/3P1B2/2P3P1/PP1N1KBq/R2Q2N1 b - - 2 12",
+      "expected": "f8e7",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "h2h3",
+        "h2g3",
+        "h2g2",
+        "h2h1",
+        "h2g1"
+      ],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "rn1q1r1k/pbN5/1pp1Qp1p/2Pp2p1/3Pn3/P7/1P2PPPP/R3KBNR w KQ - 1 17",
+      "expected": "c7a8",
+      "detected": true,
+      "correct": true,
+      "proposed": [
+        "c7a8"
+      ],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "r4rk1/ppp2ppp/3q4/1Q1p3b/2nP4/2P1PN1P/P3BPP1/R4RK1 w - - 5 17",
+      "expected": "b5b7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "6k1/3bnppp/p4n2/1pp5/8/1BNP1N2/PPP2PPP/6K1 w - - 0 19",
+      "expected": "c3e4",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "5r1k/2b1Npp1/1p2p2p/1qn5/3Q4/P7/3R1PPP/3R2K1 w - - 0 26",
+      "expected": "d2b2",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "3r2k1/p3pp1p/2Q3pb/q2rP3/N4P2/P5P1/7P/2R2R1K b - - 0 24",
+      "expected": "d5d2",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "r4rk1/1pp2ppp/p7/4p3/1PP1N3/P4P1b/5P1P/R2R3K b - - 0 22",
+      "expected": "f7f5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "r2qk2r/1pp3p1/p1nbbn1p/3p1p2/3P4/PQN1PN1P/1PPB1P2/R3KB1R w KQkq - 0 13",
+      "expected": "b3b7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "r1bq1r2/ppbn2k1/4p1p1/3pP1p1/3P1p2/2PB1N1Q/PP5P/R1B2RK1 w - - 0 19",
+      "expected": "h3e6",
+      "detected": true,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "8/3N2p1/7p/3p4/p1p4P/2P3K1/Bk4P1/8 w - - 0 41",
+      "expected": "d7c5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "r2qk2r/2p1n1pp/1bP2p2/pP2p3/Q2pP3/B1Pb4/P2N1PPP/RN2R1K1 w kq - 0 18",
+      "expected": "c3d4",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "r1b1kb1r/pp2pppp/2n2n2/3P4/2B5/q4N2/P2B1PPP/1R1QK2R b Kkq - 2 11",
+      "expected": "c8g4",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "r2qk1nr/p2b1ppp/2pbp3/2ppN3/5P2/1P2P2P/PBPP2P1/RN1QK2R b KQkq - 2 9",
+      "expected": "f7f6",
+      "detected": true,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "3r1rk1/p4p1p/3pnQp1/4p1P1/1P5P/2N1P3/2PK1Pq1/1R5R b - - 0 22",
+      "expected": "d6d5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "3r1r2/p3p1kb/1p3p2/3B1Pp1/3Rp1Pp/1QP5/PP4RK/4q3 b - - 5 31",
+      "expected": "e4e3",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "rn3rk1/pp3ppp/2p1p1b1/8/2Pq4/P4N1P/2P1BPP1/R1Q2RK1 b - - 3 18",
+      "expected": "d4e4",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "r2qk2r/1p2bp1p/p1n1b3/3pPpp1/3P4/PQN2N2/1P3PPP/R1B2RK1 w kq - 0 13",
+      "expected": "b3b7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "r3kbnr/ppp1p1pp/2n2p2/8/4QB2/1N6/PqP2PPP/RN2K2R b KQkq - 1 9",
+      "expected": "e7e5",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "b2e5",
+        "b2d4",
+        "b2c3",
+        "b2a2",
+        "b2b1",
+        "b2a1"
+      ],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "rnbq1rk1/pppp1ppp/4p3/8/3P4/3B1N2/P1PB1PPP/Q4RK1 b - - 2 9",
+      "expected": "d8f6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "2kr3r/1pp2ppp/pbp1b3/8/4N2q/3PB2P/PPP2PP1/R2Q1R1K b - - 1 16",
+      "expected": "e6d5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "2r2r1k/pbq1Q1pp/1p1p1n2/8/3P1B2/2P5/PP1n1PPP/1BR1R1K1 w - - 0 18",
+      "expected": "f4d2",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "5k1r/pN3p2/2n1pQp1/3p2Pq/3P4/2P1K2r/PP3P2/R4R2 w - - 7 29",
+      "expected": "e3d2",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "4r1k1/1p2rpb1/p2p2p1/2pPP2p/2q5/2N2Q1P/PP2R1P1/5R1K b - - 0 27",
+      "expected": "d6e5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "r2qr2k/p5pp/1p3p2/3PnQ2/bp2P3/7P/P2BBPP1/R4RK1 w - - 0 23",
+      "expected": "d2b4",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "8/2kb4/8/R1pB4/2P2P2/p5P1/r5P1/6K1 w - - 0 45",
+      "expected": "a5c5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "r1b2rk1/pp3pp1/1qn1pn1p/1N1p4/3P1B2/8/PPP1BPPP/R2Q1RK1 b - - 3 12",
+      "expected": "a7a6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "rbb2rk1/1p3ppp/pqn2n2/3p4/3Pp3/P1N1B2P/1PP1BPPN/R2QK2R b KQ - 3 13",
+      "expected": "b6b2",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    },
+    {
+      "fen": "5rk1/1bq1bppp/2p1pn2/4N3/3P4/3B3P/1BP2PP1/QR4K1 w - - 4 21",
+      "expected": "a1a7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "trappedPiece"
+    }
+  ]
+}
