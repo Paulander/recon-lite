@@ -11,8 +11,8 @@
   "w_base": {
     "p0_check->p0_move:POR": 0.1,
     "p0_move->p0_wait:POR": 0.1,
-    "phase0_establish_cut->phase1_drive_to_edge:POR": 0.784524,
-    "p1_check->p1_move:POR": 0.784524
+    "phase0_establish_cut->phase1_drive_to_edge:POR": 0.752366,
+    "p1_check->p1_move:POR": 0.752366
   },
   "w_init": {
     "p0_check->p0_move:POR": 1.0,
@@ -21,9 +21,9 @@
     "p1_check->p1_move:POR": 1.0
   },
   "consolidation_meta": {
-    "total_episodes": 3120,
+    "total_episodes": 3620,
     "episodes_since_apply": 0,
-    "last_apply_time": "2025-12-11T21:18:23.208926",
+    "last_apply_time": "2025-12-11T21:54:00.891387",
     "edges_tracked": 4
   }
 }
