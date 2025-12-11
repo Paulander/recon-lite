@@ -846,5 +846,9 @@ def create_default_hub() -> FeatureHub:
         description="Enemy pieces stuck on one color complex",
     ))
     
+    # Register Wave 1 sensors (20 new sensors for sensor flooding)
+    from .sensors_v2 import register_v2_sensors
+    register_v2_sensors(hub)
+    
     return hub
 

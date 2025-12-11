@@ -95,6 +95,10 @@ from recon_lite.plasticity.consolidate import (
     ConsolidationConfig,
     ConsolidationEngine,
 )
+from recon_lite.nodes.stem_cell import (
+    StemCellManager,
+    StemCellConfig,
+)
 from recon_lite_chess.eval.heuristic import (
     eval_position,
     compute_reward_tick,
@@ -626,6 +630,11 @@ def _decision_cycle(engine: ReConEngine,
                 env["m3_modulators"] = modulators.to_dict()
                 if deltas:
                     env["m3_weight_deltas"] = deltas
+                
+                # M8: Feed stem cells with significant rewards
+                if stem_cell_manager is not None and reward_tick is not None:
+                    if abs(reward_tick) > 0.2:  # Only feed significant rewards
+                        stem_cell_manager.tick(board, reward_tick, ticks)
 
             current_eval = new_eval
 
@@ -905,7 +914,9 @@ def play_persistent_game(initial_fen: str | None = None,
                          bandit_priors_path: Optional[Path] = None,
                          consolidation_eta: float = DEFAULT_CONSOLIDATE_ETA,
                          consolidation_min_episodes: int = DEFAULT_CONSOLIDATE_MIN_EPISODES,
-                         consolidation_engine: Optional[ConsolidationEngine] = None) -> dict:
+                         consolidation_engine: Optional[ConsolidationEngine] = None,
+                         # M8 stem cell parameters
+                         stem_cell_manager: Optional["StemCellManager"] = None) -> dict:
     if split_logs:
         viz_logger = RunLogger()
         debug_logger = RunLogger()
@@ -1434,7 +1445,7 @@ def preview_decision(board: chess.Board,
     return {"decision": decision, "proposals": proposals, "ticks": ticks}
 
 
-def run_batch(n_games: int = 10, max_plies: int = 200, trace_db: Optional["TraceDB"] = None, pack_paths: Optional[list] = None, **play_kwargs) -> dict:
+def run_batch(n_games: int = 10, max_plies: int = 200, trace_db: Optional["TraceDB"] = None, pack_paths: Optional[list] = None, stem_cell_enabled: bool = False, **play_kwargs) -> dict:
     """Run N games in batch mode with memory management."""
     stats = {
         "games": [],
@@ -1444,6 +1455,20 @@ def run_batch(n_games: int = 10, max_plies: int = 200, trace_db: Optional["Trace
         "total_mate_plies": 0,
         "avg_mate_length": None,
     }
+    
+    # M8: Create shared stem cell manager if enabled
+    stem_manager = None
+    if stem_cell_enabled:
+        stem_manager = StemCellManager(
+            max_cells=20,
+            spawn_rate=0.05,  # Conservative spawn rate
+            config=StemCellConfig(
+                min_samples=50,
+                reward_threshold=0.2,
+                specialization_threshold=0.6,
+            ),
+        )
+    
     for i in range(n_games):
         res = play_persistent_game(
             initial_fen=None, 
@@ -1451,6 +1476,7 @@ def run_batch(n_games: int = 10, max_plies: int = 200, trace_db: Optional["Trace
             trace_db=trace_db,
             trace_episode_id=f"krk-batch-{i}",
             pack_paths=pack_paths,
+            stem_cell_manager=stem_manager,
             **play_kwargs
         )
         stats["games"].append(res)
@@ -1467,6 +1493,17 @@ def run_batch(n_games: int = 10, max_plies: int = 200, trace_db: Optional["Trace
         
     if stats["mates"]:
         stats["avg_mate_length"] = stats["total_mate_plies"]/stats["mates"]
+    
+    # M8: Report stem cell stats
+    if stem_manager:
+        stem_stats = {
+            "total_cells": len(stem_manager.cells),
+            "candidates": len(stem_manager.get_specialization_candidates()),
+            "total_samples": sum(len(c.samples) for c in stem_manager.cells.values()),
+        }
+        stats["stem_cells"] = stem_stats
+        print(f"Stem cells: {stem_stats}")
+    
     print(stats)
     return stats
 
@@ -1510,6 +1547,8 @@ def main():
     parser.add_argument("--bandit-priors", type=Path, default=None, help="Path to load/save bandit priors")
     parser.add_argument("--consolidate-eta", type=float, default=DEFAULT_CONSOLIDATE_ETA, help="Consolidation learning rate")
     parser.add_argument("--consolidate-min-episodes", type=int, default=DEFAULT_CONSOLIDATE_MIN_EPISODES, help="Minimum episodes before consolidation")
+    # M8 stem cell arguments
+    parser.add_argument("--stem-cells", action="store_true", help="Enable M8 stem cell pattern discovery")
     # Single graph; demo uses the shared KRK network
     args = parser.parse_args()
 
@@ -1569,6 +1608,8 @@ def main():
             # Trace DB for JSONL output
             trace_db=trace_db,
             pack_paths=args.pack if hasattr(args, 'pack') else [],
+            # M8 stem cells
+            stem_cell_enabled=args.stem_cells,
         )
 
         # Flush trace DB after batch

@@ -51,6 +51,10 @@ from recon_lite.plasticity.consolidate import (
     ConsolidationConfig,
     ConsolidationEngine,
 )
+from recon_lite.nodes.stem_cell import (
+    StemCellManager,
+    StemCellConfig,
+)
 
 # Default configuration
 DEFAULT_PLASTICITY_ETA = 0.05
@@ -85,6 +89,8 @@ def play_persistent_game(
     consolidation_eta: float = DEFAULT_CONSOLIDATE_ETA,
     consolidation_min_episodes: int = DEFAULT_CONSOLIDATE_MIN_EPISODES,
     consolidation_engine: Optional[ConsolidationEngine] = None,
+    # M8: Stem cell parameters
+    stem_cell_manager: Optional["StemCellManager"] = None,
 ) -> dict:
     """
     Play a single KQK game to checkmate.
@@ -223,6 +229,13 @@ def play_persistent_game(
                 meta={"ply": plies},
             )
         )
+        
+        # M8: Feed stem cells with significant rewards
+        reward_tick = (eval_after - eval_before) if eval_after is not None and eval_before is not None else None
+        if stem_cell_manager is not None and reward_tick is not None:
+            if abs(reward_tick) > 0.2:
+                stem_cell_manager.tick(board, reward_tick, len(tick_records))
+        
         viz_logger.snapshot(
             engine=eng,
             note="applied_move",
@@ -329,7 +342,7 @@ def play_persistent_game(
     return result
 
 
-def run_batch(n_games: int = 10, max_plies: int = 150, **play_kwargs) -> dict:
+def run_batch(n_games: int = 10, max_plies: int = 150, stem_cell_enabled: bool = False, **play_kwargs) -> dict:
     """Run N games in batch mode with memory management."""
     stats = {
         "games": [],
@@ -341,8 +354,22 @@ def run_batch(n_games: int = 10, max_plies: int = 150, **play_kwargs) -> dict:
         "total_mate_plies": 0,
         "avg_mate_length": None,
     }
+    
+    # M8: Create shared stem cell manager if enabled
+    stem_manager = None
+    if stem_cell_enabled:
+        stem_manager = StemCellManager(
+            max_cells=20,
+            spawn_rate=0.05,
+            config=StemCellConfig(
+                min_samples=50,
+                reward_threshold=0.2,
+                specialization_threshold=0.6,
+            ),
+        )
+    
     for i in range(n_games):
-        res = play_persistent_game(initial_fen=None, max_plies=max_plies, **play_kwargs)
+        res = play_persistent_game(initial_fen=None, max_plies=max_plies, stem_cell_manager=stem_manager, **play_kwargs)
         stats["games"].append(res)
         
         # Track results
@@ -369,6 +396,16 @@ def run_batch(n_games: int = 10, max_plies: int = 150, **play_kwargs) -> dict:
     # Calculate win rate
     completed = stats["wins"] + stats["losses"] + stats["draws"]
     stats["win_rate"] = stats["wins"] / completed if completed > 0 else 0.0
+    
+    # M8: Report stem cell stats
+    if stem_manager:
+        stem_stats = {
+            "total_cells": len(stem_manager.cells),
+            "candidates": len(stem_manager.get_specialization_candidates()),
+            "total_samples": sum(len(c.samples) for c in stem_manager.cells.values()),
+        }
+        stats["stem_cells"] = stem_stats
+        print(f"Stem cells: {stem_stats}")
     
     print(stats)
     return stats
@@ -400,6 +437,9 @@ def main() -> None:
     parser.add_argument("--consolidate-eta", type=float, default=DEFAULT_CONSOLIDATE_ETA)
     parser.add_argument("--consolidate-min-episodes", type=int, default=DEFAULT_CONSOLIDATE_MIN_EPISODES)
     
+    # M8 Stem cells
+    parser.add_argument("--stem-cells", action="store_true", help="Enable M8 stem cell pattern discovery")
+    
     args = parser.parse_args()
     
     # Set up trace DB if output requested
@@ -426,6 +466,7 @@ def main() -> None:
             consolidation_pack=args.consolidate_pack,
             consolidation_eta=args.consolidate_eta,
             consolidation_min_episodes=args.consolidate_min_episodes,
+            stem_cell_enabled=args.stem_cells,
         )
     else:
         # Single game
