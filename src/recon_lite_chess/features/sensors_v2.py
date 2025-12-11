@@ -1022,6 +1022,233 @@ def register_v2_sensors(hub: FeatureHub) -> None:
         compute_fn=compute_piece_coordination,
         description="Pieces supporting each other",
     ))
+    
+    # Stalemate detection sensors (shared across endgames)
+    hub.register(FeatureDefinition(
+        name="enemy_king_rank",
+        category=FeatureCategory.GEOMETRIC,
+        compute_fn=compute_enemy_king_rank,
+        description="Enemy king rank position (0-1)",
+    ))
+    
+    hub.register(FeatureDefinition(
+        name="enemy_king_file",
+        category=FeatureCategory.GEOMETRIC,
+        compute_fn=compute_enemy_king_file,
+        description="Enemy king file position (0-1)",
+    ))
+    
+    hub.register(FeatureDefinition(
+        name="enemy_king_at_edge",
+        category=FeatureCategory.GEOMETRIC,
+        compute_fn=compute_enemy_king_at_edge,
+        description="Enemy king on edge rank/file (0/1)",
+    ))
+    
+    hub.register(FeatureDefinition(
+        name="enemy_king_in_corner",
+        category=FeatureCategory.GEOMETRIC,
+        compute_fn=compute_enemy_king_in_corner,
+        description="Enemy king in/near corner (0/0.5/1)",
+    ))
+    
+    hub.register(FeatureDefinition(
+        name="enemy_king_mobility",
+        category=FeatureCategory.GEOMETRIC,
+        compute_fn=compute_enemy_king_mobility,
+        description="Enemy king escape squares (0-1 normalized)",
+    ))
+    
+    hub.register(FeatureDefinition(
+        name="enemy_king_mobility_raw",
+        category=FeatureCategory.GEOMETRIC,
+        compute_fn=compute_enemy_king_mobility_raw,
+        description="Enemy king escape squares (0-8 raw)",
+    ))
+    
+    hub.register(FeatureDefinition(
+        name="stalemate_danger",
+        category=FeatureCategory.DYNAMIC,
+        compute_fn=compute_stalemate_danger,
+        description="Composite stalemate risk signal (0-1)",
+    ))
+
+
+# ============================================================================
+# Stalemate Detection Sensors (Shared across endgames)
+# ============================================================================
+
+def compute_enemy_king_rank(board: chess.Board, computed: Dict[str, float]) -> float:
+    """
+    Get enemy king's rank position.
+    
+    Returns: [0.0, 1.0] - normalized rank (0=rank 1, 1=rank 8)
+    """
+    enemy_king = board.king(not board.turn)
+    if enemy_king is None:
+        return 0.5
+    return chess.square_rank(enemy_king) / 7.0
+
+
+def compute_enemy_king_file(board: chess.Board, computed: Dict[str, float]) -> float:
+    """
+    Get enemy king's file position.
+    
+    Returns: [0.0, 1.0] - normalized file (0=a-file, 1=h-file)
+    """
+    enemy_king = board.king(not board.turn)
+    if enemy_king is None:
+        return 0.5
+    return chess.square_file(enemy_king) / 7.0
+
+
+def compute_enemy_king_at_edge(board: chess.Board, computed: Dict[str, float]) -> float:
+    """
+    Detect if enemy king is on an edge rank or file.
+    
+    Returns: [0.0, 1.0] - 1.0 if on edge, 0.0 if not
+    """
+    enemy_king = board.king(not board.turn)
+    if enemy_king is None:
+        return 0.0
+    
+    rank = chess.square_rank(enemy_king)
+    file = chess.square_file(enemy_king)
+    
+    # On edge if rank is 0 or 7, or file is 0 or 7
+    if rank in (0, 7) or file in (0, 7):
+        return 1.0
+    return 0.0
+
+
+def compute_enemy_king_in_corner(board: chess.Board, computed: Dict[str, float]) -> float:
+    """
+    Detect if enemy king is in a corner (a1, a8, h1, h8).
+    
+    Returns: [0.0, 1.0] - 1.0 if in corner, 0.5 if near corner, 0.0 otherwise
+    """
+    enemy_king = board.king(not board.turn)
+    if enemy_king is None:
+        return 0.0
+    
+    corners = [chess.A1, chess.A8, chess.H1, chess.H8]
+    if enemy_king in corners:
+        return 1.0
+    
+    # Near corner (within 1 square of corner)
+    rank = chess.square_rank(enemy_king)
+    file = chess.square_file(enemy_king)
+    
+    near_corner = (
+        (rank <= 1 and file <= 1) or  # Near a1
+        (rank <= 1 and file >= 6) or  # Near h1
+        (rank >= 6 and file <= 1) or  # Near a8
+        (rank >= 6 and file >= 6)     # Near h8
+    )
+    
+    return 0.5 if near_corner else 0.0
+
+
+def compute_enemy_king_mobility(board: chess.Board, computed: Dict[str, float]) -> float:
+    """
+    Count enemy king's legal escape squares (normalized).
+    
+    Returns: [0.0, 1.0] - 0.0 = no escapes (trapped), 1.0 = all 8 escapes free
+    """
+    enemy_king = board.king(not board.turn)
+    if enemy_king is None:
+        return 1.0
+    
+    escape_count = 0
+    king_file = chess.square_file(enemy_king)
+    king_rank = chess.square_rank(enemy_king)
+    
+    for df in [-1, 0, 1]:
+        for dr in [-1, 0, 1]:
+            if df == 0 and dr == 0:
+                continue
+            nf, nr = king_file + df, king_rank + dr
+            if 0 <= nf <= 7 and 0 <= nr <= 7:
+                sq = chess.square(nf, nr)
+                occupant = board.piece_at(sq)
+                # Blocked by enemy's own piece
+                if occupant and occupant.color == (not board.turn):
+                    continue
+                # Attacked by us
+                if board.is_attacked_by(board.turn, sq):
+                    continue
+                escape_count += 1
+    
+    return escape_count / 8.0
+
+
+def compute_enemy_king_mobility_raw(board: chess.Board, computed: Dict[str, float]) -> float:
+    """
+    Raw count of enemy king escape squares (0-8).
+    
+    Useful for threshold checks (e.g., <= 2 means danger).
+    
+    Returns: [0, 8] as float
+    """
+    return compute_enemy_king_mobility(board, computed) * 8.0
+
+
+def compute_stalemate_danger(board: chess.Board, computed: Dict[str, float]) -> float:
+    """
+    Composite sensor: High when enemy king is nearly trapped (stalemate risk).
+    
+    Combines:
+    - King at edge
+    - King mobility <= 2-3 squares
+    - King in corner (higher danger)
+    
+    This is the key "scent" signal for stalemate avoidance.
+    
+    Returns: [0.0, 1.0] - 0.0 = safe, 1.0 = extreme stalemate danger
+    """
+    # Get component values (use computed cache if available)
+    at_edge = computed.get("enemy_king_at_edge")
+    if at_edge is None:
+        at_edge = compute_enemy_king_at_edge(board, computed)
+    
+    mobility = computed.get("enemy_king_mobility")
+    if mobility is None:
+        mobility = compute_enemy_king_mobility(board, computed)
+    
+    in_corner = computed.get("enemy_king_in_corner")
+    if in_corner is None:
+        in_corner = compute_enemy_king_in_corner(board, computed)
+    
+    # Stalemate danger formula:
+    # - High if on edge AND low mobility
+    # - Extra high if in corner
+    
+    mobility_danger = 0.0
+    raw_mobility = mobility * 8.0
+    
+    if raw_mobility <= 1:
+        mobility_danger = 1.0  # Extreme: only 0-1 escape
+    elif raw_mobility <= 2:
+        mobility_danger = 0.8  # High: only 2 escapes
+    elif raw_mobility <= 3:
+        mobility_danger = 0.5  # Medium: only 3 escapes
+    elif raw_mobility <= 4:
+        mobility_danger = 0.2  # Low: 4 escapes
+    
+    # Combine with position
+    danger = mobility_danger
+    
+    # On edge increases danger
+    if at_edge > 0.5:
+        danger = min(1.0, danger + 0.2)
+    
+    # In corner maximizes danger
+    if in_corner >= 1.0:
+        danger = min(1.0, danger + 0.3)
+    elif in_corner >= 0.5:
+        danger = min(1.0, danger + 0.1)
+    
+    return danger
 
 
 # ============================================================================

@@ -537,7 +537,9 @@ def _decision_cycle(engine: ReConEngine,
                     modulation_config: Optional[ModulationConfig] = None,
                     last_eval: Optional[float] = None,
                     sf_engine: Optional["chess.engine.SimpleEngine"] = None,
-                    eval_mode: str = "heuristic") -> tuple[dict | None, list[dict], int, Optional[float]]:
+                    eval_mode: str = "heuristic",
+                    # M8 stem cell parameter
+                    stem_cell_manager: Optional[StemCellManager] = None) -> tuple[dict | None, list[dict], int, Optional[float]]:
     env["board"] = board
     env["chosen_move"] = None
     proposals: list[dict] = []
@@ -916,7 +918,7 @@ def play_persistent_game(initial_fen: str | None = None,
                          consolidation_min_episodes: int = DEFAULT_CONSOLIDATE_MIN_EPISODES,
                          consolidation_engine: Optional[ConsolidationEngine] = None,
                          # M8 stem cell parameters
-                         stem_cell_manager: Optional["StemCellManager"] = None) -> dict:
+                         stem_cell_manager: Optional[StemCellManager] = None) -> dict:
     if split_logs:
         viz_logger = RunLogger()
         debug_logger = RunLogger()
@@ -1175,6 +1177,8 @@ def play_persistent_game(initial_fen: str | None = None,
                 last_eval=last_eval,
                 sf_engine=sf_engine,
                 eval_mode=eval_mode,
+                # M8 stem cell
+                stem_cell_manager=stem_cell_manager,
             )
             move_record = selected
             move_uci = move_record["move"] if move_record else None

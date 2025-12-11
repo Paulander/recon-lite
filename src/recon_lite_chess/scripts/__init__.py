@@ -1,4 +1,4 @@
-"""Expose chess script builders (KPK, rook endings, opening, middlegame)."""
+"""Expose chess script builders (KPK, KQK, rook endings, opening, middlegame)."""
 
 from .kpk import (
     build_kpk_network,
@@ -7,6 +7,21 @@ from .kpk import (
     create_kpk_opposition_probe,
     create_kpk_promotion_probe,
     create_kpk_move_selector,
+)
+from .kqk import (
+    build_kqk_network,
+    create_random_kqk_board,
+    is_kqk_position,
+    create_kqk_material_detector,
+    create_kqk_move_selector,
+    analyze_stalemate_danger,
+    StalemateDangerLevel,
+)
+from .stalemate_detector import (
+    create_stalemate_danger_sensor,
+    create_stalemate_gate,
+    create_wait_move_selector,
+    StalemateAnalysis,
 )
 from .rook_endings import (
     build_rook_techniques_network,
@@ -38,6 +53,19 @@ __all__ = [
     "create_kpk_opposition_probe",
     "create_kpk_promotion_probe",
     "create_kpk_move_selector",
+    # KQK
+    "build_kqk_network",
+    "create_random_kqk_board",
+    "is_kqk_position",
+    "create_kqk_material_detector",
+    "create_kqk_move_selector",
+    "analyze_stalemate_danger",
+    "StalemateDangerLevel",
+    # Shared Stalemate Detector
+    "create_stalemate_danger_sensor",
+    "create_stalemate_gate",
+    "create_wait_move_selector",
+    "StalemateAnalysis",
     # Rook endings
     "build_rook_techniques_network",
     "create_rook_cutoff_detector",

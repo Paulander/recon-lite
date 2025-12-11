@@ -24,6 +24,15 @@ import chess
 
 from recon_lite import Graph, LinkType, Node, NodeType
 
+# Import shared stalemate detector
+from recon_lite_chess.scripts.stalemate_detector import (
+    create_stalemate_danger_sensor,
+    create_stalemate_gate,
+    create_wait_move_selector,
+    analyze_stalemate_danger,
+    StalemateDangerLevel,
+)
+
 
 # ============================================================================
 # Position Generation
@@ -517,7 +526,7 @@ def get_waiting_queen_moves(board: chess.Board, attacker_color: chess.Color) -> 
 
 
 def create_kqk_move_selector(nid: str) -> Node:
-    """Main move selector that combines all strategies."""
+    """Main move selector that combines all strategies with stalemate awareness."""
     def _predicate(node: Node, env: Dict[str, Any]):
         board = env.get("board")
         attacker = env.get("kqk", {}).get("attacker")
@@ -525,7 +534,18 @@ def create_kqk_move_selector(nid: str) -> Node:
         if attacker is None or board.turn != attacker:
             return True, False
         
-        # Priority 1: Deliver mate
+        # Get stalemate analysis from shared sensor (if available)
+        stalemate_analysis = env.get("stalemate_analysis")
+        if stalemate_analysis is None:
+            stalemate_analysis = analyze_stalemate_danger(board)
+            env["stalemate_analysis"] = stalemate_analysis
+        
+        danger = stalemate_analysis.danger_score
+        danger_level = stalemate_analysis.danger_level
+        node.meta["stalemate_danger"] = danger
+        node.meta["danger_level"] = danger_level.value
+        
+        # Priority 1: ALWAYS allow checkmate
         mates = can_deliver_queen_mate(board, attacker)
         if mates:
             suggested = mates[0].uci()
@@ -534,25 +554,32 @@ def create_kqk_move_selector(nid: str) -> Node:
             env.setdefault("kqk", {}).setdefault("policy", {})["suggested_move"] = suggested
             return True, True
         
-        # Priority 2: Restrict king more (with stalemate protection)
-        restriction_moves = get_restriction_moves(board, attacker)
-        if restriction_moves:
-            suggested = restriction_moves[0].uci()
-            node.meta["suggested_move"] = suggested
-            node.meta["move_type"] = "restrict"
-            env.setdefault("kqk", {}).setdefault("policy", {})["suggested_move"] = suggested
-            return True, True
+        # If stalemate danger is CRITICAL, only mate is allowed - skip to waiting
+        if danger_level == StalemateDangerLevel.CRITICAL:
+            node.meta["skip_reason"] = "critical_danger"
+            # Fall through to waiting moves
+        else:
+            # Priority 2: Restrict king more (with stalemate protection)
+            # Skip if danger is HIGH
+            if danger_level not in (StalemateDangerLevel.HIGH, StalemateDangerLevel.CRITICAL):
+                restriction_moves = get_restriction_moves(board, attacker)
+                if restriction_moves:
+                    suggested = restriction_moves[0].uci()
+                    node.meta["suggested_move"] = suggested
+                    node.meta["move_type"] = "restrict"
+                    env.setdefault("kqk", {}).setdefault("policy", {})["suggested_move"] = suggested
+                    return True, True
+            
+            # Priority 3: Approach with king (safer, always OK except CRITICAL)
+            approach_moves = can_approach_for_mate(board, attacker)
+            if approach_moves:
+                suggested = approach_moves[0].uci()
+                node.meta["suggested_move"] = suggested
+                node.meta["move_type"] = "approach"
+                env.setdefault("kqk", {}).setdefault("policy", {})["suggested_move"] = suggested
+                return True, True
         
-        # Priority 3: Approach with king
-        approach_moves = can_approach_for_mate(board, attacker)
-        if approach_moves:
-            suggested = approach_moves[0].uci()
-            node.meta["suggested_move"] = suggested
-            node.meta["move_type"] = "approach"
-            env.setdefault("kqk", {}).setdefault("policy", {})["suggested_move"] = suggested
-            return True, True
-        
-        # Priority 4: Waiting queen move (maintain position, force opponent move)
+        # Priority 4: Waiting queen move (safest, triangulate)
         waiting_moves = get_waiting_queen_moves(board, attacker)
         if waiting_moves:
             suggested = waiting_moves[0].uci()
@@ -653,8 +680,15 @@ def build_kqk_network() -> Graph:
     g.add_node(create_kqk_mate_detector("kqk_mate_detector"))
     g.add_node(create_kqk_mate_moves("kqk_mate_moves"))
     
+    # === STALEMATE DETECTOR (shared sensor) ===
+    g.add_node(create_stalemate_danger_sensor("kqk_stalemate_sensor"))
+    g.add_node(create_stalemate_gate("kqk_stalemate_gate", danger_threshold=0.5))
+    
     # === MOVE SELECTOR (fallback) ===
     g.add_node(create_kqk_move_selector("kqk_move_selector"))
+    
+    # === WAIT MOVE SELECTOR (when stalemate danger high) ===
+    g.add_node(create_wait_move_selector("kqk_safe_wait_selector"))
     
     # === WAIT (script wrapper + terminal) ===
     kqk_wait_script = Node("kqk_wait", NodeType.SCRIPT, meta={
@@ -667,10 +701,13 @@ def build_kqk_network() -> Graph:
     # === WIRING ===
     # Root hierarchy
     g.add_edge("kqk_root", "kqk_material_check", LinkType.SUB)
+    g.add_edge("kqk_root", "kqk_stalemate_sensor", LinkType.SUB)  # Runs first to set env
     g.add_edge("kqk_root", "kqk_phase1_drive", LinkType.SUB)
     g.add_edge("kqk_root", "kqk_phase2_corner", LinkType.SUB)
     g.add_edge("kqk_root", "kqk_phase3_mate", LinkType.SUB)
+    g.add_edge("kqk_root", "kqk_stalemate_gate", LinkType.SUB)  # Gates aggressive moves
     g.add_edge("kqk_root", "kqk_move_selector", LinkType.SUB)
+    g.add_edge("kqk_root", "kqk_safe_wait_selector", LinkType.SUB)  # When gate fires
     g.add_edge("kqk_root", "kqk_wait", LinkType.SUB)
     
     # Wait script contains the wait terminal
@@ -710,5 +747,8 @@ __all__ = [
     "create_kqk_approach_moves",
     "create_kqk_mate_moves",
     "create_kqk_move_selector",
+    # Re-export shared stalemate detector for convenience
+    "analyze_stalemate_danger",
+    "StalemateDangerLevel",
 ]
 

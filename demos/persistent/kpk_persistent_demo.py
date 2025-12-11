@@ -180,7 +180,7 @@ def play_persistent_game(
     consolidation_min_episodes: int = DEFAULT_CONSOLIDATE_MIN_EPISODES,
     consolidation_engine: Optional[ConsolidationEngine] = None,
     # M8: Stem cell parameters
-    stem_cell_manager: Optional["StemCellManager"] = None,
+    stem_cell_manager: Optional[StemCellManager] = None,
 ) -> dict:
     viz_logger = RunLogger()
     debug_logger = RunLogger() if split_logs else viz_logger
