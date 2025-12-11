@@ -1434,7 +1434,7 @@ def preview_decision(board: chess.Board,
     return {"decision": decision, "proposals": proposals, "ticks": ticks}
 
 
-def run_batch(n_games: int = 10, max_plies: int = 200, **play_kwargs) -> dict:
+def run_batch(n_games: int = 10, max_plies: int = 200, trace_db: Optional["TraceDB"] = None, pack_paths: Optional[list] = None, **play_kwargs) -> dict:
     """Run N games in batch mode with memory management."""
     stats = {
         "games": [],
@@ -1445,14 +1445,22 @@ def run_batch(n_games: int = 10, max_plies: int = 200, **play_kwargs) -> dict:
         "avg_mate_length": None,
     }
     for i in range(n_games):
-        res = play_persistent_game(initial_fen=None, max_plies=max_plies, **play_kwargs)
+        res = play_persistent_game(
+            initial_fen=None, 
+            max_plies=max_plies, 
+            trace_db=trace_db,
+            trace_episode_id=f"krk-batch-{i}",
+            pack_paths=pack_paths,
+            **play_kwargs
+        )
         stats["games"].append(res)
         if res.get("checkmate"):
             stats["mates"] += 1
             stats["total_mate_plies"] += res.get("plies", 0)
+        if res.get("stalemate"):
+            stats["stalls"] += 1
         if res.get("rook_lost"):
             stats["rook_losses"] += 1
-        # No explicit stall flag in persistent; watchdog fallback is logged only
         
         # Memory management: clean up between games
         gc.collect()
@@ -1521,6 +1529,9 @@ def main():
                 except Exception:
                     pass
 
+        # Create trace_db for batch mode
+        trace_db = TraceDB(args.trace_out) if args.trace_out else None
+        
         run_batch(
             args.batch,
             max_plies=args.max_plies,
@@ -1555,7 +1566,14 @@ def main():
             consolidation_eta=args.consolidate_eta,
             consolidation_min_episodes=args.consolidate_min_episodes,
             consolidation_engine=consol_engine,
+            # Trace DB for JSONL output
+            trace_db=trace_db,
+            pack_paths=args.pack if hasattr(args, 'pack') else [],
         )
+
+        # Flush trace DB after batch
+        if trace_db:
+            trace_db.flush()
 
         # M4: Save final consolidation state after batch
         if consol_engine and args.consolidate_pack:

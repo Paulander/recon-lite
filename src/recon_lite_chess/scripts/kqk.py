@@ -222,6 +222,7 @@ def can_deliver_queen_mate(board: chess.Board, attacker_color: chess.Color) -> L
 def can_approach_for_mate(board: chess.Board, attacker_color: chess.Color) -> List[chess.Move]:
     """
     Get king moves that help set up mate (approaching to support queen).
+    Also includes "waiting" king moves when distance can't be reduced.
     """
     defender_color = not attacker_color
     defender_king = board.king(defender_color)
@@ -231,6 +232,7 @@ def can_approach_for_mate(board: chess.Board, attacker_color: chess.Color) -> Li
         return []
     
     approach_moves = []
+    waiting_moves = []
     current_dist = king_distance(board)
     
     for move in board.legal_moves:
@@ -239,23 +241,32 @@ def can_approach_for_mate(board: chess.Board, attacker_color: chess.Color) -> Li
             # Check if this move safely approaches
             board.push(move)
             
-            # Don't move king into check (already enforced by legal_moves)
+            # Skip if causes stalemate
+            if board.is_stalemate():
+                board.pop()
+                continue
+            
             new_dist = king_distance(board)
             
             # Prefer moves that reduce distance to enemy king
             if new_dist < current_dist:
-                approach_moves.append((move, current_dist - new_dist))
+                approach_moves.append((move, current_dist - new_dist + 10))  # High priority
+            elif new_dist == current_dist:
+                # Waiting move - maintains distance, useful for triangulation
+                waiting_moves.append((move, 1))
             
             board.pop()
     
-    # Sort by distance gain
+    # Combine: approach moves first, then waiting moves
     approach_moves.sort(key=lambda x: -x[1])
-    return [m for m, _ in approach_moves]
+    all_moves = approach_moves + waiting_moves
+    return [m for m, _ in all_moves]
 
 
 def get_restriction_moves(board: chess.Board, attacker_color: chess.Color) -> List[chess.Move]:
     """
     Get queen moves that restrict the enemy king further.
+    Avoids moves that would cause stalemate.
     """
     defender_color = not attacker_color
     defender_king = board.king(defender_color)
@@ -278,9 +289,20 @@ def get_restriction_moves(board: chess.Board, attacker_color: chess.Color) -> Li
                 board.pop()
                 continue
             
+            # CRITICAL: Skip if this causes stalemate!
+            if board.is_stalemate():
+                board.pop()
+                continue
+            
             new_restriction = queen_restricts_king(board, attacker_color)
             
-            if new_restriction > current_restriction:
+            # Prefer restricting but not TOO much (leave 1-2 escape squares)
+            # Full restriction (1.0) often leads to stalemate
+            if new_restriction > current_restriction and new_restriction < 1.0:
+                # Good restriction without over-restricting
+                restriction_moves.append((move, new_restriction + 0.1))
+            elif new_restriction > current_restriction:
+                # Still better, but less preferred due to stalemate risk
                 restriction_moves.append((move, new_restriction))
             
             board.pop()
@@ -452,6 +474,48 @@ def create_kqk_mate_moves(nid: str) -> Node:
     return Node(nid=nid, ntype=NodeType.TERMINAL, predicate=_predicate)
 
 
+def get_waiting_queen_moves(board: chess.Board, attacker_color: chess.Color) -> List[chess.Move]:
+    """
+    Get queen moves that maintain restriction while being safe.
+    These are "waiting" moves that force the opponent to move into a worse position.
+    """
+    defender_color = not attacker_color
+    queen_sq = get_queen_square(board, attacker_color)
+    
+    if queen_sq is None:
+        return []
+    
+    waiting_moves = []
+    current_restriction = queen_restricts_king(board, attacker_color)
+    
+    for move in board.legal_moves:
+        piece = board.piece_at(move.from_square)
+        if piece and piece.piece_type == chess.QUEEN:
+            board.push(move)
+            
+            # Must be safe
+            new_queen_sq = move.to_square
+            if board.is_attacked_by(not attacker_color, new_queen_sq):
+                board.pop()
+                continue
+            
+            # Must not cause stalemate
+            if board.is_stalemate():
+                board.pop()
+                continue
+            
+            new_restriction = queen_restricts_king(board, attacker_color)
+            
+            # Accept moves that maintain or improve restriction (but not stalemate)
+            if new_restriction >= current_restriction * 0.8:  # Allow slight decrease
+                waiting_moves.append((move, new_restriction))
+            
+            board.pop()
+    
+    waiting_moves.sort(key=lambda x: -x[1])
+    return [m for m, _ in waiting_moves]
+
+
 def create_kqk_move_selector(nid: str) -> Node:
     """Main move selector that combines all strategies."""
     def _predicate(node: Node, env: Dict[str, Any]):
@@ -470,7 +534,7 @@ def create_kqk_move_selector(nid: str) -> Node:
             env.setdefault("kqk", {}).setdefault("policy", {})["suggested_move"] = suggested
             return True, True
         
-        # Priority 2: Restrict king more
+        # Priority 2: Restrict king more (with stalemate protection)
         restriction_moves = get_restriction_moves(board, attacker)
         if restriction_moves:
             suggested = restriction_moves[0].uci()
@@ -488,14 +552,24 @@ def create_kqk_move_selector(nid: str) -> Node:
             env.setdefault("kqk", {}).setdefault("policy", {})["suggested_move"] = suggested
             return True, True
         
-        # Fallback: any safe move
+        # Priority 4: Waiting queen move (maintain position, force opponent move)
+        waiting_moves = get_waiting_queen_moves(board, attacker)
+        if waiting_moves:
+            suggested = waiting_moves[0].uci()
+            node.meta["suggested_move"] = suggested
+            node.meta["move_type"] = "wait"
+            env.setdefault("kqk", {}).setdefault("policy", {})["suggested_move"] = suggested
+            return True, True
+        
+        # Fallback: any safe move that doesn't cause stalemate
         for move in board.legal_moves:
             board.push(move)
             queen_sq = get_queen_square(board, attacker)
             safe = queen_sq is None or not board.is_attacked_by(not attacker, queen_sq)
+            stalemate = board.is_stalemate()
             board.pop()
             
-            if safe:
+            if safe and not stalemate:
                 suggested = move.uci()
                 node.meta["suggested_move"] = suggested
                 node.meta["move_type"] = "safe"
