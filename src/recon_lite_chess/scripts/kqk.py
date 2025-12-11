@@ -582,8 +582,13 @@ def build_kqk_network() -> Graph:
     # === MOVE SELECTOR (fallback) ===
     g.add_node(create_kqk_move_selector("kqk_move_selector"))
     
-    # === WAIT ===
-    g.add_node(create_kqk_wait("kqk_wait"))
+    # === WAIT (script wrapper + terminal) ===
+    kqk_wait_script = Node("kqk_wait", NodeType.SCRIPT, meta={
+        "layer": "endgame_phase",
+        "subgraph": "kqk",
+    })
+    g.add_node(kqk_wait_script)
+    g.add_node(create_kqk_wait("kqk_wait_for_change"))  # The actual terminal
     
     # === WIRING ===
     # Root hierarchy
@@ -593,6 +598,9 @@ def build_kqk_network() -> Graph:
     g.add_edge("kqk_root", "kqk_phase3_mate", LinkType.SUB)
     g.add_edge("kqk_root", "kqk_move_selector", LinkType.SUB)
     g.add_edge("kqk_root", "kqk_wait", LinkType.SUB)
+    
+    # Wait script contains the wait terminal
+    g.add_edge("kqk_wait", "kqk_wait_for_change", LinkType.SUB)
     
     # Phase 1 internals
     g.add_edge("kqk_phase1_drive", "kqk_edge_detector", LinkType.SUB)
