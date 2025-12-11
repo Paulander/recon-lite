@@ -13,6 +13,7 @@ from .unified_builder import (
 )
 from .subgraph_gates import (
     compute_subgraph_gates,
+    compute_subgraph_affordances,
     compute_tactics_context_weights,
     MaterialInfo,
 )
@@ -25,6 +26,7 @@ __all__ = [
     "get_active_edge_traces",
     "reset_edge_traces",
     "compute_subgraph_gates",
+    "compute_subgraph_affordances",
     "compute_tactics_context_weights",
     "MaterialInfo",
     "TACTIC_TYPES",

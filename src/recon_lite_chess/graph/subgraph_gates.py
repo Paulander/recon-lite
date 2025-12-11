@@ -1,15 +1,29 @@
 """
 Subgraph gating logic for ReCoN chess.
 
-Computes activation weights for subgraphs based on board state.
+Computes continuous affordance-based activation weights for subgraphs.
+
+This module provides the "distance to applicability" signal for each subgraph,
+enabling implicit lookahead where the planning layer can sense valid strategies
+before they are fully executable.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 import chess
+
+# Import affordance sensors
+from recon_lite_chess.affordance import (
+    compute_all_affordances,
+    compute_krk_affordance,
+    compute_kpk_affordance,
+    compute_kqk_affordance,
+    AffordanceSignal,
+    AffordanceConfig,
+)
 
 
 @dataclass
@@ -125,17 +139,79 @@ def analyze_material(board: chess.Board) -> MaterialInfo:
 def compute_subgraph_gates(
     board: chess.Board,
     phase: Optional[Dict[str, float]] = None,
+    use_affordance: bool = True,
 ) -> Dict[str, float]:
     """
-    Compute activation weights for endgame subgraphs based on material and phase.
+    Compute continuous activation weights for endgame subgraphs.
+    
+    Uses the new affordance-based system for continuous [0.0, 1.0] signals
+    instead of binary gates. This enables implicit lookahead.
     
     Args:
         board: Current board position
         phase: Optional phase weights {"opening": 0.x, "middlegame": 0.x, "endgame": 0.x}
-               If provided, opening phase will hard-gate endgame subgraphs OFF.
+               Opening phase will dampen (but not fully gate) endgame affordances.
+        use_affordance: If True (default), use continuous affordance signals.
+                       If False, fall back to legacy binary gates.
     
     Returns:
         Dict mapping subgraph name to gate weight (0.0 to 1.0)
+    """
+    if use_affordance:
+        return _compute_subgraph_gates_affordance(board, phase)
+    else:
+        return _compute_subgraph_gates_legacy(board, phase)
+
+
+def _compute_subgraph_gates_affordance(
+    board: chess.Board,
+    phase: Optional[Dict[str, float]] = None,
+) -> Dict[str, float]:
+    """
+    Compute subgraph gates using continuous affordance signals.
+    
+    The affordance system provides smooth gradients instead of binary gates,
+    enabling the Bandit to learn strategies that "climb the hill" toward
+    endgame positions.
+    """
+    # Compute raw affordance signals
+    affordances = compute_all_affordances(board)
+    
+    gates = {
+        "krk": affordances["krk"].value,
+        "kpk": affordances["kpk"].value,
+        "kqk": affordances["kqk"].value,
+    }
+    
+    # Apply phase-based modulation (softer than hard gates)
+    if phase:
+        opening_weight = phase.get("opening", 0)
+        middlegame_weight = phase.get("middlegame", 0)
+        endgame_weight = phase.get("endgame", 0)
+        
+        # In opening, dampen endgame affordances but don't zero them
+        # This preserves the gradient for learning liquidation strategies
+        if opening_weight > 0.5:
+            dampening = 0.3 * (1.0 - opening_weight)  # 0.15 at opening=0.5, 0.0 at opening=1.0
+            gates = {k: v * dampening for k, v in gates.items()}
+        
+        # In middlegame, moderate dampening
+        elif middlegame_weight > 0.5:
+            # Scale by how much we're into middlegame vs endgame
+            endgame_factor = 0.3 + 0.7 * endgame_weight
+            gates = {k: v * endgame_factor for k, v in gates.items()}
+    
+    return gates
+
+
+def _compute_subgraph_gates_legacy(
+    board: chess.Board,
+    phase: Optional[Dict[str, float]] = None,
+) -> Dict[str, float]:
+    """
+    Legacy binary gating system (preserved for backward compatibility).
+    
+    This uses the original hard-gate logic with 0.0/0.3/1.0 values.
     """
     material = analyze_material(board)
     
@@ -145,35 +221,25 @@ def compute_subgraph_gates(
         "kqk": 0.0,
     }
     
-    # === HARD GATE: If in opening, endgame subgraphs are OFF ===
-    # This prevents the engine from wasting computation on endgame logic
-    # when there's a full board of pieces to deal with.
+    # Hard gate in opening
     if phase:
         opening_weight = phase.get("opening", 0)
         if opening_weight > 0.5:
-            # Opening phase dominates - keep endgames fully gated
             return gates
         
-        # Even in middlegame, reduce endgame pre-activation
         middlegame_weight = phase.get("middlegame", 0)
         if middlegame_weight > 0.6 and not material.is_endgame:
-            # Still in middlegame, no endgame patterns detected
             return gates
     
-    # === MATERIAL-BASED GATING ===
-    # Only activate endgame subgraphs when material indicates endgame
-    
-    # KRK: Exact pattern match = full activation
+    # KRK gating
     if material.pattern == "KRK":
         gates["krk"] = 1.0
-    # Pre-activation: Endgame with rook present
     elif material.is_endgame and (material.white_rooks > 0 or material.black_rooks > 0):
         gates["krk"] = 0.3
     
-    # KPK: Exact pattern match = full activation
+    # KPK gating
     if material.pattern == "KPK":
         gates["kpk"] = 1.0
-    # Pre-activation: Endgame with few pawns
     elif material.is_endgame and (material.white_pawns <= 2 or material.black_pawns <= 2):
         total_pieces = (material.white_knights + material.white_bishops + 
                        material.black_knights + material.black_bishops +
@@ -182,10 +248,9 @@ def compute_subgraph_gates(
         if total_pieces <= 2:
             gates["kpk"] = 0.3
     
-    # KQK: Exact pattern match = full activation
+    # KQK gating
     if material.pattern == "KQK":
         gates["kqk"] = 1.0
-    # Pre-activation: Endgame with queen present and low material
     elif material.is_endgame and (material.white_queens > 0 or material.black_queens > 0):
         total_non_queen = (material.white_knights + material.white_bishops +
                           material.black_knights + material.black_bishops +
@@ -195,6 +260,42 @@ def compute_subgraph_gates(
             gates["kqk"] = 0.3
     
     return gates
+
+
+def compute_subgraph_affordances(
+    board: chess.Board,
+    phase: Optional[Dict[str, float]] = None,
+) -> Tuple[Dict[str, float], Dict[str, AffordanceSignal]]:
+    """
+    Compute both gate values and full affordance signals.
+    
+    This is useful when you need both the simplified gate values
+    and the detailed affordance breakdown (components, exact match, etc.).
+    
+    Args:
+        board: Current board position
+        phase: Optional phase weights
+        
+    Returns:
+        Tuple of (gates dict, full affordances dict)
+    """
+    affordances = compute_all_affordances(board)
+    gates = {name: signal.value for name, signal in affordances.items()}
+    
+    # Apply phase modulation to gates
+    if phase:
+        opening_weight = phase.get("opening", 0)
+        middlegame_weight = phase.get("middlegame", 0)
+        endgame_weight = phase.get("endgame", 0)
+        
+        if opening_weight > 0.5:
+            dampening = 0.3 * (1.0 - opening_weight)
+            gates = {k: v * dampening for k, v in gates.items()}
+        elif middlegame_weight > 0.5:
+            endgame_factor = 0.3 + 0.7 * endgame_weight
+            gates = {k: v * endgame_factor for k, v in gates.items()}
+    
+    return gates, affordances
 
 
 def compute_tactics_context_weights(
@@ -279,4 +380,3 @@ def compute_tactics_context_weights(
         context["smotheredMate"] *= 0.7
     
     return context
-

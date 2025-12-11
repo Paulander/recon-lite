@@ -41,6 +41,38 @@ class BanditArmSummary:
 
 
 @dataclass
+class AffordanceCrossing:
+    """Record of an affordance threshold crossing event."""
+    tick: int
+    subgraph: str
+    direction: str  # "up" or "down"
+    prev_value: float
+    new_value: float
+    move: Optional[str] = None
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "tick": self.tick,
+            "subgraph": self.subgraph,
+            "direction": self.direction,
+            "prev_value": round(self.prev_value, 4),
+            "new_value": round(self.new_value, 4),
+            "move": self.move,
+        }
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "AffordanceCrossing":
+        return cls(
+            tick=data.get("tick", 0),
+            subgraph=data.get("subgraph", ""),
+            direction=data.get("direction", "up"),
+            prev_value=data.get("prev_value", 0.0),
+            new_value=data.get("new_value", 0.0),
+            move=data.get("move"),
+        )
+
+
+@dataclass
 class EpisodeSummary:
     """
     Summary of an episode for M4 cross-game consolidation.
@@ -50,6 +82,7 @@ class EpisodeSummary:
     - Bandit arm statistics
     - Average reward and outcome
     - Phase usage counts
+    - Affordance history and threshold crossings (for bridge discovery)
     """
 
     edge_delta_sums: Dict[str, float] = field(default_factory=dict)
@@ -59,6 +92,12 @@ class EpisodeSummary:
     reward_tick_count: int = 0
     phase_usage: Dict[str, int] = field(default_factory=dict)
     outcome_score: float = 0.0  # 1.0 win, 0.0 draw, -1.0 loss
+    
+    # Affordance tracking for implicit lookahead and bridge discovery
+    affordance_history: Dict[str, List[float]] = field(default_factory=dict)
+    affordance_crossings: List[AffordanceCrossing] = field(default_factory=list)
+    final_affordances: Dict[str, float] = field(default_factory=dict)
+    max_affordances: Dict[str, float] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         bandit_dict = {}
@@ -74,6 +113,12 @@ class EpisodeSummary:
             "reward_tick_count": self.reward_tick_count,
             "phase_usage": dict(self.phase_usage),
             "outcome_score": self.outcome_score,
+            "affordance_history": {
+                k: [round(v, 4) for v in vals] for k, vals in self.affordance_history.items()
+            },
+            "affordance_crossings": [c.to_dict() for c in self.affordance_crossings],
+            "final_affordances": {k: round(v, 4) for k, v in self.final_affordances.items()},
+            "max_affordances": {k: round(v, 4) for k, v in self.max_affordances.items()},
         }
 
     @classmethod
@@ -88,6 +133,13 @@ class EpisodeSummary:
                     sum_reward=arm_data.get("sum_reward", 0.0),
                     mean_reward=arm_data.get("mean_reward", 0.0),
                 )
+        
+        # Parse affordance crossings
+        crossings = [
+            AffordanceCrossing.from_dict(c)
+            for c in data.get("affordance_crossings", [])
+        ]
+        
         return cls(
             edge_delta_sums=dict(data.get("edge_delta_sums", {})),
             bandit_stats=bandit_stats,
@@ -96,7 +148,80 @@ class EpisodeSummary:
             reward_tick_count=data.get("reward_tick_count", 0),
             phase_usage=dict(data.get("phase_usage", {})),
             outcome_score=data.get("outcome_score", 0.0),
+            affordance_history=dict(data.get("affordance_history", {})),
+            affordance_crossings=crossings,
+            final_affordances=dict(data.get("final_affordances", {})),
+            max_affordances=dict(data.get("max_affordances", {})),
         )
+    
+    def record_affordance(
+        self,
+        affordances: Dict[str, float],
+        tick: int = 0,
+        move: Optional[str] = None,
+        threshold: float = 0.5,
+    ) -> None:
+        """
+        Record affordance values for this tick.
+        
+        Automatically detects threshold crossings.
+        
+        Args:
+            affordances: Current affordance values by subgraph
+            tick: Current tick number
+            move: Move that was played (if any)
+            threshold: Threshold for crossing detection
+        """
+        for subgraph, value in affordances.items():
+            # Initialize history if needed
+            if subgraph not in self.affordance_history:
+                self.affordance_history[subgraph] = []
+            
+            history = self.affordance_history[subgraph]
+            prev_value = history[-1] if history else 0.0
+            
+            # Record value
+            history.append(value)
+            
+            # Update max
+            if subgraph not in self.max_affordances:
+                self.max_affordances[subgraph] = value
+            else:
+                self.max_affordances[subgraph] = max(self.max_affordances[subgraph], value)
+            
+            # Update final
+            self.final_affordances[subgraph] = value
+            
+            # Check for crossing
+            crossed_up = prev_value < threshold <= value
+            crossed_down = prev_value >= threshold > value
+            
+            if crossed_up or crossed_down:
+                self.affordance_crossings.append(AffordanceCrossing(
+                    tick=tick,
+                    subgraph=subgraph,
+                    direction="up" if crossed_up else "down",
+                    prev_value=prev_value,
+                    new_value=value,
+                    move=move,
+                ))
+    
+    def get_affordance_summary(self) -> Dict[str, Any]:
+        """Get a summary of affordance activity in this episode."""
+        return {
+            "total_crossings": len(self.affordance_crossings),
+            "crossings_by_subgraph": self._count_crossings_by_subgraph(),
+            "final_affordances": dict(self.final_affordances),
+            "max_affordances": dict(self.max_affordances),
+            "reached_endgame": any(v >= 1.0 for v in self.final_affordances.values()),
+        }
+    
+    def _count_crossings_by_subgraph(self) -> Dict[str, int]:
+        """Count crossings per subgraph."""
+        counts: Dict[str, int] = {}
+        for crossing in self.affordance_crossings:
+            counts[crossing.subgraph] = counts.get(crossing.subgraph, 0) + 1
+        return counts
 
 
 def outcome_to_score(result: Optional[str]) -> float:

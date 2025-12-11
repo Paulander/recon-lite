@@ -51,15 +51,24 @@ def create_kpk_material_detector(nid: str) -> Node:
 
 
 def create_kpk_push_window(nid: str) -> Node:
+    """
+    Sensor that checks if pawn can be pushed safely.
+    
+    Always completes (returns True) because this is a detection node,
+    not a gate. The result is stored in meta/env for the move selector to use.
+    """
     def _predicate(node: Node, env: Dict[str, Any]):
         weights = _load_cfg()
         board = env.get("board")
         summary = struct_sensors.summarize_kpk_material(board)
         color = summary.get("attacker_color")
-        ok = bool(summary.get("is_kpk")) and tactic_sensors.can_push_pawn_safely(board, attacker_color=color)
-        node.meta["can_push"] = ok
-        env.setdefault("kpk", {}).setdefault("tactics", {})["can_push"] = ok
-        return ok, ok
+        is_kpk = bool(summary.get("is_kpk"))
+        can_push = is_kpk and tactic_sensors.can_push_pawn_safely(board, attacker_color=color)
+        node.meta["can_push"] = can_push
+        node.meta["is_kpk"] = is_kpk
+        env.setdefault("kpk", {}).setdefault("tactics", {})["can_push"] = can_push
+        # Always complete the sensor check - the move selector handles both push and king moves
+        return is_kpk, is_kpk  # Only block if not a KPK position at all
 
     return Node(nid=nid, ntype=NodeType.TERMINAL, predicate=_predicate)
 
@@ -92,6 +101,15 @@ def create_kpk_promotion_probe(nid: str) -> Node:
 
 
 def create_kpk_move_selector(nid: str) -> Node:
+    """
+    KPK move selector with promotion-focused strategy.
+    
+    The goal of KPK is to PROMOTE the pawn. This is the success condition.
+    Strategy priorities:
+    1. Push pawn to promotion when safe (highest priority near 7th/8th rank)
+    2. If pawn push blocked, use king to support/clear path
+    3. Only use king moves when pawn push isn't viable
+    """
     def _predicate(node: Node, env: Dict[str, Any]):
         weights = _load_cfg()
         board = env.get("board")
@@ -104,14 +122,54 @@ def create_kpk_move_selector(nid: str) -> Node:
         if color is None or pawn_sq is None:
             return False, False
 
+        pawn_rank = chess.square_rank(pawn_sq)
+        pawn_file = chess.square_file(pawn_sq)
+        
+        # Calculate distance to promotion (ranks remaining)
+        if color == chess.WHITE:
+            distance_to_promo = 7 - pawn_rank  # White promotes on rank 7 (8th rank)
+        else:
+            distance_to_promo = pawn_rank  # Black promotes on rank 0 (1st rank)
+        
         direction = 8 if color else -8
         push_sq = pawn_sq + direction
-        push_move = chess.Move(pawn_sq, push_sq)
-        safe_push = (push_move in board.legal_moves) and tactic_sensors.can_push_pawn_safely(board, attacker_color=color)
-        push_score = (weights.get("push_bias", 0.6) + (weights.get("safety_weight", 0.15) if safe_push else 0.0)) if (push_move in board.legal_moves) else -1.0
+        
+        # Check if this is a promotion move (pawn on 7th rank)
+        is_promotion_rank = (color == chess.WHITE and pawn_rank == 6) or (color == chess.BLACK and pawn_rank == 1)
+        
+        if is_promotion_rank:
+            # Promotion move - must specify promotion piece
+            promo_move = chess.Move(pawn_sq, push_sq, promotion=chess.QUEEN)
+            push_move = promo_move  # Use promotion move
+            push_legal = promo_move in board.legal_moves
+        else:
+            # Regular pawn push
+            push_move = chess.Move(pawn_sq, push_sq)
+            push_legal = push_move in board.legal_moves
+        
+        safe_push = push_legal and tactic_sensors.can_push_pawn_safely(board, attacker_color=color)
+        
+        # CRITICAL: Promotion move! Always take it if legal
+        if is_promotion_rank and push_legal:
+            # This push is promotion! Highest priority - ALWAYS promote
+            suggestion = push_move.uci()
+            env.setdefault("kpk", {}).setdefault("policy", {})["suggested_move"] = suggestion
+            node.meta["last_move"] = suggestion
+            node.meta["reason"] = "promotion"
+            return True, True
+        
+        # Calculate push score with distance bonus
+        # The closer to promotion, the higher the priority
+        base_push_score = weights.get("push_bias", 0.6)
+        safety_bonus = weights.get("safety_weight", 0.15) if safe_push else 0.0
+        # Massive bonus for pawns close to promotion
+        promotion_urgency = (5 - distance_to_promo) * 0.3  # +0.3 per rank advanced
+        push_score = (base_push_score + safety_bonus + promotion_urgency) if push_legal else -1.0
 
         attacker_king = summary.get("attacker_king")
         defender_king = summary.get("defender_king")
+        
+        # Evaluate king moves
         best_king = None
         for move in board.legal_moves:
             piece = board.piece_at(move.from_square)
@@ -119,26 +177,55 @@ def create_kpk_move_selector(nid: str) -> Node:
                 trial = board.copy(stack=False)
                 trial.push(move)
                 new_sq = trial.king(color)
-                if new_sq is None or defender_king is None:
+                if new_sq is None:
                     continue
-                cur_d = max(abs(chess.square_file(attacker_king) - chess.square_file(defender_king)),
-                            abs(chess.square_rank(attacker_king) - chess.square_rank(defender_king))) if attacker_king is not None else 0
-                new_d = max(abs(chess.square_file(new_sq) - chess.square_file(defender_king)),
-                            abs(chess.square_rank(new_sq) - chess.square_rank(defender_king)))
-                gain = max(0, cur_d - new_d)
-                score = gain * weights.get("king_distance_weight", 0.25)
+                    
+                score = 0.0
+                new_file = chess.square_file(new_sq)
+                new_rank = chess.square_rank(new_sq)
+                
+                # Bonus for king supporting the pawn (within 1-2 files, ahead of pawn)
+                file_dist_to_pawn = abs(new_file - pawn_file)
+                if file_dist_to_pawn <= 1:
+                    score += 0.2
+                    # Extra bonus if king is ahead of pawn (can support promotion)
+                    if color == chess.WHITE and new_rank > pawn_rank:
+                        score += 0.1
+                    elif color == chess.BLACK and new_rank < pawn_rank:
+                        score += 0.1
+                
+                # Bonus for approaching enemy king (to cut off escape)
+                if defender_king is not None:
+                    cur_d = max(abs(chess.square_file(attacker_king) - chess.square_file(defender_king)),
+                                abs(chess.square_rank(attacker_king) - chess.square_rank(defender_king))) if attacker_king is not None else 0
+                    new_d = max(abs(new_file - chess.square_file(defender_king)),
+                                abs(new_rank - chess.square_rank(defender_king)))
+                    gain = max(0, cur_d - new_d)
+                    score += gain * weights.get("king_distance_weight", 0.25)
+                
                 if best_king is None or score > best_king[0]:
                     best_king = (score, move)
 
-        if best_king is not None and best_king[0] >= push_score:
-            suggestion = best_king[1].uci()
-        elif push_score >= 0:
+        # Decision: Prioritize pawn push unless blocked or king move is significantly better
+        if push_score >= 0 and (best_king is None or push_score > best_king[0] + 0.3):
+            # Push the pawn!
             suggestion = push_move.uci()
+            node.meta["reason"] = "pawn_push"
+        elif best_king is not None:
+            # King move to support
+            suggestion = best_king[1].uci()
+            node.meta["reason"] = "king_support"
+        elif push_score >= 0:
+            # Fallback to pawn push even if not ideal
+            suggestion = push_move.uci()
+            node.meta["reason"] = "pawn_push_fallback"
 
         if suggestion is None:
+            # Last resort: any legal move
             legal = list(board.legal_moves)
             if legal:
                 suggestion = legal[0].uci()
+                node.meta["reason"] = "fallback"
 
         if suggestion is None:
             return True, False

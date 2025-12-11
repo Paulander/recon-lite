@@ -14,6 +14,12 @@ logs/
 weights/discoveries/
 weights/backups/
 
+# Reports - ignore timestamped training runs, keep summaries
+reports/overnight/
+reports/curriculum/
+reports/nightly/
+reports/blocks_smoke/
+
 #useless windows files
 *.Zone.Identifierdata/puzzles/lichess_puzzles.csv.bz2
 data/puzzles/lichess_puzzles.csv.bz2

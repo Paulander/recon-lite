@@ -451,3 +451,178 @@ def load_priors(path: "Path") -> BanditPriors:
 
     return BanditPriors.from_dict(data)
 
+
+# ---------------------------------------------------------------------------
+# Affordance-Enhanced Reward Computation
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class AffordanceRewardConfig:
+    """
+    Configuration for affordance-based reward enhancement.
+    
+    Attributes:
+        affordance_weight: Weight for affordance delta in total reward (0.0-1.0)
+        base_reward_weight: Weight for base reward (typically 1.0 - affordance_weight)
+        affordance_threshold: Minimum affordance delta to consider (noise filter)
+        clip_range: Max magnitude for affordance contribution
+    """
+    affordance_weight: float = 0.3
+    base_reward_weight: float = 0.7
+    affordance_threshold: float = 0.05
+    clip_range: float = 1.0
+
+
+def compute_affordance_delta(
+    affordance_before: Dict[str, float],
+    affordance_after: Dict[str, float],
+) -> Tuple[float, Dict[str, float]]:
+    """
+    Compute total and per-subgraph affordance delta.
+    
+    A positive delta means the action moved us closer to activating
+    an endgame strategy (e.g., liquidating toward KRK).
+    
+    Args:
+        affordance_before: Affordance values before the action
+        affordance_after: Affordance values after the action
+        
+    Returns:
+        Tuple of (total_delta, per_subgraph_deltas)
+    """
+    deltas: Dict[str, float] = {}
+    total_delta = 0.0
+    
+    # Get all subgraphs mentioned in either dict
+    all_subgraphs = set(affordance_before.keys()) | set(affordance_after.keys())
+    
+    for subgraph in all_subgraphs:
+        before = affordance_before.get(subgraph, 0.0)
+        after = affordance_after.get(subgraph, 0.0)
+        delta = after - before
+        deltas[subgraph] = delta
+        total_delta += delta
+    
+    return total_delta, deltas
+
+
+def compute_reward_with_affordance(
+    base_reward: float,
+    affordance_before: Dict[str, float],
+    affordance_after: Dict[str, float],
+    config: Optional[AffordanceRewardConfig] = None,
+) -> Tuple[float, Dict[str, Any]]:
+    """
+    Compute enhanced reward that includes affordance gradient.
+    
+    This enables the Bandit to learn strategies that "climb the hill"
+    toward endgame positions, even when material evaluation hasn't changed.
+    
+    Example: A move that increases KRK affordance from 0.1 to 0.4 is rewarded
+    even if material balance is unchanged, because it moves toward a winning
+    endgame conversion.
+    
+    Args:
+        base_reward: The base reward from evaluation (e.g., eval_after - eval_before)
+        affordance_before: Affordance signals before the action
+        affordance_after: Affordance signals after the action
+        config: Optional configuration
+        
+    Returns:
+        Tuple of (enhanced_reward, breakdown_dict)
+    """
+    config = config or AffordanceRewardConfig()
+    
+    # Compute affordance delta
+    total_delta, deltas = compute_affordance_delta(affordance_before, affordance_after)
+    
+    # Filter out noise
+    if abs(total_delta) < config.affordance_threshold:
+        total_delta = 0.0
+    
+    # Clip affordance contribution
+    affordance_contrib = max(-config.clip_range, min(config.clip_range, total_delta))
+    
+    # Compute weighted combination
+    enhanced_reward = (
+        config.base_reward_weight * base_reward +
+        config.affordance_weight * affordance_contrib
+    )
+    
+    # Build breakdown for logging/debugging
+    breakdown = {
+        "base_reward": round(base_reward, 4),
+        "affordance_delta": round(total_delta, 4),
+        "affordance_contrib": round(affordance_contrib, 4),
+        "enhanced_reward": round(enhanced_reward, 4),
+        "per_subgraph_deltas": {k: round(v, 4) for k, v in deltas.items()},
+    }
+    
+    return enhanced_reward, breakdown
+
+
+def assign_reward_with_affordance(
+    parent_id: str,
+    child_id: str,
+    base_reward: float,
+    affordance_before: Dict[str, float],
+    affordance_after: Dict[str, float],
+    state: BanditStateDict,
+    config: Optional[AffordanceRewardConfig] = None,
+) -> Tuple[bool, Dict[str, Any]]:
+    """
+    Assign affordance-enhanced reward to a bandit arm.
+    
+    Convenience function that combines compute_reward_with_affordance
+    and assign_reward.
+    
+    Args:
+        parent_id: The parent node id
+        child_id: The child node id that was active
+        base_reward: Base reward from evaluation
+        affordance_before: Affordance signals before action
+        affordance_after: Affordance signals after action
+        state: Bandit state dict
+        config: Optional reward configuration
+        
+    Returns:
+        Tuple of (success, breakdown_dict)
+    """
+    enhanced_reward, breakdown = compute_reward_with_affordance(
+        base_reward, affordance_before, affordance_after, config
+    )
+    
+    success = assign_reward(parent_id, child_id, enhanced_reward, state)
+    
+    return success, breakdown
+
+
+def get_best_affordance_improvement(
+    affordance_before: Dict[str, float],
+    affordance_after: Dict[str, float],
+) -> Optional[str]:
+    """
+    Get the subgraph with the largest affordance improvement.
+    
+    Useful for logging and understanding which endgame strategy
+    was moved toward.
+    
+    Args:
+        affordance_before: Affordance values before action
+        affordance_after: Affordance values after action
+        
+    Returns:
+        Name of subgraph with largest positive delta, or None if all negative
+    """
+    _, deltas = compute_affordance_delta(affordance_before, affordance_after)
+    
+    if not deltas:
+        return None
+    
+    best_subgraph = max(deltas.keys(), key=lambda k: deltas[k])
+    
+    if deltas[best_subgraph] > 0:
+        return best_subgraph
+    
+    return None

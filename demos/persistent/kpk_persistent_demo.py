@@ -128,6 +128,30 @@ KPK_PLASTICITY_EDGES = [
 ]
 
 
+def _check_pawn_promoted(board: chess.Board, attacker_color: bool = chess.WHITE) -> bool:
+    """
+    Check if the attacker's pawn has promoted (KPK success condition).
+    
+    In KPK endgame, success is achieved when the pawn promotes to a Queen.
+    This is the goal of the KPK subgraph - after promotion, the game
+    transitions to KQK for checkmate.
+    
+    Args:
+        board: Current board position
+        attacker_color: Color of the side with the pawn (default WHITE)
+        
+    Returns:
+        True if promotion has occurred (attacker has a Queen)
+    """
+    # In KPK starting position, attacker has only K+P
+    # If attacker now has a Queen, promotion occurred
+    for sq in chess.SQUARES:
+        piece = board.piece_at(sq)
+        if piece and piece.piece_type == chess.QUEEN and piece.color == attacker_color:
+            return True
+    return False
+
+
 def play_persistent_game(
     initial_fen: str | None = None,
     *,
@@ -272,6 +296,14 @@ def play_persistent_game(
             note="applied_move",
             env={"fen": board.fen(), "ply": plies, "move": chosen},
         )
+        
+        # KPK Success: Check if pawn promoted (this is the goal of KPK subgraph)
+        # After promotion, the game transitions to KQK for checkmate
+        if _check_pawn_promoted(board, chess.WHITE):
+            # Signal promotion success to environment
+            env.setdefault("kpk", {})["status"] = "PROMOTED"
+            break  # KPK subgraph succeeded - exit loop
+        
         if board.is_game_over():
             break
         opp_moves = list(board.legal_moves)
@@ -285,9 +317,27 @@ def play_persistent_game(
             note="opponent_move",
             env={"fen": board.fen(), "ply": plies, "move": opp.uci()},
         )
+        
+        # Reset network for next move cycle
+        # Reset CONFIRMED terminals back to INACTIVE so they can fire again
+        for node in g.nodes.values():
+            if node.nid != "kpk_root" and node.state == NodeState.CONFIRMED:
+                node.state = NodeState.INACTIVE
+            elif node.state not in (NodeState.CONFIRMED, NodeState.INACTIVE):
+                node.state = NodeState.INACTIVE
+        # Re-REQUEST root to trigger next cycle
+        g.nodes["kpk_root"].state = NodeState.REQUESTED
 
     # M8: Extract episode summary for consolidation
-    game_result = board.result() if board.is_game_over() else None
+    # Check for promotion success (KPK goal achieved)
+    promoted = _check_pawn_promoted(board, chess.WHITE)
+    if promoted:
+        game_result = "1-0"  # Promotion = KPK success (win)
+    elif board.is_game_over():
+        game_result = board.result()
+    else:
+        game_result = None
+    
     episode_summary = None
     if plasticity_enabled:
         episode_summary = extract_episode_summary(
@@ -300,10 +350,11 @@ def play_persistent_game(
     # M8: Accumulate episode for consolidation
     result = {
         "plies": plies,
-        "game_over": board.is_game_over(),
+        "game_over": board.is_game_over() or promoted,
         "result": game_result,
         "final_fen": board.fen(),
         "checkmate": board.is_checkmate(),
+        "promoted": promoted,  # KPK success condition
     }
     
     if consol_engine and episode_summary:
@@ -356,6 +407,10 @@ def run_batch(n_games: int = 10, max_plies: int = 100, **play_kwargs) -> dict:
     """Run N games in batch mode with memory management."""
     stats = {
         "games": [],
+        "wins": 0,       # W for result "1-0" (includes promotions)
+        "losses": 0,     # L for result "0-1"
+        "draws": 0,      # D for result "1/2-1/2"
+        "incomplete": 0, # Games that hit max_plies
         "mates": 0,
         "stalls": 0,
         "total_mate_plies": 0,
@@ -365,12 +420,24 @@ def run_batch(n_games: int = 10, max_plies: int = 100, **play_kwargs) -> dict:
     for i in range(n_games):
         res = play_persistent_game(initial_fen=None, max_plies=max_plies, **play_kwargs)
         stats["games"].append(res)
+        
+        # Track results
+        game_result = res.get("result")
+        if game_result == "1-0":
+            stats["wins"] += 1
+        elif game_result == "0-1":
+            stats["losses"] += 1
+        elif game_result == "1/2-1/2":
+            stats["draws"] += 1
+        else:
+            stats["incomplete"] += 1
+        
         if res.get("checkmate"):
             stats["mates"] += 1
             stats["total_mate_plies"] += res.get("plies", 0)
-        # Check for pawn promotion (indicated by piece on 8th rank in final FEN)
-        final_fen = res.get("final_fen", "")
-        if "Q" in final_fen.split()[0]:  # Queen from promotion
+        
+        # Track promotions (now directly from result)
+        if res.get("promoted"):
             stats["promotions"] += 1
         
         # Memory management: clean up between games
@@ -378,6 +445,11 @@ def run_batch(n_games: int = 10, max_plies: int = 100, **play_kwargs) -> dict:
         
     if stats["mates"]:
         stats["avg_mate_length"] = stats["total_mate_plies"] / stats["mates"]
+    
+    # Calculate win rate (for KPK, promotion counts as win)
+    completed = stats["wins"] + stats["losses"] + stats["draws"]
+    stats["win_rate"] = stats["wins"] / completed if completed > 0 else 0.0
+    
     print(stats)
     return stats
 
