@@ -308,6 +308,17 @@ def play_training_game(
                 active_plans,
             )
         
+        # Safety net: choose any legal move if selector returned None
+        if move is None:
+            legal = list(state.board.legal_moves)
+            if not legal:
+                break
+            move = legal[0]
+            # Mark fallback in tick meta later
+            fallback_used = True
+        else:
+            fallback_used = False
+        
         if move is None:
             break
         
@@ -361,7 +372,10 @@ def play_training_game(
             eval_before=eval_before,
             eval_after=eval_after,
             reward_tick=round(reward_tick, 4),
-            meta={"ply": len(state.move_history)},
+            meta={
+                "ply": len(state.move_history),
+                "fallback": fallback_used,
+            },
         ))
         
         # Opponent's turn
