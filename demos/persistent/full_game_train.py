@@ -313,7 +313,15 @@ def play_training_game(
             legal = list(state.board.legal_moves)
             if not legal:
                 break
-            move = legal[0]
+            # Prefer queen promotion if available when falling back
+            promo_moves = [m for m in legal if m.promotion]
+            queen_promos = [m for m in promo_moves if m.promotion == chess.QUEEN]
+            if queen_promos:
+                move = queen_promos[0]
+            elif promo_moves:
+                move = promo_moves[0]
+            else:
+                move = legal[0]
             # Mark fallback in tick meta later
             fallback_used = True
         else:
@@ -375,6 +383,7 @@ def play_training_game(
             meta={
                 "ply": len(state.move_history),
                 "fallback": fallback_used,
+                "result": state.board.result(claim_draw=True),
             },
         ))
         
@@ -453,6 +462,7 @@ def play_training_game(
         "weight_deltas": len(weight_deltas_sum),
         "discoveries": len(discoveries),
         "final_fen": state.board.fen(),
+        "tick_records": tick_records,
     }
     
     if verbose:
@@ -614,6 +624,19 @@ def run_batch_training(
             stem_manager=stem_manager,
             snapshot_hook=snapshot_hook,
         )
+        
+        # Save episode to trace if enabled
+        if trace_db:
+            ep = EpisodeRecord(
+                episode_id=f"game-{i+1}",
+                result=result.get("result"),
+                ticks=result.get("tick_records", []),
+                notes={
+                    "final_fen": result.get("final_fen"),
+                    "moves": result.get("moves"),
+                },
+            )
+            trace_db.add_episode(ep)
         
         # Aggregate stats
         stats["games"].append(result)
