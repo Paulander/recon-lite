@@ -33,6 +33,7 @@ QUICK_MODE=false
 RESUME_MODE=false
 SINGLE_PHASE=""
 ENGINE="/usr/games/stockfish"
+EPOCHS=1              # Number of times to repeat full curriculum
 
 # Training parameters per phase
 # Phase 1: Anchor (perfect endgame conversion)
@@ -88,6 +89,14 @@ while [[ $# -gt 0 ]]; do
             ENGINE="$2"
             shift 2
             ;;
+        --epochs)
+            EPOCHS="$2"
+            if ! [[ "$EPOCHS" =~ ^[0-9]+$ ]] || [ "$EPOCHS" -lt 1 ]; then
+                echo "Error: --epochs must be a positive integer"
+                exit 1
+            fi
+            shift 2
+            ;;
         --help|-h)
             echo "Usage: $0 [OPTIONS]"
             echo ""
@@ -96,6 +105,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --phase PHASE     Train single phase (anchor/bridge/wilderness/integration)"
             echo "  --resume          Resume from checkpoint"
             echo "  --engine PATH     Path to Stockfish"
+            echo "  --epochs N        Repeat full curriculum N times (default: 1)"
             echo ""
             echo "Phases:"
             echo "  anchor:      Perfect endgame conversion (KRK, KPK, KQK)"
@@ -159,6 +169,7 @@ log "Configuration:"
 log "  Quick mode: $QUICK_MODE"
 log "  Single phase: ${SINGLE_PHASE:-all}"
 log "  Resume mode: $RESUME_MODE"
+log "  Epochs: $EPOCHS"
 log "  Engine: ${ENGINE:-none}"
 log "  Log file: $LOG_FILE"
 echo ""
@@ -365,11 +376,18 @@ if [ -n "$SINGLE_PHASE" ]; then
             ;;
     esac
 else
-    # Run all phases in order
-    run_anchor_phase
-    run_bridge_phase
-    run_wilderness_phase
-    run_integration_phase
+    # Run all phases, repeated for EPOCHS
+    for epoch in $(seq 1 $EPOCHS); do
+        log_header "Epoch $epoch of $EPOCHS"
+        run_anchor_phase
+        run_bridge_phase
+        run_wilderness_phase
+        run_integration_phase
+        
+        if [ $epoch -lt $EPOCHS ]; then
+            log "Epoch $epoch complete. Starting epoch $((epoch + 1))..."
+        fi
+    done
 fi
 
 # =============================================================================
@@ -403,6 +421,7 @@ cat > "$REPORTS_DIR/training_summary.json" << EOF
     "total_episodes": $TOTAL_EPISODES,
     "quick_mode": $QUICK_MODE,
     "single_phase": "${SINGLE_PHASE:-null}",
+    "epochs": $EPOCHS,
     "weights_dir": "$WEIGHTS_DIR/nightly",
     "reports_dir": "$REPORTS_DIR"
 }

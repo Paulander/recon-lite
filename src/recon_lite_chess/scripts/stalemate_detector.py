@@ -307,6 +307,7 @@ def create_wait_move_selector(nid: str) -> Node:
             
             # Store for actuator
             env.setdefault("waiting_moves", {})["suggested_move"] = best_move.uci()
+            env.setdefault("kqk", {}).setdefault("policy", {})["suggested_move"] = best_move.uci()
             
             return True, True
         

@@ -542,8 +542,11 @@ def create_kqk_move_selector(nid: str) -> Node:
         
         danger = stalemate_analysis.danger_score
         danger_level = stalemate_analysis.danger_level
+        # Only honor prefer_wait when danger is truly CRITICAL
+        prefer_wait = env.get("prefer_wait", False) and danger_level == StalemateDangerLevel.CRITICAL
         node.meta["stalemate_danger"] = danger
         node.meta["danger_level"] = danger_level.value
+        node.meta["prefer_wait"] = prefer_wait
         
         # Priority 1: ALWAYS allow checkmate
         mates = can_deliver_queen_mate(board, attacker)
@@ -554,14 +557,24 @@ def create_kqk_move_selector(nid: str) -> Node:
             env.setdefault("kqk", {}).setdefault("policy", {})["suggested_move"] = suggested
             return True, True
         
+        # If gate requested waiting, honor it before any aggressive move
+        if prefer_wait:
+            waiting_from_gate = env.get("waiting_moves", {}).get("suggested_move")
+            if waiting_from_gate:
+                node.meta["suggested_move"] = waiting_from_gate
+                node.meta["move_type"] = "wait_gate"
+                env.setdefault("kqk", {}).setdefault("policy", {})["suggested_move"] = waiting_from_gate
+                return True, True
+            # If gate fired but no precomputed move, fall through to waiting search
+        
         # If stalemate danger is CRITICAL, only mate is allowed - skip to waiting
         if danger_level == StalemateDangerLevel.CRITICAL:
             node.meta["skip_reason"] = "critical_danger"
             # Fall through to waiting moves
         else:
             # Priority 2: Restrict king more (with stalemate protection)
-            # Skip if danger is HIGH
-            if danger_level not in (StalemateDangerLevel.HIGH, StalemateDangerLevel.CRITICAL):
+            # Skip if danger is HIGH or if gate asked to wait
+            if not prefer_wait and danger_level not in (StalemateDangerLevel.HIGH, StalemateDangerLevel.CRITICAL):
                 restriction_moves = get_restriction_moves(board, attacker)
                 if restriction_moves:
                     suggested = restriction_moves[0].uci()
@@ -571,13 +584,14 @@ def create_kqk_move_selector(nid: str) -> Node:
                     return True, True
             
             # Priority 3: Approach with king (safer, always OK except CRITICAL)
-            approach_moves = can_approach_for_mate(board, attacker)
-            if approach_moves:
-                suggested = approach_moves[0].uci()
-                node.meta["suggested_move"] = suggested
-                node.meta["move_type"] = "approach"
-                env.setdefault("kqk", {}).setdefault("policy", {})["suggested_move"] = suggested
-                return True, True
+            if not prefer_wait and danger_level != StalemateDangerLevel.CRITICAL:
+                approach_moves = can_approach_for_mate(board, attacker)
+                if approach_moves:
+                    suggested = approach_moves[0].uci()
+                    node.meta["suggested_move"] = suggested
+                    node.meta["move_type"] = "approach"
+                    env.setdefault("kqk", {}).setdefault("policy", {})["suggested_move"] = suggested
+                    return True, True
         
         # Priority 4: Waiting queen move (safest, triangulate)
         waiting_moves = get_waiting_queen_moves(board, attacker)
@@ -682,7 +696,8 @@ def build_kqk_network() -> Graph:
     
     # === STALEMATE DETECTOR (shared sensor) ===
     g.add_node(create_stalemate_danger_sensor("kqk_stalemate_sensor"))
-    g.add_node(create_stalemate_gate("kqk_stalemate_gate", danger_threshold=0.5))
+    # Gate should only block at CRITICAL stalemate danger (mobility <= 1)
+    g.add_node(create_stalemate_gate("kqk_stalemate_gate", danger_threshold=0.99))
     
     # === MOVE SELECTOR (fallback) ===
     g.add_node(create_kqk_move_selector("kqk_move_selector"))

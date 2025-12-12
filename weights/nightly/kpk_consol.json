@@ -11,9 +11,9 @@
   "w_base": {},
   "w_init": {},
   "consolidation_meta": {
-    "total_episodes": 1450,
+    "total_episodes": 18950,
     "episodes_since_apply": 0,
-    "last_apply_time": "2025-12-11T21:55:25.792237",
+    "last_apply_time": "2025-12-12T04:52:40.718445",
     "edges_tracked": 0
   }
 }

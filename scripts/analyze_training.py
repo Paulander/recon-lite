@@ -45,6 +45,10 @@ def analyze_jsonl(path: Path) -> TrainingStats:
     """Analyze a single JSONL trace file."""
     stats = TrainingStats()
     
+    # Determine phase type from filename (e.g., "anchor_kpk" -> "kpk")
+    phase_type = path.stem.lower()
+    is_kpk = "kpk" in phase_type and "kqk" not in phase_type
+    
     with open(path) as f:
         for line in f:
             try:
@@ -67,17 +71,30 @@ def analyze_jsonl(path: Path) -> TrainingStats:
             else:
                 stats.incomplete += 1
             
-            # Check for promotion (KPK success condition)
-            # Look for Queen in final FEN (indicates promotion happened)
-            ticks = ep.get("ticks", [])
-            if ticks:
-                last_tick = ticks[-1]
-                if isinstance(last_tick, dict):
-                    final_fen = last_tick.get("board_fen", "")
-                    # Check if White has a Queen (promotion)
-                    fen_board = final_fen.split()[0] if final_fen else ""
-                    if "Q" in fen_board:
-                        stats.promotions += 1
+            # Check for promotion (KPK success condition only)
+            # Only count promotions for KPK games, not KQK (which always has a Queen)
+            if is_kpk:
+                ticks = ep.get("ticks", [])
+                if ticks and len(ticks) > 1:
+                    # Get initial FEN (first tick)
+                    first_tick = ticks[0]
+                    if isinstance(first_tick, dict):
+                        initial_fen = first_tick.get("board_fen", "")
+                        initial_board = initial_fen.split()[0] if initial_fen else ""
+                        
+                        # Get final FEN (last tick)
+                        last_tick = ticks[-1]
+                        if isinstance(last_tick, dict):
+                            final_fen = last_tick.get("board_fen", "")
+                            final_board = final_fen.split()[0] if final_fen else ""
+                            
+                            # Count White Queens in initial vs final position
+                            initial_queens = initial_board.count("Q")
+                            final_queens = final_board.count("Q")
+                            
+                            # Promotion happened if final has more Queens than initial
+                            if final_queens > initial_queens:
+                                stats.promotions += 1
     
     stats.compute_derived()
     return stats
@@ -152,8 +169,9 @@ def generate_markdown_report(
         "## Notes",
         "",
         "- Win rate counts only completed games (excludes max_plies timeouts)",
-        "- **Promos** = pawn promotions (KPK success condition)",
+        "- **Promos** = pawn promotions (KPK success condition only)",
         "- For KPK: promotion counts as win (result='1-0')",
+        "- KQK and KRK do not have promotions (KQK starts with Queen, KRK has no pawns)",
         "- KPK endgames are harder to win than KRK due to drawing tendencies",
         "",
     ])

@@ -9,7 +9,7 @@
     "w_max": 3.0
   },
   "w_base": {
-    "tactics_root->detect_fork:SUB": 1.019454,
+    "tactics_root->detect_fork:SUB": 1.079619,
     "detect_fork->exploit_fork:POR": 1.0,
     "tactics_root->detect_pin:SUB": 1.0,
     "detect_pin->exploit_pin:POR": 1.0,
@@ -22,7 +22,7 @@
     "detect_back_rank->exploit_back_rank:POR": 1.0,
     "tactics_root->detect_discovered:SUB": 1.0,
     "detect_discovered->exploit_discovered:POR": 1.0,
-    "tactics_root->exploit_fork:SUB": 1.019454
+    "tactics_root->exploit_fork:SUB": 1.079619
   },
   "w_init": {
     "tactics_root->detect_fork:SUB": 1.0,
@@ -41,9 +41,9 @@
     "tactics_root->exploit_fork:SUB": 1.0
   },
   "consolidation_meta": {
-    "total_episodes": 2850,
+    "total_episodes": 6350,
     "episodes_since_apply": 0,
-    "last_apply_time": "2025-12-11T09:25:33.125031",
+    "last_apply_time": "2025-12-12T04:54:25.305222",
     "edges_tracked": 14
   }
 }
