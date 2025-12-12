@@ -34,7 +34,7 @@ import random
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional, Tuple, Callable
 
 import chess
 import chess.engine
@@ -107,6 +107,7 @@ from recon_lite_chess.graph import (
     get_active_edge_traces,
     reset_edge_traces,
 )
+from tools.graph_snapshot import export_graph_snapshot
 
 # Import the graph builder from full_game_demo
 from demos.persistent.full_game_demo import (
@@ -173,6 +174,8 @@ def play_training_game(
     consolidation_engine: Optional[ConsolidationEngine] = None,
     # Stem cells
     stem_manager: Optional[StemCellManager] = None,
+    # Snapshot hook
+    snapshot_hook: Optional[callable] = None,
 ) -> Dict[str, Any]:
     """
     Play a single training game.
@@ -442,6 +445,13 @@ def play_training_game(
         win_status = "WIN" if game_result == "1-0" else "LOSS" if game_result == "0-1" else "DRAW"
         print(f"  Game {game_id}: {win_status} in {len(state.move_history)} moves, reward={total_reward:.2f}")
     
+    # Optional graph snapshot after game (captures weights/topology as loaded/applied)
+    if snapshot_hook:
+        try:
+            snapshot_hook(g, game_id)
+        except Exception:
+            pass
+    
     return result
 
 
@@ -467,6 +477,9 @@ def run_batch_training(
     stem_cell_path: Optional[Path] = None,
     # Trace output
     trace_out: Optional[Path] = None,
+    # Snapshots
+    snapshot_dir: Optional[Path] = None,
+    snapshot_interval: int = 50,
 ) -> Dict[str, Any]:
     """
     Run batch training with multiple games.
@@ -566,6 +579,13 @@ def run_batch_training(
         if initial_fens and i < len(initial_fens):
             game_fen = initial_fens[i]
         
+        # Snapshot hook (per game) if enabled
+        snapshot_hook = None
+        if snapshot_dir and snapshot_interval > 0 and (i % snapshot_interval == 0):
+            def _hook(graph, game_id, *, _dir=snapshot_dir):
+                export_graph_snapshot(graph, _dir / f"graph_{game_id:04d}.json", meta={"game": game_id})
+            snapshot_hook = _hook
+        
         result = play_training_game(
             game_id=i + 1,
             initial_fen=game_fen,
@@ -578,6 +598,7 @@ def run_batch_training(
             plasticity_config=plasticity_config,
             consolidation_engine=consol_engine,
             stem_manager=stem_manager,
+            snapshot_hook=snapshot_hook,
         )
         
         # Aggregate stats
@@ -691,6 +712,10 @@ def main():
     parser.add_argument("--trace-out", type=Path, help="Path for trace output")
     parser.add_argument("--output-json", type=Path, help="Path to save stats JSON")
     
+    # Snapshots
+    parser.add_argument("--snapshot-dir", type=Path, help="Directory to save graph snapshots")
+    parser.add_argument("--snapshot-interval", type=int, default=50, help="Save snapshot every N games (default: 50)")
+    
     args = parser.parse_args()
     
     # Quick mode overrides
@@ -727,6 +752,8 @@ def main():
         stem_cells_enabled=args.stem_cells,
         stem_cell_path=args.stem_cell_path,
         trace_out=args.trace_out,
+        snapshot_dir=args.snapshot_dir,
+        snapshot_interval=args.snapshot_interval,
     )
     
     # Save stats if requested

@@ -146,6 +146,65 @@ def generate_kpk_position(
     return chess.Board("8/8/8/8/4k3/8/4P3/4K3 w - - 0 1")
 
 
+def generate_kpk_near_promotion(
+    max_attempts: int = 50,
+    white_to_move: bool = True,
+    allow_rook_pawn: bool = False,
+) -> chess.Board:
+    """
+    Generate a simple KPK position 1-2 plies from promotion.
+    
+    Places the pawn on the 7th (or 2nd) rank with minimal clutter so
+    training can focus on the KPK -> promotion -> KQK handoff.
+    """
+    for _ in range(max_attempts):
+        board = chess.Board(None)
+        board.clear()
+        
+        # Prefer central files to avoid rook-pawn corner draws unless allowed
+        candidate_files = list(range(0, 8)) if allow_rook_pawn else list(range(1, 7))
+        pawn_file = random.choice(candidate_files)
+        pawn_rank = 6 if white_to_move else 1  # 7th for White, 2nd for Black
+        pawn_sq = chess.square(pawn_file, pawn_rank)
+        
+        # Place attacking king behind/near the pawn
+        wk_candidates = [
+            sq for sq in chess.SQUARES
+            if chess.square_distance(sq, pawn_sq) <= 2 and sq != pawn_sq
+        ]
+        if not wk_candidates:
+            continue
+        wk_sq = random.choice(wk_candidates)
+        
+        # Defender king a couple of squares away from promotion square
+        promo_sq = chess.square(pawn_file, pawn_rank + (1 if white_to_move else -1))
+        bk_candidates = [
+            sq for sq in chess.SQUARES
+            if chess.square_distance(sq, promo_sq) >= 2
+            and sq not in (pawn_sq, wk_sq)
+        ]
+        if not bk_candidates:
+            continue
+        bk_sq = random.choice(bk_candidates)
+        
+        board.set_piece_at(wk_sq, chess.Piece(chess.KING, chess.WHITE))
+        board.set_piece_at(bk_sq, chess.Piece(chess.KING, chess.BLACK))
+        board.set_piece_at(pawn_sq, chess.Piece(chess.PAWN, chess.WHITE))
+        board.turn = chess.WHITE if white_to_move else chess.BLACK
+        
+        if not board.is_valid():
+            continue
+        
+        # Avoid immediate stalemate or illegal promotion issues
+        if board.turn != chess.WHITE and board.is_stalemate():
+            continue
+        
+        return board
+    
+    # Fallback: simple near-promotion
+    return chess.Board("8/8/8/3k4/8/8/4P3/4K3 w - - 0 1")
+
+
 def generate_kqk_position(
     ensure_winning: bool = True,
     max_attempts: int = 100,
