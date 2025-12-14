@@ -307,9 +307,9 @@
     "CreateWeakness->TacticsSensor:SUB": 1.0
   },
   "consolidation_meta": {
-    "total_episodes": 40,
+    "total_episodes": 490,
     "episodes_since_apply": 0,
-    "last_apply_time": "2025-12-05T17:48:23.516536",
+    "last_apply_time": "2025-12-12T14:40:35.836579",
     "edges_tracked": 147
   }
 }

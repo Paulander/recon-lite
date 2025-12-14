@@ -101,6 +101,7 @@ from recon_lite_chess.scripts.tactics import (
     get_back_rank_moves,
 )
 from recon_lite_chess.eval.heuristic import eval_position, compute_reward_tick
+from recon_lite_chess.scripts.kqk import is_kqk_position
 from recon_lite_chess.graph import (
     build_unified_graph,
     load_all_weights,
@@ -116,6 +117,123 @@ from demos.persistent.full_game_demo import (
     extract_board_features,
     GameState,
 )
+
+
+def _normalize_promotion(board: chess.Board, move: Optional[chess.Move]) -> Optional[chess.Move]:
+    """
+    Default pawn promotion to queen unless an underpromotion uniquely checkmates.
+    Prevents accidental stalemates from arbitrary underpromotions.
+    """
+    if move is None:
+        return None
+    piece = board.piece_at(move.from_square)
+    if not piece or piece.piece_type != chess.PAWN:
+        return move
+    
+    dest_rank = chess.square_rank(move.to_square)
+    if dest_rank not in (0, 7):
+        return move
+    
+    # Already promoting to queen
+    if move.promotion == chess.QUEEN:
+        return move
+    
+    queen_move = chess.Move(move.from_square, move.to_square, promotion=chess.QUEEN)
+    
+    under_mate = False
+    queen_mate = False
+    
+    if move.promotion:
+        try:
+            board.push(move)
+            under_mate = board.is_checkmate()
+            board.pop()
+        except Exception:
+            under_mate = False
+    
+    try:
+        board.push(queen_move)
+        queen_mate = board.is_checkmate()
+        board.pop()
+    except Exception:
+        queen_mate = False
+    
+    if under_mate and not queen_mate:
+        return move
+    
+    if queen_move in board.legal_moves:
+        return queen_move
+    return move
+
+
+def _would_be_insufficient_material(board: chess.Board, move: chess.Move) -> bool:
+    """Check if making the move results in insufficient material (and not mate)."""
+    try:
+        board.push(move)
+        bad = board.is_insufficient_material() and not board.is_checkmate()
+        board.pop()
+        return bad
+    except Exception:
+        return False
+
+
+def _prefer_legal_queen_promo(board: chess.Board, move: chess.Move) -> chess.Move:
+    """
+    Ensure pawn promotions default to queen and avoid moves that immediately lead
+    to insufficient material (unless checkmate).
+    """
+    normalized = _normalize_promotion(board, move)
+    if normalized and not _would_be_insufficient_material(board, normalized):
+        return normalized
+    
+    # Try other legal moves that do not lead to insufficient material
+    for candidate in board.legal_moves:
+        norm = _normalize_promotion(board, candidate)
+        if not _would_be_insufficient_material(board, norm):
+            return norm
+    # Fallback: return the original normalized move
+    return normalized or move
+
+
+def _queen_hangs_after(board: chess.Board, move: chess.Move) -> bool:
+    """
+    Returns True if after making the move, our queen is hanging (attacked, not defended)
+    and the position is not checkmate.
+    """
+    try:
+        mover_color = board.turn
+        board.push(move)
+        q_sq = None
+        for sq, piece in board.piece_map().items():
+            if piece.color == mover_color and piece.piece_type == chess.QUEEN:
+                q_sq = sq
+                break
+        if q_sq is None:
+            board.pop()
+            return False
+        opponent_color = board.turn  # after push, turn flips to opponent
+        hanging = board.is_attacked_by(opponent_color, q_sq) and not board.is_attacked_by(mover_color, q_sq)
+        bad = hanging and not board.is_checkmate()
+        board.pop()
+        return bad
+    except Exception:
+        return False
+
+
+def _prefer_safe_move(board: chess.Board, move: chess.Move) -> chess.Move:
+    """
+    Apply promotion normalization and avoid moves that hang the queen or drop to insufficient material.
+    """
+    normalized = _normalize_promotion(board, move)
+    if normalized and not _would_be_insufficient_material(board, normalized) and not _queen_hangs_after(board, normalized):
+        return normalized
+    
+    for candidate in board.legal_moves:
+        norm = _normalize_promotion(board, candidate)
+        if not _would_be_insufficient_material(board, norm) and not _queen_hangs_after(board, norm):
+            return norm
+    
+    return normalized or move
 
 
 # Default parameters
@@ -176,6 +294,8 @@ def play_training_game(
     stem_manager: Optional[StemCellManager] = None,
     # Snapshot hook
     snapshot_hook: Optional[callable] = None,
+    debug_draws: bool = False,
+    weights_dir: Path = Path("weights/latest"),
 ) -> Dict[str, Any]:
     """
     Play a single training game.
@@ -189,6 +309,8 @@ def play_training_game(
         include_tactics=True,
         include_sensors=True,
     )
+    # Apply latest weights (per-subgraph packs) before consolidation
+    load_all_weights(g, weights_dir=weights_dir)
     engine = ReConEngine(g)
     
     # Reset all edge traces at start of game
@@ -253,14 +375,34 @@ def play_training_game(
         now_requested = engine.step(env)
         state.tick += 1
         
+        # Check for endgame policy suggestions (KRK/KPK/KQK) before other logic
+        suggested_move_uci = None
+        for key in ("kqk", "krk", "kpk"):
+            pol = env.get(key, {}).get("policy") if isinstance(env.get(key), dict) else None
+            if pol and pol.get("suggested_move"):
+                suggested_move_uci = pol["suggested_move"]
+                break
+        
+        move_from_policy = None
+        if suggested_move_uci:
+            try:
+                candidate = chess.Move.from_uci(suggested_move_uci)
+                if candidate in state.board.legal_moves:
+                    move_from_policy = candidate
+            except Exception:
+                move_from_policy = None
+        
         # Collect fired edges and update traces for FULL NETWORK consolidation
-        # This tracks ALL edges that fire, not just plasticity edges
+        # (use permissive "active endpoints" heuristic; strict matching yields zero updates)
         for e in g.edges:
+            if e.ltype not in (LinkType.POR, LinkType.SUB):
+                continue
             src_node = g.nodes.get(e.src)
             dst_node = g.nodes.get(e.dst)
             if src_node and dst_node:
-                if src_node.state in (NodeState.TRUE, NodeState.CONFIRMED) and \
-                   dst_node.state == NodeState.REQUESTED:
+                src_ok = src_node.state in (NodeState.TRUE, NodeState.CONFIRMED, getattr(NodeState, "WAITING", NodeState.CONFIRMED))
+                dst_ok = dst_node.state in (NodeState.REQUESTED, NodeState.TRUE, NodeState.CONFIRMED, getattr(NodeState, "WAITING", NodeState.CONFIRMED))
+                if src_ok and dst_ok:
                     # Record for plasticity
                     fired_edges.append({"src": e.src, "dst": e.dst, "ltype": e.ltype.name})
                     
@@ -288,13 +430,14 @@ def play_training_game(
         forks = detect_forks(state.board)
         hanging = detect_hanging_pieces(state.board)
         
-        # Prioritize tactical moves
-        move = None
-        if forks:
+        # Prioritize tactical moves (but never override an explicit endgame policy move)
+        move = move_from_policy
+
+        if move is None and forks:
             fork_moves = get_fork_moves(state.board)
             if fork_moves:
                 move = fork_moves[0]
-        elif hanging.get("enemy_hanging"):
+        elif move is None and hanging.get("enemy_hanging"):
             hanging_moves = get_capture_hanging_moves(state.board)
             if hanging_moves:
                 move = hanging_moves[0]
@@ -326,6 +469,14 @@ def play_training_game(
             fallback_used = True
         else:
             fallback_used = False
+        
+        # Normalize promotion choice and avoid insufficient material / hanging queen.
+        move = _prefer_safe_move(state.board, move)
+
+        # Extra guard: in pure KQK, never hang the queen.
+        in_kqk, attacker_color = is_kqk_position(state.board)
+        if in_kqk and attacker_color == state.board.turn and _queen_hangs_after(state.board, move):
+            move = _prefer_safe_move(state.board, move)
         
         if move is None:
             break
@@ -402,6 +553,12 @@ def play_training_game(
         outcome_score = 1.0
     elif game_result == "0-1":
         outcome_score = -1.0
+    elif game_result == "1/2-1/2" and debug_draws:
+        try:
+            draw_claim = state.board.result(claim_draw=True)
+        except Exception:
+            draw_claim = "n/a"
+        print(f"[draw-debug] game {game_id} draw fen={state.board.fen()} claim={draw_claim}")
     
     # Gather ALL active edge traces for consolidation
     # This tracks the entire network, not just specific edges
@@ -504,6 +661,9 @@ def run_batch_training(
     # Snapshots
     snapshot_dir: Optional[Path] = None,
     snapshot_interval: int = 50,
+    debug_draws: bool = False,
+    # Weights
+    weights_dir: Path = Path("weights/latest"),
 ) -> Dict[str, Any]:
     """
     Run batch training with multiple games.
@@ -623,6 +783,8 @@ def run_batch_training(
             consolidation_engine=consol_engine,
             stem_manager=stem_manager,
             snapshot_hook=snapshot_hook,
+            debug_draws=debug_draws,
+            weights_dir=weights_dir,
         )
         
         # Save episode to trace if enabled
@@ -752,6 +914,8 @@ def main():
     # Snapshots
     parser.add_argument("--snapshot-dir", type=Path, help="Directory to save graph snapshots")
     parser.add_argument("--snapshot-interval", type=int, default=50, help="Save snapshot every N games (default: 50)")
+    parser.add_argument("--debug-draws", action="store_true", help="Print FEN/claim result when a game ends in draw")
+    parser.add_argument("--weights-dir", type=Path, default=Path("weights/latest"), help="Directory to load per-subgraph weights (default: weights/latest)")
     
     args = parser.parse_args()
     
@@ -791,6 +955,8 @@ def main():
         trace_out=args.trace_out,
         snapshot_dir=args.snapshot_dir,
         snapshot_interval=args.snapshot_interval,
+        debug_draws=args.debug_draws,
+        weights_dir=args.weights_dir,
     )
     
     # Save stats if requested

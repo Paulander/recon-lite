@@ -113,7 +113,11 @@ from recon_lite.nodes.stem_cell import (
     StemCellManager,
     StemCellConfig,
 )
-from recon_lite_chess.eval.heuristic import eval_position, compute_reward_tick
+from recon_lite_chess.eval.heuristic import (
+    eval_position,
+    eval_position_stockfish,
+    compute_reward_tick,
+)
 
 # M8: KPK plasticity defaults (matching KRK)
 DEFAULT_PLASTICITY_ETA = 0.05
@@ -130,6 +134,28 @@ DEFAULT_CONSOLIDATE_MIN_EPISODES = 10
 KPK_PLASTICITY_EDGES = [
     # Will be populated from the actual KPK network structure
 ]
+
+
+def _collect_fired_edges(g) -> list[dict]:
+    """Collect fired POR/SUB edges based on active endpoint node states."""
+    waiting = getattr(NodeState, "WAITING", None)
+    src_states = {NodeState.TRUE, NodeState.CONFIRMED}
+    dst_states = {NodeState.REQUESTED, NodeState.TRUE, NodeState.CONFIRMED}
+    if waiting is not None:
+        src_states.add(waiting)
+        dst_states.add(waiting)
+
+    fired = []
+    for e in g.edges:
+        if e.ltype not in (LinkType.POR, LinkType.SUB):
+            continue
+        src_node = g.nodes.get(e.src)
+        dst_node = g.nodes.get(e.dst)
+        if not src_node or not dst_node:
+            continue
+        if src_node.state in src_states and dst_node.state in dst_states:
+            fired.append({"src": e.src, "dst": e.dst, "ltype": e.ltype.name})
+    return fired
 
 
 def _check_pawn_promoted(board: chess.Board, attacker_color: bool = chess.WHITE) -> bool:
@@ -222,7 +248,7 @@ def play_persistent_game(
     kpk_plasticity_edges = []
     if plasticity_enabled:
         for e in g.edges:
-            if e.ltype == LinkType.POR:
+            if e.ltype in (LinkType.POR, LinkType.SUB):
                 kpk_plasticity_edges.append((e.src, e.dst, e.ltype))
     plasticity_state = init_plasticity_state(g, kpk_plasticity_edges) if plasticity_enabled else {}
 
@@ -234,6 +260,8 @@ def play_persistent_game(
     )
     if consolidation_engine is not None:
         consol_engine = consolidation_engine
+        consol_engine.init_from_graph(g)
+        consol_engine.apply_w_base_to_graph(g)
     elif consolidation_enabled:
         consol_engine = ConsolidationEngine(consolidation_config)
         if consolidation_pack and consolidation_pack.exists():
@@ -252,9 +280,13 @@ def play_persistent_game(
         env = {"board": board}
         chosen = None
         move_ticks = 0
+        fired_edges: list[dict] = []
         while move_ticks < max_ticks_per_move and chosen is None:
             move_ticks += 1
             now_req = eng.step(env)
+            fired_edges = _collect_fired_edges(eng.g)
+            if plasticity_enabled and plasticity_state:
+                update_eligibility(plasticity_state, fired_edges, plasticity_config.lambda_decay)
             chosen = env.get("kpk", {}).get("policy", {}).get("suggested_move") if isinstance(env.get("kpk"), dict) else None
             viz_logger.snapshot(
                 engine=eng,
@@ -265,26 +297,37 @@ def play_persistent_game(
         if not chosen:
             break
         try:
-            eval_before = None
-            eval_after = None
-            if sf_engine is not None:
-                try:
-                    info_before = sf_engine.analyse(board, limit=chess.engine.Limit(depth=stockfish_depth))
-                    score_before = info_before.get("score") if info_before else None
-                    eval_before = float(score_before.white().score(mate_score=10000) or 0.0) if score_before else None
-                except Exception:
-                    eval_before = None
+            eval_before = (
+                eval_position_stockfish(board, sf_engine, depth=stockfish_depth)
+                if sf_engine is not None
+                else eval_position(board)
+            )
             board.push_uci(chosen)
-            if sf_engine is not None:
-                try:
-                    info_after = sf_engine.analyse(board, limit=chess.engine.Limit(depth=stockfish_depth))
-                    score_after = info_after.get("score") if info_after else None
-                    eval_after = float(score_after.white().score(mate_score=10000) or 0.0) if score_after else None
-                except Exception:
-                    eval_after = None
+            eval_after = (
+                eval_position_stockfish(board, sf_engine, depth=stockfish_depth)
+                if sf_engine is not None
+                else eval_position(board)
+            )
         except Exception:
             break
         plies += 1
+        last_eval = eval_after
+
+        reward_tick = compute_reward_tick(eval_before, eval_after, plasticity_r_max)
+        if _check_pawn_promoted(board, chess.WHITE):
+            reward_tick = plasticity_r_max
+
+        if plasticity_enabled and plasticity_state:
+            deltas = apply_fast_update(
+                plasticity_state,
+                g,
+                reward_tick,
+                plasticity_config.eta_tick,
+                plasticity_config,
+            )
+            if deltas:
+                env["m3_weight_deltas"] = deltas
+
         tick_records.append(
             TickRecord(
                 tick_id=len(tick_records) + 1,
@@ -293,14 +336,13 @@ def play_persistent_game(
                 active_nodes=[nid for nid, node in eng.g.nodes.items() if node.state != NodeState.INACTIVE],
                 eval_before=eval_before,
                 eval_after=eval_after,
-                reward_tick=(round(eval_after - eval_before, 3) if eval_after is not None and eval_before is not None else None),
+                reward_tick=round(reward_tick, 4),
                 meta={"ply": plies},
             )
         )
         
         # M8: Feed stem cells with significant rewards
-        reward_tick = (eval_after - eval_before) if eval_after is not None and eval_before is not None else None
-        if stem_cell_manager is not None and reward_tick is not None:
+        if stem_cell_manager is not None:
             if abs(reward_tick) > 0.2:
                 stem_cell_manager.tick(board, reward_tick, len(tick_records))
         

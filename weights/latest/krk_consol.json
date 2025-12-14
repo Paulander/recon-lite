@@ -11,19 +11,21 @@
   "w_base": {
     "p0_check->p0_move:POR": 0.1,
     "p0_move->p0_wait:POR": 0.1,
-    "phase0_establish_cut->phase1_drive_to_edge:POR": 0.805505,
-    "p1_check->p1_move:POR": 0.805505
+    "phase0_establish_cut->phase1_drive_to_edge:POR": 0.104048,
+    "p1_check->p1_move:POR": 0.104048,
+    "p1_move->p1_wait:POR": 0.998173
   },
   "w_init": {
     "p0_check->p0_move:POR": 1.0,
     "p0_move->p0_wait:POR": 1.0,
     "phase0_establish_cut->phase1_drive_to_edge:POR": 1.0,
-    "p1_check->p1_move:POR": 1.0
+    "p1_check->p1_move:POR": 1.0,
+    "p1_move->p1_wait:POR": 1.0
   },
   "consolidation_meta": {
-    "total_episodes": 2370,
+    "total_episodes": 21120,
     "episodes_since_apply": 0,
-    "last_apply_time": "2025-12-05T17:48:09.956935",
-    "edges_tracked": 4
+    "last_apply_time": "2025-12-12T04:51:16.982495",
+    "edges_tracked": 5
   }
 }

@@ -47,6 +47,11 @@ from recon_lite.plasticity import (
     snapshot_plasticity,
     extract_episode_summary,
 )
+from recon_lite_chess.eval.heuristic import (
+    eval_position,
+    eval_position_stockfish,
+    compute_reward_tick,
+)
 from recon_lite.plasticity.consolidate import (
     ConsolidationConfig,
     ConsolidationEngine,
@@ -64,6 +69,50 @@ DEFAULT_PLASTICITY_W_MAX = 3.0
 DEFAULT_PLASTICITY_LAMBDA = 0.8
 DEFAULT_CONSOLIDATE_ETA = 0.01
 DEFAULT_CONSOLIDATE_MIN_EPISODES = 10
+
+
+def _collect_fired_edges(g) -> list[dict]:
+    """Collect fired POR/SUB edges based on active endpoint node states."""
+    waiting = getattr(NodeState, "WAITING", None)
+    src_states = {NodeState.TRUE, NodeState.CONFIRMED}
+    dst_states = {NodeState.REQUESTED, NodeState.TRUE, NodeState.CONFIRMED}
+    if waiting is not None:
+        src_states.add(waiting)
+        dst_states.add(waiting)
+
+    fired = []
+    for e in g.edges:
+        if e.ltype not in (LinkType.POR, LinkType.SUB):
+            continue
+        src_node = g.nodes.get(e.src)
+        dst_node = g.nodes.get(e.dst)
+        if not src_node or not dst_node:
+            continue
+        if src_node.state in src_states and dst_node.state in dst_states:
+            fired.append({"src": e.src, "dst": e.dst, "ltype": e.ltype.name})
+    return fired
+
+
+def _edge_keys_in_graph(g) -> set[str]:
+    keys: set[str] = set()
+    for e in g.edges:
+        if e.ltype not in (LinkType.POR, LinkType.SUB):
+            continue
+        keys.add(f"{e.src}->{e.dst}:{e.ltype.name}")
+    return keys
+
+
+def _prune_consolidation_to_graph(consol_engine: ConsolidationEngine, g) -> None:
+    """
+    Prevent stale/foreign edges from persisting inside a reused consolidation pack.
+
+    Consolidation packs can get "polluted" (e.g., if a full-game trainer wrote
+    into a KQK pack). Because ConsolidationEngine doesn't auto-prune, we do it
+    here so `weights/nightly/kqk_consol.json` only contains edges that exist in
+    the KQK graph.
+    """
+    allowed = _edge_keys_in_graph(g)
+    consol_engine.edge_states = {k: v for k, v in consol_engine.edge_states.items() if k in allowed}
 
 
 def play_persistent_game(
@@ -147,7 +196,7 @@ def play_persistent_game(
     kqk_plasticity_edges = []
     if plasticity_enabled:
         for e in g.edges:
-            if e.ltype == LinkType.POR:
+            if e.ltype in (LinkType.POR, LinkType.SUB):
                 kqk_plasticity_edges.append((e.src, e.dst, e.ltype))
     plasticity_state = init_plasticity_state(g, kqk_plasticity_edges) if plasticity_enabled else {}
 
@@ -159,6 +208,10 @@ def play_persistent_game(
     )
     if consolidation_engine is not None:
         consol_engine = consolidation_engine
+        # Ensure the shared engine is initialized for this graph and applied at game start
+        _prune_consolidation_to_graph(consol_engine, g)
+        consol_engine.init_from_graph(g)
+        consol_engine.apply_w_base_to_graph(g)
     elif consolidation_enabled:
         consol_engine = ConsolidationEngine(consolidation_config)
         if consolidation_pack and consolidation_pack.exists():
@@ -166,21 +219,29 @@ def play_persistent_game(
                 consol_engine.load_state(consolidation_pack)
             except Exception:
                 pass
+        _prune_consolidation_to_graph(consol_engine, g)
         consol_engine.init_from_graph(g)
         consol_engine.apply_w_base_to_graph(g)
     else:
         consol_engine = None
+
+    # Track last evaluation for reward computation (pawn units)
+    last_eval: Optional[float] = None
 
     # Main game loop - play until checkmate, stalemate, or max_plies
     while not board.is_game_over() and plies < max_plies:
         env = {"board": board}
         chosen = None
         move_ticks = 0
+        fired_edges: list[dict] = []
         
         # Get move from network
         while move_ticks < max_ticks_per_move and chosen is None:
             move_ticks += 1
             now_req = eng.step(env)
+            fired_edges = _collect_fired_edges(eng.g)
+            if plasticity_enabled and plasticity_state:
+                update_eligibility(plasticity_state, fired_edges, plasticity_config.lambda_decay)
             chosen = env.get("kqk", {}).get("policy", {}).get("suggested_move") if isinstance(env.get("kqk"), dict) else None
             viz_logger.snapshot(
                 engine=eng,
@@ -194,29 +255,38 @@ def play_persistent_game(
         
         # Evaluate position and make move
         try:
-            eval_before = None
-            eval_after = None
-            if sf_engine is not None:
-                try:
-                    info_before = sf_engine.analyse(board, limit=chess.engine.Limit(depth=stockfish_depth))
-                    score_before = info_before.get("score") if info_before else None
-                    eval_before = float(score_before.white().score(mate_score=10000) or 0.0) if score_before else None
-                except Exception:
-                    eval_before = None
-            
+            eval_before = (
+                eval_position_stockfish(board, sf_engine, depth=stockfish_depth)
+                if sf_engine is not None
+                else eval_position(board)
+            )
             board.push_uci(chosen)
-            
-            if sf_engine is not None:
-                try:
-                    info_after = sf_engine.analyse(board, limit=chess.engine.Limit(depth=stockfish_depth))
-                    score_after = info_after.get("score") if info_after else None
-                    eval_after = float(score_after.white().score(mate_score=10000) or 0.0) if score_after else None
-                except Exception:
-                    eval_after = None
+            eval_after = (
+                eval_position_stockfish(board, sf_engine, depth=stockfish_depth)
+                if sf_engine is not None
+                else eval_position(board)
+            )
         except Exception:
             break
         
         plies += 1
+        last_eval = eval_after
+
+        reward_tick = compute_reward_tick(eval_before, eval_after, plasticity_r_max)
+        if board.is_checkmate():
+            reward_tick = plasticity_r_max
+
+        if plasticity_enabled and plasticity_state:
+            deltas = apply_fast_update(
+                plasticity_state,
+                g,
+                reward_tick,
+                plasticity_config.eta_tick,
+                plasticity_config,
+            )
+            if deltas:
+                env["m3_weight_deltas"] = deltas
+
         tick_records.append(
             TickRecord(
                 tick_id=len(tick_records) + 1,
@@ -225,14 +295,13 @@ def play_persistent_game(
                 active_nodes=[nid for nid, node in eng.g.nodes.items() if node.state != NodeState.INACTIVE],
                 eval_before=eval_before,
                 eval_after=eval_after,
-                reward_tick=(round(eval_after - eval_before, 3) if eval_after is not None and eval_before is not None else None),
+                reward_tick=round(reward_tick, 4),
                 meta={"ply": plies},
             )
         )
         
         # M8: Feed stem cells with significant rewards
-        reward_tick = (eval_after - eval_before) if eval_after is not None and eval_before is not None else None
-        if stem_cell_manager is not None and reward_tick is not None:
+        if stem_cell_manager is not None:
             if abs(reward_tick) > 0.2:
                 stem_cell_manager.tick(board, reward_tick, len(tick_records))
         
@@ -448,7 +517,21 @@ def main() -> None:
         trace_db = TraceDB(args.trace_out)
     
     if args.batch > 0:
-        # Batch mode
+        # Batch mode (use a shared consolidation engine so the pack is updated reliably)
+        consol_engine = None
+        if args.consolidate:
+            consol_config = ConsolidationConfig(
+                eta_consolidate=args.consolidate_eta,
+                min_episodes=args.consolidate_min_episodes,
+                enabled=True,
+            )
+            consol_engine = ConsolidationEngine(consol_config)
+            if args.consolidate_pack and args.consolidate_pack.exists():
+                try:
+                    consol_engine.load_state(args.consolidate_pack)
+                except Exception:
+                    pass
+
         run_batch(
             args.batch,
             max_plies=args.max_plies,
@@ -466,8 +549,14 @@ def main() -> None:
             consolidation_pack=args.consolidate_pack,
             consolidation_eta=args.consolidate_eta,
             consolidation_min_episodes=args.consolidate_min_episodes,
+            consolidation_engine=consol_engine,
             stem_cell_enabled=args.stem_cells,
         )
+        if consol_engine and args.consolidate_pack:
+            try:
+                consol_engine.save_state(args.consolidate_pack)
+            except Exception:
+                pass
     else:
         # Single game
         res = play_persistent_game(

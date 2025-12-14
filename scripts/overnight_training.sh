@@ -354,42 +354,15 @@ print('KQK module OK')
 " 2>&1 || log "    Warning: KQK module import test failed"
 fi
 
-# Use full_game_train.py for KQK training with KQK-specific positions
-# We'll generate KQK FENs and train with them
-uv run python -c "
-import sys
-sys.path.insert(0, 'src')
-import json
-import random
-
-from pathlib import Path
-
-# Generate random KQK positions
-from recon_lite_chess.scripts.kqk import create_random_kqk_board
-
-n_games = $KQK_GAMES
-positions = []
-for _ in range(n_games):
-    fen = create_random_kqk_board(white_to_move=random.choice([True, False]))
-    positions.append(fen)
-
-# Save positions for training
-output_path = Path('$REPORTS_DIR/kqk_positions.txt')
-output_path.parent.mkdir(parents=True, exist_ok=True)
-output_path.write_text('\n'.join(positions))
-print(f'Generated {len(positions)} KQK positions')
-" 2>&1 | tee -a "$LOGS_DIR/overnight_$TIMESTAMP.log"
-
-# Train using full game trainer with KQK positions (uses the generated FEN file)
-uv run python demos/persistent/full_game_train.py \
+# Train KQK using the dedicated KQK persistent demo (produces a KQK-only pack).
+uv run python demos/persistent/kqk_persistent_demo.py \
     --batch "$KQK_GAMES" \
-    --fen-file "$REPORTS_DIR/kqk_positions.txt" \
     --plasticity \
     --consolidate \
     --consolidate-pack "$WEIGHTS_DIR/nightly/kqk_consol.json" \
     --engine "$ENGINE" --depth "$ENDGAME_DEPTH" \
-    --max-moves 60 \
-    --quiet \
+    --trace-out "$REPORTS_DIR/kqk_training.jsonl" \
+    --output-basename "kqk_overnight_$TIMESTAMP" \
     2>&1 | tee -a "$LOGS_DIR/overnight_$TIMESTAMP.log" || log "KQK training encountered issues"
 
 if [ -f "$WEIGHTS_DIR/nightly/kqk_consol.json" ]; then
