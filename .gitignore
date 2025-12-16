@@ -25,3 +25,11 @@ reports/blocks_smoke/
 data/puzzles/lichess_puzzles.csv.bz2
 .cursor/
 game.json
+
+# Training run artifacts
+backup_*
+weights/versions/
+weights/runs/
+weights/demo_backups/
+reports/bridge*
+*.POLLUTED.json

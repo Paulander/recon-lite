@@ -8,12 +8,40 @@
     "w_min": 0.1,
     "w_max": 3.0
   },
-  "w_base": {},
-  "w_init": {},
+  "w_base": {
+    "kpk_root->kpk_detect:SUB": 1.23823,
+    "kpk_root->kpk_execute:SUB": 1.159408,
+    "kpk_root->kpk_finish:SUB": 1.0,
+    "kpk_root->kpk_wait:SUB": 1.0,
+    "kpk_detect->kpk_material_check:SUB": 1.23823,
+    "kpk_detect->kpk_push_window:SUB": 1.23823,
+    "kpk_execute->kpk_move_selector:SUB": 1.159408,
+    "kpk_execute->kpk_opposition_probe:SUB": 1.159408,
+    "kpk_finish->kpk_promotion_probe:SUB": 1.0,
+    "kpk_wait->kpk_wait_for_change:SUB": 1.0,
+    "kpk_detect->kpk_execute:POR": 1.287986,
+    "kpk_execute->kpk_finish:POR": 1.0,
+    "kpk_finish->kpk_wait:POR": 1.0
+  },
+  "w_init": {
+    "kpk_root->kpk_detect:SUB": 1.0,
+    "kpk_root->kpk_execute:SUB": 1.0,
+    "kpk_root->kpk_finish:SUB": 1.0,
+    "kpk_root->kpk_wait:SUB": 1.0,
+    "kpk_detect->kpk_material_check:SUB": 1.0,
+    "kpk_detect->kpk_push_window:SUB": 1.0,
+    "kpk_execute->kpk_move_selector:SUB": 1.0,
+    "kpk_execute->kpk_opposition_probe:SUB": 1.0,
+    "kpk_finish->kpk_promotion_probe:SUB": 1.0,
+    "kpk_wait->kpk_wait_for_change:SUB": 1.0,
+    "kpk_detect->kpk_execute:POR": 1.0,
+    "kpk_execute->kpk_finish:POR": 1.0,
+    "kpk_finish->kpk_wait:POR": 1.0
+  },
   "consolidation_meta": {
-    "total_episodes": 18950,
+    "total_episodes": 19850,
     "episodes_since_apply": 0,
-    "last_apply_time": "2025-12-12T04:52:40.718445",
-    "edges_tracked": 0
+    "last_apply_time": "2025-12-15T10:24:18.856986",
+    "edges_tracked": 13
   }
 }
