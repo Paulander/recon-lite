@@ -33,7 +33,15 @@ QUICK_MODE=false
 RESUME_MODE=false
 SINGLE_PHASE=""
 ENGINE="/usr/games/stockfish"
+EPOCHS=3              # Number of times to repeat full curriculum
+
+# Configuration
+QUICK_MODE=false
+RESUME_MODE=false
+SINGLE_PHASE=""
+ENGINE="/usr/games/stockfish"
 EPOCHS=1              # Number of times to repeat full curriculum
+KPK_BRIDGE=false      # Use KPK positions for bridge phase
 
 # Training parameters per phase
 # Phase 1: Anchor (perfect endgame conversion)
@@ -42,7 +50,7 @@ ANCHOR_WIN_RATE=0.99    # Exit criterion: >99% win rate
 ANCHOR_DEPTH=2          # Stockfish depth for validation
 
 # Phase 2: Bridge (learn transitions)
-BRIDGE_GAMES=200        # Simplified middlegame episodes
+BRIDGE_GAMES=1000        # Simplified middlegame episodes
 BRIDGE_ACTIVATION=0.8   # Exit: >80% endgame activation rate
 BRIDGE_DEPTH=4
 
@@ -97,6 +105,10 @@ while [[ $# -gt 0 ]]; do
             fi
             shift 2
             ;;
+        --kpk-bridge)
+            KPK_BRIDGE=true
+            shift
+            ;;
         --help|-h)
             echo "Usage: $0 [OPTIONS]"
             echo ""
@@ -106,6 +118,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --resume          Resume from checkpoint"
             echo "  --engine PATH     Path to Stockfish"
             echo "  --epochs N        Repeat full curriculum N times (default: 1)"
+            echo "  --kpk-bridge      Use KPK near-promotion positions for bridge phase"
             echo ""
             echo "Phases:"
             echo "  anchor:      Perfect endgame conversion (KRK, KPK, KQK)"
@@ -193,6 +206,8 @@ run_anchor_phase() {
         --consolidate \
         --consolidate-pack "$WEIGHTS_DIR/nightly/krk_consol.json" \
         ${ENGINE:+--engine "$ENGINE" --depth "$ANCHOR_DEPTH"} \
+        --consolidate-eta 0.0001 \
+        --consolidate-min-episodes 200 \
         --trace-out "$REPORTS_DIR/anchor_krk.jsonl" \
         --output-basename "anchor_krk_$TIMESTAMP" \
         2>&1 | tee -a "$LOG_FILE" || log "KRK training encountered issues"
@@ -241,19 +256,41 @@ run_anchor_phase() {
 run_bridge_phase() {
     log_header "Phase 2: BRIDGE (Learn Transitions)"
     
-    log "Training simplified middlegame transitions ($BRIDGE_GAMES games)..."
-    
-    # Use full_game_demo with bridge-specific configuration
-    uv run python demos/persistent/full_game_demo.py \
-        --batch "$BRIDGE_GAMES" \
-        --plasticity \
-        --bandit \
-        --consolidate \
-        --consolidate-pack "$WEIGHTS_DIR/nightly/fullgame_consol.json" \
-        ${ENGINE:+--engine "$ENGINE" --depth "$BRIDGE_DEPTH"} \
-        --trace-out "$REPORTS_DIR/bridge_training.jsonl" \
-        --output-basename "bridge_$TIMESTAMP" \
-        2>&1 | tee -a "$LOG_FILE" || log "Bridge training encountered issues"
+    if [ "$KPK_BRIDGE" = true ]; then
+        log "Training bridge with KPK near-promotion positions ($BRIDGE_GAMES games)..."
+        
+        # Use full_game_train.py directly with KPK FENs
+        uv run python demos/persistent/full_game_train.py \
+            --batch "$BRIDGE_GAMES" \
+            --fen-file data/bridge/near_promo.fens \
+            --max-moves 80 \
+            --timeout-loss \
+            --plasticity \
+            --consolidate \
+            --consolidate-pack "$WEIGHTS_DIR/nightly/fullgame_consol.json" \
+            ${ENGINE:+--engine "$ENGINE" --depth "$BRIDGE_DEPTH"} \
+            --weights-dir "$WEIGHTS_DIR/latest" \
+            --trace-out "$REPORTS_DIR/bridge_training.jsonl" \
+            --output-json "$REPORTS_DIR/bridge_stats.json" \
+            --snapshot-dir "$REPORTS_DIR/bridge_snapshots" \
+            --snapshot-interval 50 \
+            --quiet \
+            2>&1 | tee -a "$LOG_FILE" || log "KPK bridge training encountered issues"
+    else
+        log "Training simplified middlegame transitions ($BRIDGE_GAMES games)..."
+        
+        # Use full_game_demo with standard positions
+        uv run python demos/persistent/full_game_demo.py \
+            --batch "$BRIDGE_GAMES" \
+            --plasticity \
+            --bandit \
+            --consolidate \
+            --consolidate-pack "$WEIGHTS_DIR/nightly/fullgame_consol.json" \
+            ${ENGINE:+--engine "$ENGINE" --depth "$BRIDGE_DEPTH"} \
+            --trace-out "$REPORTS_DIR/bridge_training.jsonl" \
+            --output-basename "bridge_$TIMESTAMP" \
+            2>&1 | tee -a "$LOG_FILE" || log "Bridge training encountered issues"
+    fi
     
     TOTAL_EPISODES=$((TOTAL_EPISODES + BRIDGE_GAMES))
     

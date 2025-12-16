@@ -924,6 +924,9 @@ def play_game(
         if "kpk_root" in g.nodes:
             g.nodes["kpk_root"].meta["gate"] = subgraph_gates.get("kpk", 0.0)
             g.nodes["kpk_root"].meta["activation"] = subgraph_gates.get("kpk", 0.0)
+        if "kqk_root" in g.nodes:
+            g.nodes["kqk_root"].meta["gate"] = subgraph_gates.get("kqk", 0.0)
+            g.nodes["kqk_root"].meta["activation"] = subgraph_gates.get("kqk", 0.0)
         
         # Update persistence for strategic plans
         goal_plans = get_active_plans_for_goal(ultimate.goal.name, phase.as_dict())

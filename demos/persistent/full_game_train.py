@@ -247,6 +247,50 @@ DEFAULT_CONSOLIDATE_ETA = 0.01
 DEFAULT_CONSOLIDATE_MIN_EPISODES = 10
 
 
+_SUBGRAPH_NODE_PREFIXES = (
+    "krk_",
+    "kpk_",
+    "kqk_",
+)
+
+_TACTICS_NODE_PREFIXES = (
+    "tactic_",
+    "detect_",
+    "exploit_",
+    "protect_",
+)
+
+
+def _is_non_fullgame_node_id(node_id: str) -> bool:
+    return node_id.startswith(_SUBGRAPH_NODE_PREFIXES) or node_id.startswith(_TACTICS_NODE_PREFIXES)
+
+
+def _fullgame_edge_whitelist(graph: Graph) -> List[str]:
+    """
+    Return edge keys that belong to the 'full game' graph and should be owned by
+    the full-game consolidation pack.
+
+    Critical: this excludes endgame subgraphs (kpk/krk/kqk) and tactics, because
+    those are trained/saved in their own packs and should not be overwritten by
+    full-game consolidation.
+    """
+    keys: List[str] = []
+    for e in graph.edges:
+        if e.ltype not in (LinkType.POR, LinkType.SUB):
+            continue
+        
+        # FIX: Whitelist edges that connect TO a subgraph root (the gate).
+        # These are "main" -> "subgraph_root" edges and MUST be owned by fullgame.
+        if e.dst.endswith("_root"):
+             keys.append(f"{e.src}->{e.dst}:{e.ltype.name}")
+             continue
+
+        if _is_non_fullgame_node_id(e.src) or _is_non_fullgame_node_id(e.dst):
+            continue
+        keys.append(f"{e.src}->{e.dst}:{e.ltype.name}")
+    return keys
+
+
 def get_trainable_edges(graph: Graph) -> List[Tuple[str, str, LinkType]]:
     """
     Get ALL edges that should be trained with plasticity.
@@ -281,6 +325,7 @@ def play_training_game(
     *,
     initial_fen: Optional[str] = None,
     max_moves: int = 200,
+    timeout_loss: bool = False,
     vs_random: bool = True,
     verbose: bool = False,
     stockfish_engine: Optional[chess.engine.SimpleEngine] = None,
@@ -333,7 +378,8 @@ def play_training_game(
     
     # Apply consolidation weights if available
     if consolidation_engine:
-        consolidation_engine.init_from_graph(g)
+        # IMPORTANT: do not let full-game consolidation overwrite trained endgame/tactics packs.
+        consolidation_engine.init_from_graph(g, edge_whitelist=_fullgame_edge_whitelist(g))
         consolidation_engine.apply_w_base_to_graph(g)
     
     # Set up feature extractor for stem cells
@@ -346,6 +392,7 @@ def play_training_game(
         state = GameState(board=chess.Board(initial_fen))
     else:
         state = GameState(board=chess.Board())
+    agent_color = state.board.turn
     state.last_eval = eval_position(state.board)
     
     tick_records: List[TickRecord] = []
@@ -547,7 +594,12 @@ def play_training_game(
                 state.move_history.append(opp_move.uci())
     
     # Game over - extract episode summary
-    game_result = state.board.result() if state.board.is_game_over() else "*"
+    timed_out = (not state.board.is_game_over()) and len(state.move_history) >= max_moves
+    if timed_out and timeout_loss:
+        # If the agent fails to convert within the move budget, treat as a loss
+        game_result = "0-1" if agent_color == chess.WHITE else "1-0"
+    else:
+        game_result = state.board.result() if state.board.is_game_over() else "*"
     outcome_score = 0.0
     if game_result == "1-0":
         outcome_score = 1.0
@@ -559,6 +611,8 @@ def play_training_game(
         except Exception:
             draw_claim = "n/a"
         print(f"[draw-debug] game {game_id} draw fen={state.board.fen()} claim={draw_claim}")
+    elif timed_out and timeout_loss and debug_draws:
+        print(f"[timeout-debug] game {game_id} timeout_loss fen={state.board.fen()} plies={len(state.move_history)}")
     
     # Gather ALL active edge traces for consolidation
     # This tracks the entire network, not just specific edges
@@ -575,16 +629,21 @@ def play_training_game(
     
     # Accumulate for consolidation using ALL edge traces
     if consolidation_engine:
+        # Only consolidate edges owned by the full-game pack.
+        allowed_edge_keys = set(consolidation_engine.edge_states.keys())
+
         # Create episode summary with all active edge deltas
         edge_delta_sums = {}
         for edge_key, trace_value in active_traces.items():
             # Scale trace by outcome: winning reinforces active edges, losing penalizes
-            edge_delta_sums[edge_key] = trace_value * outcome_score
+            if edge_key in allowed_edge_keys:
+                edge_delta_sums[edge_key] = trace_value * outcome_score
         
         # If plasticity ran, merge its deltas too
         if episode_summary and hasattr(episode_summary, 'edge_delta_sums'):
             for k, v in episode_summary.edge_delta_sums.items():
-                edge_delta_sums[k] = edge_delta_sums.get(k, 0.0) + v
+                if k in allowed_edge_keys:
+                    edge_delta_sums[k] = edge_delta_sums.get(k, 0.0) + v
         
         # Build comprehensive episode summary
         full_summary = EpisodeSummary(
@@ -641,6 +700,7 @@ def run_batch_training(
     *,
     initial_fens: Optional[List[str]] = None,
     max_moves: int = 200,
+    timeout_loss: bool = False,
     vs_random: bool = True,
     verbose: bool = True,
     stockfish_path: Optional[str] = None,
@@ -774,6 +834,7 @@ def run_batch_training(
             game_id=i + 1,
             initial_fen=game_fen,
             max_moves=max_moves,
+            timeout_loss=timeout_loss,
             vs_random=vs_random,
             verbose=verbose,
             stockfish_engine=sf_engine,
@@ -884,6 +945,7 @@ def main():
     # Basic options
     parser.add_argument("--batch", type=int, default=10, help="Number of games to train")
     parser.add_argument("--max-moves", type=int, default=200, help="Max moves per game")
+    parser.add_argument("--timeout-loss", action="store_true", help="Treat reaching --max-moves without mate as a loss for the agent")
     parser.add_argument("--vs-random", action="store_true", default=True, help="Play against random opponent")
     parser.add_argument("--quiet", action="store_true", help="Suppress verbose output")
     parser.add_argument("--quick", action="store_true", help="Quick mode (fewer games, less depth)")
@@ -940,6 +1002,7 @@ def main():
         n_games=args.batch,
         initial_fens=initial_fens,
         max_moves=args.max_moves,
+        timeout_loss=args.timeout_loss,
         vs_random=args.vs_random,
         verbose=verbose,
         stockfish_path=args.engine,

@@ -15,6 +15,64 @@ import chess
 
 from recon_lite import Graph, LinkType, Node, NodeType, NodeState
 
+# =============================================================================
+# CRITICAL: Import factory functions that create nodes WITH predicates.
+# Without these, the subgraph nodes are empty placeholders that auto-confirm.
+# See SUBGRAPH_INTEGRATION.md for guidance on adding new subgraphs.
+# =============================================================================
+
+# KQK (King+Queen vs King) factories
+from recon_lite_chess.scripts.kqk import (
+    create_kqk_material_detector,
+    create_kqk_edge_detector,
+    create_kqk_corner_detector,
+    create_kqk_mate_detector,
+    create_kqk_restriction_evaluator,
+    create_kqk_drive_moves,
+    create_kqk_approach_moves,
+    create_kqk_mate_moves,
+    create_kqk_move_selector,
+)
+from recon_lite_chess.scripts.stalemate_detector import (
+    create_stalemate_danger_sensor,
+    create_stalemate_gate,
+    create_wait_move_selector,
+)
+
+# KPK (King+Pawn vs King) factories
+from recon_lite_chess.scripts.kpk import (
+    create_kpk_material_detector,
+    create_kpk_push_window,
+    create_kpk_opposition_probe,
+    create_kpk_promotion_probe,
+    create_kpk_move_selector,
+)
+
+# KRK (King+Rook vs King) factories - uses classes
+from recon_lite_chess.krk_nodes import (
+    KingAtEdgeDetector,
+    BoxShrinkEvaluator,
+    ConfinementEvaluator,
+    BarrierReadyEvaluator,
+    OppositionEvaluator,
+    MateDeliverEvaluator,
+    StalemateDetector,
+    CutEstablishedDetector,
+    WaitForBoardChange as KRKWaitForBoardChange,
+    RookLostDetector,
+    # Move generators (with correct class names)
+    Phase0ChooseMoves,
+    KingDriveMoves,
+    ConfinementMoves,
+    BarrierPlacementMoves,
+    BoxShrinkMoves,
+    OppositionMoves,
+    MateMoves,
+)
+
+# Shared wait node factory
+from recon_lite_chess import create_wait_for_board_change
+
 
 # All supported tactic types
 TACTIC_TYPES = [
@@ -189,6 +247,9 @@ def _integrate_krk_subgraph(g: Graph) -> None:
     Integrate KRK endgame subgraph with prefixed node IDs.
     
     All KRK nodes get 'krk_' prefix and are marked with subgraph="krk".
+    
+    IMPORTANT: Uses factory classes from krk_nodes.py to create nodes WITH predicates.
+    Without predicates, nodes auto-confirm without populating suggested_move.
     """
     prefix = "krk_"
     
@@ -203,7 +264,7 @@ def _integrate_krk_subgraph(g: Graph) -> None:
     # Connect to main graph
     g.add_edge("GameRoot", f"{prefix}root", LinkType.SUB)
     
-    # KRK Phase nodes
+    # KRK Phase nodes (scripts - no predicates needed)
     phases = [
         ("phase0_establish_cut", "Establish first cut"),
         ("phase1_drive_to_edge", "Drive king to edge"),
@@ -227,45 +288,36 @@ def _integrate_krk_subgraph(g: Graph) -> None:
     g.add_edge(f"{prefix}phase2_shrink_box", f"{prefix}phase3_take_opposition", LinkType.POR)
     g.add_edge(f"{prefix}phase3_take_opposition", f"{prefix}phase4_deliver_mate", LinkType.POR)
     
-    # KRK Evaluators (terminals)
-    evaluators = [
-        "king_at_edge",
-        "king_confined",
-        "barrier_ready",
-        "box_can_shrink",
-        "can_take_opposition",
-        "can_deliver_mate",
-        "is_stalemate",
-        "cut_established",
-        "rook_lost",
-    ]
+    # =========================================================================
+    # KRK Evaluators - USE CLASS FACTORIES WITH PREDICATES
+    # =========================================================================
+    g.add_node(KingAtEdgeDetector(f"{prefix}king_at_edge"))
+    g.add_node(ConfinementEvaluator(f"{prefix}king_confined"))
+    g.add_node(BarrierReadyEvaluator(f"{prefix}barrier_ready"))
+    g.add_node(BoxShrinkEvaluator(f"{prefix}box_can_shrink"))
+    g.add_node(OppositionEvaluator(f"{prefix}can_take_opposition"))
+    g.add_node(MateDeliverEvaluator(f"{prefix}can_deliver_mate"))
+    g.add_node(StalemateDetector(f"{prefix}is_stalemate"))
+    g.add_node(CutEstablishedDetector(f"{prefix}cut_established"))
+    g.add_node(RookLostDetector(f"{prefix}rook_lost"))
     
-    for eval_id in evaluators:
-        node = Node(f"{prefix}{eval_id}", NodeType.TERMINAL, meta={
-            "layer": "endgame_terminal",
-            "subgraph": "krk",
-        })
-        g.add_node(node)
+    # =========================================================================
+    # KRK Move generators - USE CLASS FACTORIES WITH PREDICATES
+    # =========================================================================
+    g.add_node(Phase0ChooseMoves(f"{prefix}choose_phase0"))
+    g.add_node(KingDriveMoves(f"{prefix}king_drive_moves"))
+    g.add_node(ConfinementMoves(f"{prefix}confinement_moves"))
+    g.add_node(BarrierPlacementMoves(f"{prefix}barrier_placement_moves"))
+    g.add_node(BoxShrinkMoves(f"{prefix}box_shrink_moves"))
+    g.add_node(OppositionMoves(f"{prefix}opposition_moves"))
+    g.add_node(MateMoves(f"{prefix}mate_moves"))
     
-    # KRK Move generators
-    move_gens = [
-        "choose_phase0",
-        "king_drive_moves",
-        "confinement_moves",
-        "barrier_placement_moves",
-        "box_shrink_moves",
-        "opposition_moves",
-        "mate_moves",
-    ]
+    # Wait node
+    g.add_node(KRKWaitForBoardChange(f"{prefix}wait"))
     
-    for mg_id in move_gens:
-        node = Node(f"{prefix}{mg_id}", NodeType.TERMINAL, meta={
-            "layer": "endgame_actuator",
-            "subgraph": "krk",
-        })
-        g.add_node(node)
-    
-    # Internal phase wiring (simplified)
+    # =========================================================================
+    # Internal phase wiring
+    # =========================================================================
     g.add_edge(f"{prefix}phase0_establish_cut", f"{prefix}cut_established", LinkType.SUB)
     g.add_edge(f"{prefix}phase0_establish_cut", f"{prefix}choose_phase0", LinkType.SUB)
     
@@ -285,18 +337,15 @@ def _integrate_krk_subgraph(g: Graph) -> None:
     # Sentinels
     g.add_edge(f"{prefix}root", f"{prefix}is_stalemate", LinkType.SUB)
     g.add_edge(f"{prefix}root", f"{prefix}rook_lost", LinkType.SUB)
-    
-    # Add wait node
-    wait_node = Node(f"{prefix}wait", NodeType.TERMINAL, meta={
-        "layer": "endgame_terminal",
-        "subgraph": "krk",
-    })
-    g.add_node(wait_node)
+    g.add_edge(f"{prefix}root", f"{prefix}wait", LinkType.SUB)
 
 
 def _integrate_kpk_subgraph(g: Graph) -> None:
     """
     Integrate KPK endgame subgraph with prefixed node IDs.
+    
+    IMPORTANT: Uses factory functions from kpk.py to create nodes WITH predicates.
+    Without predicates, nodes auto-confirm without populating suggested_move.
     """
     prefix = "kpk_"
     
@@ -311,7 +360,7 @@ def _integrate_kpk_subgraph(g: Graph) -> None:
     # Connect to main graph
     g.add_edge("GameRoot", f"{prefix}root", LinkType.SUB)
     
-    # KPK Script nodes
+    # KPK Script nodes (no predicates needed for scripts)
     scripts = ["detect", "execute", "finish", "wait"]
     for script_id in scripts:
         node = Node(f"{prefix}{script_id}", NodeType.SCRIPT, meta={
@@ -326,22 +375,15 @@ def _integrate_kpk_subgraph(g: Graph) -> None:
     g.add_edge(f"{prefix}execute", f"{prefix}finish", LinkType.POR)
     g.add_edge(f"{prefix}finish", f"{prefix}wait", LinkType.POR)
     
-    # KPK Terminals
-    terminals = [
-        "material_check",
-        "push_window",
-        "opposition_probe",
-        "promotion_probe",
-        "move_selector",
-        "wait_for_change",
-    ]
-    
-    for term_id in terminals:
-        node = Node(f"{prefix}{term_id}", NodeType.TERMINAL, meta={
-            "layer": "endgame_terminal",
-            "subgraph": "kpk",
-        })
-        g.add_node(node)
+    # =========================================================================
+    # KPK Terminals - USE FACTORY FUNCTIONS WITH PREDICATES
+    # =========================================================================
+    g.add_node(create_kpk_material_detector(f"{prefix}material_check"))
+    g.add_node(create_kpk_push_window(f"{prefix}push_window"))
+    g.add_node(create_kpk_opposition_probe(f"{prefix}opposition_probe"))
+    g.add_node(create_kpk_promotion_probe(f"{prefix}promotion_probe"))
+    g.add_node(create_kpk_move_selector(f"{prefix}move_selector"))
+    g.add_node(create_wait_for_board_change(f"{prefix}wait_for_change"))
     
     # Internal wiring
     g.add_edge(f"{prefix}detect", f"{prefix}material_check", LinkType.SUB)
@@ -357,6 +399,9 @@ def _integrate_kqk_subgraph(g: Graph) -> None:
     Integrate KQK endgame subgraph with prefixed node IDs.
     
     King + Queen vs King endgame.
+    
+    IMPORTANT: Uses factory functions from kqk.py to create nodes WITH predicates.
+    Without predicates, nodes auto-confirm without populating suggested_move.
     """
     prefix = "kqk_"
     
@@ -371,7 +416,7 @@ def _integrate_kqk_subgraph(g: Graph) -> None:
     # Connect to main graph
     g.add_edge("GameRoot", f"{prefix}root", LinkType.SUB)
     
-    # KQK Phase nodes
+    # KQK Phase nodes (scripts - no predicates needed)
     phases = [
         ("phase1_drive", "Drive enemy king to edge"),
         ("phase2_corner", "Push king to corner"),
@@ -391,38 +436,32 @@ def _integrate_kqk_subgraph(g: Graph) -> None:
     g.add_edge(f"{prefix}phase1_drive", f"{prefix}phase2_corner", LinkType.POR)
     g.add_edge(f"{prefix}phase2_corner", f"{prefix}phase3_mate", LinkType.POR)
     
-    # KQK Evaluators (terminals)
-    evaluators = [
-        "material_check",
-        "edge_detector",
-        "corner_detector",
-        "mate_detector",
-        "restriction_eval",
-    ]
+    # =========================================================================
+    # KQK Terminals - USE FACTORY FUNCTIONS WITH PREDICATES
+    # =========================================================================
+    g.add_node(create_kqk_material_detector(f"{prefix}material_check"))
+    g.add_node(create_kqk_edge_detector(f"{prefix}edge_detector"))
+    g.add_node(create_kqk_corner_detector(f"{prefix}corner_detector"))
+    g.add_node(create_kqk_mate_detector(f"{prefix}mate_detector"))
+    g.add_node(create_kqk_restriction_evaluator(f"{prefix}restriction_eval"))
     
-    for eval_id in evaluators:
-        node = Node(f"{prefix}{eval_id}", NodeType.TERMINAL, meta={
-            "layer": "endgame_terminal",
-            "subgraph": "kqk",
-        })
-        g.add_node(node)
+    # Move generators
+    g.add_node(create_kqk_drive_moves(f"{prefix}drive_moves"))
+    g.add_node(create_kqk_approach_moves(f"{prefix}approach_moves"))
+    g.add_node(create_kqk_mate_moves(f"{prefix}mate_moves"))
+    g.add_node(create_kqk_move_selector(f"{prefix}move_selector"))
     
-    # KQK Move generators
-    move_gens = [
-        "drive_moves",
-        "approach_moves",
-        "mate_moves",
-        "move_selector",
-    ]
+    # Stalemate detection (shared sensor)
+    g.add_node(create_stalemate_danger_sensor(f"{prefix}stalemate_sensor"))
+    g.add_node(create_stalemate_gate(f"{prefix}stalemate_gate", danger_threshold=0.99))
+    g.add_node(create_wait_move_selector(f"{prefix}safe_wait_selector"))
     
-    for mg_id in move_gens:
-        node = Node(f"{prefix}{mg_id}", NodeType.TERMINAL, meta={
-            "layer": "endgame_actuator",
-            "subgraph": "kqk",
-        })
-        g.add_node(node)
+    # Wait node
+    g.add_node(create_wait_for_board_change(f"{prefix}wait"))
     
+    # =========================================================================
     # Internal phase wiring
+    # =========================================================================
     g.add_edge(f"{prefix}phase1_drive", f"{prefix}edge_detector", LinkType.SUB)
     g.add_edge(f"{prefix}phase1_drive", f"{prefix}restriction_eval", LinkType.SUB)
     g.add_edge(f"{prefix}phase1_drive", f"{prefix}drive_moves", LinkType.SUB)
@@ -433,16 +472,12 @@ def _integrate_kqk_subgraph(g: Graph) -> None:
     g.add_edge(f"{prefix}phase3_mate", f"{prefix}mate_detector", LinkType.SUB)
     g.add_edge(f"{prefix}phase3_mate", f"{prefix}mate_moves", LinkType.SUB)
     
-    # Global move selector (fallback)
-    g.add_edge(f"{prefix}root", f"{prefix}move_selector", LinkType.SUB)
+    # Root-level connections
     g.add_edge(f"{prefix}root", f"{prefix}material_check", LinkType.SUB)
-    
-    # Add wait node
-    wait_node = Node(f"{prefix}wait", NodeType.TERMINAL, meta={
-        "layer": "endgame_terminal",
-        "subgraph": "kqk",
-    })
-    g.add_node(wait_node)
+    g.add_edge(f"{prefix}root", f"{prefix}stalemate_sensor", LinkType.SUB)
+    g.add_edge(f"{prefix}root", f"{prefix}stalemate_gate", LinkType.SUB)
+    g.add_edge(f"{prefix}root", f"{prefix}move_selector", LinkType.SUB)
+    g.add_edge(f"{prefix}root", f"{prefix}safe_wait_selector", LinkType.SUB)
     g.add_edge(f"{prefix}root", f"{prefix}wait", LinkType.SUB)
 
 
