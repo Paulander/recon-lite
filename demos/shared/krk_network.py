@@ -225,61 +225,30 @@ def build_krk_network() -> Graph:
 
 def create_random_krk_board(white_to_move: bool = True) -> str:
     """
-    Create a random KRK position for testing.
+    Create a random valid KRK position for testing.
+
+    Uses the validated generator from training.generators to ensure:
+    - Both kings are present
+    - No immediate stalemate possible from white's first move
+    - Position is winnable for white
 
     Args:
-        white_to_move: Whether white should move first
+        white_to_move: Whether white should move first (ignored, always True for training)
 
     Returns:
         str: FEN string of the random KRK position
     """
-    import random
-
-    # Place white king randomly
-    wk_squares = ['g7', 'h7', 'g8', 'h8']  # Corner area
-    wk_square = random.choice(wk_squares)
-
-    # Place white rook randomly (not on king square)
-    all_squares = [f"{file}{rank}" for rank in '12345678' for file in 'abcdefgh']
-    available_squares = [sq for sq in all_squares if sq != wk_square]
-    wr_square = random.choice(available_squares)
-
-    # Place black king randomly (not on white pieces)
-    bk_squares = [sq for sq in all_squares if sq not in [wk_square, wr_square]]
-    bk_square = random.choice(bk_squares)
-
-    # Create FEN
-    board_fen = ""
-    for rank in '87654321':
-        empty_count = 0
-        for file in 'abcdefgh':
-            square = f"{file}{rank}"
-            if square == wk_square:
-                if empty_count > 0:
-                    board_fen += str(empty_count)
-                    empty_count = 0
-                board_fen += 'K'
-            elif square == wr_square:
-                if empty_count > 0:
-                    board_fen += str(empty_count)
-                    empty_count = 0
-                board_fen += 'R'
-            elif square == bk_square:
-                if empty_count > 0:
-                    board_fen += str(empty_count)
-                    empty_count = 0
-                board_fen += 'k'
-            else:
-                empty_count += 1
-        if empty_count > 0:
-            board_fen += str(empty_count)
-        if rank != '1':
-            board_fen += '/'
-
-    turn = 'w' if white_to_move else 'b'
-    fen = f"{board_fen} {turn} - - 0 1"
-
-    return fen
+    from recon_lite_chess.training.generators import generate_krk_position
+    
+    # Use the validated generator which ensures no immediate stalemate
+    board = generate_krk_position(ensure_winning=True)
+    
+    # Validate both kings are present (defensive check)
+    if board.king(chess.WHITE) is None or board.king(chess.BLACK) is None:
+        # Fallback to known safe position
+        return "8/8/8/4k3/8/8/8/R3K3 w - - 0 1"
+    
+    return board.fen()
 
 
 def evaluate_krk_position(board: chess.Board, max_ticks: int = 100) -> Dict[str, Any]:

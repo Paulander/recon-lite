@@ -32,7 +32,7 @@ def generate_krk_position(
         max_attempts: Maximum attempts to find valid position
         
     Returns:
-        A valid KRK position
+        A valid KRK position where White can win
     """
     for _ in range(max_attempts):
         board = chess.Board(None)
@@ -61,19 +61,34 @@ def generate_krk_position(
         board.set_piece_at(bk_sq, chess.Piece(chess.KING, chess.BLACK))
         board.set_piece_at(rook_sq, chess.Piece(chess.ROOK, chess.WHITE))
         
-        # Set turn randomly
-        board.turn = random.choice([chess.WHITE, chess.BLACK])
+        # Always white to move for training consistency
+        board.turn = chess.WHITE
+        
+        # Validate position has both kings
+        if board.king(chess.WHITE) is None or board.king(chess.BLACK) is None:
+            continue
         
         # Validate position
         if not board.is_valid():
             continue
         
         if ensure_winning:
-            # Skip if stalemate or Black can capture rook
-            if board.turn == chess.BLACK and board.is_stalemate():
+            # Check if rook is immediately capturable by black king
+            if rook_sq in board.attacks(bk_sq):
                 continue
-            # Check if rook is en prise to king
-            if board.turn == chess.BLACK and rook_sq in board.attacks(bk_sq):
+            
+            # Check if ANY white move creates immediate stalemate for black
+            has_safe_move = False
+            for move in board.legal_moves:
+                board.push(move)
+                is_stale = board.is_stalemate()
+                board.pop()
+                if not is_stale:
+                    has_safe_move = True
+                    break
+            
+            if not has_safe_move:
+                # All white moves lead to stalemate - reject this position
                 continue
         
         return board

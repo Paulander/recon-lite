@@ -44,13 +44,14 @@ Source docs: `updates_continuous.md`, `recon_roadmap_m3_fast_plasticity.md`, `re
 - Used by M3 bandit for "scent" gradients toward winning positions
 
 **FeatureHub** (`features/hub.py`):
-Global registry of 18+ hoisted features across 6 categories:
-- **TACTICAL**: `detect_fork`, `detect_pin`, `detect_hanging`, `detect_skewer`, `detect_back_rank`
+Global registry of 30+ hoisted features across 6 categories:
+- **TACTICAL**: `fork_available`, `pin_present`, `hanging_piece`, `skewer`, `back_rank_vulnerable`, `discovered_attack`, `double_check`
 - **GEOMETRIC**: `opposition_status`
-- **MATERIAL**: `material_balance`, `material_advantage`, `piece_count`
-- **POSITIONAL**: `king_safety`, `center_control`, `color_complex_weakness`
-- **DYNAMIC**: `mobility`, `pawn_tension`
-- **PHASE**: `phase_opening`, `phase_middlegame`, `phase_endgame`, `affordance_krk`, `affordance_kpk`, `affordance_kqk`
+- **MATERIAL**: `material_advantage`
+- **POSITIONAL**: `king_safety`, `center_control`, `pawn_structure`, `color_complex_weakness`
+- **DYNAMIC**: `mobility`
+- **PHASE**: `phase_opening`, `phase_endgame`, `affordance_krk`, `affordance_kpk`, `affordance_kqk`
+- Plus 20+ additional sensors from `sensors_v2.py` for sensor flooding
 
 **Evaluation** (`eval/`):
 - `heuristic.py`: Material, king safety, mobility, pawn structure, piece activity
@@ -139,6 +140,7 @@ Serialized weight/threshold packs loaded at build time; used as baselines:
 - `demos/persistent/kpk_persistent_demo.py` - KPK with promotion
 - `demos/persistent/kqk_persistent_demo.py` - KQK with stalemate protection
 - `demos/persistent/full_game_demo.py` - Full game from start
+- `demos/persistent/full_game_train.py` - Full game training with plasticity, consolidation, and stem cells
 
 ### Plasticity
 - `src/recon_lite/plasticity/fast.py` - M3 fast plasticity
