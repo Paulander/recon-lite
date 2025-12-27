@@ -118,6 +118,7 @@ from recon_lite_chess.eval.heuristic import (
     eval_position_stockfish,
     compute_reward_tick,
 )
+from recon_lite_chess.sensors.structure import is_kpk_theoretical_draw
 
 # M8: KPK plasticity defaults (matching KRK)
 DEFAULT_PLASTICITY_ETA = 0.05
@@ -216,6 +217,10 @@ def play_persistent_game(
         board = chess.Board(initial_fen)
     else:
         board = chess.Board(create_random_kpk_board(white_to_move=True))
+    
+    # Check if starting position is a theoretical draw (only check at start)
+    starting_is_theoretical_draw = is_kpk_theoretical_draw(board)
+    
     g = build_kpk_network()
     eng = ReConEngine(g)
     g.nodes["kpk_root"].state = NodeState.REQUESTED
@@ -410,6 +415,7 @@ def play_persistent_game(
         "final_fen": board.fen(),
         "checkmate": board.is_checkmate(),
         "promoted": promoted,  # KPK success condition
+        "theoretical_draw": starting_is_theoretical_draw,  # Was starting position a theoretical draw?
     }
     
     if consol_engine and episode_summary:
@@ -464,13 +470,17 @@ def run_batch(n_games: int = 10, max_plies: int = 100, stem_cell_enabled: bool =
         "games": [],
         "wins": 0,       # W for result "1-0" (includes promotions)
         "losses": 0,     # L for result "0-1"
-        "draws": 0,      # D for result "1/2-1/2"
+        "draws": 0,      # D for result "1/2-1/2" 
         "incomplete": 0, # Games that hit max_plies
         "mates": 0,
         "stalls": 0,
         "total_mate_plies": 0,
         "avg_mate_length": None,
         "promotions": 0,
+        # Theoretical draw tracking for optimal play rate
+        "theoretical_draws": 0,       # Draw outcomes from theoretical draw starting positions
+        "avoidable_draws": 0,         # Draw outcomes from winnable starting positions (suboptimal)
+        "wins_from_theoretical_draws": 0,  # Wins from positions that were theoretical draws (bonus!)
     }
     
     # M8: Create shared stem cell manager if enabled
@@ -509,6 +519,23 @@ def run_batch(n_games: int = 10, max_plies: int = 100, stem_cell_enabled: bool =
         if res.get("promoted"):
             stats["promotions"] += 1
         
+        # Track theoretical vs avoidable draws
+        # Only count as theoretical_draw if the game ENDED in a draw AND started as theoretical draw
+        is_theoretical_start = res.get("theoretical_draw", False)
+        is_draw_outcome = (game_result == "1/2-1/2")
+        
+        if is_draw_outcome:
+            if is_theoretical_start:
+                # Draw from a theoretical draw position = expected/optimal outcome
+                stats["theoretical_draws"] += 1
+            else:
+                # Draw from a winnable position = avoidable draw (suboptimal play)
+                stats["avoidable_draws"] += 1
+        
+        # Also track wins from theoretical draw positions (exceeded expectations!)
+        if game_result == "1-0" and is_theoretical_start:
+            stats["wins_from_theoretical_draws"] += 1
+        
         # Memory management: clean up between games
         gc.collect()
         
@@ -518,6 +545,26 @@ def run_batch(n_games: int = 10, max_plies: int = 100, stem_cell_enabled: bool =
     # Calculate win rate (for KPK, promotion counts as win)
     completed = stats["wins"] + stats["losses"] + stats["draws"]
     stats["win_rate"] = stats["wins"] / completed if completed > 0 else 0.0
+    
+    # Derived stats for complete breakdown
+    # Total positions that started as theoretical draws
+    stats["theoretical_draw_starts"] = stats["theoretical_draws"] + stats["wins_from_theoretical_draws"]
+    # Total positions that started as winnable
+    stats["winnable_starts"] = completed - stats["theoretical_draw_starts"]
+    # Wins from winnable positions (we should win these)
+    stats["wins_from_winnable"] = stats["wins"] - stats["wins_from_theoretical_draws"]
+    
+    # How well we do on positions we SHOULD win (the key metric for training)
+    if stats["winnable_starts"] > 0:
+        stats["winnable_win_rate"] = stats["wins_from_winnable"] / stats["winnable_starts"]
+    else:
+        stats["winnable_win_rate"] = 1.0
+    
+    # Calculate optimal play rate:
+    # Optimal = wins + draws_from_theoretical_positions
+    # (If we win, it's optimal. If we draw from a drawn position, it's optimal.)
+    optimal_outcomes = stats["wins"] + stats["theoretical_draws"]
+    stats["optimal_rate"] = optimal_outcomes / completed if completed > 0 else 0.0
     
     # M8: Report stem cell stats
     if stem_manager:

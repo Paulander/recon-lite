@@ -7,6 +7,7 @@ from .structure import (
     summarize_kpk_material,
     pawn_distance_to_promotion,
     pawn_has_clear_path,
+    is_kpk_theoretical_draw,
 )
 from .tactics import (
     can_push_pawn_safely,
@@ -32,6 +33,7 @@ __all__ = [
     "summarize_kpk_material",
     "pawn_distance_to_promotion",
     "pawn_has_clear_path",
+    "is_kpk_theoretical_draw",
     # Tactical sensors
     "can_push_pawn_safely",
     "has_opposition_alignment",

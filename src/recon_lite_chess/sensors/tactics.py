@@ -7,10 +7,9 @@ from typing import Optional
 import chess
 
 from .structure import _basic_kpk_signature
+from recon_lite_chess.endgame_utils import chebyshev as _chebyshev
 
 
-def _chebyshev(a: chess.Square, b: chess.Square) -> int:
-    return max(abs(chess.square_file(a) - chess.square_file(b)), abs(chess.square_rank(a) - chess.square_rank(b)))
 
 
 def can_push_pawn_safely(board: chess.Board, *, attacker_color: Optional[bool] = None) -> bool:

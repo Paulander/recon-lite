@@ -118,7 +118,8 @@ def generate_kpk_position(
         board.clear()
         
         # Place pawn (not on rank 1 or 8)
-        pawn_file = random.randint(0, 7)
+        # Avoid rook pawns (a/h file) which have many theoretical draws
+        pawn_file = random.randint(1, 6)  # Files b-g only
         pawn_rank = random.randint(1, 6)  # Ranks 2-7
         pawn_sq = chess.square(pawn_file, pawn_rank)
         
@@ -146,14 +147,30 @@ def generate_kpk_position(
         board.set_piece_at(bk_sq, chess.Piece(chess.KING, chess.BLACK))
         board.set_piece_at(pawn_sq, chess.Piece(chess.PAWN, chess.WHITE))
         
-        board.turn = random.choice([chess.WHITE, chess.BLACK])
+        # Always white to move for training consistency
+        board.turn = chess.WHITE
+        
+        # Validate position has both kings
+        if board.king(chess.WHITE) is None or board.king(chess.BLACK) is None:
+            continue
         
         if not board.is_valid():
             continue
         
-        # Basic validation
-        if board.turn == chess.BLACK and board.is_stalemate():
-            continue
+        if ensure_winning:
+            # Check if ANY white move creates immediate stalemate for black
+            has_safe_move = False
+            for move in board.legal_moves:
+                board.push(move)
+                is_stale = board.is_stalemate()
+                board.pop()
+                if not is_stale:
+                    has_safe_move = True
+                    break
+            
+            if not has_safe_move:
+                # All white moves lead to stalemate - reject this position
+                continue
         
         return board
     
@@ -232,7 +249,7 @@ def generate_kqk_position(
         max_attempts: Maximum attempts
         
     Returns:
-        A valid KQK position
+        A valid KQK position where White can win
     """
     for _ in range(max_attempts):
         board = chess.Board(None)
@@ -259,16 +276,33 @@ def generate_kqk_position(
         board.set_piece_at(bk_sq, chess.Piece(chess.KING, chess.BLACK))
         board.set_piece_at(queen_sq, chess.Piece(chess.QUEEN, chess.WHITE))
         
-        board.turn = random.choice([chess.WHITE, chess.BLACK])
+        # Always white to move for training consistency
+        board.turn = chess.WHITE
+        
+        # Validate position has both kings
+        if board.king(chess.WHITE) is None or board.king(chess.BLACK) is None:
+            continue
         
         if not board.is_valid():
             continue
         
         if ensure_winning:
-            if board.turn == chess.BLACK and board.is_stalemate():
+            # Check if queen is immediately capturable by black king
+            if queen_sq in board.attacks(bk_sq):
                 continue
-            # Avoid queen en prise
-            if board.turn == chess.BLACK and queen_sq in board.attacks(bk_sq):
+            
+            # Check if ANY white move creates immediate stalemate for black
+            has_safe_move = False
+            for move in board.legal_moves:
+                board.push(move)
+                is_stale = board.is_stalemate()
+                board.pop()
+                if not is_stale:
+                    has_safe_move = True
+                    break
+            
+            if not has_safe_move:
+                # All white moves lead to stalemate - reject this position
                 continue
         
         return board
