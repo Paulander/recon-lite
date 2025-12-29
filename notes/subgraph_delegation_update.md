@@ -103,11 +103,32 @@ if env.get("kpk", {}).get("promotion_detected"):
 
 Test 5 (KPK→KQK Transition) fails because after White promotes, it's Black's turn. The KQK move selector correctly returns no move when it's the defender's turn. This is expected behavior - the test could be improved to have Black make a random move first.
 
+## Verification Results ✓
+
+```bash
+cd ~/git/recon-lite && source .venv/bin/activate
+python demos/persistent/full_game_train.py --batch 5 --fen-file data/bridge/near_promo.fens --max-moves 80 --vs-random
+```
+
+**Output:**
+```
+Win rate: 100.0%
+Wins: 5, Losses: 0, Draws: 0
+Checkmates: 5, Stalemates: 0
+Avg moves: 39.8
+```
+
+All games successfully:
+1. Promoted pawn (KPK → KQK transition)
+2. Achieved checkmate with queen
+
 ---
 
-## Next Steps
+## Summary
 
-1. Integrate SubgraphLock into `full_game_train.py`
-2. Add KQK sentinel and lock transition on promotion
-3. Run bridge training with new mechanism
-4. Verify win rate improves from 0%
+The 0% bridge training win rate issue has been fixed by implementing proper **Subgraph Goal Delegation**. The key fixes were:
+
+1. **SubgraphLock mechanism**: Engine "collapses into" active subgraph
+2. **Node state reset**: Subgraph nodes reset to INACTIVE before each step
+3. **Sentinel-based transitions**: KPK→KQK on promotion detection
+4. **+1.0 promotion bonus**: Reinforces successful promotions

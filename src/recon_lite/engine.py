@@ -386,6 +386,17 @@ class ReConEngine:
         subgraph_nodes = self._get_subgraph_nodes(self.subgraph_lock.subgraph_root)
         now_requested: Dict[str, bool] = {}
         
+        # CRITICAL: Reset subgraph node states for fresh evaluation of new board position
+        # Without this, nodes stay CONFIRMED and don't re-run their predicates
+        for nid in subgraph_nodes:
+            node = self.g.nodes[nid]
+            node.state = NodeState.INACTIVE
+        
+        # Request the subgraph root to start propagation
+        root_node = self.g.nodes[self.subgraph_lock.subgraph_root]
+        root_node.state = NodeState.REQUESTED
+        root_node.tick_entered = self.tick
+        
         # Run internal ticks until actuator produces output or max reached
         for internal_tick in range(self.subgraph_lock.max_internal_ticks):
             # Update only subgraph terminals

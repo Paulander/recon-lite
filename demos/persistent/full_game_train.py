@@ -102,6 +102,7 @@ from recon_lite_chess.scripts.tactics import (
 )
 from recon_lite_chess.eval.heuristic import eval_position, compute_reward_tick
 from recon_lite_chess.scripts.kqk import is_kqk_position
+from recon_lite_chess.sensors.structure import summarize_kpk_material
 from recon_lite_chess.graph import (
     build_unified_graph,
     load_all_weights,
@@ -246,6 +247,48 @@ DEFAULT_PLASTICITY_LAMBDA = 0.8
 DEFAULT_CONSOLIDATE_ETA = 0.01
 DEFAULT_CONSOLIDATE_MIN_EPISODES = 10
 
+
+# =============================================================================
+# ENDGAME SENTINELS FOR SUBGRAPH LOCKING
+# =============================================================================
+
+def kpk_sentinel(env: Dict[str, Any]) -> bool:
+    """
+    Sentinel for KPK subgraph: returns True while position is still KPK.
+    Returns False when pawn promotes (position becomes KQK) or material changes.
+    """
+    board = env.get("board")
+    if not board:
+        return False
+    summary = summarize_kpk_material(board)
+    return bool(summary.get("is_kpk"))
+
+
+def kqk_sentinel(env: Dict[str, Any]) -> bool:
+    """
+    Sentinel for KQK subgraph: returns True while position is still KQK.
+    Returns False when queen is captured or game ends.
+    """
+    board = env.get("board")
+    if not board:
+        return False
+    is_kqk, _ = is_kqk_position(board)
+    return is_kqk
+
+
+def krk_sentinel(env: Dict[str, Any]) -> bool:
+    """
+    Sentinel for KRK subgraph: returns True while position is still KRK.
+    """
+    board = env.get("board")
+    if not board:
+        return False
+    # Simple KRK check: exactly 3 pieces, one rook
+    pieces = list(board.piece_map().values())
+    if len(pieces) != 3:
+        return False
+    types = [p.piece_type for p in pieces]
+    return types.count(chess.KING) == 2 and types.count(chess.ROOK) == 1
 
 _SUBGRAPH_NODE_PREFIXES = (
     "krk_",
@@ -410,6 +453,31 @@ def play_training_game(
         # Create environment
         env = {"board": state.board}
         
+        # =====================================================================
+        # SUBGRAPH GOAL DELEGATION: Lock into endgame subgraph when detected
+        # =====================================================================
+        # Check if we should lock into an endgame subgraph
+        # Priority: KQK (strongest) > KRK > KPK (weakest)
+        if not engine.subgraph_lock:
+            is_kqk, kqk_attacker = is_kqk_position(state.board)
+            if is_kqk and kqk_attacker == state.board.turn:
+                # We have K+Q vs K and it's our turn - lock into KQK
+                engine.lock_subgraph("kqk_root", kqk_sentinel)
+            elif krk_sentinel(env):
+                # We have K+R vs K - lock into KRK
+                # (check who has the rook)
+                pieces = list(state.board.piece_map().items())
+                rook_sq = next((sq for sq, p in pieces if p.piece_type == chess.ROOK), None)
+                if rook_sq is not None:
+                    rook_color = state.board.piece_at(rook_sq).color
+                    if rook_color == state.board.turn:
+                        engine.lock_subgraph("krk_root", krk_sentinel)
+            elif kpk_sentinel(env):
+                # We have K+P vs K - lock into KPK
+                kpk_summary = summarize_kpk_material(state.board)
+                if kpk_summary.get("attacker_color") == state.board.turn:
+                    engine.lock_subgraph("kpk_root", kpk_sentinel)
+        
         # Get evaluation before move
         eval_before = None
         if stockfish_engine:
@@ -417,10 +485,17 @@ def play_training_game(
         if eval_before is None:
             eval_before = eval_position(state.board)
         
-        # Run engine step
+        # Run engine step (if subgraph locked, this runs internal ticks)
         fired_edges = []
         now_requested = engine.step(env)
         state.tick += 1
+        
+        # Debug logging (uncomment for troubleshooting)
+        # if verbose and state.tick <= 3:
+        #     lock_info = f"lock={engine.subgraph_lock.subgraph_root}" if engine.subgraph_lock else "no lock"
+        #     kpk_policy = env.get("kpk", {}).get("policy", {}).get("suggested_move", "none")
+        #     kqk_policy = env.get("kqk", {}).get("policy", {}).get("suggested_move", "none")
+        #     print(f"    Tick {state.tick}: {lock_info}, kpk={kpk_policy}, kqk={kqk_policy}")
         
         # Check for endgame policy suggestions (KRK/KPK/KQK) before other logic
         suggested_move_uci = None
@@ -549,6 +624,23 @@ def play_training_game(
         # Bonus for checkmate
         if state.board.is_checkmate():
             reward_tick = 2.0
+        
+        # =================================================================
+        # PROMOTION DETECTION & SUBGRAPH TRANSITION: KPK → KQK
+        # =================================================================
+        if move.promotion:
+            # Promotion happened! Big bonus for achieving KPK goal
+            reward_tick += 1.0
+            
+            # Transition from KPK to KQK subgraph
+            if engine.subgraph_lock and engine.subgraph_lock.subgraph_root == "kpk_root":
+                engine.unlock_subgraph(goal_achieved=True)
+                # Check if we should lock into KQK
+                is_kqk, kqk_attacker = is_kqk_position(state.board)
+                # Note: after our move, it's opponent's turn, so we check if we're the attacker
+                if is_kqk and kqk_attacker != state.board.turn:  # We just promoted, opponent to move
+                    # Don't lock yet - wait until it's our turn again
+                    pass
         
         total_reward += reward_tick
         
