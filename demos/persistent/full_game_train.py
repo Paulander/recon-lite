@@ -454,29 +454,36 @@ def play_training_game(
         env = {"board": state.board}
         
         # =====================================================================
-        # SUBGRAPH GOAL DELEGATION: Lock into endgame subgraph when detected
+        # LEARNED GATE ROUTING: Use endgame_gate node for subgraph selection
         # =====================================================================
-        # Check if we should lock into an endgame subgraph
-        # Priority: KQK (strongest) > KRK > KPK (weakest)
+        # The gate runs during engine.step() and populates env["endgame_gate"]
+        # We first do a "probe step" to let the gate compute routing, then lock
+        # based on its decision.
+        
+        # Sentinel map for subgraph exit conditions
+        sentinels = {
+            "kpk": kpk_sentinel,
+            "kqk": kqk_sentinel,
+            "krk": krk_sentinel,
+        }
+        
+        # If not already locked, check if gate wants us to lock into a subgraph
         if not engine.subgraph_lock:
-            is_kqk, kqk_attacker = is_kqk_position(state.board)
-            if is_kqk and kqk_attacker == state.board.turn:
-                # We have K+Q vs K and it's our turn - lock into KQK
-                engine.lock_subgraph("kqk_root", kqk_sentinel)
-            elif krk_sentinel(env):
-                # We have K+R vs K - lock into KRK
-                # (check who has the rook)
-                pieces = list(state.board.piece_map().items())
-                rook_sq = next((sq for sq, p in pieces if p.piece_type == chess.ROOK), None)
-                if rook_sq is not None:
-                    rook_color = state.board.piece_at(rook_sq).color
-                    if rook_color == state.board.turn:
-                        engine.lock_subgraph("krk_root", krk_sentinel)
-            elif kpk_sentinel(env):
-                # We have K+P vs K - lock into KPK
-                kpk_summary = summarize_kpk_material(state.board)
-                if kpk_summary.get("attacker_color") == state.board.turn:
-                    engine.lock_subgraph("kpk_root", kpk_sentinel)
+            # Run the gate node to compute activations
+            gate_node = g.nodes.get("endgame_gate")
+            if gate_node and gate_node.predicate:
+                gate_node.predicate(gate_node, env)
+            
+            # Check gate's routing decision
+            gate_data = env.get("endgame_gate", {})
+            active_endgame = gate_data.get("active_endgame")
+            
+            if active_endgame:
+                # Lock into the gate's recommended subgraph
+                subgraph_root = f"{active_endgame}_root"
+                sentinel = sentinels.get(active_endgame)
+                if sentinel and subgraph_root in g.nodes:
+                    engine.lock_subgraph(subgraph_root, sentinel)
         
         # Get evaluation before move
         eval_before = None

@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReCoN Bridge Demo - Chess + Network</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      color: #f8fafc;
+      min-height: 100vh;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+    
+    header {
+      padding: 16px 24px;
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(99, 102, 241, 0.3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    header h1 {
+      font-weight: 600;
+      font-size: 1.5rem;
+      background: linear-gradient(90deg, #818cf8, #22d3ee);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .status-badge {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    
+    .status-badge.kpk { background: #10b981; }
+    .status-badge.kqk { background: #8b5cf6; }
+    .status-badge.none { background: #64748b; }
+    
+    main {
+      display: grid;
+      grid-template-columns: 400px 1fr;
+      gap: 24px;
+      padding: 24px;
+      height: calc(100vh - 80px);
+    }
+    
+    .chess-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    #chess-board {
+      width: 400px;
+      height: 400px;
+      background: #1e293b;
+      border-radius: 12px;
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      grid-template-rows: repeat(8, 1fr);
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+    
+    .square {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      font-family: 'Segoe UI Symbol', 'Apple Color Emoji', sans-serif;
+    }
+    
+    .square.light { background: #e2e8f0; }
+    .square.dark { background: #475569; }
+    .square.highlight { box-shadow: inset 0 0 0 3px #22c55e; }
+    
+    .move-info {
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 16px;
+    }
+    
+    .move-info h3 {
+      font-size: 0.9rem;
+      color: #94a3b8;
+      margin-bottom: 8px;
+    }
+    
+    .move-info .move {
+      font-size: 1.4rem;
+      font-weight: 600;
+      font-family: 'Cascadia Code', monospace;
+    }
+    
+    .move-info .fen {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 8px;
+      word-break: break-all;
+    }
+    
+    .network-panel {
+      background: #1e293b;
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    #network-canvas {
+      flex: 1;
+      width: 100%;
+    }
+    
+    .controls {
+      padding: 16px;
+      background: rgba(15, 23, 42, 0.8);
+      border-top: 1px solid rgba(148, 163, 184, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .controls button {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    
+    #play-btn {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: white;
+    }
+    
+    #play-btn:hover { transform: scale(1.05); }
+    
+    #frame-slider {
+      flex: 1;
+      accent-color: #818cf8;
+      height: 8px;
+    }
+    
+    #frame-label {
+      font-size: 0.9rem;
+      color: #cbd5e1;
+      min-width: 180px;
+      text-align: right;
+    }
+    
+    .legend {
+      padding: 12px 16px;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-size: 0.8rem;
+      border-top: 1px solid rgba(148, 163, 184, 0.1);
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🎯 ReCoN Bridge Demo</h1>
+    <span id="lock-badge" class="status-badge none">No Lock</span>
+  </header>
+  
+  <main>
+    <div class="chess-panel">
+      <div id="chess-board"></div>
+      <div class="move-info">
+        <h3>Current Move</h3>
+        <div id="move-display" class="move">—</div>
+        <div id="fen-display" class="fen">Starting position</div>
+      </div>
+    </div>
+    
+    <div class="network-panel">
+      <canvas id="network-canvas"></canvas>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-dot" style="background:#22c55e"></span> Active</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span> Requested</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#6366f1"></span> Subgraph</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#64748b"></span> Inactive</div>
+      </div>
+      <div class="controls">
+        <button id="play-btn">▶ Play</button>
+        <input type="range" id="frame-slider" min="0" max="0" value="0">
+        <span id="frame-label">Frame 0 / 0</span>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Chess piece Unicode
+    const PIECES = {
+      'K': '♔', 'Q': '♕', 'R': '♖', 'B': '♗', 'N': '♘', 'P': '♙',
+      'k': '♚', 'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞', 'p': '♟'
+    };
+    
+    // Network node layout
+    const NODE_LAYOUT = {
+      'GameRoot': { x: 400, y: 50, type: 'control' },
+      'endgame_gate': { x: 400, y: 130, type: 'gate' },
+      'kpk_root': { x: 200, y: 210, type: 'subgraph' },
+      'kqk_root': { x: 400, y: 210, type: 'subgraph' },
+      'krk_root': { x: 600, y: 210, type: 'subgraph' },
+      'kpk_detect': { x: 120, y: 290, type: 'phase' },
+      'kpk_execute': { x: 200, y: 290, type: 'selector' },
+      'kpk_move_selector': { x: 160, y: 370, type: 'synth' },
+      'kqk_detect': { x: 320, y: 290, type: 'phase' },
+      'kqk_execute': { x: 400, y: 290, type: 'selector' },
+      'kqk_move_selector': { x: 360, y: 370, type: 'synth' },
+      'kqk_mate_moves': { x: 440, y: 370, type: 'synth' },
+    };
+    
+    const NODE_COLORS = {
+      control: '#2563eb',
+      gate: '#f97316',
+      subgraph: '#8b5cf6',
+      phase: '#0ea5e9',
+      selector: '#22c55e',
+      synth: '#ef4444',
+    };
+    
+    let demoData = null;
+    let currentFrame = 0;
+    let playInterval = null;
+    
+    // DOM elements
+    const boardEl = document.getElementById('chess-board');
+    const canvasEl = document.getElementById('network-canvas');
+    const ctx = canvasEl.getContext('2d');
+    const sliderEl = document.getElementById('frame-slider');
+    const labelEl = document.getElementById('frame-label');
+    const playBtn = document.getElementById('play-btn');
+    const moveDisplay = document.getElementById('move-display');
+    const fenDisplay = document.getElementById('fen-display');
+    const lockBadge = document.getElementById('lock-badge');
+    
+    // Parse FEN and render board
+    function renderBoard(fen) {
+      boardEl.innerHTML = '';
+      const [placement] = fen.split(' ');
+      const rows = placement.split('/');
+      
+      for (let rank = 0; rank < 8; rank++) {
+        let file = 0;
+        for (const char of rows[rank]) {
+          if (/\d/.test(char)) {
+            const empty = parseInt(char);
+            for (let i = 0; i < empty; i++) {
+              const sq = document.createElement('div');
+              sq.className = `square ${(rank + file) % 2 === 0 ? 'light' : 'dark'}`;
+              boardEl.appendChild(sq);
+              file++;
+            }
+          } else {
+            const sq = document.createElement('div');
+            sq.className = `square ${(rank + file) % 2 === 0 ? 'light' : 'dark'}`;
+            sq.textContent = PIECES[char] || '';
+            boardEl.appendChild(sq);
+            file++;
+          }
+        }
+      }
+    }
+    
+    // Render network graph
+    function renderNetwork(frame) {
+      const parent = canvasEl.parentElement;
+      canvasEl.width = parent.clientWidth;
+      canvasEl.height = parent.clientHeight - 100;
+      
+      ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+      
+      const nodeStates = frame.node_states || {};
+      const activations = frame.node_activations || {};
+      const lock = frame.subgraph_lock;
+      
+      // Draw edges
+      const edges = [
+        ['GameRoot', 'kpk_root'],
+        ['GameRoot', 'kqk_root'],
+        ['GameRoot', 'krk_root'],
+        ['kpk_root', 'kpk_detect'],
+        ['kpk_root', 'kpk_execute'],
+        ['kpk_execute', 'kpk_move_selector'],
+        ['kqk_root', 'kqk_detect'],
+        ['kqk_root', 'kqk_execute'],
+        ['kqk_execute', 'kqk_move_selector'],
+        ['kqk_execute', 'kqk_mate_moves'],
+      ];
+      
+      for (const [from, to] of edges) {
+        const fromPos = NODE_LAYOUT[from];
+        const toPos = NODE_LAYOUT[to];
+        if (!fromPos || !toPos) continue;
+        
+        const isActive = lock && (from.includes(lock.replace('_root', '')) || to.includes(lock.replace('_root', '')));
+        
+        ctx.beginPath();
+        ctx.moveTo(fromPos.x, fromPos.y);
+        ctx.lineTo(toPos.x, toPos.y);
+        ctx.strokeStyle = isActive ? '#22c55e' : '#334155';
+        ctx.lineWidth = isActive ? 3 : 1.5;
+        ctx.stroke();
+      }
+      
+      // Draw nodes
+      for (const [nid, pos] of Object.entries(NODE_LAYOUT)) {
+        const state = nodeStates[nid] || 'INACTIVE';
+        const activation = activations[nid] || 0;
+        const isLocked = lock && nid.includes(lock.replace('_root', ''));
+        
+        let color = NODE_COLORS[pos.type] || '#64748b';
+        let radius = 24;
+        
+        if (state === 'TRUE' || state === 'CONFIRMED') {
+          color = '#22c55e';
+          radius = 28;
+        } else if (state === 'REQUESTED' || state === 'WAITING') {
+          color = '#f59e0b';
+          radius = 26;
+        } else if (isLocked) {
+          color = '#8b5cf6';
+          radius = 26;
+        }
+        
+        // Glow for active nodes
+        if (activation > 0.5) {
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, radius + 8, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(34, 197, 94, ${activation * 0.3})`;
+          ctx.fill();
+        }
+        
+        // Node circle
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // Label
+        ctx.fillStyle = '#fff';
+        ctx.font = '11px Segoe UI';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const label = nid.replace('_root', '').replace('_', ' ');
+        ctx.fillText(label.substring(0, 10), pos.x, pos.y);
+      }
+    }
+    
+    // Update display for current frame
+    function updateDisplay() {
+      if (!demoData || !demoData.frames) return;
+      
+      const frame = demoData.frames[currentFrame];
+      if (!frame) return;
+      
+      // Update chess board
+      renderBoard(frame.board_fen);
+      
+      // Update network
+      renderNetwork(frame);
+      
+      // Update move info
+      moveDisplay.textContent = frame.move_uci || '—';
+      fenDisplay.textContent = frame.board_fen;
+      
+      // Update lock badge
+      const lock = frame.subgraph_lock;
+      if (lock) {
+        const name = lock.replace('_root', '').toUpperCase();
+        lockBadge.textContent = `🔒 ${name}`;
+        lockBadge.className = `status-badge ${lock.includes('kpk') ? 'kpk' : 'kqk'}`;
+      } else {
+        lockBadge.textContent = 'No Lock';
+        lockBadge.className = 'status-badge none';
+      }
+      
+      // Update slider
+      sliderEl.value = currentFrame;
+      labelEl.textContent = `Frame ${currentFrame + 1} / ${demoData.frames.length}`;
+    }
+    
+    // Load demo data
+    async function loadDemo() {
+      try {
+        const res = await fetch('sample_data/bridge_demo.json');
+        demoData = await res.json();
+        
+        sliderEl.max = demoData.frames.length - 1;
+        currentFrame = 0;
+        updateDisplay();
+        
+        console.log(`Loaded demo: ${demoData.frames.length} frames, result: ${demoData.result}`);
+      } catch (err) {
+        console.error('Failed to load demo:', err);
+        alert('Failed to load bridge_demo.json - run export_bridge_demo.py first');
+      }
+    }
+    
+    // Playback controls
+    function togglePlay() {
+      if (playInterval) {
+        clearInterval(playInterval);
+        playInterval = null;
+        playBtn.textContent = '▶ Play';
+      } else {
+        playInterval = setInterval(() => {
+          currentFrame = (currentFrame + 1) % demoData.frames.length;
+          updateDisplay();
+        }, 800);
+        playBtn.textContent = '⏸ Pause';
+      }
+    }
+    
+    // Event listeners
+    playBtn.addEventListener('click', togglePlay);
+    sliderEl.addEventListener('input', (e) => {
+      currentFrame = parseInt(e.target.value);
+      updateDisplay();
+      if (playInterval) togglePlay(); // Pause on manual scrub
+    });
+    
+    window.addEventListener('resize', () => {
+      if (demoData) updateDisplay();
+    });
+    
+    // Initialize
+    loadDemo();
+  </script>
+</body>
+</html>

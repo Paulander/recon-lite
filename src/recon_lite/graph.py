@@ -56,6 +56,7 @@ class Edge:
     dst: str
     ltype: LinkType
     w: Any = field(default_factory=lambda: 1.0)  # Allow scalar weight without forcing numpy.
+    meta: Dict[str, Any] = field(default_factory=dict)  # Metadata for trainability, subgraph, etc.
 
 class Graph:
     def __init__(self):

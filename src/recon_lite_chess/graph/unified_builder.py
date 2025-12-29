@@ -73,6 +73,9 @@ from recon_lite_chess.krk_nodes import (
 # Shared wait node factory
 from recon_lite_chess import create_wait_for_board_change
 
+# Endgame gating (learned subgraph selection)
+from recon_lite_chess.scripts.endgame_gate import create_endgame_gate
+
 
 # All supported tactic types
 TACTIC_TYPES = [
@@ -112,8 +115,9 @@ def build_unified_graph(
     if include_sensors:
         _add_sensors(g)
     
-    # 2. Integrate endgame subgraphs
+    # 2. Integrate endgame subgraphs with gating layer
     if include_endgames:
+        _integrate_endgame_gate(g)  # Add gating layer first
         _integrate_krk_subgraph(g)
         _integrate_kpk_subgraph(g)
         _integrate_kqk_subgraph(g)
@@ -242,6 +246,29 @@ def _add_sensors(g: Graph) -> None:
     g.add_edge("GameRoot", "EndgameDetector", LinkType.SUB)
 
 
+def _integrate_endgame_gate(g: Graph) -> None:
+    """
+    Integrate the learned endgame gating layer.
+    
+    The gate node detects material patterns and computes activation scores.
+    Weighted edges to subgraph roots determine which subgraph activates.
+    
+    Structure:
+        WinStrategy → endgame_gate → {kpk_root, kqk_root, krk_root}
+                                     (trainable SUB edges)
+    """
+    # Create the gate node
+    gate = create_endgame_gate("endgame_gate")
+    g.add_node(gate)
+    
+    # Connect gate to WinStrategy (gate is part of winning path)
+    g.add_edge("WinStrategy", "endgame_gate", LinkType.SUB)
+    
+    # NOTE: Weighted edges to subgraph roots are added in each subgraph's
+    # integration function. We create the gate first, then each subgraph
+    # connects to it instead of directly to GameRoot.
+
+
 def _integrate_krk_subgraph(g: Graph) -> None:
     """
     Integrate KRK endgame subgraph with prefixed node IDs.
@@ -261,8 +288,12 @@ def _integrate_krk_subgraph(g: Graph) -> None:
     })
     g.add_node(krk_root)
     
-    # Connect to main graph
-    g.add_edge("GameRoot", f"{prefix}root", LinkType.SUB)
+    # Connect to endgame gate with trainable weighted edge
+    g.add_edge("endgame_gate", f"{prefix}root", LinkType.SUB)
+    edge = g.edges[-1]  # Get the just-added edge
+    edge.meta = edge.meta or {}
+    edge.meta["trainable"] = True
+    edge.meta["gate_edge"] = "krk"
     
     # KRK Phase nodes (scripts - no predicates needed)
     phases = [
@@ -357,8 +388,12 @@ def _integrate_kpk_subgraph(g: Graph) -> None:
     })
     g.add_node(kpk_root)
     
-    # Connect to main graph
-    g.add_edge("GameRoot", f"{prefix}root", LinkType.SUB)
+    # Connect to endgame gate with trainable weighted edge
+    g.add_edge("endgame_gate", f"{prefix}root", LinkType.SUB)
+    edge = g.edges[-1]  # Get the just-added edge
+    edge.meta = edge.meta or {}
+    edge.meta["trainable"] = True
+    edge.meta["gate_edge"] = "kpk"
     
     # KPK Script nodes (no predicates needed for scripts)
     scripts = ["detect", "execute", "finish", "wait"]
@@ -414,7 +449,12 @@ def _integrate_kqk_subgraph(g: Graph) -> None:
     g.add_node(kqk_root)
     
     # Connect to main graph
-    g.add_edge("GameRoot", f"{prefix}root", LinkType.SUB)
+    # Connect to endgame gate with trainable weighted edge
+    g.add_edge("endgame_gate", f"{prefix}root", LinkType.SUB)
+    edge = g.edges[-1]  # Get the just-added edge
+    edge.meta = edge.meta or {}
+    edge.meta["trainable"] = True
+    edge.meta["gate_edge"] = "kqk"
     
     # KQK Phase nodes (scripts - no predicates needed)
     phases = [
