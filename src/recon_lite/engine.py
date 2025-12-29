@@ -1,7 +1,25 @@
 # recon_lite/engine.py
-from typing import Dict, Any, Optional
+from dataclasses import dataclass, field
+from typing import Dict, Any, Optional, Callable, Set
 from .graph import Graph, NodeType, NodeState, LinkType
 from .time.microtick import MicrotickConfig, run_microticks
+
+
+@dataclass
+class SubgraphLock:
+    """
+    Tracks which subgraph currently owns execution (goal delegation).
+    
+    When locked, the engine only ticks nodes within this subgraph,
+    completing internal execution before returning control. The sentinel
+    function is checked each step to detect exceptional exits.
+    """
+    subgraph_root: str                          # e.g., "kpk_root"
+    entry_tick: int                             # When we locked in
+    sentinel_fn: Callable[[Dict[str, Any]], bool]  # Returns False to exit
+    goal_achieved: bool = False                 # Subgraph completed successfully
+    max_internal_ticks: int = 10                # Prevent infinite loops
+
 
 class ReConEngine:
     """
@@ -10,6 +28,11 @@ class ReConEngine:
     - POR gating: a node is requestable only if all its POR predecessors are TRUE/CONFIRMED.
     - Parent becomes TRUE when the last node of each POR chain under it is CONFIRMED.
     - TERMINAL nodes use predicate(env) -> (done, success) to progress.
+    
+    Subgraph Goal Delegation:
+    - When lock_subgraph() is called, execution "collapses" into that subgraph
+    - Internal ticks complete before returning control
+    - Sentinel function checks for exceptional exits
     """
 
     # Initialize the engine with a graph and set initial tick and log storage
@@ -23,6 +46,8 @@ class ReConEngine:
         self.g = graph
         self.tick = 0
         self.logs: list[Dict[str, Any]] = []
+        self.subgraph_lock: Optional[SubgraphLock] = None
+        self._subgraph_nodes_cache: Dict[str, Set[str]] = {}
 
     # Capture the current state of the network for logging. Should obviously be optional. 
     def snapshot(self, note: str = "") -> Dict[str, Any]:
@@ -197,9 +222,14 @@ class ReConEngine:
 
 # Core function.Execute one discrete time step, orchestrating terminal updates, script requests, and confirmations
     def step(self, env: Optional[Dict[str, Any]] = None) -> Dict[str, bool]:
-        """Execute one discrete time step of the ReCon network."""
+        """Execute one discrete time step of the ReCon network.
+        
+        If a subgraph is locked, delegates to _step_subgraph for internal ticking.
+        """
         self.tick += 1
         env = env or {}
+        
+        # Handle microticks (continuous activation settling)
         micro_cfg = env.get("microticks")
         micro_history = None
 
@@ -224,6 +254,23 @@ class ReConEngine:
         if micro_history is not None:
             env["microtick_history"] = micro_history
 
+        # === SUBGRAPH LOCK HANDLING ===
+        if self.subgraph_lock:
+            # Check sentinel: should we exit the subgraph?
+            try:
+                should_stay = self.subgraph_lock.sentinel_fn(env)
+            except Exception as e:
+                print(f"Sentinel error for {self.subgraph_lock.subgraph_root}: {e}")
+                should_stay = False
+            
+            if not should_stay:
+                # Exit subgraph, return to full graph mode
+                self.unlock_subgraph()
+            else:
+                # Execute within subgraph only
+                return self._step_subgraph(env)
+        
+        # === NORMAL FULL GRAPH STEP ===
         now_requested: Dict[str, bool] = {}
 
         self._update_terminals(env, now_requested)
@@ -233,3 +280,195 @@ class ReConEngine:
         self.snapshot() # make optional through either global config or parameter. Maybe possible to set resolution/trigger for log? e.g. "every 10 ticks" or "on request". 
                         # not prioritized for now. Just comment out if performance is an issue. 
         return now_requested
+    
+    # =========================================================================
+    # SUBGRAPH GOAL DELEGATION
+    # =========================================================================
+    
+    def lock_subgraph(
+        self, 
+        subgraph_root: str, 
+        sentinel_fn: Callable[[Dict[str, Any]], bool],
+        max_internal_ticks: int = 10
+    ) -> None:
+        """
+        Lock execution to a specific subgraph (goal delegation).
+        
+        When locked, step() only ticks nodes within the subgraph, running
+        internal ticks until an actuator produces output. The sentinel
+        function is checked each step to detect exceptional exits.
+        
+        Args:
+            subgraph_root: Node ID of the subgraph root (e.g., "kpk_root")
+            sentinel_fn: Called with env each step; returns False to exit
+            max_internal_ticks: Prevent infinite loops (default 10)
+        """
+        if subgraph_root not in self.g.nodes:
+            raise ValueError(f"Subgraph root '{subgraph_root}' not found in graph")
+        
+        self.subgraph_lock = SubgraphLock(
+            subgraph_root=subgraph_root,
+            entry_tick=self.tick,
+            sentinel_fn=sentinel_fn,
+            max_internal_ticks=max_internal_ticks,
+        )
+        
+        # Request the subgraph root to start internal propagation
+        root_node = self.g.nodes[subgraph_root]
+        if root_node.state == NodeState.INACTIVE:
+            root_node.state = NodeState.REQUESTED
+            root_node.tick_entered = self.tick
+    
+    def unlock_subgraph(self, goal_achieved: bool = False) -> Optional[SubgraphLock]:
+        """
+        Unlock execution from the current subgraph.
+        
+        Args:
+            goal_achieved: Whether the subgraph completed its goal successfully
+            
+        Returns:
+            The unlocked SubgraphLock (for inspection) or None if wasn't locked
+        """
+        if not self.subgraph_lock:
+            return None
+        
+        self.subgraph_lock.goal_achieved = goal_achieved
+        old_lock = self.subgraph_lock
+        self.subgraph_lock = None
+        
+        return old_lock
+    
+    def _get_subgraph_nodes(self, root_id: str) -> Set[str]:
+        """Get all node IDs belonging to a subgraph (cached).
+        
+        Uses both metadata 'subgraph' field and node ID prefix matching.
+        E.g., for root_id='kpk_root', prefix='kpk_' matches 'kpk_move_selector'.
+        """
+        if root_id in self._subgraph_nodes_cache:
+            return self._subgraph_nodes_cache[root_id]
+        
+        root_node = self.g.nodes.get(root_id)
+        if not root_node:
+            return set()
+        
+        # Extract subgraph name and prefix from root ID
+        # e.g., "kpk_root" -> subgraph_name="kpk", prefix="kpk_"
+        subgraph_name = root_node.meta.get("subgraph", root_id.replace("_root", ""))
+        prefix = f"{subgraph_name}_"
+        
+        nodes = set()
+        for nid, node in self.g.nodes.items():
+            # Match by metadata
+            node_sg = node.meta.get("subgraph", "")
+            if node_sg == subgraph_name:
+                nodes.add(nid)
+            # Also match by node ID prefix (for factory-created nodes)
+            elif nid.startswith(prefix):
+                nodes.add(nid)
+        
+        self._subgraph_nodes_cache[root_id] = nodes
+        return nodes
+    
+    def _step_subgraph(self, env: Dict[str, Any]) -> Dict[str, bool]:
+        """
+        Execute internal ticks within the locked subgraph until actuator ready.
+        
+        This implements the "collapse into subgraph" behavior: the engine runs
+        multiple internal ticks completing the subgraph's execution before
+        returning control.
+        
+        Returns:
+            Dict of newly requested nodes (within subgraph)
+        """
+        if not self.subgraph_lock:
+            return {}
+        
+        subgraph_nodes = self._get_subgraph_nodes(self.subgraph_lock.subgraph_root)
+        now_requested: Dict[str, bool] = {}
+        
+        # Run internal ticks until actuator produces output or max reached
+        for internal_tick in range(self.subgraph_lock.max_internal_ticks):
+            # Update only subgraph terminals
+            self._update_terminals_subset(env, now_requested, subgraph_nodes)
+            
+            # Process only subgraph script requests
+            self._process_script_requests_subset(now_requested, subgraph_nodes)
+            
+            # Confirm only subgraph scripts
+            self._confirm_script_completions_subset(subgraph_nodes)
+            
+            # Check if we have a move suggestion (actuator output)
+            # This is specific to chess but could be generalized
+            subgraph_key = self.subgraph_lock.subgraph_root.replace("_root", "")
+            if env.get(subgraph_key, {}).get("policy", {}).get("suggested_move"):
+                break
+            
+            # Also check if root is confirmed (subgraph completed)
+            root_node = self.g.nodes.get(self.subgraph_lock.subgraph_root)
+            if root_node and root_node.state == NodeState.CONFIRMED:
+                self.subgraph_lock.goal_achieved = True
+                break
+        
+        return now_requested
+    
+    def _update_terminals_subset(
+        self, 
+        env: Dict[str, Any], 
+        now_requested: Dict[str, bool],
+        allowed_nodes: Set[str]
+    ) -> None:
+        """Update terminal nodes, but only those in allowed_nodes."""
+        for nid, node in self.g.nodes.items():
+            if nid not in allowed_nodes:
+                continue
+            if node.ntype == NodeType.TERMINAL:
+                if node.state == NodeState.REQUESTED:
+                    node.state = NodeState.WAITING
+                    node.tick_entered = self.tick
+                elif node.state == NodeState.WAITING:
+                    if node.predicate is None:
+                        node.state = NodeState.TRUE
+                    else:
+                        try:
+                            done, success = node.predicate(node, env)
+                            if done:
+                                node.state = NodeState.TRUE if success else NodeState.FAILED
+                        except Exception as e:
+                            print(f"Predicate error for {node.nid}: {e}")
+                            node.state = NodeState.FAILED
+                elif node.state == NodeState.TRUE:
+                    node.state = NodeState.CONFIRMED
+
+    def _process_script_requests_subset(
+        self, 
+        now_requested: Dict[str, bool],
+        allowed_nodes: Set[str]
+    ) -> None:
+        """Request children for script nodes, but only those in allowed_nodes."""
+        for nid, node in self.g.nodes.items():
+            if nid not in allowed_nodes:
+                continue
+            if node.ntype == NodeType.SCRIPT:
+                if node.state == NodeState.REQUESTED:
+                    node.state = NodeState.WAITING
+                    node.tick_entered = self.tick
+
+                if node.state in (NodeState.REQUESTED, NodeState.WAITING):
+                    for child_id in self.g.children(nid):
+                        if child_id in allowed_nodes:
+                            self._request_child_if_ready(child_id, now_requested)
+    
+    def _confirm_script_completions_subset(self, allowed_nodes: Set[str]) -> None:
+        """Confirm script nodes when children done, but only those in allowed_nodes."""
+        for nid, node in self.g.nodes.items():
+            if nid not in allowed_nodes:
+                continue
+            if node.ntype == NodeType.SCRIPT and node.state in (NodeState.REQUESTED, NodeState.WAITING, NodeState.TRUE):
+                if self._children_confirmed_sequence_done(nid):
+                    node.state = NodeState.TRUE
+
+        for nid, node in self.g.nodes.items():
+            if nid not in allowed_nodes:
+                continue
+            if node.ntype == NodeType.SCRIPT and node.state == NodeState.TRUE:
+                node.state = NodeState.CONFIRMED
