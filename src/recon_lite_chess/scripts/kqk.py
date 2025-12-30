@@ -284,6 +284,9 @@ def get_restriction_moves(board: chess.Board, attacker_color: chess.Color) -> Li
     if defender_king is None or queen_sq is None:
         return []
     
+    # Check if defender is on edge - CRITICAL: don't let them escape!
+    defender_on_edge_now = defender_on_edge(board, defender_color)
+    
     restriction_moves = []
     current_restriction = queen_restricts_king(board, attacker_color)
     
@@ -305,14 +308,28 @@ def get_restriction_moves(board: chess.Board, attacker_color: chess.Color) -> Li
             
             new_restriction = queen_restricts_king(board, attacker_color)
             
+            # CRITICAL: If defender was on edge, heavily penalize moves that let them escape
+            edge_penalty = 0.0
+            if defender_on_edge_now:
+                for opp_move in board.legal_moves:
+                    board.push(opp_move)
+                    if not defender_on_edge(board, defender_color):
+                        edge_penalty = 2.0  # Severe penalty
+                        board.pop()
+                        break
+                    board.pop()
+            
             # Prefer restricting but not TOO much (leave 1-2 escape squares)
             # Full restriction (1.0) often leads to stalemate
             if new_restriction > current_restriction and new_restriction < 1.0:
                 # Good restriction without over-restricting
-                restriction_moves.append((move, new_restriction + 0.1))
+                restriction_moves.append((move, new_restriction + 0.1 - edge_penalty))
             elif new_restriction > current_restriction:
                 # Still better, but less preferred due to stalemate risk
-                restriction_moves.append((move, new_restriction))
+                restriction_moves.append((move, new_restriction - edge_penalty))
+            elif new_restriction >= current_restriction - 0.05:
+                # Maintains restriction - include with edge penalty if applicable
+                restriction_moves.append((move, new_restriction - edge_penalty))
             
             board.pop()
     

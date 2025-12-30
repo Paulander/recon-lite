@@ -465,7 +465,8 @@ def compute_kqk_reward_shaping(
     KQK-specific reward shaping for checkmate progress.
     
     Provides gradient signals for:
-    - Driving enemy king to edge
+    - Driving enemy king to edge (CRITICAL)
+    - Keeping enemy king at edge (CRITICAL)
     - Restricting enemy king mobility
     - Approaching with our king
     
@@ -475,7 +476,7 @@ def compute_kqk_reward_shaping(
         attacker: Color of the attacking side (has K+Q)
         
     Returns:
-        Additional reward in [-0.5, +0.5] based on progress
+        Additional reward based on progress
     """
     # Import KQK detection functions
     from recon_lite_chess.scripts.kqk import (
@@ -487,33 +488,54 @@ def compute_kqk_reward_shaping(
     defender = not attacker
     reward = 0.0
     
-    # === Edge progress ===
-    # Driving king to edge is critical for KQK checkmate
+    # === Helper: distance to nearest edge ===
+    def edge_distance(board: chess.Board, color: chess.Color) -> int:
+        """0 = on edge, 3 = in center"""
+        king_sq = board.king(color)
+        if king_sq is None:
+            return 3
+        file = chess.square_file(king_sq)
+        rank = chess.square_rank(king_sq)
+        # Distance to nearest edge
+        return min(file, 7 - file, rank, 7 - rank)
+    
+    # === Edge progress (CRITICAL) ===
     edge_before = defender_on_edge(board_before, defender)
     edge_after = defender_on_edge(board_after, defender)
     
+    dist_to_edge_before = edge_distance(board_before, defender)
+    dist_to_edge_after = edge_distance(board_after, defender)
+    
     if edge_after and not edge_before:
-        reward += 0.3  # Drove king to edge - excellent!
+        reward += 0.5  # Drove king to edge - excellent!
     elif not edge_after and edge_before:
-        reward -= 0.5  # PENALTY: King escaped edge - very bad!
+        reward -= 1.5  # SEVERE PENALTY: King escaped edge!
+    
+    # Continuous edge distance reward
+    if dist_to_edge_after < dist_to_edge_before:
+        reward += 0.2  # Getting closer to edge
+    elif dist_to_edge_after > dist_to_edge_before:
+        reward -= 0.3  # King moving toward center - bad!
+    
+    # Bonus for keeping king at edge
+    if edge_after and edge_before:
+        reward += 0.05  # Maintained edge control
     
     # === Restriction progress ===
-    # Queen cutting off more squares is progress
     restr_before = queen_restricts_king(board_before, attacker)
     restr_after = queen_restricts_king(board_after, attacker)
     
     if restr_after > restr_before + 0.05:
-        reward += 0.1  # Better restriction
+        reward += 0.15  # Better restriction
     elif restr_after < restr_before - 0.1:
-        reward -= 0.1  # Lost significant restriction
+        reward -= 0.2  # Lost significant restriction
     
     # === King distance (approaching) ===
-    # Our king needs to approach to support queen for mate
     dist_before = king_distance(board_before)
     dist_after = king_distance(board_after)
     
     if dist_after < dist_before:
-        reward += 0.05  # King approaching
+        reward += 0.1  # King approaching
     
     return reward
 
