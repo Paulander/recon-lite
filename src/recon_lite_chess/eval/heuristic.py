@@ -456,6 +456,99 @@ def compute_reward_tick(
     return max(-r_max, min(r_max, delta))
 
 
+def compute_kqk_reward_shaping(
+    board_before: chess.Board,
+    board_after: chess.Board,
+    attacker: chess.Color,
+) -> float:
+    """
+    KQK-specific reward shaping for checkmate progress.
+    
+    Provides gradient signals for:
+    - Driving enemy king to edge
+    - Restricting enemy king mobility
+    - Approaching with our king
+    
+    Args:
+        board_before: Board state before our move
+        board_after: Board state after our move
+        attacker: Color of the attacking side (has K+Q)
+        
+    Returns:
+        Additional reward in [-0.5, +0.5] based on progress
+    """
+    # Import KQK detection functions
+    from recon_lite_chess.scripts.kqk import (
+        defender_on_edge,
+        queen_restricts_king,
+        king_distance,
+    )
+    
+    defender = not attacker
+    reward = 0.0
+    
+    # === Edge progress ===
+    # Driving king to edge is critical for KQK checkmate
+    edge_before = defender_on_edge(board_before, defender)
+    edge_after = defender_on_edge(board_after, defender)
+    
+    if edge_after and not edge_before:
+        reward += 0.3  # Drove king to edge - excellent!
+    elif not edge_after and edge_before:
+        reward -= 0.5  # PENALTY: King escaped edge - very bad!
+    
+    # === Restriction progress ===
+    # Queen cutting off more squares is progress
+    restr_before = queen_restricts_king(board_before, attacker)
+    restr_after = queen_restricts_king(board_after, attacker)
+    
+    if restr_after > restr_before + 0.05:
+        reward += 0.1  # Better restriction
+    elif restr_after < restr_before - 0.1:
+        reward -= 0.1  # Lost significant restriction
+    
+    # === King distance (approaching) ===
+    # Our king needs to approach to support queen for mate
+    dist_before = king_distance(board_before)
+    dist_after = king_distance(board_after)
+    
+    if dist_after < dist_before:
+        reward += 0.05  # King approaching
+    
+    return reward
+
+
+def compute_kqk_efficiency_bonus(
+    plies: int,
+    r_max: float = 2.0,
+    optimal_plies: int = 20,
+) -> float:
+    """
+    Compute efficiency bonus for fast checkmate.
+    
+    Rewards winning quickly, with maximum bonus at optimal move count.
+    
+    Args:
+        plies: Number of plies (half-moves) to checkmate
+        r_max: Base checkmate reward
+        optimal_plies: Target optimal ply count for KQK
+        
+    Returns:
+        Total checkmate reward including efficiency bonus
+    """
+    if plies <= optimal_plies:
+        efficiency = 1.0
+    else:
+        # Linear decay: at 2x optimal, efficiency = 0
+        efficiency = max(0.0, 1.0 - (plies - optimal_plies) / optimal_plies)
+    
+    return r_max + efficiency * 1.0  # Up to +3.0 for optimal play
+
+
+# Step penalty constant for encouraging efficient play
+KQK_STEP_PENALTY = 0.01
+
+
 def eval_position_stockfish(
     board: chess.Board,
     engine: "chess.engine.SimpleEngine",

@@ -328,20 +328,24 @@ def play_and_export(
         "krk": krk_sentinel,
     }
     
-    # Initial frame
+    # Initial frame - run gate first to get activations
     env = {"board": board}
+    gate_node = g.nodes.get("endgame_gate")
+    if gate_node and gate_node.predicate:
+        gate_node.predicate(gate_node, env)
     frames.append(export_frame(0, board, None, engine, env, g))
     
     move_count = 0
     while not board.is_game_over() and move_count < max_moves:
         env = {"board": board}
         
-        # Run gate to determine routing
+        # Always run gate for visualization (even when locked)
+        gate_node = g.nodes.get("endgame_gate")
+        if gate_node and gate_node.predicate:
+            gate_node.predicate(gate_node, env)
+        
+        # Lock subgraph based on gate decision (only if not already locked)
         if not engine.subgraph_lock:
-            gate_node = g.nodes.get("endgame_gate")
-            if gate_node and gate_node.predicate:
-                gate_node.predicate(gate_node, env)
-            
             gate_data = env.get("endgame_gate", {})
             active_endgame = gate_data.get("active_endgame")
             

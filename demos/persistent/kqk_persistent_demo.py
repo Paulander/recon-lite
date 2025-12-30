@@ -51,6 +51,9 @@ from recon_lite_chess.eval.heuristic import (
     eval_position,
     eval_position_stockfish,
     compute_reward_tick,
+    compute_kqk_reward_shaping,
+    compute_kqk_efficiency_bonus,
+    KQK_STEP_PENALTY,
 )
 from recon_lite.plasticity.consolidate import (
     ConsolidationConfig,
@@ -273,8 +276,21 @@ def play_persistent_game(
         last_eval = eval_after
 
         reward_tick = compute_reward_tick(eval_before, eval_after, plasticity_r_max)
+        
+        # === KQK REWARD SHAPING ===
+        # Add progress-based rewards for edge/restriction/distance
+        # Note: We're the attacker (white) with K+Q, playing against random
+        board_before_copy = board.copy()
+        board_before_copy.pop()  # Undo our move to get board_before
+        kqk_shaping = compute_kqk_reward_shaping(board_before_copy, board, chess.WHITE)
+        reward_tick += kqk_shaping
+        
+        # Step penalty to encourage efficient play
+        reward_tick -= KQK_STEP_PENALTY
+        
+        # Checkmate bonus with efficiency scaling
         if board.is_checkmate():
-            reward_tick = plasticity_r_max
+            reward_tick = compute_kqk_efficiency_bonus(plies, plasticity_r_max, optimal_plies=20)
 
         if plasticity_enabled and plasticity_state:
             deltas = apply_fast_update(
