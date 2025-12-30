@@ -494,6 +494,11 @@
     let playInterval = null;
 
     function getBindings(frame) {
+      // Use sensor bindings from exporter if available
+      if (frame.bindings && Object.keys(frame.bindings).length > 0) {
+        return frame.bindings;
+      }
+      // Fallback to move-based binding
       const bindings = {};
       const lock = frame.subgraph_lock;
       if (!lock || !frame.move_uci || frame.move_uci.length < 4) return bindings;
@@ -703,13 +708,18 @@
         const size = 10 + activation * 5;
         const isTerminal = node.type === 'terminal';
 
-        // Glow
+        // Opacity based on continuous activation
+        const opacity = Math.max(0.3, activation);
+
+        // Glow for high activation
         if (activation > 0.5) {
           ctx.beginPath();
           ctx.arc(pos.x, pos.y, size + 5, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(34, 197, 94, ${activation * 0.25})`;
+          ctx.fillStyle = `rgba(34, 197, 94, ${activation * 0.3})`;
           ctx.fill();
         }
+
+        ctx.globalAlpha = opacity;
 
         // Draw shape
         if (isTerminal) {
@@ -738,6 +748,8 @@
           const label = node.id.replace('_root', '').replace(/_/g, ' ').substring(0, 10);
           ctx.fillText(label, pos.x, pos.y);
         }
+
+        ctx.globalAlpha = 1;  // Reset opacity
       }
     }
 

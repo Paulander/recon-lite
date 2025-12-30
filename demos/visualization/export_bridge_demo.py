@@ -204,7 +204,7 @@ def export_frame(
     if engine.subgraph_lock:
         subgraph_lock = engine.subgraph_lock.subgraph_root
     
-    # Node states and activations
+    # Node states and activations (use continuous activation.level when available)
     node_states = {}
     node_activations = {}
     
@@ -216,18 +216,51 @@ def export_frame(
             nid.startswith(subgraph_lock.replace("_root", "_"))
         )
         
+        # Use continuous activation level if available
         activation = 0.0
-        if node.state in (NodeState.TRUE, NodeState.CONFIRMED):
+        if hasattr(node, 'activation') and hasattr(node.activation, 'level'):
+            activation = float(node.activation.level)
+        elif node.state in (NodeState.TRUE, NodeState.CONFIRMED):
             activation = 1.0
         elif node.state in (NodeState.WAITING, NodeState.REQUESTED):
             activation = 0.5
-        if is_in_locked:
-            activation = max(activation, 0.8)
         
-        node_activations[nid] = activation
+        if is_in_locked:
+            activation = max(activation, 0.7)
+        
+        node_activations[nid] = round(activation, 3)
     
     # Gate activations
     gate_data = env.get("endgame_gate", {})
+    
+    # Extract sensor bindings from env (what each sensor is "looking at")
+    bindings = {}
+    
+    # KQK bindings: queen position, king positions
+    kqk_data = env.get("kqk", {})
+    if kqk_data:
+        if "queen_sq" in kqk_data:
+            bindings["queen"] = chess.square_name(kqk_data["queen_sq"])
+        if "our_king_sq" in kqk_data:
+            bindings["our_king"] = chess.square_name(kqk_data["our_king_sq"])
+        if "enemy_king_sq" in kqk_data:
+            bindings["enemy_king"] = chess.square_name(kqk_data["enemy_king_sq"])
+    
+    # KRK bindings: rook position, fence rank/file
+    krk_data = env.get("krk", {})
+    if krk_data:
+        if "rook_sq" in krk_data:
+            bindings["rook"] = chess.square_name(krk_data["rook_sq"])
+        if "fence_rank" in krk_data:
+            bindings["fence_rank"] = str(krk_data["fence_rank"] + 1)
+        if "fence_file" in krk_data:
+            bindings["fence_file"] = chr(ord('a') + krk_data["fence_file"])
+    
+    # KPK bindings: pawn position
+    kpk_data = env.get("kpk", {})
+    if kpk_data:
+        if "pawn_sq" in kpk_data:
+            bindings["pawn"] = chess.square_name(kpk_data["pawn_sq"])
     
     return {
         "tick": tick,
@@ -240,6 +273,7 @@ def export_frame(
         "gate_decision": gate_data.get("active_endgame"),
         "node_states": node_states,
         "node_activations": node_activations,
+        "bindings": bindings,
     }
 
 
