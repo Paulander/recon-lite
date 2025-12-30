@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
 """
-Export a winning bridge game with per-move network state for visualization.
+Export bridge games with network state for visualization.
 
-Creates a JSON timeline that can be loaded in the bridge_demo.html viewer.
+Creates JSON with:
+- Game frames (board position, moves, node states per tick)
+- Graph topology (nodes, edges for visualization layout)
 
 Usage:
-    python demos/visualization/export_bridge_demo.py [--output PATH] [--moves N]
+    # Trained network (default)
+    python export_bridge_demo.py --output sample_data/bridge_trained.json
+    
+    # Untrained network (no weights loaded)
+    python export_bridge_demo.py --no-weights --output sample_data/bridge_untrained.json
 """
 
 from __future__ import annotations
@@ -15,22 +21,24 @@ import json
 import random
 import sys
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Set
 
-# Add paths
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 import chess
 
-from recon_lite.graph import Node, NodeType, NodeState, LinkType
+from recon_lite.graph import Node, NodeType, NodeState, LinkType, Graph
 from recon_lite.engine import ReConEngine
 from recon_lite_chess.graph import build_unified_graph, load_all_weights
 from recon_lite_chess.scripts.kqk import is_kqk_position
 from recon_lite_chess.sensors.structure import summarize_kpk_material
 
 
-# Sentinels (from training script)
+# ============================================================================
+# Sentinels for subgraph exit conditions
+# ============================================================================
+
 def kpk_sentinel(env: Dict[str, Any]) -> bool:
     board = env.get("board")
     if not board:
@@ -47,21 +55,140 @@ def kqk_sentinel(env: Dict[str, Any]) -> bool:
     return is_kqk
 
 
-def get_node_color(state: NodeState, is_locked_subgraph: bool = False) -> str:
-    """Map node state to color for visualization."""
-    if is_locked_subgraph:
-        return "#22c55e"  # Green for active subgraph
-    
-    colors = {
-        NodeState.INACTIVE: "#64748b",
-        NodeState.REQUESTED: "#f59e0b",
-        NodeState.WAITING: "#eab308",
-        NodeState.TRUE: "#22c55e",
-        NodeState.CONFIRMED: "#16a34a",
-        NodeState.FAILED: "#ef4444",
-    }
-    return colors.get(state, "#94a3b8")
+def krk_sentinel(env: Dict[str, Any]) -> bool:
+    board = env.get("board")
+    if not board:
+        return False
+    pieces = list(board.piece_map().values())
+    if len(pieces) != 3:
+        return False
+    types = [p.piece_type for p in pieces]
+    return types.count(chess.KING) == 2 and types.count(chess.ROOK) == 1
 
+
+# ============================================================================
+# Graph Topology Export (for visualization layout)
+# ============================================================================
+
+def export_graph_topology(g: Graph, filter_subgraphs: Optional[Set[str]] = None) -> Dict[str, Any]:
+    """
+    Export graph topology for visualization.
+    
+    Layout strategy: SUB = vertical (parent above children), POR = horizontal (left to right)
+    """
+    # Filter to relevant nodes for bridge demo
+    if filter_subgraphs is None:
+        filter_subgraphs = {"main", "kpk", "kqk", "krk"}
+    
+    nodes = []
+    edges = []
+    
+    for nid, node in g.nodes.items():
+        subgraph = node.meta.get("subgraph", "main")
+        
+        # Include main graph + endgame subgraphs
+        if subgraph not in filter_subgraphs:
+            # Also check node ID prefix
+            if not any(nid.startswith(f"{sg}_") for sg in filter_subgraphs if sg != "main"):
+                continue
+        
+        nodes.append({
+            "id": nid,
+            "type": node.ntype.name.lower(),
+            "layer": node.meta.get("layer", "unknown"),
+            "subgraph": subgraph,
+        })
+    
+    node_ids = {n["id"] for n in nodes}
+    
+    for edge in g.edges:
+        if edge.src in node_ids and edge.dst in node_ids:
+            edges.append({
+                "src": edge.src,
+                "dst": edge.dst,
+                "type": edge.ltype.name.lower(),
+                "weight": float(edge.w) if hasattr(edge, 'w') else 1.0,
+                "trainable": edge.meta.get("trainable", False) if hasattr(edge, 'meta') else False,
+            })
+    
+    return {
+        "nodes": nodes,
+        "edges": edges,
+    }
+
+
+def compute_layout(topology: Dict[str, Any]) -> Dict[str, Dict[str, float]]:
+    """
+    Compute 2D positions for nodes based on SUB (vertical) and POR (horizontal).
+    
+    Returns dict mapping node_id -> {x, y}
+    """
+    nodes = topology["nodes"]
+    edges = topology["edges"]
+    
+    # Build parent-child map from SUB edges
+    children: Dict[str, List[str]] = {}
+    parents: Dict[str, str] = {}
+    
+    for edge in edges:
+        if edge["type"] == "sub":
+            src, dst = edge["src"], edge["dst"]
+            children.setdefault(src, []).append(dst)
+            if dst not in parents:
+                parents[dst] = src
+    
+    # Find roots (nodes with no parent in SUB structure)
+    all_ids = {n["id"] for n in nodes}
+    roots = [nid for nid in all_ids if nid not in parents]
+    
+    # Assign depth (Y coordinate based on SUB hierarchy)
+    depths: Dict[str, int] = {}
+    
+    def assign_depth(nid: str, depth: int):
+        if nid in depths:
+            return
+        depths[nid] = depth
+        for child in children.get(nid, []):
+            assign_depth(child, depth + 1)
+    
+    for root in roots:
+        assign_depth(root, 0)
+    
+    # Assign unreached nodes
+    for n in nodes:
+        if n["id"] not in depths:
+            depths[n["id"]] = 5  # Default depth for disconnected
+    
+    # Group by depth for X positioning
+    by_depth: Dict[int, List[str]] = {}
+    for nid, d in depths.items():
+        by_depth.setdefault(d, []).append(nid)
+    
+    # Compute positions
+    positions: Dict[str, Dict[str, float]] = {}
+    y_spacing = 80
+    x_spacing = 120
+    
+    for depth, node_ids in by_depth.items():
+        # Sort by subgraph then name for consistent layout
+        node_ids.sort(key=lambda nid: (
+            next((n.get("subgraph", "") for n in nodes if n["id"] == nid), ""),
+            nid
+        ))
+        
+        x_start = -(len(node_ids) - 1) * x_spacing / 2
+        for i, nid in enumerate(node_ids):
+            positions[nid] = {
+                "x": 400 + x_start + i * x_spacing,
+                "y": 60 + depth * y_spacing,
+            }
+    
+    return positions
+
+
+# ============================================================================
+# Frame Export
+# ============================================================================
 
 def export_frame(
     tick: int,
@@ -69,90 +196,103 @@ def export_frame(
     move: Optional[chess.Move],
     engine: ReConEngine,
     env: Dict[str, Any],
-    g,
+    g: Graph,
 ) -> Dict[str, Any]:
     """Export a single frame for visualization."""
     
-    # Determine active subgraph
     subgraph_lock = None
     if engine.subgraph_lock:
         subgraph_lock = engine.subgraph_lock.subgraph_root
     
-    # Get node states with activation levels
+    # Node states and activations
+    node_states = {}
     node_activations = {}
+    
     for nid, node in g.nodes.items():
-        is_in_locked = subgraph_lock and nid.startswith(subgraph_lock.replace("_root", "_"))
+        node_states[nid] = node.state.name
+        
+        is_in_locked = subgraph_lock and (
+            nid == subgraph_lock or 
+            nid.startswith(subgraph_lock.replace("_root", "_"))
+        )
+        
         activation = 0.0
         if node.state in (NodeState.TRUE, NodeState.CONFIRMED):
             activation = 1.0
         elif node.state in (NodeState.WAITING, NodeState.REQUESTED):
             activation = 0.5
-        
         if is_in_locked:
             activation = max(activation, 0.8)
         
         node_activations[nid] = activation
     
-    # Get policy suggestions
-    kpk_move = env.get("kpk", {}).get("policy", {}).get("suggested_move")
-    kqk_move = env.get("kqk", {}).get("policy", {}).get("suggested_move")
+    # Gate activations
+    gate_data = env.get("endgame_gate", {})
     
-    # Build frame for macrograph viewer format
-    frame = {
+    return {
         "tick": tick,
-        "label": f"{move.uci() if move else 'Start'}" + (f" ({subgraph_lock})" if subgraph_lock else ""),
+        "label": f"{move.uci() if move else 'Start'}",
         "board_fen": board.fen(),
         "move_uci": move.uci() if move else None,
         "subgraph_lock": subgraph_lock,
-        "macro_frame": {
-            "phase_mix": {
-                "kpk": 1.0 if kpk_sentinel({"board": board}) else 0.0,
-                "kqk": 1.0 if kqk_sentinel({"board": board}) else 0.0,
-            },
-            "plan_groups": [
-                {
-                    "id": "PlanEndgame",
-                    "activation": 1.0 if subgraph_lock else 0.3,
-                    "plans": [subgraph_lock.replace("_root", "").upper()] if subgraph_lock else []
-                },
-            ],
-            "bindings": {
-                f"macro/endgame/{subgraph_lock.replace('_root', '')}": True
-            } if subgraph_lock else {},
-            "move_synth": {
-                "chosen": move.uci() if move else None,
-                "source": subgraph_lock if subgraph_lock else "heuristic",
-            },
-        },
-        "node_states": {nid: n.state.name for nid, n in g.nodes.items()},
+        "turn": "white" if board.turn else "black",
+        "gate_activations": gate_data.get("activations", {}),
+        "gate_decision": gate_data.get("active_endgame"),
+        "node_states": node_states,
         "node_activations": node_activations,
     }
-    
-    return frame
 
+
+# ============================================================================
+# Game Play and Export
+# ============================================================================
 
 def play_and_export(
     output_path: Path,
     max_moves: int = 80,
     initial_fen: Optional[str] = None,
+    load_weights: bool = True,
     verbose: bool = True,
 ) -> bool:
-    """Play a bridge game and export frames for visualization."""
+    """Play a bridge game and export for visualization."""
     
-    # Use a near-promotion FEN
     if initial_fen is None:
-        initial_fen = "8/6P1/7K/8/2k5/8/8/8 w - - 0 1"  # Classic KPK, pawn ready to promote
+        initial_fen = "8/6P1/7K/8/2k5/8/8/8 w - - 0 1"
     
-    # Build graph and engine
-    g = build_unified_graph(include_endgames=True, include_tactics=True, include_sensors=True)
-    load_all_weights(g, weights_dir=Path("weights/latest"))
+    # Build graph
+    g = build_unified_graph(include_endgames=True, include_tactics=False, include_sensors=True)
+    
+    if load_weights:
+        weights_dir = Path("weights/latest")
+        if weights_dir.exists():
+            load_all_weights(g, weights_dir=weights_dir)
+            if verbose:
+                print("Loaded weights from weights/latest")
+        else:
+            if verbose:
+                print("Warning: weights/latest not found, using default weights")
+    else:
+        if verbose:
+            print("Running with default (untrained) weights")
+    
     engine = ReConEngine(g)
-    
     board = chess.Board(initial_fen)
     frames: List[Dict[str, Any]] = []
     
+    # Export graph topology
+    topology = export_graph_topology(g)
+    positions = compute_layout(topology)
+    
     if verbose:
-        print(f"Starting position: {initial_fen}")
+        print(f"Starting: {initial_fen}")
+        print(f"Graph: {len(topology['nodes'])} nodes, {len(topology['edges'])} edges")
+    
+    # Sentinel map
+    sentinels = {
+        "kpk": kpk_sentinel,
+        "kqk": kqk_sentinel,
+        "krk": krk_sentinel,
+    }
     
     # Initial frame
     env = {"board": board}
@@ -162,23 +302,28 @@ def play_and_export(
     while not board.is_game_over() and move_count < max_moves:
         env = {"board": board}
         
-        # Detect endgame and lock subgraph
+        # Run gate to determine routing
         if not engine.subgraph_lock:
-            is_kqk, kqk_attacker = is_kqk_position(board)
-            if is_kqk and kqk_attacker == board.turn:
-                engine.lock_subgraph("kqk_root", kqk_sentinel)
-            elif kpk_sentinel(env):
-                kpk_summary = summarize_kpk_material(board)
-                if kpk_summary.get("attacker_color") == board.turn:
-                    engine.lock_subgraph("kpk_root", kpk_sentinel)
+            gate_node = g.nodes.get("endgame_gate")
+            if gate_node and gate_node.predicate:
+                gate_node.predicate(gate_node, env)
+            
+            gate_data = env.get("endgame_gate", {})
+            active_endgame = gate_data.get("active_endgame")
+            
+            if active_endgame:
+                subgraph_root = f"{active_endgame}_root"
+                sentinel = sentinels.get(active_endgame)
+                if sentinel and subgraph_root in g.nodes:
+                    engine.lock_subgraph(subgraph_root, sentinel)
         
-        # Request root and step
+        # Engine step
         g.nodes["GameRoot"].state = NodeState.REQUESTED
         engine.step(env)
         
         # Get move from policy
         move = None
-        for key in ("kqk", "kpk"):
+        for key in ("kqk", "kpk", "krk"):
             suggested = env.get(key, {}).get("policy", {}).get("suggested_move")
             if suggested:
                 try:
@@ -194,26 +339,24 @@ def play_and_export(
             legal = list(board.legal_moves)
             if not legal:
                 break
-            # Prefer promotions
             promos = [m for m in legal if m.promotion]
-            move = promos[0] if promos else legal[0]
+            move = promos[0] if promos else random.choice(legal)
         
-        # Make move
         board.push(move)
         move_count += 1
         
         # Handle promotion transition
-        if move.promotion and engine.subgraph_lock and engine.subgraph_lock.subgraph_root == "kpk_root":
-            engine.unlock_subgraph(goal_achieved=True)
+        if move.promotion and engine.subgraph_lock:
+            if engine.subgraph_lock.subgraph_root == "kpk_root":
+                engine.unlock_subgraph(goal_achieved=True)
         
-        # Export frame
         frames.append(export_frame(move_count, board, move, engine, env, g))
         
         if verbose and move_count <= 5:
             lock = engine.subgraph_lock.subgraph_root if engine.subgraph_lock else "none"
-            print(f"  Move {move_count}: {move.uci()}, lock={lock}")
+            print(f"  {move_count}: {move.uci()} lock={lock}")
         
-        # Opponent move (random)
+        # Opponent move
         if not board.is_game_over():
             opp_moves = list(board.legal_moves)
             if opp_moves:
@@ -222,7 +365,7 @@ def play_and_export(
                 move_count += 1
                 frames.append(export_frame(move_count, board, opp_move, engine, {"board": board}, g))
     
-    # Determine result
+    # Result
     if board.is_checkmate():
         result = "checkmate"
         winner = "black" if board.turn else "white"
@@ -231,37 +374,42 @@ def play_and_export(
     elif board.is_game_over():
         result = board.result()
         if verbose:
-            print(f"\nGame over: {result}")
+            print(f"\n{result}")
     else:
         result = "timeout"
         if verbose:
-            print(f"\nGame timeout after {move_count} moves")
+            print(f"\nTimeout after {move_count} moves")
     
-    # Add game metadata
+    # Build output with topology
     output = {
-        "version": "bridge_demo_v1",
+        "version": "bridge_demo_v2",
+        "trained": load_weights,
         "initial_fen": initial_fen,
         "result": result,
         "total_moves": move_count,
+        "topology": topology,
+        "positions": positions,
         "frames": frames,
     }
     
-    # Export
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w") as f:
         json.dump(output, f, indent=2)
     
     if verbose:
-        print(f"\nExported {len(frames)} frames to {output_path}")
+        print(f"Exported {len(frames)} frames to {output_path}")
     
     return result == "checkmate"
 
 
 def main():
     parser = argparse.ArgumentParser(description="Export bridge game for visualization")
-    parser.add_argument("--output", "-o", type=Path, default=Path("demos/visualization/sample_data/bridge_demo.json"))
+    parser.add_argument("--output", "-o", type=Path, 
+                       default=Path("demos/visualization/sample_data/bridge_demo.json"))
     parser.add_argument("--moves", "-m", type=int, default=80)
     parser.add_argument("--fen", type=str, default=None)
+    parser.add_argument("--no-weights", action="store_true", 
+                       help="Run with untrained (default) weights")
     parser.add_argument("--quiet", "-q", action="store_true")
     args = parser.parse_args()
     
@@ -269,6 +417,7 @@ def main():
         output_path=args.output,
         max_moves=args.moves,
         initial_fen=args.fen,
+        load_weights=not args.no_weights,
         verbose=not args.quiet,
     )
     
