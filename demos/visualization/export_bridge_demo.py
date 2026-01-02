@@ -207,6 +207,10 @@ def export_frame(
     # Node states and activations (use continuous activation.level when available)
     node_states = {}
     node_activations = {}
+    # Check if the locked subgraph root has been reached by engine
+    subgraph_root_reached = False
+    if subgraph_lock and subgraph_lock in g.nodes:
+        subgraph_root_reached = g.nodes[subgraph_lock].state != NodeState.INACTIVE
     
     for nid, node in g.nodes.items():
         node_states[nid] = node.state.name
@@ -216,13 +220,9 @@ def export_frame(
             nid.startswith(subgraph_lock.replace("_root", "_"))
         )
         
-        # Parent path nodes are active when subgraph is locked AND they've been reached
-        # (state != INACTIVE means engine has touched them)
-        is_parent_of_locked = (
-            subgraph_lock and 
-            nid in ("GameRoot", "WinStrategy", "endgame_gate") and
-            node.state != NodeState.INACTIVE
-        )
+        # Parent path nodes: show connection when locked
+        is_in_parent_path = subgraph_lock and nid in ("GameRoot", "WinStrategy", "endgame_gate")
+        parent_path_reached = is_in_parent_path and node.state != NodeState.INACTIVE
         
         # Use continuous activation level if available
         activation = 0.0
@@ -233,10 +233,15 @@ def export_frame(
         elif node.state in (NodeState.WAITING, NodeState.REQUESTED):
             activation = 0.5
         
-        if is_in_locked:
+        # Only boost locked subgraph if its root has been reached
+        if is_in_locked and subgraph_root_reached:
             activation = max(activation, 0.7)
-        elif is_parent_of_locked:
-            activation = max(activation, 0.8)  # Parent path gets high activation
+        elif is_in_locked and not subgraph_root_reached:
+            activation = max(activation, 0.3)  # Dim: locked but not yet reached
+        elif parent_path_reached:
+            activation = max(activation, 0.8)  # Fully reached by propagation
+        elif is_in_parent_path:
+            activation = max(activation, 0.5)  # Path exists but not yet propagated
         
         node_activations[nid] = round(activation, 3)
     
