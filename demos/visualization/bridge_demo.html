@@ -449,7 +449,9 @@
       </div>
       <div class="controls">
         <button id="play-btn">▶ Play</button>
-        <button id="step-btn" style="background:#475569;color:#fff">Step</button>
+        <button id="step-back-btn" style="background:#475569;color:#fff" title="Step backward">◀</button>
+        <button id="step-btn" style="background:#475569;color:#fff" title="Step forward">▶</button>
+        <button id="reset-view-btn" style="background:#475569;color:#fff" title="Reset pan/zoom">⟲ View</button>
         <input type="range" id="frame-slider" min="0" max="0" value="0">
         <span id="frame-label">Frame 0 / 0</span>
       </div>
@@ -492,6 +494,73 @@
     let demoData = null;
     let currentFrame = 0;
     let playInterval = null;
+
+    // Pan and zoom state
+    let panX = 0, panY = 0;
+    let zoom = 1.0;
+    let isPanning = false;
+    let lastMouseX = 0, lastMouseY = 0;
+
+    // Pan: left-click and drag
+    canvasEl.addEventListener('mousedown', (e) => {
+      if (e.button === 0) {
+        isPanning = true;
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+        canvasEl.style.cursor = 'grabbing';
+      }
+    });
+
+    canvasEl.addEventListener('mousemove', (e) => {
+      if (isPanning) {
+        panX += e.clientX - lastMouseX;
+        panY += e.clientY - lastMouseY;
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+        renderNetwork(demoData.frames[currentFrame]);
+      }
+    });
+
+    canvasEl.addEventListener('mouseup', () => {
+      isPanning = false;
+      canvasEl.style.cursor = 'grab';
+    });
+
+    canvasEl.addEventListener('mouseleave', () => {
+      isPanning = false;
+      canvasEl.style.cursor = 'grab';
+    });
+
+    // Zoom: scroll wheel
+    canvasEl.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+      const newZoom = Math.max(0.2, Math.min(5.0, zoom * zoomFactor));
+
+      // Zoom toward mouse position
+      const rect = canvasEl.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      panX = mouseX - (mouseX - panX) * (newZoom / zoom);
+      panY = mouseY - (mouseY - panY) * (newZoom / zoom);
+      zoom = newZoom;
+
+      renderNetwork(demoData?.frames?.[currentFrame]);
+    });
+
+    // Set initial cursor
+    canvasEl.style.cursor = 'grab';
+
+    // Reset view button
+    document.getElementById('reset-view-btn').addEventListener('click', () => {
+      panX = 0;
+      panY = 0;
+      zoom = 1.0;
+      if (demoData && demoData.frames) {
+        renderNetwork(demoData.frames[currentFrame]);
+      }
+    });
 
     function getBindings(frame) {
       // Use sensor bindings from exporter if available
@@ -575,32 +644,57 @@
       const allIds = new Set(nodes.map(n => n.id));
       const roots = nodes.filter(n => !parents[n.id]).map(n => n.id);
 
+      // Build node type lookup
+      const nodeType = {};
+      for (const n of nodes) nodeType[n.id] = n.type;
+
+      // Check if a node only has terminal children (simple sensor branch)
+      const hasOnlyTerminalChildren = (nid) => {
+        const kids = children[nid] || [];
+        if (kids.length === 0) return false;
+        return kids.every(k => nodeType[k] === 'terminal');
+      };
+
       // Compute subtree widths (for centering)
       const subtreeWidth = {};
-      const nodeWidth = 90;
+      const nodeWidthNormal = 70;   // Tighter horizontal spacing
+      const nodeWidthCompact = 35;  // Smaller for terminal-only branches
 
       function calcWidth(nid) {
         if (subtreeWidth[nid] !== undefined) return subtreeWidth[nid];
         const kids = children[nid] || [];
         if (kids.length === 0) {
-          subtreeWidth[nid] = nodeWidth;
+          // Terminal nodes get compact width
+          subtreeWidth[nid] = nodeType[nid] === 'terminal' ? nodeWidthCompact : nodeWidthNormal;
+        } else if (hasOnlyTerminalChildren(nid)) {
+          // Nodes with only terminal children get smaller width
+          subtreeWidth[nid] = nodeWidthCompact * Math.max(1, kids.length);
         } else {
           let total = 0;
           for (const k of kids) total += calcWidth(k);
-          subtreeWidth[nid] = Math.max(nodeWidth, total);
+          // Reduce width slightly to pull children toward center
+          subtreeWidth[nid] = Math.max(nodeWidthNormal, total * 0.85);
         }
         return subtreeWidth[nid];
       }
 
       for (const r of roots) calcWidth(r);
       for (const n of nodes) {
-        if (subtreeWidth[n.id] === undefined) subtreeWidth[n.id] = nodeWidth;
+        if (subtreeWidth[n.id] === undefined) subtreeWidth[n.id] = nodeWidthCompact;
       }
 
       // Assign positions recursively
-      const ySpacing = 70;
+      // More Y spacing for scripts = children converge toward center
+      const ySpacingByDepth = (depth, isTerminalChild, parentId) => {
+        if (isTerminalChild) return 45;   // Terminals close to parent
+        if (parentId === 'endgame_gate') return 130;  // Gate -> subgraph roots: longer drop
+        if (depth < 1) return 120;        // GameRoot -> strategies: big gap
+        if (depth < 2) return 110;        // Strategies -> next level
+        if (depth < 3) return 90;         // Other gate-level
+        return 70;                        // Deeper scripts
+      };
 
-      function layout(nid, x, y) {
+      function layout(nid, x, y, depth = 0) {
         positions[nid] = { x, y };
         const kids = children[nid] || [];
         if (kids.length === 0) return;
@@ -609,10 +703,15 @@
         let totalWidth = 0;
         for (const k of kids) totalWidth += subtreeWidth[k];
 
-        let curX = x - totalWidth / 2;
+        // Extra X spread for endgame_gate's children (subgraph roots)
+        const xMultiplier = (nid === 'endgame_gate') ? 1.5 : 1.0;
+
+        let curX = x - (totalWidth * xMultiplier) / 2;
         for (const k of kids) {
-          const w = subtreeWidth[k];
-          layout(k, curX + w / 2, y + ySpacing);
+          const w = subtreeWidth[k] * xMultiplier;
+          const isTerminal = nodeType[k] === 'terminal';
+          const nextY = y + ySpacingByDepth(depth, isTerminal, nid);
+          layout(k, curX + w / 2, nextY, depth + 1);
           curX += w;
         }
       }
@@ -658,6 +757,11 @@
       canvasEl.height = parent.clientHeight - 100;
 
       ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+
+      // Apply pan and zoom transform
+      ctx.save();
+      ctx.translate(panX, panY);
+      ctx.scale(zoom, zoom);
 
       const { nodes, edges } = demoData.topology;
       const positions = computeTreeLayout(demoData.topology, canvasEl.width, canvasEl.height);
@@ -741,16 +845,30 @@
 
         // Label
         if (showLabels.checked && size > 8) {
-          ctx.fillStyle = '#fff';
-          ctx.font = '9px Segoe UI';
+          ctx.fillStyle = '#94a3b8';  // Lighter color for labels
           ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          const label = node.id.replace('_root', '').replace(/_/g, ' ').substring(0, 10);
-          ctx.fillText(label, pos.x, pos.y);
+
+          if (isTerminal) {
+            // Terminal nodes: full label below the node
+            ctx.font = '10px Segoe UI';
+            ctx.textBaseline = 'top';
+            const label = node.id.replace('_root', '').replace(/_/g, ' ');
+            ctx.fillText(label, pos.x, pos.y + size + 4);
+          } else {
+            // Script nodes: truncated label inside
+            ctx.font = '9px Segoe UI';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#fff';
+            const label = node.id.replace('_root', '').replace(/_/g, ' ').substring(0, 10);
+            ctx.fillText(label, pos.x, pos.y);
+          }
         }
 
         ctx.globalAlpha = 1;  // Reset opacity
       }
+
+      // Restore transform
+      ctx.restore();
     }
 
     function updateDisplay() {
@@ -812,6 +930,11 @@
     }
 
     playBtn.addEventListener('click', togglePlay);
+    document.getElementById('step-back-btn').addEventListener('click', () => {
+      if (playInterval) togglePlay();
+      currentFrame = Math.max(currentFrame - 1, 0);
+      updateDisplay();
+    });
     stepBtn.addEventListener('click', () => {
       if (playInterval) togglePlay();
       currentFrame = Math.min(currentFrame + 1, demoData.frames.length - 1);

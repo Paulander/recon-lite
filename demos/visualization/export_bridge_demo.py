@@ -216,6 +216,14 @@ def export_frame(
             nid.startswith(subgraph_lock.replace("_root", "_"))
         )
         
+        # Parent path nodes are active when subgraph is locked AND they've been reached
+        # (state != INACTIVE means engine has touched them)
+        is_parent_of_locked = (
+            subgraph_lock and 
+            nid in ("GameRoot", "WinStrategy", "endgame_gate") and
+            node.state != NodeState.INACTIVE
+        )
+        
         # Use continuous activation level if available
         activation = 0.0
         if hasattr(node, 'activation') and hasattr(node.activation, 'level'):
@@ -227,6 +235,8 @@ def export_frame(
         
         if is_in_locked:
             activation = max(activation, 0.7)
+        elif is_parent_of_locked:
+            activation = max(activation, 0.8)  # Parent path gets high activation
         
         node_activations[nid] = round(activation, 3)
     
