@@ -232,3 +232,93 @@ class Graph:
                 break
         if not found:
             raise KeyError(f"No POR edge {src} -> {dst} to set weight on")
+
+    # -------------------------------------------------------------------------
+    # Hot-reload / Dynamic topology methods
+    # -------------------------------------------------------------------------
+
+    def refresh_bindings(self, registry: "TopologyRegistry") -> Dict[str, str]:
+        """
+        Hot-reload topology changes from registry.
+        
+        - Adds new nodes that exist in registry but not in graph
+        - Updates edge weights from registry
+        - Does NOT remove nodes (pruning happens via separate call)
+        
+        Args:
+            registry: TopologyRegistry with new topology
+            
+        Returns:
+            Dict mapping node/edge IDs to their status ("added", "updated")
+        
+        Note: Import is done inline to avoid circular imports.
+        """
+        from recon_lite_chess.graph.builder import refresh_graph_from_registry
+        return refresh_graph_from_registry(self, registry)
+
+    def remove_node(self, node_id: str) -> bool:
+        """
+        Remove a node and its edges from the graph.
+        
+        Args:
+            node_id: ID of the node to remove
+            
+        Returns:
+            True if removed, False if not found
+        """
+        if node_id not in self.nodes:
+            return False
+        
+        # Remove edges involving this node
+        self.edges = [
+            e for e in self.edges
+            if e.src != node_id and e.dst != node_id
+        ]
+        
+        # Update out index
+        keys_to_remove = [k for k in self.out.keys() if k[0] == node_id]
+        for k in keys_to_remove:
+            del self.out[k]
+        
+        # Also remove from out lists
+        for key, dsts in list(self.out.items()):
+            self.out[key] = [d for d in dsts if d != node_id]
+        
+        # Update inc index
+        keys_to_remove = [k for k in self.inc.keys() if k[0] == node_id]
+        for k in keys_to_remove:
+            del self.inc[k]
+        
+        # Also remove from inc lists
+        for key, srcs in list(self.inc.items()):
+            self.inc[key] = [s for s in srcs if s != node_id]
+        
+        # Update parent tracking
+        if node_id in self.parent:
+            del self.parent[node_id]
+        
+        # Remove from other nodes' parent references
+        for nid in list(self.parent.keys()):
+            if self.parent[nid] == node_id:
+                self.parent[nid] = None
+        
+        # Update fan-in tracking
+        if node_id in self.parents_fanin:
+            del self.parents_fanin[node_id]
+        
+        for nid in list(self.parents_fanin.keys()):
+            self.parents_fanin[nid] = [
+                p for p in self.parents_fanin[nid] if p != node_id
+            ]
+        
+        # Finally remove the node
+        del self.nodes[node_id]
+        
+        return True
+
+    def get_edge(self, src: str, dst: str, ltype: LinkType) -> Optional[Edge]:
+        """Get an edge by source, destination, and type."""
+        for e in self.edges:
+            if e.src == src and e.dst == dst and e.ltype == ltype:
+                return e
+        return None

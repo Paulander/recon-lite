@@ -658,7 +658,7 @@
       // Compute subtree widths (for centering)
       const subtreeWidth = {};
       const nodeWidthNormal = 70;   // Tighter horizontal spacing
-      const nodeWidthCompact = 35;  // Smaller for terminal-only branches
+      const nodeWidthCompact = 50;  // Slightly more spacing for terminals
 
       function calcWidth(nid) {
         if (subtreeWidth[nid] !== undefined) return subtreeWidth[nid];
@@ -699,20 +699,64 @@
         const kids = children[nid] || [];
         if (kids.length === 0) return;
 
-        // Center children under parent
-        let totalWidth = 0;
-        for (const k of kids) totalWidth += subtreeWidth[k];
+        // Check if this is a subgraph root (kpk_root, kqk_root, krk_root)
+        const isSubgraphRoot = nid.endsWith('_root') && nid !== 'GameRoot';
 
-        // Extra X spread for endgame_gate's children (subgraph roots)
-        const xMultiplier = (nid === 'endgame_gate') ? 1.5 : 1.0;
+        if (isSubgraphRoot) {
+          // Two-row layout: terminals in first row(s), scripts below
+          const terminals = kids.filter(k => nodeType[k] === 'terminal');
+          const scripts = kids.filter(k => nodeType[k] !== 'terminal');
 
-        let curX = x - (totalWidth * xMultiplier) / 2;
-        for (const k of kids) {
-          const w = subtreeWidth[k] * xMultiplier;
-          const isTerminal = nodeType[k] === 'terminal';
-          const nextY = y + ySpacingByDepth(depth, isTerminal, nid);
-          layout(k, curX + w / 2, nextY, depth + 1);
-          curX += w;
+          // Layout terminals - use multiple rows if many terminals
+          const maxTerminalsPerRow = 8;
+          const terminalSpacing = 40;  // Tighter spacing for terminals
+          const numTerminalRows = Math.ceil(terminals.length / maxTerminalsPerRow);
+
+          for (let row = 0; row < numTerminalRows; row++) {
+            const rowStart = row * maxTerminalsPerRow;
+            const rowEnd = Math.min(rowStart + maxTerminalsPerRow, terminals.length);
+            const rowTerminals = terminals.slice(rowStart, rowEnd);
+            const rowWidth = rowTerminals.length * terminalSpacing;
+            let curX = x - rowWidth / 2;
+            const terminalY = y + 45 + (row * 35);  // Each row 35px apart
+
+            for (let i = 0; i < rowTerminals.length; i++) {
+              const k = rowTerminals[i];
+              positions[k] = { x: curX + terminalSpacing / 2, y: terminalY, terminalIndex: rowStart + i };
+              curX += terminalSpacing;
+            }
+          }
+
+          const terminalRowsHeight = numTerminalRows * 35;
+
+          // Layout scripts below terminal rows (centered under parent)
+          if (scripts.length > 0) {
+            let scriptTotalWidth = 0;
+            for (const k of scripts) scriptTotalWidth += subtreeWidth[k];
+            let curX = x - scriptTotalWidth / 2;
+            const scriptY = y + 45 + terminalRowsHeight + 20;  // Below terminal rows
+            for (const k of scripts) {
+              const w = subtreeWidth[k];
+              layout(k, curX + w / 2, scriptY, depth + 1);
+              curX += w;
+            }
+          }
+        } else {
+          // Normal layout for non-subgraph-root nodes
+          let totalWidth = 0;
+          for (const k of kids) totalWidth += subtreeWidth[k];
+
+          // Extra X spread for endgame_gate's children (subgraph roots)
+          const xMultiplier = (nid === 'endgame_gate') ? 1.5 : 1.0;
+
+          let curX = x - (totalWidth * xMultiplier) / 2;
+          for (const k of kids) {
+            const w = subtreeWidth[k] * xMultiplier;
+            const isTerminal = nodeType[k] === 'terminal';
+            const nextY = y + ySpacingByDepth(depth, isTerminal, nid);
+            layout(k, curX + w / 2, nextY, depth + 1);
+            curX += w;
+          }
         }
       }
 
@@ -849,11 +893,15 @@
           ctx.textAlign = 'center';
 
           if (isTerminal) {
-            // Terminal nodes: full label below the node
+            // Terminal nodes: full label below the node, alternating y-offset
             ctx.font = '10px Segoe UI';
             ctx.textBaseline = 'top';
             const label = node.id.replace('_root', '').replace(/_/g, ' ');
-            ctx.fillText(label, pos.x, pos.y + size + 4);
+            // Alternate y-offset based on terminal index (stored in position) to avoid label overlap
+            const termIdx = pos.terminalIndex !== undefined ? pos.terminalIndex :
+              Array.from(demoData.topology.nodes).findIndex(n => n.id === node.id);
+            const yOffset = (termIdx % 2 === 0) ? 4 : 18;
+            ctx.fillText(label, pos.x, pos.y + size + yOffset);
           } else {
             // Script nodes: truncated label inside
             ctx.font = '9px Segoe UI';
