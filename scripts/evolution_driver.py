@@ -316,15 +316,9 @@ def _play_single_game(
                 suggested_move = kqk_policy["suggested_move"]
                 break
         
-        # Create tick record
-        tick_rec = TickRecord(
-            tick_id=tick_count,
-            board_fen=board.fen(),
-            active_nodes=[n.nid for n in graph.nodes.values() 
-                         if n.state in (NodeState.ACTIVE, NodeState.WAITING, NodeState.REQUESTED)],
-            action=suggested_move,
-        )
-        ep.ticks.append(tick_rec)
+        # Calculate reward for this tick
+        # Use move-based reward shaping: fewer moves to promotion = better
+        tick_reward = 0.0
         
         # Make move
         move_made = False
@@ -341,17 +335,42 @@ def _play_single_game(
                     # For KPK training, promotion = success, game ends
                     if move.promotion:
                         promoted = True
+                        # Big reward! Scale by efficiency (fewer moves = better)
+                        # Max reward at 2 moves (fastest promotion), min at 50 moves
+                        efficiency = max(0.5, 1.0 - (move_count - 2) / 48.0)
+                        tick_reward = 1.0 * efficiency
+                        
                         # Give stem cells the win reward
                         if stem_manager and HAS_STEM_CELL:
-                            stem_manager.tick(board, 1.0, tick_count)  # Big reward!
-                        break  # Game ends at promotion - that's the goal!
-                    
-                    # Update stem cells with small progress reward
-                    if stem_manager and HAS_STEM_CELL:
-                        reward = 0.05  # Small progress reward
-                        stem_manager.tick(board, reward, tick_count)
+                            stem_manager.tick(board, tick_reward, tick_count)
+                    else:
+                        # Progress reward - pawn moving up ranks is good
+                        # Higher ranks get increasing rewards to trigger spikes
+                        pawn_rank = 0
+                        for sq in board.pieces(chess.PAWN, our_color):
+                            pawn_rank = max(pawn_rank, chess.square_rank(sq) if our_color == chess.WHITE else 7 - chess.square_rank(sq))
+                        # Rank 6 (about to promote) = 0.5, rank 5 = 0.4, etc.
+                        tick_reward = 0.1 + pawn_rank * 0.07
+                        
+                        if stem_manager and HAS_STEM_CELL:
+                            stem_manager.tick(board, tick_reward, tick_count)
             except Exception:
-                pass
+                tick_reward = -0.1  # Bad move attempted
+        
+        # Create tick record WITH reward
+        tick_rec = TickRecord(
+            tick_id=tick_count,
+            board_fen=board.fen(),
+            active_nodes=[n.nid for n in graph.nodes.values() 
+                         if n.state in (NodeState.ACTIVE, NodeState.WAITING, NodeState.REQUESTED)],
+            action=suggested_move,
+            reward_tick=tick_reward,  # Now stored for structural phase!
+        )
+        ep.ticks.append(tick_rec)
+        
+        # Exit on promotion
+        if promoted:
+            break
         
         if not move_made:
             # No valid suggested move, pick any legal
@@ -412,7 +431,7 @@ def run_structural_phase(
     """
     learner = StructureLearner(
         registry=registry,
-        cooldown_ticks=config.games_per_cycle * 10,
+        cooldown_ticks=0,  # Allow promotions every cycle (tick-based cooldown broken)
         min_spike_reward=0.3,
         decay_rate=0.95,
         prune_threshold_games=config.prune_threshold_games,
@@ -554,6 +573,9 @@ def run_evolution_training(config: EvolutionConfig) -> List[CycleResult]:
         print(f"    Spikes found: {struct_stats['spikes_found']}")
         print(f"    High-impact cells: {struct_stats['high_impact_cells']}")
         print(f"    Promotions: {struct_stats['promotions_succeeded']}")
+        # Show promotion errors if any
+        for err in struct_stats.get('promotion_errors', [])[:3]:  # First 3 only
+            print(f"    ⚠ {err}")
         
         # Snapshot
         print("  Saving snapshot...")
@@ -656,6 +678,35 @@ def main():
         help="Output directory for reports"
     )
     parser.add_argument(
+        "--run-name", "-n",
+        type=str,
+        default=None,
+        help="Name for this run (creates unique folder). Default: timestamp"
+    )
+    parser.add_argument(
+        "--stage", "-s",
+        type=int,
+        default=0,
+        help="Starting curriculum stage (0-7)"
+    )
+    parser.add_argument(
+        "--end-stage",
+        type=int,
+        default=None,
+        help="End stage (inclusive). If set, runs all stages from --stage to --end-stage"
+    )
+    parser.add_argument(
+        "--all-stages",
+        action="store_true",
+        help="Run all 8 curriculum stages sequentially (inherits weights)"
+    )
+    parser.add_argument(
+        "--win-threshold",
+        type=float,
+        default=0.9,
+        help="Win rate to advance to next stage (default: 0.9)"
+    )
+    parser.add_argument(
         "--quick",
         action="store_true",
         help="Quick test mode (10 games, 2 cycles)"
@@ -663,15 +714,70 @@ def main():
     
     args = parser.parse_args()
     
-    config = EvolutionConfig(
-        topology_path=args.topology,
-        games_per_cycle=10 if args.quick else args.games_per_cycle,
-        max_cycles=2 if args.quick else args.cycles,
-        output_dir=args.output_dir,
-    )
+    # Generate unique run name if not provided
+    if args.run_name:
+        run_name = args.run_name
+    else:
+        run_name = datetime.now().strftime("%Y%m%d_%H%M%S")
     
-    run_evolution_training(config)
+    # Determine stage range
+    start_stage = args.stage
+    if args.all_stages:
+        end_stage = 7
+    elif args.end_stage is not None:
+        end_stage = args.end_stage
+    else:
+        end_stage = args.stage
+    
+    # Run stages sequentially
+    prev_topology_path = args.topology
+    
+    for stage_idx in range(start_stage, end_stage + 1):
+        stage_name = f"stage{stage_idx}"
+        
+        # Create stage-specific directories under run name
+        base_snap = Path("snapshots/evolution") / run_name / stage_name
+        base_trace = Path("traces/evolution") / run_name / stage_name
+        base_output = args.output_dir / run_name / stage_name
+        
+        config = EvolutionConfig(
+            topology_path=prev_topology_path,
+            games_per_cycle=10 if args.quick else args.games_per_cycle,
+            max_cycles=2 if args.quick else args.cycles,
+            output_dir=base_output,
+            snapshot_dir=base_snap,
+            trace_dir=base_trace,
+            current_stage_idx=stage_idx,
+            stage_promotion_threshold=args.win_threshold,
+        )
+        
+        # Ensure directories exist
+        config.snapshot_dir.mkdir(parents=True, exist_ok=True)
+        config.trace_dir.mkdir(parents=True, exist_ok=True)
+        config.output_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Print stage info
+        print(f"\n{'#'*60}")
+        print(f"# STAGE {stage_idx}: {KPK_STAGES[stage_idx].name.upper()}")
+        print(f"# {KPK_STAGES[stage_idx].description}")
+        print(f"{'#'*60}")
+        print(f"Run name: {run_name}/{stage_name}")
+        
+        results = run_evolution_training(config)
+        
+        # Get last topology for next stage (weight inheritance!)
+        last_cycle_snap = config.snapshot_dir / f"cycle_{config.max_cycles:04d}.json"
+        if last_cycle_snap.exists():
+            prev_topology_path = last_cycle_snap
+            print(f"  → Weights inherited from: {last_cycle_snap}")
+        
+        # Check if we should stop early (win rate too low)
+        if results:
+            avg_win = sum(r.win_rate for r in results) / len(results)
+            if avg_win < 0.5 and stage_idx < end_stage:
+                print(f"\n⚠️  Average win rate {avg_win:.1%} < 50%. Consider more training before advancing.")
 
 
 if __name__ == "__main__":
     main()
+

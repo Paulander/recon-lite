@@ -43,13 +43,13 @@
         #controls {
             top: 20px;
             left: 20px;
-            min-width: 260px;
+            min-width: 280px;
         }
 
         #stats {
             top: 20px;
             right: 20px;
-            min-width: 180px;
+            min-width: 200px;
         }
 
         #legend {
@@ -63,10 +63,39 @@
             left: 50%;
             transform: translateX(-50%);
             text-align: center;
+            min-width: 500px;
+        }
+
+        /* Stage title banner */
+        #stage-banner {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(168, 85, 247, 0.3));
+            border: 1px solid rgba(168, 85, 247, 0.5);
+            border-radius: 12px;
+            padding: 12px 30px;
+            z-index: 100;
+            text-align: center;
+        }
+
+        #stage-name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        #stage-path {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 4px;
         }
 
         h1 {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             margin-bottom: 15px;
             background: linear-gradient(135deg, #6366f1, #a855f7);
             -webkit-background-clip: text;
@@ -79,7 +108,7 @@
 
         .control-group label {
             display: block;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: #888;
             margin-bottom: 5px;
             text-transform: uppercase;
@@ -103,38 +132,48 @@
             box-shadow: 0 5px 20px rgba(99, 102, 241, 0.4);
         }
 
-        #file-list {
-            max-height: 150px;
+        #folder-tree {
+            max-height: 200px;
             overflow-y: auto;
             margin-top: 10px;
             font-size: 0.75rem;
         }
 
-        .file-item {
-            padding: 4px 8px;
+        .folder-item {
+            padding: 6px 10px;
             cursor: pointer;
             border-radius: 4px;
+            margin: 2px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .file-item:hover,
-        .file-item.active {
+        .folder-item:hover,
+        .folder-item.active {
             background: rgba(99, 102, 241, 0.2);
             color: #a5b4fc;
         }
 
+        .folder-item .count {
+            color: #666;
+            font-size: 0.65rem;
+        }
+
         .playback {
             display: flex;
-            gap: 10px;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         .btn {
-            padding: 8px 16px;
+            padding: 8px 14px;
             border: none;
             border-radius: 6px;
             background: rgba(99, 102, 241, 0.2);
             color: #a5b4fc;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
         }
 
         .btn:hover {
@@ -146,11 +185,35 @@
             cursor: not-allowed;
         }
 
+        .btn.active {
+            background: rgba(74, 222, 128, 0.3);
+            color: #4ade80;
+        }
+
+        /* Checkbox styling */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .toggle-row input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #6366f1;
+        }
+
+        .toggle-row span {
+            font-size: 0.75rem;
+            color: #aaa;
+        }
+
         .stat-row {
             display: flex;
             justify-content: space-between;
-            padding: 6px 0;
-            font-size: 0.85rem;
+            padding: 5px 0;
+            font-size: 0.8rem;
         }
 
         .stat-value {
@@ -169,31 +232,72 @@
         .legend-item {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin: 5px 0;
-            font-size: 0.75rem;
+            gap: 8px;
+            margin: 4px 0;
+            font-size: 0.7rem;
         }
 
         .legend-color {
-            width: 14px;
-            height: 14px;
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
         }
 
         #cycle-label {
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 600;
             color: #a5b4fc;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         #timeline-slider {
-            width: 400px;
+            width: 100%;
         }
 
         input[type="range"] {
             width: 100%;
             margin-top: 5px;
+        }
+
+        /* Node label popup */
+        .node-label {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid #4ade80;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            color: #4ade80;
+            pointer-events: none;
+            white-space: nowrap;
+            animation: popIn 0.5s ease-out;
+            z-index: 200;
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .node-label.fade-out {
+            animation: fadeOut 2s ease-out forwards;
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+            }
         }
     </style>
 </head>
@@ -202,13 +306,19 @@
     <div id="container">
         <div id="canvas-container"></div>
 
+        <!-- Stage Banner -->
+        <div id="stage-banner">
+            <div id="stage-name">Load a run folder</div>
+            <div id="stage-path">Select folder containing stage subfolders</div>
+        </div>
+
         <div id="controls" class="panel">
             <h1>🧠 ReCoN Evolution</h1>
             <div class="control-group">
-                <label>Load Snapshots</label>
-                <label class="file-label" for="file-input">📂 Select Folder</label>
+                <label>Load Run Folder</label>
+                <label class="file-label" for="file-input">📂 Select Run Folder</label>
                 <input type="file" id="file-input" webkitdirectory multiple>
-                <div id="file-list"></div>
+                <div id="folder-tree"></div>
             </div>
             <div class="control-group">
                 <label>Playback</label>
@@ -217,18 +327,26 @@
                     <button class="btn" id="play-btn" disabled>▶ Play</button>
                     <button class="btn" id="next-btn" disabled>▶</button>
                 </div>
+                <div class="toggle-row">
+                    <input type="checkbox" id="show-labels" checked>
+                    <span>Show new node labels</span>
+                </div>
+                <div class="toggle-row">
+                    <input type="checkbox" id="auto-advance" checked>
+                    <span>Auto-advance stages</span>
+                </div>
             </div>
             <div class="control-group">
-                <label>Speed</label>
-                <input type="range" id="speed-slider" min="500" max="5000" value="2000">
+                <label>Speed (ms)</label>
+                <input type="range" id="speed-slider" min="300" max="3000" value="1500">
             </div>
         </div>
 
         <div id="stats" class="panel">
+            <div class="stat-row"><span>Stage</span><span class="stat-value" id="stat-stage">-</span></div>
+            <div class="stat-row"><span>Cycle</span><span class="stat-value" id="stat-cycle">0</span></div>
             <div class="stat-row"><span>Nodes</span><span class="stat-value" id="stat-nodes">0</span></div>
             <div class="stat-row"><span>Edges</span><span class="stat-value" id="stat-edges">0</span></div>
-            <div class="stat-row"><span>Backbone</span><span class="stat-value" id="stat-backbone">0</span></div>
-            <div class="stat-row"><span>Sensors</span><span class="stat-value" id="stat-sensors">0</span></div>
             <div class="stat-row"><span>New</span><span class="stat-value stat-highlight" id="stat-new">0</span></div>
             <div class="stat-row"><span>Pruned</span><span class="stat-value stat-warning" id="stat-pruned">0</span>
             </div>
@@ -245,7 +363,7 @@
                 <div class="legend-color" style="background:#f472b6"></div><span>Actuator</span>
             </div>
             <div class="legend-item">
-                <div class="legend-color" style="background:#4ade80"></div><span>New</span>
+                <div class="legend-color" style="background:#4ade80"></div><span>New Node</span>
             </div>
             <div class="legend-item">
                 <div class="legend-color" style="background:#fb923c"></div><span>Stem Cell</span>
@@ -256,6 +374,9 @@
             <div id="cycle-label">Cycle 0 / 0</div>
             <input type="range" id="timeline-slider" min="0" max="0" value="0" disabled>
         </div>
+
+        <!-- Node labels container -->
+        <div id="labels-container"></div>
     </div>
 
     <script type="importmap">
@@ -274,7 +395,7 @@
         const CONFIG = {
             nodeRadius: 0.35,
             edgeOpacity: 0.5,
-            animDuration: 1000,
+            animDuration: 800,
             colors: {
                 backbone: 0x6366f1, sensor: 0x22d3ee, actuator: 0xf472b6,
                 stemCell: 0xfb923c, newNode: 0x4ade80, prunedNode: 0xef4444,
@@ -283,7 +404,10 @@
         };
 
         let scene, camera, renderer, controls;
-        let snapshots = [], currentIndex = 0, isPlaying = false, playInterval = null;
+        let stages = [];  // Array of {name, files: [{name, data}]}
+        let currentStageIdx = 0;
+        let currentFileIdx = 0;
+        let isPlaying = false, playInterval = null;
         let nodeMeshes = {}, edgeLines = {}, animations = [];
 
         function init() {
@@ -398,7 +522,12 @@
                     const m = createNode(n, p, isNew);
                     nodeMeshes[n.id] = m;
                     scene.add(m);
-                    if (isNew) animateAppear(m);
+                    if (isNew) {
+                        animateAppear(m);
+                        if (document.getElementById('show-labels').checked) {
+                            showNodeLabel(n.id, p);
+                        }
+                    }
                 }
             });
 
@@ -416,11 +545,35 @@
             updateStats(nodes, edges, newN, rmN);
         }
 
+        function showNodeLabel(nodeId, pos3d) {
+            const container = document.getElementById('labels-container');
+            const label = document.createElement('div');
+            label.className = 'node-label';
+            label.textContent = nodeId;
+
+            // Project 3D to 2D
+            const vec = new THREE.Vector3(pos3d.x, pos3d.y, pos3d.z);
+            vec.project(camera);
+            const x = (vec.x * 0.5 + 0.5) * window.innerWidth;
+            const y = (-vec.y * 0.5 + 0.5) * window.innerHeight;
+
+            label.style.left = `${x}px`;
+            label.style.top = `${y - 40}px`;
+            container.appendChild(label);
+
+            // Fade out after delay
+            setTimeout(() => {
+                label.classList.add('fade-out');
+                setTimeout(() => label.remove(), 2000);
+            }, 3000);
+        }
+
         function createNode(n, p, isNew) {
             let c = CONFIG.colors.backbone;
             if (n.group === 'sensor') c = CONFIG.colors.sensor;
             else if (n.group === 'actuator') c = CONFIG.colors.actuator;
             else if (n.group === 'stem_cell') c = CONFIG.colors.stemCell;
+            else if (n.group === 'promoted') c = CONFIG.colors.newNode;
             if (isNew) c = CONFIG.colors.newNode;
 
             const geo = new THREE.SphereGeometry(CONFIG.nodeRadius, 32, 32);
@@ -483,65 +636,143 @@
 
         function updateStats(n, e, newN, rmN) {
             const nl = Object.values(n);
+            const stage = stages[currentStageIdx];
+            document.getElementById('stat-stage').textContent = stage ? stage.name : '-';
+            document.getElementById('stat-cycle').textContent = currentFileIdx + 1;
             document.getElementById('stat-nodes').textContent = nl.length;
             document.getElementById('stat-edges').textContent = Object.keys(e).length;
-            document.getElementById('stat-backbone').textContent = nl.filter(x => x.group === 'backbone').length;
-            document.getElementById('stat-sensors').textContent = nl.filter(x => x.group === 'sensor').length;
             document.getElementById('stat-new').textContent = newN.size;
             document.getElementById('stat-pruned').textContent = rmN.size;
         }
 
-        document.getElementById('file-input').addEventListener('change', async e => {
-            const files = Array.from(e.target.files).filter(f => f.name.endsWith('.json')).sort((a, b) => a.name.localeCompare(b.name));
-            snapshots = [];
-            const list = document.getElementById('file-list');
-            list.innerHTML = '';
+        function updateBanner() {
+            const stage = stages[currentStageIdx];
+            if (stage) {
+                const stageNum = stage.name.match(/\d+/)?.[0] || '?';
+                document.getElementById('stage-name').textContent = `Stage ${stageNum}: ${stage.name}`;
+                document.getElementById('stage-path').textContent = stage.path || '';
+            }
+        }
 
+        // File handling - group by stage folders
+        document.getElementById('file-input').addEventListener('change', async e => {
+            const files = Array.from(e.target.files).filter(f => f.name.endsWith('.json'));
+
+            // Group files by parent folder (stage)
+            const stageMap = new Map();
             for (const f of files) {
+                const pathParts = f.webkitRelativePath.split('/');
+                const stageName = pathParts[pathParts.length - 2] || 'root';
+                if (!stageMap.has(stageName)) {
+                    stageMap.set(stageName, { name: stageName, path: pathParts.slice(0, -1).join('/'), files: [] });
+                }
                 const data = JSON.parse(await f.text());
-                const idx = snapshots.length;
-                snapshots.push({ name: f.name, data });
-                const item = document.createElement('div');
-                item.className = 'file-item';
-                item.textContent = f.name;
-                item.onclick = () => goTo(idx);
-                list.appendChild(item);
+                stageMap.get(stageName).files.push({ name: f.name, data });
             }
 
-            if (snapshots.length) {
-                document.getElementById('prev-btn').disabled = false;
-                document.getElementById('play-btn').disabled = false;
-                document.getElementById('next-btn').disabled = false;
-                document.getElementById('timeline-slider').disabled = false;
-                document.getElementById('timeline-slider').max = snapshots.length - 1;
-                goTo(0);
+            // Sort stages and files
+            stages = Array.from(stageMap.values())
+                .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+            stages.forEach(s => s.files.sort((a, b) => a.name.localeCompare(b.name)));
+
+            // Build folder tree UI
+            const tree = document.getElementById('folder-tree');
+            tree.innerHTML = '';
+            stages.forEach((s, i) => {
+                const item = document.createElement('div');
+                item.className = 'folder-item';
+                item.innerHTML = `📁 ${s.name} <span class="count">(${s.files.length})</span>`;
+                item.onclick = () => goToStage(i);
+                tree.appendChild(item);
+            });
+
+            if (stages.length && stages[0].files.length) {
+                enableControls();
+                goToStage(0);
             }
         });
 
-        function goTo(i) {
-            if (i < 0 || i >= snapshots.length) return;
-            const prev = currentIndex >= 0 && currentIndex < snapshots.length ? snapshots[currentIndex].data : null;
-            currentIndex = i;
-            renderGraph(snapshots[i].data, prev);
-            document.getElementById('cycle-label').textContent = `Cycle ${i + 1} / ${snapshots.length}`;
-            document.getElementById('timeline-slider').value = i;
-            document.querySelectorAll('.file-item').forEach((el, j) => el.classList.toggle('active', j === i));
+        function enableControls() {
+            document.getElementById('prev-btn').disabled = false;
+            document.getElementById('play-btn').disabled = false;
+            document.getElementById('next-btn').disabled = false;
+            document.getElementById('timeline-slider').disabled = false;
+        }
+
+        function goToStage(stageIdx) {
+            if (stageIdx < 0 || stageIdx >= stages.length) return;
+            currentStageIdx = stageIdx;
+            currentFileIdx = 0;
+
+            // Update timeline for this stage
+            const stage = stages[stageIdx];
+            document.getElementById('timeline-slider').max = stage.files.length - 1;
+            document.getElementById('timeline-slider').value = 0;
+
+            // Update folder tree highlighting
+            document.querySelectorAll('.folder-item').forEach((el, i) => el.classList.toggle('active', i === stageIdx));
+
+            updateBanner();
+            goToFile(0);
+        }
+
+        function goToFile(fileIdx) {
+            const stage = stages[currentStageIdx];
+            if (!stage || fileIdx < 0 || fileIdx >= stage.files.length) return;
+
+            const prevIdx = currentFileIdx;
+            currentFileIdx = fileIdx;
+
+            const prevSnap = prevIdx >= 0 && prevIdx < stage.files.length ? stage.files[prevIdx].data : null;
+            renderGraph(stage.files[fileIdx].data, prevSnap);
+
+            document.getElementById('cycle-label').textContent = `Cycle ${fileIdx + 1} / ${stage.files.length}`;
+            document.getElementById('timeline-slider').value = fileIdx;
+        }
+
+        function nextFrame() {
+            const stage = stages[currentStageIdx];
+            if (!stage) return;
+
+            if (currentFileIdx < stage.files.length - 1) {
+                goToFile(currentFileIdx + 1);
+            } else if (document.getElementById('auto-advance').checked && currentStageIdx < stages.length - 1) {
+                // Auto-advance to next stage
+                goToStage(currentStageIdx + 1);
+            } else {
+                stop();
+            }
+        }
+
+        function prevFrame() {
+            if (currentFileIdx > 0) {
+                goToFile(currentFileIdx - 1);
+            } else if (currentStageIdx > 0) {
+                // Go to previous stage's last file
+                currentStageIdx--;
+                const stage = stages[currentStageIdx];
+                document.querySelectorAll('.folder-item').forEach((el, i) => el.classList.toggle('active', i === currentStageIdx));
+                updateBanner();
+                goToFile(stage.files.length - 1);
+            }
         }
 
         document.getElementById('play-btn').onclick = () => isPlaying ? stop() : play();
-        document.getElementById('prev-btn').onclick = () => goTo(currentIndex - 1);
-        document.getElementById('next-btn').onclick = () => goTo(currentIndex + 1);
-        document.getElementById('timeline-slider').oninput = e => goTo(+e.target.value);
+        document.getElementById('prev-btn').onclick = prevFrame;
+        document.getElementById('next-btn').onclick = nextFrame;
+        document.getElementById('timeline-slider').oninput = e => goToFile(+e.target.value);
 
         function play() {
             isPlaying = true;
             document.getElementById('play-btn').textContent = '⏸ Pause';
-            playInterval = setInterval(() => currentIndex >= snapshots.length - 1 ? stop() : goTo(currentIndex + 1), +document.getElementById('speed-slider').value);
+            document.getElementById('play-btn').classList.add('active');
+            playInterval = setInterval(nextFrame, +document.getElementById('speed-slider').value);
         }
 
         function stop() {
             isPlaying = false;
             document.getElementById('play-btn').textContent = '▶ Play';
+            document.getElementById('play-btn').classList.remove('active');
             clearInterval(playInterval);
         }
 

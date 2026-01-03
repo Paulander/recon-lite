@@ -33,3 +33,13 @@ weights/runs/
 weights/demo_backups/
 reports/bridge*
 *.POLLUTED.json
+
+# =============================================================================
+# EVOLUTION TRAINING DATA (large, should be backed up externally)
+# TODO: Set up data backup pipeline (AWS S3, Google Drive, etc.)
+# See: reports/project_summary_for_ai.md for backup requirements
+# =============================================================================
+traces/
+snapshots/
+reports/evolution/
+signatures/

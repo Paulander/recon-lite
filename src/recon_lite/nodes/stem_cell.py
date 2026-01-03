@@ -335,12 +335,75 @@ class StemCellManager:
         max_cells: int = 20,
         spawn_rate: float = 0.1,  # Probability of spawning new cell per tick
         config: Optional[StemCellConfig] = None,
+        feature_extractor: Optional[Callable] = None,
     ):
         self.max_cells = max_cells
         self.spawn_rate = spawn_rate
         self.default_config = config or StemCellConfig()
         self.cells: Dict[str, StemCellTerminal] = {}
         self._next_id = 0
+        
+        # Default feature extractor for chess boards
+        if feature_extractor is not None:
+            self.feature_extractor = feature_extractor
+        else:
+            self.feature_extractor = self._default_board_features
+    
+    @staticmethod
+    def _default_board_features(board) -> List[float]:
+        """Default feature extractor for chess boards.
+        
+        Creates a simple representation including:
+        - Piece counts and positions
+        - Pawn rank for each pawn
+        - King distances
+        """
+        if not HAS_CHESS or not hasattr(board, 'piece_map'):
+            return []
+        
+        import chess
+        features = []
+        
+        # Piece counts (12 features: 6 piece types x 2 colors)
+        for color in [chess.WHITE, chess.BLACK]:
+            for ptype in [chess.PAWN, chess.KNIGHT, chess.BISHOP, 
+                          chess.ROOK, chess.QUEEN, chess.KING]:
+                count = len(board.pieces(ptype, color))
+                features.append(float(count))
+        
+        # Pawn ranks (16 features: up to 8 pawns x 2 colors, padded)
+        for color in [chess.WHITE, chess.BLACK]:
+            pawn_ranks = []
+            for sq in board.pieces(chess.PAWN, color):
+                rank = chess.square_rank(sq) if color == chess.WHITE else 7 - chess.square_rank(sq)
+                pawn_ranks.append(float(rank) / 7.0)  # Normalize to 0-1
+            # Pad to 8 pawns
+            pawn_ranks.extend([0.0] * (8 - len(pawn_ranks)))
+            features.extend(pawn_ranks[:8])
+        
+        # King positions (4 features: file, rank for each king)
+        for color in [chess.WHITE, chess.BLACK]:
+            king_sqs = list(board.pieces(chess.KING, color))
+            if king_sqs:
+                sq = king_sqs[0]
+                features.append(float(chess.square_file(sq)) / 7.0)
+                features.append(float(chess.square_rank(sq)) / 7.0)
+            else:
+                features.extend([0.0, 0.0])
+        
+        # King distance to pawn (1 feature)
+        white_pawns = list(board.pieces(chess.PAWN, chess.WHITE))
+        white_king = list(board.pieces(chess.KING, chess.WHITE))
+        if white_pawns and white_king:
+            pawn_sq = white_pawns[0]
+            king_sq = white_king[0]
+            dist = max(abs(chess.square_file(pawn_sq) - chess.square_file(king_sq)),
+                      abs(chess.square_rank(pawn_sq) - chess.square_rank(king_sq)))
+            features.append(float(dist) / 7.0)
+        else:
+            features.append(0.0)
+        
+        return features
     
     def spawn_cell(self, config: Optional[StemCellConfig] = None) -> Optional[StemCellTerminal]:
         """Spawn a new stem cell if under limit."""
@@ -357,6 +420,7 @@ class StemCellManager:
         cell = StemCellTerminal(
             cell_id=cell_id,
             config=config or self.default_config,
+            feature_extractor=self.feature_extractor,  # Pass feature extractor!
         )
         cell.activate()
         self.cells[cell_id] = cell

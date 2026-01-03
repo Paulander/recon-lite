@@ -338,32 +338,104 @@ def generate_anchor_position(
 
 
 # ============================================================================
-# KPK Curriculum Stages (Trivial → Opposition)
-# For progressive learning of pawn endings
+# KPK Extended Curriculum (8 Stages: Sprinter → Zugzwang)
+# Progressive learning with specific pattern discovery targets
 # ============================================================================
 
 @dataclass
 class KPKStage:
     """Configuration for a KPK curriculum stage."""
     name: str
-    pawn_rank_min: int  # 0-7 (0 = rank 1)
-    pawn_rank_max: int
-    opp_king_min_dist: int  # Chebyshev from pawn
-    opp_king_max_dist: int
-    own_king_max_dist: Optional[int] = None  # None = any
+    description: str
+    # Position constraints
+    pawn_rank_min: int = 1  # 0-7 (0 = rank 1)
+    pawn_rank_max: int = 6
+    opp_king_min_dist: int = 1  # Chebyshev from pawn
+    opp_king_max_dist: int = 7
+    own_king_max_dist: Optional[int] = None
     force_rook_pawn: bool = False
-    description: str = ""
+    # Position generator function name (optional override)
+    generator: Optional[str] = None
+    # Example FEN for documentation
+    example_fen: str = ""
 
 
-# Progressive stages from trivial to complex
+# Extended 8-stage curriculum
 KPK_STAGES: List[KPKStage] = [
-    KPKStage("trivial", 6, 6, 4, 7, None, False, "7th rank, king far - just push"),
-    KPKStage("easy", 5, 5, 3, 7, None, False, "6th rank, two pushes"),
-    KPKStage("medium", 4, 5, 2, 4, None, False, "Opponent getting closer"),
-    KPKStage("king_help", 3, 5, 1, 3, 4, False, "Need own king to help"),
-    KPKStage("opposition", 2, 4, 1, 2, 2, False, "Close quarters - patterns matter"),
-    KPKStage("rook_pawn", 2, 5, 1, 4, None, True, "a/h file - many are draws"),
-    KPKStage("general", 1, 5, 1, 7, None, False, "Mixed for generalization"),
+    # Stage 0: The Sprinter - trivial promotion
+    KPKStage(
+        name="sprinter",
+        description="Pawn on 7th, King on 6th, Enemy far. Just push!",
+        pawn_rank_min=6, pawn_rank_max=6,
+        opp_king_min_dist=4, opp_king_max_dist=7,
+        own_king_max_dist=2,
+        example_fen="8/4P3/4K3/8/8/8/8/4k3 w - - 0 1"
+    ),
+    # Stage 1: The Escort - King support
+    KPKStage(
+        name="escort",
+        description="Pawn on 5th/6th. Enemy 3-4 away. Learn King support.",
+        pawn_rank_min=4, pawn_rank_max=5,
+        opp_king_min_dist=3, opp_king_max_dist=4,
+        own_king_max_dist=3,
+        example_fen="8/8/4PK2/8/8/8/4k3/8 w - - 0 1"
+    ),
+    # Stage 2: The Square Rule - racing calculation
+    KPKStage(
+        name="square_rule",
+        description="Pawn on 2nd-4th. Enemy on edge of 'the square'.",
+        pawn_rank_min=1, pawn_rank_max=3,
+        opp_king_min_dist=3, opp_king_max_dist=5,
+        own_king_max_dist=5,
+        example_fen="8/8/8/8/4P3/8/4K3/1k6 w - - 0 1"
+    ),
+    # Stage 3: Frontal Blockade - shouldering
+    KPKStage(
+        name="frontal_blockade",
+        description="Enemy King directly in front of pawn. Learn shouldering.",
+        pawn_rank_min=3, pawn_rank_max=4,
+        opp_king_min_dist=1, opp_king_max_dist=2,
+        own_king_max_dist=2,
+        generator="frontal_blockade",  # Special generator
+        example_fen="8/8/4k3/4P3/4K3/8/8/8 w - - 0 1"
+    ),
+    # Stage 4: Key Squares - direct opposition
+    KPKStage(
+        name="key_squares",
+        description="Pawn on 4th/5th. White King must reach key squares.",
+        pawn_rank_min=3, pawn_rank_max=4,
+        opp_king_min_dist=1, opp_king_max_dist=3,
+        own_king_max_dist=2,
+        example_fen="8/8/4k3/8/4P3/3K4/8/8 w - - 0 1"
+    ),
+    # Stage 5: The Pivot - distant opposition
+    KPKStage(
+        name="pivot",
+        description="Pawn on 2nd/3rd. King far. Learn distant opposition.",
+        pawn_rank_min=1, pawn_rank_max=2,
+        opp_king_min_dist=2, opp_king_max_dist=4,
+        own_king_max_dist=4,
+        example_fen="8/8/8/4k3/8/8/4P3/4K3 w - - 0 1"
+    ),
+    # Stage 6: Corner Trap - rook pawn draws
+    KPKStage(
+        name="corner_trap",
+        description="Rook pawn (a/h file). Learn stalemate patterns.",
+        pawn_rank_min=2, pawn_rank_max=5,
+        opp_king_min_dist=1, opp_king_max_dist=4,
+        force_rook_pawn=True,
+        example_fen="8/8/1K6/P7/8/k7/8/8 w - - 0 1"
+    ),
+    # Stage 7: Zugzwang - triangulation
+    KPKStage(
+        name="zugzwang",
+        description="Corresponding squares. Learn triangulation.",
+        pawn_rank_min=3, pawn_rank_max=5,
+        opp_king_min_dist=1, opp_king_max_dist=2,
+        own_king_max_dist=2,
+        generator="zugzwang",  # Special generator
+        example_fen="8/8/3k4/3P4/3K4/8/8/8 w - - 0 1"
+    ),
 ]
 
 

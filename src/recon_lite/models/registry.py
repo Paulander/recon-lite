@@ -166,15 +166,29 @@ class TopologyRegistry:
             return json.load(f)
     
     def _parse_data(self):
-        """Parse loaded data into NodeSpec and EdgeSpec objects."""
+        """Parse loaded data into NodeSpec and EdgeSpec objects.
+        
+        Handles both formats:
+        - topology.json: {"nodes": [{...}, ...], "edges": [{...}, ...]}
+        - snapshot.json: {"nodes": {"id": {...}, ...}, "edges": {"key": {...}, ...}}
+        """
         self._nodes.clear()
         self._edges.clear()
         
-        for node_data in self.data.get("nodes", []):
+        nodes_data = self.data.get("nodes", [])
+        edges_data = self.data.get("edges", [])
+        
+        # Handle dict format (snapshots)
+        if isinstance(nodes_data, dict):
+            nodes_data = list(nodes_data.values())
+        if isinstance(edges_data, dict):
+            edges_data = list(edges_data.values())
+        
+        for node_data in nodes_data:
             spec = NodeSpec.from_dict(node_data)
             self._nodes[spec.id] = spec
         
-        for edge_data in self.data.get("edges", []):
+        for edge_data in edges_data:
             spec = EdgeSpec.from_dict(edge_data)
             self._edges[spec.key] = spec
     

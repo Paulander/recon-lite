@@ -452,6 +452,7 @@ class StructureLearner:
         # Step 3: Promote top candidates
         promotions: List[PromotionResult] = []
         promoted_count = 0
+        promotion_errors: List[str] = []
         
         # Default parent candidates if not specified
         if parent_candidates is None:
@@ -466,10 +467,12 @@ class StructureLearner:
             parent_id = parent_candidates[0] if parent_candidates else "kpk_root"
             
             result = self.promote_stem_cell(cell, parent_id, current_tick)
-            promotions.append(result)
-            
-            if result.success:
-                promoted_count += 1
+            if result:
+                promotions.append(result)
+                if result.success:
+                    promoted_count += 1
+                elif result.error:
+                    promotion_errors.append(f"{cell.cell_id}: {result.error}")
         
         # Step 4: Collection confirmation stats for pruning
         # (Would need episode summary data for this)
@@ -484,6 +487,7 @@ class StructureLearner:
             "promotions_attempted": len(promotions),
             "promotions_succeeded": promoted_count,
             "promotions": [p.cell_id for p in promotions if p.success],
+            "promotion_errors": promotion_errors,
             "pruning_results": [r.edge_key for r in pruning_results if r.pruned],
             "current_tick": current_tick,
         }
