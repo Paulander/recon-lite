@@ -449,33 +449,62 @@ class StructureLearner:
         # Step 2: Find high-impact stem cells
         high_impact = self.find_high_impact_stem_cells(stem_manager, spikes)
         
-        # Step 3: Promote top candidates
-        promotions: List[PromotionResult] = []
-        promoted_count = 0
-        promotion_errors: List[str] = []
+        # Step 3: Promote CANDIDATE cells to TRIAL tier
+        trial_promotions: List[str] = []
+        trial_errors: List[str] = []
         
         # Default parent candidates if not specified
         if parent_candidates is None:
             parent_candidates = ["kpk_detect", "kpk_execute"]
         
         for cell in high_impact:
-            if promoted_count >= max_promotions:
+            if len(trial_promotions) >= max_promotions:
                 break
             
-            # Choose parent based on where the cell was most active
-            # For now, use first available parent
+            # Only promote CANDIDATE cells (not already in TRIAL)
+            if cell.state != StemCellState.CANDIDATE:
+                continue
+            
+            # Check if ready for trial
+            consistency, _ = cell.analyze_pattern()
+            if consistency < 0.35:
+                trial_errors.append(f"{cell.cell_id}: consistency {consistency:.2f} < 0.35")
+                continue
+            
+            # Choose parent
             parent_id = parent_candidates[0] if parent_candidates else "kpk_root"
             
-            result = self.promote_stem_cell(cell, parent_id, current_tick)
-            if result:
-                promotions.append(result)
-                if result.success:
-                    promoted_count += 1
-                elif result.error:
-                    promotion_errors.append(f"{cell.cell_id}: {result.error}")
+            # Promote to TRIAL (not MATURE yet)
+            if cell.promote_to_trial(self.registry, parent_id, current_tick):
+                trial_promotions.append(cell.cell_id)
+            else:
+                trial_errors.append(f"{cell.cell_id}: trial promotion failed")
         
-        # Step 4: Collection confirmation stats for pruning
-        # (Would need episode summary data for this)
+        # Step 4: Apply XP decay to all TRIAL cells (-1 XP per cycle)
+        xp_decays: List[Tuple[str, int]] = []
+        for cell in stem_manager.cells.values():
+            if cell.state == StemCellState.TRIAL:
+                new_xp = cell.decay_xp()
+                xp_decays.append((cell.cell_id, new_xp))
+        
+        # Step 5: Check for solidification (XP >= 100) or demotion (XP <= 0)
+        solidified: List[str] = []
+        demoted: List[str] = []
+        
+        for cell in list(stem_manager.cells.values()):
+            if cell.state != StemCellState.TRIAL:
+                continue
+            
+            should_change, new_state = cell.check_solidification()
+            if should_change:
+                if new_state == "mature":
+                    if cell.solidify_to_mature(self.registry, current_tick):
+                        solidified.append(cell.cell_id)
+                elif new_state == "demoted":
+                    if cell.demote_to_exploring(self.registry):
+                        demoted.append(cell.cell_id)
+        
+        # Step 6: Collection confirmation stats for pruning
         pruning_results: List[PruningResult] = []
         
         # Save changes
@@ -484,10 +513,20 @@ class StructureLearner:
         return {
             "spikes_found": len(spikes),
             "high_impact_cells": len(high_impact),
-            "promotions_attempted": len(promotions),
-            "promotions_succeeded": promoted_count,
-            "promotions": [p.cell_id for p in promotions if p.success],
-            "promotion_errors": promotion_errors,
+            # Trial lifecycle stats
+            "trial_promotions": len(trial_promotions),
+            "trial_promoted": trial_promotions,
+            "trial_errors": trial_errors,
+            "xp_decays": len(xp_decays),
+            "solidified": len(solidified),
+            "solidified_cells": solidified,
+            "demoted": len(demoted),
+            "demoted_cells": demoted,
+            # Legacy compat
+            "promotions_attempted": len(trial_promotions),
+            "promotions_succeeded": len(trial_promotions),
+            "promotions": trial_promotions,
+            "promotion_errors": trial_errors,
             "pruning_results": [r.edge_key for r in pruning_results if r.pruned],
             "current_tick": current_tick,
         }

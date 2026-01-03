@@ -2,7 +2,7 @@
   "version": "1.0",
   "network": "kpk",
   "created": "2026-01-02T14:11:00Z",
-  "last_modified": "2026-01-03T17:32:36.126318",
+  "last_modified": "2026-01-03T18:33:24.692118",
   "nodes": [
     {
       "id": "kpk_root",
@@ -80,6 +80,104 @@
       "group": "sensor",
       "factory": "recon_lite_chess:create_wait_for_board_change",
       "meta": {}
+    },
+    {
+      "id": "TRIAL_stem_0000_37",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0000",
+        "promoted_tick": 37,
+        "consistency": 0.37572749663400906,
+        "sample_count": 200,
+        "xp": 50,
+        "tier": "trial"
+      },
+      "pattern_signature": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.4721428571428573,
+        0.5021428571428574,
+        0.4871428571428573,
+        0.5857142857142855,
+        0.0
+      ]
+    },
+    {
+      "id": "TRIAL_stem_0001_37",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0001",
+        "promoted_tick": 37,
+        "consistency": 0.37572749663400906,
+        "sample_count": 200,
+        "xp": 50,
+        "tier": "trial"
+      },
+      "pattern_signature": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.4721428571428573,
+        0.5021428571428574,
+        0.4871428571428573,
+        0.5857142857142855,
+        0.0
+      ]
     }
   ],
   "edges": [
@@ -186,9 +284,72 @@
       "weight": 1.0,
       "consolidate": true,
       "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0000_37",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0001_37",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
     }
   ],
   "stem_cells": [],
   "promoted_nodes": [],
-  "evolution_history": []
+  "evolution_history": [
+    {
+      "tick": 37,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0000_37",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": "recon_lite.learning.m5_structure:create_pattern_sensor"
+      },
+      "timestamp": "2026-01-03T18:07:06.025476"
+    },
+    {
+      "tick": 37,
+      "event_type": "edge_added",
+      "target_id": "kpk_detect->TRIAL_stem_0000_37:SUB",
+      "details": {
+        "src": "kpk_detect",
+        "dst": "TRIAL_stem_0000_37",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-03T18:07:06.025498"
+    },
+    {
+      "tick": 37,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0001_37",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": "recon_lite.learning.m5_structure:create_pattern_sensor"
+      },
+      "timestamp": "2026-01-03T18:07:06.025913"
+    },
+    {
+      "tick": 37,
+      "event_type": "edge_added",
+      "target_id": "kpk_detect->TRIAL_stem_0001_37:SUB",
+      "details": {
+        "src": "kpk_detect",
+        "dst": "TRIAL_stem_0001_37",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-03T18:07:06.025921"
+    }
+  ]
 }

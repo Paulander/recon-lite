@@ -572,9 +572,15 @@ def run_evolution_training(config: EvolutionConfig) -> List[CycleResult]:
         )
         print(f"    Spikes found: {struct_stats['spikes_found']}")
         print(f"    High-impact cells: {struct_stats['high_impact_cells']}")
-        print(f"    Promotions: {struct_stats['promotions_succeeded']}")
-        # Show promotion errors if any
-        for err in struct_stats.get('promotion_errors', [])[:3]:  # First 3 only
+        
+        # Three-tier lifecycle stats
+        trial_count = struct_stats.get('trial_promotions', 0)
+        solid_count = struct_stats.get('solidified', 0)
+        demote_count = struct_stats.get('demoted', 0)
+        print(f"    → TRIAL: {trial_count}  SOLID: {solid_count}  DEMOTED: {demote_count}")
+        
+        # Show trial errors if any
+        for err in struct_stats.get('trial_errors', [])[:2]:
             print(f"    ⚠ {err}")
         
         # Snapshot

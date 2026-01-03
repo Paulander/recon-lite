@@ -1,9 +1,19 @@
-"""M10.1: Stem Cell Terminal Implementation.
+"""M10.1: Stem Cell Terminal Implementation with Three-Tier Lifecycle.
 
 Stem cells are special terminal nodes that can discover new patterns
-and potentially specialize into full sensors.
+and potentially specialize into full sensors through a graduated promotion system.
 
-Lifecycle: EXPLORING → CANDIDATE → SPECIALIZED
+Three-Tier Lifecycle:
+    1. EXPLORING (Tier 1): Collecting samples, low consistency OK
+    2. TRIAL (Tier 2): Transient vertex with XP system, must prove utility
+    3. MATURE (Tier 3): Solidified permanent node in topology.json
+
+XP System (for TRIAL tier):
+    - Success (positive affordance delta): +10 XP
+    - Failure (negative affordance delta): -10 XP
+    - Background decay: -1 XP per cycle
+    - Solidify threshold: XP >= 100 → MATURE
+    - Demotion threshold: XP <= 0 → back to EXPLORING
 
 Usage:
     from recon_lite.nodes import StemCellTerminal, StemCellState
@@ -13,9 +23,12 @@ Usage:
     # During game play, stem cell collects samples
     stem.observe(board, reward_tick)
     
-    # When enough samples collected, attempt specialization
-    if stem.should_specialize():
-        sensor = stem.specialize()
+    # Promote to trial when consistency > 0.35
+    if stem.can_enter_trial():
+        stem.promote_to_trial(registry, parent_id)
+    
+    # Update XP based on move outcomes
+    stem.update_xp(affordance_delta)
 """
 
 from dataclasses import dataclass, field
@@ -41,12 +54,31 @@ except ImportError:
 
 
 class StemCellState(Enum):
-    """Lifecycle states for a stem cell."""
+    """Three-tier lifecycle states for stem cells.
+    
+    Tier 1 (Exploratory):
+        DORMANT: Not yet activated
+        EXPLORING: Actively collecting samples
+        CANDIDATE: Has enough samples, awaiting trial evaluation
+    
+    Tier 2 (Probationary):
+        TRIAL: Transient vertex in graph, earning XP to prove utility
+    
+    Tier 3 (Solidified):
+        MATURE: Permanent node in topology.json, fully trusted
+    
+    Terminal:
+        SPECIALIZED: Legacy alias for MATURE
+        PRUNED: Removed due to low value or XP depletion
+    """
     DORMANT = auto()      # Not yet activated
-    EXPLORING = auto()    # Actively collecting samples
-    CANDIDATE = auto()    # Has enough samples, awaiting evaluation
-    SPECIALIZED = auto()  # Promoted to full sensor
-    PRUNED = auto()       # Removed due to low value
+    EXPLORING = auto()    # Tier 1: Actively collecting samples
+    CANDIDATE = auto()    # Tier 1: Ready for trial consideration
+    TRIAL = auto()        # Tier 2: Transient vertex with XP system
+    MATURE = auto()       # Tier 3: Permanent node, solidified
+    SPECIALIZED = auto()  # Legacy alias for MATURE
+    PRUNED = auto()       # Removed/deleted
+
 
 
 @dataclass
@@ -91,13 +123,28 @@ class StemCellSample:
 
 class StemCellTerminal:
     """
-    A stem cell terminal that can discover patterns and specialize.
+    A stem cell terminal with three-tier lifecycle and XP system.
     
     Stem cells are exploratory nodes that:
-    1. Collect samples during high-reward moments
-    2. Analyze patterns in collected samples
-    3. Potentially specialize into a full sensor
+    1. EXPLORING: Collect samples during high-reward moments
+    2. TRIAL: Operate as transient vertex, earning XP to prove utility
+    3. MATURE: Solidified as permanent node in topology.json
+    
+    XP System (TRIAL tier only):
+        - Base XP on promotion: 50
+        - Success: +10 XP (positive affordance delta)
+        - Failure: -10 XP (negative affordance delta)
+        - Decay: -1 XP per cycle
+        - Solidify: XP >= 100 → MATURE
+        - Demote: XP <= 0 → back to EXPLORING
     """
+    
+    # XP Configuration
+    XP_INITIAL = 50        # Starting XP when entering TRIAL
+    XP_SOLIDIFY = 100      # XP needed to become MATURE
+    XP_SUCCESS = 10        # XP for positive affordance delta
+    XP_FAILURE = -10       # XP for negative affordance delta
+    XP_DECAY = -1          # XP lost per cycle (cost of living)
     
     def __init__(
         self,
@@ -109,12 +156,29 @@ class StemCellTerminal:
         self.config = config or StemCellConfig()
         self.feature_extractor = feature_extractor
         
+        # Core state
         self.state = StemCellState.DORMANT
         self.samples: List[StemCellSample] = []
         self.exploration_ticks = 0
         self.pattern_signature: Optional[List[float]] = None
         self.trust_score = 0.0
         self.metadata: Dict[str, Any] = {}
+        
+        # XP System (Tier 2: TRIAL)
+        self.xp: int = 0
+        self.xp_successes: int = 0
+        self.xp_failures: int = 0
+        self.trial_node_id: Optional[str] = None  # Graph node ID when solidified
+        self.trial_edge_key: Optional[str] = None  # Edge key to parent
+        
+        # Trial preparation data (stored when entering TRIAL, used when solidifying)
+        self.trial_parent_id: Optional[str] = None
+        self.trial_consistency: float = 0.0
+        self.trial_signature: Optional[List[float]] = None
+        self.trial_tick: int = 0
+        
+        # Pattern centroid for similarity comparison
+        self.pattern_centroid: Optional[List[float]] = None
     
     def activate(self) -> None:
         """Start exploration."""
@@ -234,8 +298,258 @@ class StemCellTerminal:
         # Consistency: 1.0 if all samples are identical, lower if spread out
         consistency = 1.0 - min(1.0, avg_distance / (max_distance + 1e-6))
         
+        # Store centroid for pattern signature and similarity comparison
         self.pattern_signature = centroid.tolist()
+        self.pattern_centroid = self.pattern_signature
         return float(consistency), self.pattern_signature
+    
+    # =========================================================================
+    # XP SYSTEM - THREE-TIER LIFECYCLE MANAGEMENT
+    # =========================================================================
+    
+    def can_enter_trial(self, min_samples: int = 100, min_consistency: float = 0.35) -> bool:
+        """
+        Check if cell is ready to enter TRIAL tier.
+        
+        Requirements:
+            - In CANDIDATE state
+            - At least min_samples collected
+            - Pattern consistency >= min_consistency
+        """
+        if self.state != StemCellState.CANDIDATE:
+            return False
+        
+        if len(self.samples) < min_samples:
+            return False
+        
+        consistency, _ = self.analyze_pattern()
+        return consistency >= min_consistency
+    
+    def promote_to_trial(
+        self,
+        registry: Any,  # TopologyRegistry
+        parent_id: str,
+        current_tick: int = 0,
+    ) -> bool:
+        """
+        Promote cell to TRIAL tier as a transient vertex.
+        
+        Creates a temporary node in the registry that can be solidified
+        or removed based on XP performance.
+        
+        Args:
+            registry: TopologyRegistry for metadata (node created on solidification)
+            parent_id: Parent node to wire to
+            current_tick: Current tick for metadata
+            
+        Returns:
+            True if promotion successful
+        """
+        if self.state not in (StemCellState.CANDIDATE, StemCellState.EXPLORING):
+            return False
+        
+        consistency, signature = self.analyze_pattern()
+        if consistency < 0.35:
+            return False
+        
+        # Generate trial node ID (will be created on solidification)
+        self.trial_node_id = f"TRIAL_{self.cell_id}_{current_tick}"
+        
+        # Store trial preparation data (don't add to registry yet to avoid graph issues)
+        self.trial_parent_id = parent_id
+        self.trial_consistency = consistency
+        self.trial_signature = signature
+        self.trial_tick = current_tick
+        
+        # Update state to TRIAL
+        self.state = StemCellState.TRIAL
+        self.xp = self.XP_INITIAL
+        self.xp_successes = 0
+        self.xp_failures = 0
+        
+        # Store in metadata for serialization
+        self.metadata["trial_prep"] = {
+            "node_id": self.trial_node_id,
+            "parent_id": parent_id,
+            "consistency": consistency,
+            "promoted_tick": current_tick,
+            "sample_count": len(self.samples),
+        }
+        
+        return True
+    
+    def update_xp(self, affordance_delta: float) -> Tuple[int, str]:
+        """
+        Update XP based on affordance delta from a move.
+        
+        Args:
+            affordance_delta: Change in affordance (positive = good, negative = bad)
+            
+        Returns:
+            (xp_change, result) where result is 'success', 'failure', or 'neutral'
+        """
+        if self.state != StemCellState.TRIAL:
+            return 0, "not_trial"
+        
+        if affordance_delta > 0.1:
+            # Success: positive affordance delta
+            xp_change = self.XP_SUCCESS
+            self.xp_successes += 1
+            result = "success"
+        elif affordance_delta < -0.1:
+            # Failure: negative affordance delta
+            xp_change = self.XP_FAILURE
+            self.xp_failures += 1
+            result = "failure"
+        else:
+            # Neutral: no significant change
+            xp_change = 0
+            result = "neutral"
+        
+        self.xp += xp_change
+        return xp_change, result
+    
+    def decay_xp(self) -> int:
+        """
+        Apply XP decay (cost of living).
+        
+        Called once per cycle for all TRIAL cells.
+        
+        Returns:
+            XP after decay
+        """
+        if self.state != StemCellState.TRIAL:
+            return self.xp
+        
+        self.xp += self.XP_DECAY
+        return self.xp
+    
+    def check_solidification(self) -> Tuple[bool, str]:
+        """
+        Check if cell should be solidified (MATURE) or demoted (EXPLORING).
+        
+        Returns:
+            (should_change, new_state) where new_state is 'mature', 'demoted', or 'stay'
+        """
+        if self.state != StemCellState.TRIAL:
+            return False, "not_trial"
+        
+        if self.xp >= self.XP_SOLIDIFY:
+            return True, "mature"
+        elif self.xp <= 0:
+            return True, "demoted"
+        else:
+            return False, "stay"
+    
+    def solidify_to_mature(self, registry: Any, current_tick: int = 0) -> bool:
+        """
+        Solidify trial node to permanent MATURE node.
+        
+        Args:
+            registry: TopologyRegistry for updating node
+            current_tick: Current tick for metadata
+            
+        Returns:
+            True if successful
+        """
+        if self.state != StemCellState.TRIAL or not self.trial_node_id:
+            return False
+        
+        if not self.trial_parent_id:
+            self.metadata["solidify_error"] = "No trial parent ID stored"
+            return False
+        
+        try:
+            # Create permanent mature node in registry
+            node_spec = {
+                "id": self.trial_node_id,
+                "type": "TERMINAL",
+                "group": "mature",  # Permanent mature node
+                "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+                "pattern_signature": self.trial_signature,
+                "transient": False,  # Permanent!
+                "meta": {
+                    "cell_id": self.cell_id,
+                    "promoted_tick": self.trial_tick,
+                    "solidified_tick": current_tick,
+                    "consistency": self.trial_consistency,
+                    "sample_count": len(self.samples),
+                    "final_xp": self.xp,
+                    "xp_successes": self.xp_successes,
+                    "xp_failures": self.xp_failures,
+                    "tier": "mature",
+                }
+            }
+            
+            # Add mature node to registry
+            registry.add_node(node_spec, tick=current_tick)
+            
+            # Wire to parent with full weight
+            registry.add_edge(
+                self.trial_parent_id, 
+                self.trial_node_id, 
+                "SUB", 
+                weight=1.0, 
+                tick=current_tick
+            )
+            self.trial_edge_key = f"{self.trial_parent_id}->{self.trial_node_id}:SUB"
+            
+            # Update state
+            self.state = StemCellState.MATURE
+            registry.save()
+            return True
+            
+        except Exception as e:
+            self.metadata["solidify_error"] = str(e)
+            return False
+    
+    def demote_to_exploring(self, registry: Any) -> bool:
+        """
+        Demote cell back to EXPLORING (XP depleted).
+        
+        Since TRIAL state is tracked internally (no registry node yet),
+        we just reset the cell state and keep samples for continued learning.
+        
+        Args:
+            registry: TopologyRegistry (unused, kept for API compat)
+            
+        Returns:
+            True if successful
+        """
+        if self.state != StemCellState.TRIAL:
+            return False
+        
+        # Reset to EXPLORING state
+        self.state = StemCellState.EXPLORING
+        self.xp = 0
+        self.xp_successes = 0
+        self.xp_failures = 0
+        self.trial_node_id = None
+        self.trial_edge_key = None
+        self.trial_parent_id = None
+        self.trial_signature = None
+        self.trial_tick = 0
+        self.trial_consistency = 0.0
+        
+        # Keep some samples for continued learning
+        if len(self.samples) > 50:
+            # Keep most recent 50 samples
+            self.samples = self.samples[-50:]
+        
+        self.exploration_ticks = 0
+        return True
+    
+    def get_xp_stats(self) -> Dict[str, Any]:
+        """Get XP statistics for reporting."""
+        return {
+            "xp": self.xp,
+            "xp_successes": self.xp_successes,
+            "xp_failures": self.xp_failures,
+            "xp_ratio": self.xp_successes / max(1, self.xp_failures),
+            "trial_node_id": self.trial_node_id,
+            "state": self.state.name,
+        }
+
     
     def specialize(self) -> Optional[Dict[str, Any]]:
         """
@@ -301,6 +615,13 @@ class StemCellTerminal:
                 "exploration_budget": self.config.exploration_budget,
             },
             "metadata": self.metadata,
+            # XP System fields
+            "xp": self.xp,
+            "xp_successes": self.xp_successes,
+            "xp_failures": self.xp_failures,
+            "trial_node_id": self.trial_node_id,
+            "trial_edge_key": self.trial_edge_key,
+            "pattern_centroid": self.pattern_centroid,
         }
     
     @classmethod
@@ -322,6 +643,15 @@ class StemCellTerminal:
         cell.pattern_signature = data.get("pattern_signature")
         cell.trust_score = data.get("trust_score", 0.0)
         cell.metadata = data.get("metadata", {})
+        
+        # XP System fields
+        cell.xp = data.get("xp", 0)
+        cell.xp_successes = data.get("xp_successes", 0)
+        cell.xp_failures = data.get("xp_failures", 0)
+        cell.trial_node_id = data.get("trial_node_id")
+        cell.trial_edge_key = data.get("trial_edge_key")
+        cell.pattern_centroid = data.get("pattern_centroid")
+        
         return cell
 
 
@@ -451,6 +781,39 @@ class StemCellManager:
                     stored.append(cell_id)
         
         return stored
+    
+    def update_trial_xp(self, affordance_delta: float) -> Dict[str, Tuple[int, str]]:
+        """
+        Update XP for all TRIAL cells based on affordance delta.
+        
+        Called after each move to provide move-level feedback.
+        
+        Args:
+            affordance_delta: Change in affordance (positive = good move)
+            
+        Returns:
+            Dict mapping cell_id to (xp_change, result)
+        """
+        results = {}
+        for cell_id, cell in self.cells.items():
+            if cell.state == StemCellState.TRIAL:
+                xp_change, result = cell.update_xp(affordance_delta)
+                results[cell_id] = (xp_change, result)
+        return results
+    
+    def get_trial_cells(self) -> List[StemCellTerminal]:
+        """Get all cells in TRIAL state."""
+        return [c for c in self.cells.values() if c.state == StemCellState.TRIAL]
+    
+    def get_trial_stats(self) -> Dict[str, Any]:
+        """Get statistics about TRIAL cells."""
+        trial_cells = self.get_trial_cells()
+        return {
+            "count": len(trial_cells),
+            "xp_values": {c.cell_id: c.xp for c in trial_cells},
+            "total_xp": sum(c.xp for c in trial_cells),
+            "avg_xp": sum(c.xp for c in trial_cells) / max(1, len(trial_cells)),
+        }
     
     def get_specialization_candidates(self) -> List[StemCellTerminal]:
         """Get cells ready for specialization."""
