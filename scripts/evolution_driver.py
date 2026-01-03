@@ -58,10 +58,29 @@ except ImportError:
     HAS_BUILDER = False
 
 try:
-    from recon_lite_chess.training.generators import generate_kpk_position
+    from recon_lite_chess.training.generators import (
+        generate_kpk_position,
+        generate_kpk_curriculum_position,
+        KPK_STAGES,
+        KPKStage,
+    )
     HAS_GENERATORS = True
 except ImportError:
     HAS_GENERATORS = False
+    KPK_STAGES = []
+    KPKStage = None
+
+try:
+    from recon_lite_chess.features.kpk_features import extract_kpk_features
+    HAS_FEATURES = True
+except ImportError:
+    HAS_FEATURES = False
+
+try:
+    from recon_lite_chess.training.rewards import get_reward_provider, MoveReward
+    HAS_REWARDS = True
+except ImportError:
+    HAS_REWARDS = False
 
 
 @dataclass
@@ -91,6 +110,13 @@ class EvolutionConfig:
     stem_cell_spawn_rate: float = 0.05
     stem_cell_max_cells: int = 10
     stem_cell_min_samples: int = 30
+    
+    # Curriculum settings
+    use_curriculum: bool = True
+    current_stage_idx: int = 0
+    stage_promotion_threshold: float = 0.8  # Win rate to advance
+    min_games_per_stage: int = 50
+    use_stockfish_rewards: bool = True
 
 
 @dataclass
@@ -157,8 +183,12 @@ def run_online_phase(
     losses = 0
     
     for game_idx in range(config.games_per_cycle):
-        # Generate starting position
-        if HAS_GENERATORS:
+        # Generate starting position - use curriculum if enabled
+        if config.use_curriculum and HAS_GENERATORS and KPK_STAGES:
+            stage_idx = min(config.current_stage_idx, len(KPK_STAGES) - 1)
+            gen_board = generate_kpk_curriculum_position(KPK_STAGES[stage_idx])
+            fen = gen_board.fen()
+        elif HAS_GENERATORS:
             gen_board = generate_kpk_position()
             fen = gen_board.fen() if hasattr(gen_board, 'fen') else str(gen_board)
         else:

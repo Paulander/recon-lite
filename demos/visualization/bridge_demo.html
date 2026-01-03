@@ -741,8 +741,34 @@
               curX += w;
             }
           }
+        } else if (nid === 'GameRoot') {
+          // Special layout for GameRoot: strategies spread out, terminals centered below
+          const terminals = kids.filter(k => nodeType[k] === 'terminal');
+          const strategies = kids.filter(k => nodeType[k] !== 'terminal');
+
+          // Layout strategies (WinStrategy, DrawStrategy, SurviveStrategy)
+          let strategyTotalWidth = 0;
+          for (const k of strategies) strategyTotalWidth += subtreeWidth[k];
+          let curX = x - strategyTotalWidth / 2;
+          const strategyY = y + ySpacingByDepth(depth, false, nid);
+          for (const k of strategies) {
+            const w = subtreeWidth[k];
+            layout(k, curX + w / 2, strategyY, depth + 1);
+            curX += w;
+          }
+
+          // Layout terminals centered directly below GameRoot (in the triangle space)
+          const terminalSpacing = 45;
+          const terminalsTotalWidth = terminals.length * terminalSpacing;
+          curX = x - terminalsTotalWidth / 2;
+          const terminalY = y + 55;  // Below GameRoot but above strategies' children
+          for (let i = 0; i < terminals.length; i++) {
+            const k = terminals[i];
+            positions[k] = { x: curX + terminalSpacing / 2, y: terminalY, terminalIndex: i };
+            curX += terminalSpacing;
+          }
         } else {
-          // Normal layout for non-subgraph-root nodes
+          // Normal layout for other nodes
           let totalWidth = 0;
           for (const k of kids) totalWidth += subtreeWidth[k];
 

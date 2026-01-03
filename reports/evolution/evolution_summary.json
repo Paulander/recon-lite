@@ -1,5 +1,5 @@
 {
-  "completed_at": "2026-01-02T17:31:43.064283",
+  "completed_at": "2026-01-03T02:04:52.582237",
   "total_cycles": 2,
   "total_games": 20,
   "avg_win_rate": 0.0,
@@ -10,14 +10,14 @@
       "games": 10,
       "win_rate": 0.0,
       "promotions": [],
-      "duration": 0.2959868907928467
+      "duration": 0.2292330265045166
     },
     {
       "cycle": 2,
       "games": 10,
       "win_rate": 0.0,
       "promotions": [],
-      "duration": 0.13698410987854004
+      "duration": 0.1851806640625
     }
   ]
 }

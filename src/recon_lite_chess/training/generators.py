@@ -11,6 +11,7 @@ Provides functions to generate training positions for each curriculum phase:
 from __future__ import annotations
 
 import random
+from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
 import chess
@@ -334,6 +335,137 @@ def generate_anchor_position(
         return generate_kqk_position()
     else:
         return generate_krk_position()
+
+
+# ============================================================================
+# KPK Curriculum Stages (Trivial → Opposition)
+# For progressive learning of pawn endings
+# ============================================================================
+
+@dataclass
+class KPKStage:
+    """Configuration for a KPK curriculum stage."""
+    name: str
+    pawn_rank_min: int  # 0-7 (0 = rank 1)
+    pawn_rank_max: int
+    opp_king_min_dist: int  # Chebyshev from pawn
+    opp_king_max_dist: int
+    own_king_max_dist: Optional[int] = None  # None = any
+    force_rook_pawn: bool = False
+    description: str = ""
+
+
+# Progressive stages from trivial to complex
+KPK_STAGES: List[KPKStage] = [
+    KPKStage("trivial", 6, 6, 4, 7, None, False, "7th rank, king far - just push"),
+    KPKStage("easy", 5, 5, 3, 7, None, False, "6th rank, two pushes"),
+    KPKStage("medium", 4, 5, 2, 4, None, False, "Opponent getting closer"),
+    KPKStage("king_help", 3, 5, 1, 3, 4, False, "Need own king to help"),
+    KPKStage("opposition", 2, 4, 1, 2, 2, False, "Close quarters - patterns matter"),
+    KPKStage("rook_pawn", 2, 5, 1, 4, None, True, "a/h file - many are draws"),
+    KPKStage("general", 1, 5, 1, 7, None, False, "Mixed for generalization"),
+]
+
+
+def _chebyshev(sq1: int, sq2: int) -> int:
+    """Chebyshev (king move) distance between squares."""
+    r1, f1 = chess.square_rank(sq1), chess.square_file(sq1)
+    r2, f2 = chess.square_rank(sq2), chess.square_file(sq2)
+    return max(abs(r1 - r2), abs(f1 - f2))
+
+
+def generate_kpk_curriculum_position(
+    stage: KPKStage,
+    max_attempts: int = 100,
+) -> chess.Board:
+    """
+    Generate a KPK position matching curriculum stage constraints.
+    
+    Args:
+        stage: KPKStage configuration
+        max_attempts: Maximum generation attempts
+        
+    Returns:
+        Valid KPK position matching constraints
+    """
+    for _ in range(max_attempts):
+        board = chess.Board(None)
+        board.clear()
+        
+        # Pawn position
+        pawn_rank = random.randint(stage.pawn_rank_min, stage.pawn_rank_max)
+        if stage.force_rook_pawn:
+            pawn_file = random.choice([0, 7])  # a or h
+        else:
+            pawn_file = random.randint(1, 6)  # b-g
+        pawn_sq = chess.square(pawn_file, pawn_rank)
+        
+        # White king
+        wk_candidates = [
+            sq for sq in chess.SQUARES
+            if sq != pawn_sq
+            and (stage.own_king_max_dist is None 
+                 or _chebyshev(sq, pawn_sq) <= stage.own_king_max_dist)
+            and _chebyshev(sq, pawn_sq) <= 5  # Reasonably close
+        ]
+        if not wk_candidates:
+            continue
+        wk_sq = random.choice(wk_candidates)
+        
+        # Black king - within distance constraints
+        bk_candidates = [
+            sq for sq in chess.SQUARES
+            if sq not in (pawn_sq, wk_sq)
+            and _chebyshev(sq, wk_sq) >= 2  # Kings can't be adjacent
+            and stage.opp_king_min_dist <= _chebyshev(sq, pawn_sq) <= stage.opp_king_max_dist
+        ]
+        if not bk_candidates:
+            continue
+        bk_sq = random.choice(bk_candidates)
+        
+        board.set_piece_at(pawn_sq, chess.Piece(chess.PAWN, chess.WHITE))
+        board.set_piece_at(wk_sq, chess.Piece(chess.KING, chess.WHITE))
+        board.set_piece_at(bk_sq, chess.Piece(chess.KING, chess.BLACK))
+        board.turn = chess.WHITE
+        
+        if board.is_valid() and not board.is_game_over() and list(board.legal_moves):
+            return board
+    
+    # Fallback
+    return chess.Board("8/8/8/8/4k3/8/4P3/4K3 w - - 0 1")
+
+
+def generate_kpk_stage_position(stage_index: int) -> chess.Board:
+    """Generate position for a specific curriculum stage by index."""
+    if 0 <= stage_index < len(KPK_STAGES):
+        return generate_kpk_curriculum_position(KPK_STAGES[stage_index])
+    return generate_kpk_curriculum_position(KPK_STAGES[-1])
+
+
+# Convenience functions for each stage
+def generate_kpk_trivial() -> chess.Board:
+    """Stage 1: Pawn on 7th, king far."""
+    return generate_kpk_curriculum_position(KPK_STAGES[0])
+
+def generate_kpk_easy() -> chess.Board:
+    """Stage 2: Pawn on 6th, king far."""
+    return generate_kpk_curriculum_position(KPK_STAGES[1])
+
+def generate_kpk_medium() -> chess.Board:
+    """Stage 3: Opponent getting closer."""
+    return generate_kpk_curriculum_position(KPK_STAGES[2])
+
+def generate_kpk_king_help() -> chess.Board:
+    """Stage 4: Need own king to help."""
+    return generate_kpk_curriculum_position(KPK_STAGES[3])
+
+def generate_kpk_opposition() -> chess.Board:
+    """Stage 5: Close quarters, patterns matter."""
+    return generate_kpk_curriculum_position(KPK_STAGES[4])
+
+def generate_kpk_rook_pawn() -> chess.Board:
+    """Stage 6: Rook pawn positions (many draws)."""
+    return generate_kpk_curriculum_position(KPK_STAGES[5])
 
 
 # ============================================================================

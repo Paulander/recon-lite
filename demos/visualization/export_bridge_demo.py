@@ -306,7 +306,8 @@ def play_and_export(
     """Play a bridge game and export for visualization."""
     
     if initial_fen is None:
-        initial_fen = "8/6P1/7K/8/2k5/8/8/8 w - - 0 1"
+        # Pawn on 6th, Black king in corner - very fast mate after promotion
+        initial_fen = "7k/8/4P3/8/8/8/8/4K3 w - - 0 1"
     
     # Build graph
     g = build_unified_graph(include_endgames=True, include_tactics=False, include_sensors=True)
