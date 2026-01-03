@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReCoN Evolution Visualizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #0a0a0f;
+            color: #e0e0e0;
+            overflow: hidden;
+        }
+
+        #container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        .panel {
+            position: fixed;
+            background: rgba(15, 15, 25, 0.95);
+            border: 1px solid rgba(100, 100, 255, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        #controls {
+            top: 20px;
+            left: 20px;
+            min-width: 260px;
+        }
+
+        #stats {
+            top: 20px;
+            right: 20px;
+            min-width: 180px;
+        }
+
+        #legend {
+            bottom: 20px;
+            left: 20px;
+            padding: 15px;
+        }
+
+        #timeline {
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-label {
+            display: inline-block;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .file-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        #file-list {
+            max-height: 150px;
+            overflow-y: auto;
+            margin-top: 10px;
+            font-size: 0.75rem;
+        }
+
+        .file-item {
+            padding: 4px 8px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .file-item:hover,
+        .file-item.active {
+            background: rgba(99, 102, 241, 0.2);
+            color: #a5b4fc;
+        }
+
+        .playback {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            background: rgba(99, 102, 241, 0.2);
+            color: #a5b4fc;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .btn:hover {
+            background: rgba(99, 102, 241, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 0.85rem;
+        }
+
+        .stat-value {
+            color: #a5b4fc;
+            font-weight: 600;
+        }
+
+        .stat-highlight {
+            color: #4ade80;
+        }
+
+        .stat-warning {
+            color: #fb923c;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 5px 0;
+            font-size: 0.75rem;
+        }
+
+        .legend-color {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+        }
+
+        #cycle-label {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #a5b4fc;
+            margin-bottom: 10px;
+        }
+
+        #timeline-slider {
+            width: 400px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container">
+        <div id="canvas-container"></div>
+
+        <div id="controls" class="panel">
+            <h1>🧠 ReCoN Evolution</h1>
+            <div class="control-group">
+                <label>Load Snapshots</label>
+                <label class="file-label" for="file-input">📂 Select Folder</label>
+                <input type="file" id="file-input" webkitdirectory multiple>
+                <div id="file-list"></div>
+            </div>
+            <div class="control-group">
+                <label>Playback</label>
+                <div class="playback">
+                    <button class="btn" id="prev-btn" disabled>◀</button>
+                    <button class="btn" id="play-btn" disabled>▶ Play</button>
+                    <button class="btn" id="next-btn" disabled>▶</button>
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Speed</label>
+                <input type="range" id="speed-slider" min="500" max="5000" value="2000">
+            </div>
+        </div>
+
+        <div id="stats" class="panel">
+            <div class="stat-row"><span>Nodes</span><span class="stat-value" id="stat-nodes">0</span></div>
+            <div class="stat-row"><span>Edges</span><span class="stat-value" id="stat-edges">0</span></div>
+            <div class="stat-row"><span>Backbone</span><span class="stat-value" id="stat-backbone">0</span></div>
+            <div class="stat-row"><span>Sensors</span><span class="stat-value" id="stat-sensors">0</span></div>
+            <div class="stat-row"><span>New</span><span class="stat-value stat-highlight" id="stat-new">0</span></div>
+            <div class="stat-row"><span>Pruned</span><span class="stat-value stat-warning" id="stat-pruned">0</span>
+            </div>
+        </div>
+
+        <div id="legend" class="panel">
+            <div class="legend-item">
+                <div class="legend-color" style="background:#6366f1"></div><span>Backbone</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background:#22d3ee"></div><span>Sensor</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background:#f472b6"></div><span>Actuator</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background:#4ade80"></div><span>New</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background:#fb923c"></div><span>Stem Cell</span>
+            </div>
+        </div>
+
+        <div id="timeline" class="panel">
+            <div id="cycle-label">Cycle 0 / 0</div>
+            <input type="range" id="timeline-slider" min="0" max="0" value="0" disabled>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        const CONFIG = {
+            nodeRadius: 0.35,
+            edgeOpacity: 0.5,
+            animDuration: 1000,
+            colors: {
+                backbone: 0x6366f1, sensor: 0x22d3ee, actuator: 0xf472b6,
+                stemCell: 0xfb923c, newNode: 0x4ade80, prunedNode: 0xef4444,
+                edgeSUB: 0x4f46e5, edgePOR: 0xa855f7, bg: 0x0a0a0f
+            }
+        };
+
+        let scene, camera, renderer, controls;
+        let snapshots = [], currentIndex = 0, isPlaying = false, playInterval = null;
+        let nodeMeshes = {}, edgeLines = {}, animations = [];
+
+        function init() {
+            const container = document.getElementById('canvas-container');
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(CONFIG.colors.bg);
+            scene.fog = new THREE.Fog(CONFIG.colors.bg, 30, 80);
+
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 10, 25);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 0.5;
+
+            scene.add(new THREE.AmbientLight(0x404040, 0.5));
+            const light1 = new THREE.PointLight(0x6366f1, 1, 100);
+            light1.position.set(10, 10, 10);
+            scene.add(light1);
+            const light2 = new THREE.PointLight(0xa855f7, 1, 100);
+            light2.position.set(-10, -10, -10);
+            scene.add(light2);
+
+            createStarfield();
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            animate();
+        }
+
+        function createStarfield() {
+            const geo = new THREE.BufferGeometry();
+            const verts = [];
+            for (let i = 0; i < 2000; i++) {
+                verts.push((Math.random() - 0.5) * 200, (Math.random() - 0.5) * 200, (Math.random() - 0.5) * 200);
+            }
+            geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+            scene.add(new THREE.Points(geo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.1, opacity: 0.5, transparent: true })));
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const now = Date.now();
+            animations = animations.filter(a => {
+                const p = Math.min(1, (now - a.start) / a.duration);
+                a.update(p);
+                return p < 1;
+            });
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        function calcLayout(nodes) {
+            const pos = {}, groups = {};
+            Object.values(nodes).forEach(n => {
+                const g = n.group || 'other';
+                if (!groups[g]) groups[g] = [];
+                groups[g].push(n);
+            });
+
+            const order = ['backbone', 'sensor', 'actuator', 'promoted', 'stem_cell'];
+            let y = 5;
+            order.forEach(gn => {
+                const gNodes = groups[gn] || [];
+                gNodes.forEach((n, i) => {
+                    const angle = (i / Math.max(gNodes.length, 1)) * Math.PI * 2;
+                    const r = 3 + gNodes.length * 0.5;
+                    pos[n.id] = { x: Math.cos(angle) * r, y, z: Math.sin(angle) * r };
+                });
+                if (gNodes.length) y -= 4;
+            });
+            Object.keys(groups).filter(g => !order.includes(g)).forEach(g => {
+                groups[g].forEach((n, i) => {
+                    const angle = (i / groups[g].length) * Math.PI * 2;
+                    pos[n.id] = { x: Math.cos(angle) * 5, y, z: Math.sin(angle) * 5 };
+                });
+                y -= 4;
+            });
+            return pos;
+        }
+
+        function renderGraph(snap, prevSnap = null) {
+            const nodes = snap.nodes || {}, edges = snap.edges || {};
+            const pos = calcLayout(nodes);
+
+            const curr = new Set(Object.keys(nodes));
+            const prev = prevSnap ? new Set(Object.keys(prevSnap.nodes || {})) : new Set();
+            const newN = new Set([...curr].filter(id => !prev.has(id)));
+            const rmN = new Set([...prev].filter(id => !curr.has(id)));
+
+            rmN.forEach(id => {
+                const m = nodeMeshes[id];
+                if (m) animateRemove(m, id);
+            });
+
+            Object.values(nodes).forEach(n => {
+                const p = pos[n.id], isNew = newN.has(n.id);
+                if (nodeMeshes[n.id]) {
+                    animatePos(nodeMeshes[n.id], p);
+                } else {
+                    const m = createNode(n, p, isNew);
+                    nodeMeshes[n.id] = m;
+                    scene.add(m);
+                    if (isNew) animateAppear(m);
+                }
+            });
+
+            Object.values(edgeLines).forEach(l => scene.remove(l));
+            edgeLines = {};
+            Object.values(edges).forEach(e => {
+                const sp = pos[e.src], dp = pos[e.dst];
+                if (sp && dp) {
+                    const l = createEdge(e, sp, dp);
+                    edgeLines[`${e.src}->${e.dst}`] = l;
+                    scene.add(l);
+                }
+            });
+
+            updateStats(nodes, edges, newN, rmN);
+        }
+
+        function createNode(n, p, isNew) {
+            let c = CONFIG.colors.backbone;
+            if (n.group === 'sensor') c = CONFIG.colors.sensor;
+            else if (n.group === 'actuator') c = CONFIG.colors.actuator;
+            else if (n.group === 'stem_cell') c = CONFIG.colors.stemCell;
+            if (isNew) c = CONFIG.colors.newNode;
+
+            const geo = new THREE.SphereGeometry(CONFIG.nodeRadius, 32, 32);
+            const mat = new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 0.3, metalness: 0.5, roughness: 0.3 });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(p.x, p.y, p.z);
+            mesh.userData = { id: n.id };
+
+            const glow = new THREE.Mesh(
+                new THREE.SphereGeometry(CONFIG.nodeRadius * 1.5, 16, 16),
+                new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.15 })
+            );
+            mesh.add(glow);
+            return mesh;
+        }
+
+        function createEdge(e, sp, dp) {
+            const pts = [new THREE.Vector3(sp.x, sp.y, sp.z), new THREE.Vector3(dp.x, dp.y, dp.z)];
+            let c = CONFIG.colors.edgeSUB;
+            if (e.type === 'POR') c = CONFIG.colors.edgePOR;
+            return new THREE.Line(
+                new THREE.BufferGeometry().setFromPoints(pts),
+                new THREE.LineBasicMaterial({ color: c, transparent: true, opacity: CONFIG.edgeOpacity })
+            );
+        }
+
+        function animateAppear(m) {
+            m.scale.set(0, 0, 0);
+            animations.push({
+                start: Date.now(), duration: CONFIG.animDuration, update: p => {
+                    const e = p === 0 ? 0 : p === 1 ? 1 : Math.pow(2, -10 * p) * Math.sin((p * 10 - 0.75) * 2.094) + 1;
+                    m.scale.set(e, e, e);
+                    m.material.emissiveIntensity = 0.3 + (1 - p) * 0.7;
+                }
+            });
+        }
+
+        function animateRemove(m, id) {
+            m.material.emissive.setHex(CONFIG.colors.prunedNode);
+            m.material.color.setHex(CONFIG.colors.prunedNode);
+            animations.push({
+                start: Date.now(), duration: CONFIG.animDuration * 1.5, update: p => {
+                    m.scale.set(1 - p, 1 - p, 1 - p);
+                    if (p >= 1) { scene.remove(m); delete nodeMeshes[id]; }
+                }
+            });
+        }
+
+        function animatePos(m, tp) {
+            const sp = m.position.clone();
+            animations.push({
+                start: Date.now(), duration: 500, update: p => {
+                    const e = 1 - Math.pow(1 - p, 3);
+                    m.position.x = sp.x + (tp.x - sp.x) * e;
+                    m.position.y = sp.y + (tp.y - sp.y) * e;
+                    m.position.z = sp.z + (tp.z - sp.z) * e;
+                }
+            });
+        }
+
+        function updateStats(n, e, newN, rmN) {
+            const nl = Object.values(n);
+            document.getElementById('stat-nodes').textContent = nl.length;
+            document.getElementById('stat-edges').textContent = Object.keys(e).length;
+            document.getElementById('stat-backbone').textContent = nl.filter(x => x.group === 'backbone').length;
+            document.getElementById('stat-sensors').textContent = nl.filter(x => x.group === 'sensor').length;
+            document.getElementById('stat-new').textContent = newN.size;
+            document.getElementById('stat-pruned').textContent = rmN.size;
+        }
+
+        document.getElementById('file-input').addEventListener('change', async e => {
+            const files = Array.from(e.target.files).filter(f => f.name.endsWith('.json')).sort((a, b) => a.name.localeCompare(b.name));
+            snapshots = [];
+            const list = document.getElementById('file-list');
+            list.innerHTML = '';
+
+            for (const f of files) {
+                const data = JSON.parse(await f.text());
+                const idx = snapshots.length;
+                snapshots.push({ name: f.name, data });
+                const item = document.createElement('div');
+                item.className = 'file-item';
+                item.textContent = f.name;
+                item.onclick = () => goTo(idx);
+                list.appendChild(item);
+            }
+
+            if (snapshots.length) {
+                document.getElementById('prev-btn').disabled = false;
+                document.getElementById('play-btn').disabled = false;
+                document.getElementById('next-btn').disabled = false;
+                document.getElementById('timeline-slider').disabled = false;
+                document.getElementById('timeline-slider').max = snapshots.length - 1;
+                goTo(0);
+            }
+        });
+
+        function goTo(i) {
+            if (i < 0 || i >= snapshots.length) return;
+            const prev = currentIndex >= 0 && currentIndex < snapshots.length ? snapshots[currentIndex].data : null;
+            currentIndex = i;
+            renderGraph(snapshots[i].data, prev);
+            document.getElementById('cycle-label').textContent = `Cycle ${i + 1} / ${snapshots.length}`;
+            document.getElementById('timeline-slider').value = i;
+            document.querySelectorAll('.file-item').forEach((el, j) => el.classList.toggle('active', j === i));
+        }
+
+        document.getElementById('play-btn').onclick = () => isPlaying ? stop() : play();
+        document.getElementById('prev-btn').onclick = () => goTo(currentIndex - 1);
+        document.getElementById('next-btn').onclick = () => goTo(currentIndex + 1);
+        document.getElementById('timeline-slider').oninput = e => goTo(+e.target.value);
+
+        function play() {
+            isPlaying = true;
+            document.getElementById('play-btn').textContent = '⏸ Pause';
+            playInterval = setInterval(() => currentIndex >= snapshots.length - 1 ? stop() : goTo(currentIndex + 1), +document.getElementById('speed-slider').value);
+        }
+
+        function stop() {
+            isPlaying = false;
+            document.getElementById('play-btn').textContent = '▶ Play';
+            clearInterval(playInterval);
+        }
+
+        init();
+    </script>
+</body>
+
+</html>
