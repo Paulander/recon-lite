@@ -243,8 +243,21 @@ def _play_single_game(
     max_moves: int,
     max_ticks: int,
 ) -> Tuple[str, EpisodeRecord]:
-    """Play a single KPK game and return (result, episode_record)."""
+    """
+    Play a single KPK game and return (result, episode_record).
+    
+    Uses proper subgraph locking pattern from full_game_train.py.
+    """
     from recon_lite.plasticity import init_plasticity_state
+    from recon_lite_chess.sensors.structure import summarize_kpk_material
+    
+    # Sentinel: stay locked while position is KPK
+    def kpk_sentinel(env: Dict[str, Any]) -> bool:
+        b = env.get("board")
+        if not b:
+            return False
+        summary = summarize_kpk_material(b)
+        return bool(summary.get("is_kpk"))
     
     # Initialize episode record
     ep = EpisodeRecord(episode_id=episode_id)
@@ -261,8 +274,12 @@ def _play_single_game(
     tick_count = 0
     our_color = board.turn
     
+    # Lock into KPK subgraph (this is the key fix!)
+    if "kpk_root" in graph.nodes:
+        engine.lock_subgraph("kpk_root", kpk_sentinel)
+    
     while not board.is_game_over() and move_count < max_moves:
-        # Reset node states for fresh move evaluation
+        # Reset node states for fresh move evaluation (but keep lock)
         for node in graph.nodes.values():
             node.state = NodeState.INACTIVE
         
@@ -273,34 +290,30 @@ def _play_single_game(
             "move_count": move_count,
         }
         
+        # Extract features for stem cells if available
+        if HAS_FEATURES:
+            env["features"] = extract_kpk_features(board)
+            env["kpk_features"] = env["features"]
+        
         # Run engine steps until move selected
         ticks_this_move = 0
         suggested_move = None
         
-        # Request root to start propagation
-        root_node = graph.nodes.get("kpk_root")
-        if root_node:
-            root_node.state = NodeState.REQUESTED
-        
         while ticks_this_move < max_ticks:
-            engine.step(env)  # Use step() not tick()
+            engine.step(env)
             tick_count += 1
             ticks_this_move += 1
             
-            # Check for suggested move in env
+            # Check for suggested move in env (from kpk_move_selector)
             kpk_policy = env.get("kpk", {}).get("policy", {})
             if "suggested_move" in kpk_policy:
                 suggested_move = kpk_policy["suggested_move"]
                 break
             
-            # Also check node meta
-            for nid, node in graph.nodes.items():
-                if "last_move" in node.meta:
-                    suggested_move = node.meta["last_move"]
-                    del node.meta["last_move"]  # Clear for next move
-                    break
-            
-            if suggested_move:
+            # Also check kqk if pawn promoted
+            kqk_policy = env.get("kqk", {}).get("policy", {})
+            if "suggested_move" in kqk_policy:
+                suggested_move = kqk_policy["suggested_move"]
                 break
         
         # Create tick record
@@ -314,39 +327,43 @@ def _play_single_game(
         ep.ticks.append(tick_rec)
         
         # Make move
+        move_made = False
+        promoted = False
         if suggested_move:
             try:
                 move = chess.Move.from_uci(suggested_move)
                 if move in board.legal_moves:
                     board.push(move)
                     move_count += 1
+                    move_made = True
                     
-                    # Update stem cells if available
+                    # KPK WIN CONDITION: Promotion!
+                    # For KPK training, promotion = success, game ends
+                    if move.promotion:
+                        promoted = True
+                        # Give stem cells the win reward
+                        if stem_manager and HAS_STEM_CELL:
+                            stem_manager.tick(board, 1.0, tick_count)  # Big reward!
+                        break  # Game ends at promotion - that's the goal!
+                    
+                    # Update stem cells with small progress reward
                     if stem_manager and HAS_STEM_CELL:
-                        # Compute simple reward signal
-                        reward = 0.1 if not board.is_game_over() else (1.0 if board.is_checkmate() else 0.0)
+                        reward = 0.05  # Small progress reward
                         stem_manager.tick(board, reward, tick_count)
-                else:
-                    # Illegal move, try any legal
-                    legal_moves = list(board.legal_moves)
-                    if legal_moves:
-                        board.push(legal_moves[0])
-                        move_count += 1
             except Exception:
-                # Fallback
-                legal_moves = list(board.legal_moves)
-                if legal_moves:
-                    board.push(legal_moves[0])
-                    move_count += 1
-        else:
-            # No move suggested, pick random legal
+                pass
+        
+        if not move_made:
+            # No valid suggested move, pick any legal
             legal_moves = list(board.legal_moves)
             if legal_moves:
                 import random
                 board.push(random.choice(legal_moves))
                 move_count += 1
+            else:
+                break  # No legal moves
         
-        # Opponent's turn (for KPK, we simulate opponent moving randomly)
+        # Opponent's turn (random)
         if not board.is_game_over():
             legal_moves = list(board.legal_moves)
             if legal_moves:
@@ -354,8 +371,15 @@ def _play_single_game(
                 board.push(random.choice(legal_moves))
                 move_count += 1
     
+    # Clean up subgraph lock
+    if engine.subgraph_lock:
+        engine.unlock_subgraph(goal_achieved=promoted or board.is_checkmate())
+    
     # Determine result
-    if board.is_checkmate():
+    # For KPK: promotion = WIN (the goal is to promote safely)
+    if promoted:
+        result = "win"  # KPK success!
+    elif board.is_checkmate():
         result = "win" if board.turn != our_color else "loss"
     elif board.is_stalemate() or board.is_insufficient_material():
         result = "draw"
