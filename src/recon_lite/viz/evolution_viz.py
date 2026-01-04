@@ -404,6 +404,7 @@ def save_topology_snapshot(
     registry: Any,  # TopologyRegistry
     output_dir: Path,
     cycle: int,
+    snapshot_override: Dict[str, Any] = None,  # Optional: use this instead of registry.get_snapshot()
 ) -> Path:
     """
     Save a topology snapshot for a training cycle.
@@ -412,6 +413,7 @@ def save_topology_snapshot(
         registry: TopologyRegistry
         output_dir: Directory for snapshots
         cycle: Cycle number
+        snapshot_override: Optional snapshot dict to save (e.g. with TRIAL cells added)
         
     Returns:
         Path to saved JSON snapshot
@@ -421,7 +423,8 @@ def save_topology_snapshot(
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    snapshot = registry.get_snapshot()
+    # Use override if provided, otherwise get from registry
+    snapshot = snapshot_override if snapshot_override else registry.get_snapshot()
     snapshot["cycle"] = cycle
     
     output_path = output_dir / f"cycle_{cycle:04d}.json"

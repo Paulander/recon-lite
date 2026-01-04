@@ -463,21 +463,61 @@ def save_cycle_snapshot(
     registry: TopologyRegistry,
     old_snapshot: Dict[str, Any],
     cycle: int,
+    stem_manager: Any = None,  # Optional: include TRIAL cells
 ) -> Tuple[Optional[Path], Optional[Path]]:
     """
     Save evolution snapshot with diff highlighting.
     
+    If stem_manager is provided, TRIAL cells are included in the snapshot
+    as visualization-only nodes (group="trial").
+    
     Returns:
         (topology_json_path, evolution_png_path)
     """
-    # Get new snapshot
+    # Get new snapshot from registry
     new_snapshot = registry.get_snapshot()
+    
+    # Add TRIAL cells to snapshot for visualization
+    if stem_manager and HAS_STEM_CELL:
+        trial_cells = stem_manager.get_trial_cells()
+        for cell in trial_cells:
+            # Create node entry for TRIAL cell  
+            node_id = cell.trial_node_id or f"TRIAL_{cell.cell_id}_{cycle}"
+            node_entry = {
+                "id": node_id,
+                "type": "TERMINAL",
+                "group": "trial",  # visualization-only marker
+                "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+                "meta": {
+                    "cell_id": cell.cell_id,
+                    "xp": cell.xp,
+                    "xp_successes": cell.xp_successes,
+                    "xp_failures": cell.xp_failures,
+                    "tier": "trial",
+                    "samples": len(cell.samples),
+                    "consistency": getattr(cell, "trial_consistency", 0),
+                },
+                "transient": True,  # Mark as visualization-only
+            }
+            # Add to nodes dict (keyed by node_id)
+            new_snapshot["nodes"][node_id] = node_entry
+            
+            # Add edge from parent to TRIAL cell
+            parent_id = getattr(cell, "trial_parent_id", None) or "kpk_detect"
+            edge_key = f"{parent_id}->{node_id}:SUB"
+            edge_entry = {
+                "src": parent_id,
+                "dst": node_id,
+                "type": "SUB",
+                "weight": 0.5,  # Trial weight
+            }
+            new_snapshot["edges"][edge_key] = edge_entry
     
     # Compute diff
     diff = diff_topologies(old_snapshot, new_snapshot)
     
     # Save JSON snapshot
-    json_path = save_topology_snapshot(registry, config.snapshot_dir, cycle)
+    json_path = save_topology_snapshot(registry, config.snapshot_dir, cycle, new_snapshot)
     
     # Render PNG
     png_path = config.snapshot_dir / f"cycle_{cycle:04d}.png"
@@ -590,6 +630,7 @@ def run_evolution_training(config: EvolutionConfig) -> List[CycleResult]:
             registry=registry,
             old_snapshot=old_snapshot,
             cycle=cycle,
+            stem_manager=stem_manager,  # Include TRIAL cells for visualization
         )
         
         cycle_duration = time.time() - cycle_start
