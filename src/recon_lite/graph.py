@@ -322,3 +322,125 @@ class Graph:
             if e.src == src and e.dst == dst and e.ltype == ltype:
                 return e
         return None
+
+    # =========================================================================
+    # CONTINUOUS ACTIVATION PROPAGATION (Section 3.1)
+    # =========================================================================
+    
+    def get_sur_children(self, nid: str) -> List[Tuple[str, float]]:
+        """
+        Get all nodes that send SUR (confirmation) links TO this node.
+        
+        Returns:
+            List of (child_nid, weight) tuples
+        """
+        children = []
+        for edge in self.edges:
+            if edge.dst == nid and edge.ltype == LinkType.SUR:
+                w = edge.w if hasattr(edge, 'w') else 1.0
+                children.append((edge.src, w))
+        return children
+    
+    def get_sub_children(self, nid: str) -> List[Tuple[str, float]]:
+        """
+        Get all nodes that are targeted by SUB links from this node.
+        
+        Returns:
+            List of (child_nid, weight) tuples
+        """
+        children = []
+        for edge in self.edges:
+            if edge.src == nid and edge.ltype == LinkType.SUB:
+                w = edge.w if hasattr(edge, 'w') else 1.0
+                children.append((edge.dst, w))
+        return children
+
+    def compute_z_sur(self, nid: str) -> float:
+        """
+        Compute weighted sum of child activations for a node.
+        
+        z_i = Σ(w_ij * a_j) for all children j
+        
+        Args:
+            nid: Node ID to compute z for
+            
+        Returns:
+            Weighted sum of child activations
+        """
+        z = 0.0
+        
+        # Get children via SUB links (this node's sub-nodes)
+        for child_nid, weight in self.get_sub_children(nid):
+            child = self.nodes.get(child_nid)
+            if child:
+                z += weight * child.activation.value
+        
+        return z
+    
+    def propagate_activation(self, eta: float = 0.1) -> Dict[str, float]:
+        """
+        Single propagation step for all nodes.
+        
+        For each SCRIPT node with children, compute:
+            z = Σ(w_ij * a_j)  [weighted sum of child activations]
+            a_new = a_old + eta * k * (z - a_old)  [exponential smoothing]
+        
+        If a node's predicate has set meta["activation"], use that as source.
+        Terminal nodes (sensors) set their own activation via predicate.
+        
+        Args:
+            eta: Learning rate / smoothing factor (default 0.1)
+            
+        Returns:
+            Dict of node_id -> new activation value
+        """
+        new_activations = {}
+        
+        for nid, node in self.nodes.items():
+            # Check if predicate has set an activation value
+            if "activation" in node.meta:
+                # Predicate explicitly set activation - use it
+                target = node.meta["activation"]
+                node.activation.nudge(target, eta)
+                new_activations[nid] = node.activation.value
+            elif node.ntype == NodeType.SCRIPT:
+                # Compute target from children
+                z = self.compute_z_sur(nid)
+                # Normalize by number of children
+                children = self.get_sub_children(nid)
+                if children:
+                    z /= len(children)
+                
+                # Smooth update
+                new_val = node.activation.nudge(z, eta)
+                new_activations[nid] = new_val
+            else:
+                # Terminal nodes maintain their current activation
+                new_activations[nid] = node.activation.value
+        
+        return new_activations
+    
+    def propagate_microtick(self, num_steps: int = 5, eta: float = 0.1) -> Dict[str, float]:
+        """
+        Run multiple propagation steps to settle activations.
+        
+        This implements the microtick loop that allows activations to
+        propagate from terminals up through the script hierarchy.
+        
+        Args:
+            num_steps: Number of microticks to run
+            eta: Smoothing factor per step
+            
+        Returns:
+            Final activation values
+        """
+        for _ in range(num_steps):
+            self.propagate_activation(eta)
+        
+        return {nid: node.activation.value for nid, node in self.nodes.items()}
+    
+    def reset_activations(self, value: float = 0.0):
+        """Reset all node activations to a given value."""
+        for node in self.nodes.values():
+            node.activation.reset(value)
+
