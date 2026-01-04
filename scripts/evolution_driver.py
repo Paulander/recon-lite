@@ -71,15 +71,21 @@ except ImportError:
     KPKStage = None
 
 # Per-stage cycle configuration (more cycles for harder stages)
+# Baby-step stages (1-5) need fewer cycles since positions are fixed/easy
 STAGE_CYCLES = {
     0: 5,    # SPRINTER - easy, just push
-    1: 20,   # ESCORT - learn king support
-    2: 30,   # SQUARE_RULE - learn the square
-    3: 30,   # BARRIER - learn barrier concept
-    4: 40,   # OPPOSITION - key technique
-    5: 40,   # SHOULDER - advanced technique
-    6: 50,   # TEMPO - timing concepts
-    7: 50,   # DISTANT_OPP - hardest
+    1: 3,    # GUARDIAN_E - fixed position, trivial
+    2: 3,    # GUARDIAN_D - generalization test
+    3: 5,    # STEP_ASIDE - learn unblocking
+    4: 8,    # SHOULDERING - interference
+    5: 10,   # OPPOSITION_LITE - first real test
+    6: 20,   # ESCORT - original Stage 1
+    7: 30,   # SQUARE_RULE
+    8: 30,   # FRONTAL_BLOCKADE
+    9: 40,   # KEY_SQUARES
+    10: 40,  # PIVOT
+    11: 50,  # CORNER_TRAP
+    12: 50,  # ZUGZWANG
 }
 
 try:

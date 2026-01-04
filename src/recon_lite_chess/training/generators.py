@@ -360,7 +360,7 @@ class KPKStage:
     example_fen: str = ""
 
 
-# Extended 8-stage curriculum
+# Extended curriculum with Discovery Bridge stages
 KPK_STAGES: List[KPKStage] = [
     # Stage 0: The Sprinter - trivial promotion
     KPKStage(
@@ -371,7 +371,59 @@ KPK_STAGES: List[KPKStage] = [
         own_king_max_dist=2,
         example_fen="8/4P3/4K3/8/8/8/8/4k3 w - - 0 1"
     ),
-    # Stage 1: The Escort - King support
+    # === DISCOVERY BRIDGE (Baby Steps) ===
+    # Stage 1: Guardian (E-file) - King protects promotion square
+    KPKStage(
+        name="guardian_e",
+        description="WK:e7, P:e6, BK:g8. Learn King protecting promotion.",
+        pawn_rank_min=5, pawn_rank_max=5,
+        opp_king_min_dist=3, opp_king_max_dist=4,
+        own_king_max_dist=1,
+        generator="fixed",  # Use fixed position
+        example_fen="6k1/3K4/4P3/8/8/8/8/8 w - - 0 1"  # King on d7 beside pawn, push e6-e7
+    ),
+    # Stage 2: Guardian (D-file) - Generalization test
+    KPKStage(
+        name="guardian_d",
+        description="WK:d7, P:d6, BK:h8. File generalization.",
+        pawn_rank_min=5, pawn_rank_max=5,
+        opp_king_min_dist=4, opp_king_max_dist=5,
+        own_king_max_dist=1,
+        generator="fixed",
+        example_fen="7k/2K5/3P4/8/8/8/8/8 w - - 0 1"  # King on c7 beside pawn, push d6-d7
+    ),
+    # Stage 3: Step-Aside - King unblocks pawn
+    KPKStage(
+        name="step_aside",
+        description="WK:e6, P:e5, BK:h8. King must step aside.",
+        pawn_rank_min=4, pawn_rank_max=4,
+        opp_king_min_dist=5, opp_king_max_dist=6,
+        own_king_max_dist=1,
+        generator="fixed",
+        example_fen="7k/8/4K3/4P3/8/8/8/8 w - - 0 1"  # Ke6-d7, then push
+    ),
+    # Stage 4: Shouldering - King interference
+    KPKStage(
+        name="shouldering",
+        description="WK:d5, P:d4, BK:f6. Learn King interference.",
+        pawn_rank_min=3, pawn_rank_max=3,
+        opp_king_min_dist=2, opp_king_max_dist=3,
+        own_king_max_dist=1,
+        generator="fixed",
+        example_fen="8/8/5k2/3K4/3P4/8/8/8 w - - 0 1"  # Ke5 shoulders
+    ),
+    # Stage 5: Opposition Lite - First real test
+    KPKStage(
+        name="opposition_lite",
+        description="WK:e4, P:e3, BK:e6. Direct opposition intro.",
+        pawn_rank_min=2, pawn_rank_max=2,
+        opp_king_min_dist=2, opp_king_max_dist=3,
+        own_king_max_dist=1,
+        generator="fixed",
+        example_fen="8/8/4k3/8/4K3/4P3/8/8 w - - 0 1"  # Opposition position
+    ),
+    # === ORIGINAL STAGES (renumbered 6+) ===
+    # Stage 6: The Escort - King support (original Stage 1)
     KPKStage(
         name="escort",
         description="Pawn on 5th/6th. Enemy 3-4 away. Learn King support.",
@@ -460,6 +512,10 @@ def generate_kpk_curriculum_position(
     Returns:
         Valid KPK position matching constraints
     """
+    # Handle fixed positions (baby-step stages)
+    if stage.generator == "fixed" and stage.example_fen:
+        return chess.Board(stage.example_fen)
+    
     for _ in range(max_attempts):
         board = chess.Board(None)
         board.clear()

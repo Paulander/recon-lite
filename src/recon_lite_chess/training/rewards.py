@@ -26,13 +26,14 @@ class MoveReward:
     eval_delta: float = 0.0      # Stockfish eval change (normalized)
     progress: float = 0.0        # Pawn advancement reward
     outcome: float = 0.0         # Game outcome (+1 win, -1 loss, 0 draw/ongoing)
+    inertia_penalty: float = 0.0 # Penalty for repetition/draws/slow play
     is_blunder: bool = False     # Large negative eval swing
     raw_eval: float = 0.0        # Raw eval for logging
     
     @property
     def total(self) -> float:
         """Combined reward signal."""
-        return self.eval_delta + self.progress + self.outcome
+        return self.eval_delta + self.progress + self.outcome + self.inertia_penalty
 
 
 class StockfishRewardProvider:
@@ -197,6 +198,7 @@ class SimpleRewardProvider:
     Simple reward provider using only game outcomes.
     
     Use when Stockfish is not available.
+    Includes inertia penalties for draws/repetition/slow play.
     """
     
     def compute_reward(
@@ -211,10 +213,25 @@ class SimpleRewardProvider:
         if board_after.is_checkmate():
             reward.outcome = 1.0
         elif board_after.is_stalemate():
-            reward.outcome = 0.0
+            # Stalemate is bad in KPK - we should be winning!
+            reward.outcome = -0.3
+            reward.inertia_penalty = -0.2  # Additional penalty
         elif board_after.is_insufficient_material():
-            reward.outcome = 0.0
+            # Lost the pawn - very bad!
+            reward.outcome = -0.5
+        elif board_after.can_claim_threefold_repetition() or board_after.is_repetition(2):
+            # Repetition detection - punish "dancing"
+            reward.inertia_penalty = -0.5
+        elif board_after.can_claim_fifty_moves():
+            # 50-move rule draw imminent
+            reward.inertia_penalty = -0.3
         else:
+            # Check for inertia (slow play) penalty
+            move_count = board_after.fullmove_number
+            if move_count > 30:
+                # -0.01 per move after move 30 (inertia tax)
+                reward.inertia_penalty = -0.01 * (move_count - 30)
+            
             # Small progress reward for pawn advancement
             pawns_before = list(board_before.pieces(chess.PAWN, chess.WHITE))
             pawns_after = list(board_after.pieces(chess.PAWN, chess.WHITE))
