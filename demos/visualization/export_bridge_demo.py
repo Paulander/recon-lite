@@ -32,7 +32,9 @@ from recon_lite.graph import Node, NodeType, NodeState, LinkType, Graph
 from recon_lite.engine import ReConEngine
 from recon_lite_chess.graph import build_unified_graph, load_all_weights
 from recon_lite_chess.scripts.kqk import is_kqk_position
+from recon_lite_chess.scripts.kpk import build_kpk_legs_network
 from recon_lite_chess.sensors.structure import summarize_kpk_material
+
 
 
 # ============================================================================
@@ -456,6 +458,187 @@ def play_and_export(
     return result == "checkmate"
 
 
+# ============================================================================
+# KPK Legs-Based Game Export (New Architecture)
+# ============================================================================
+
+def export_kpk_legs_frame(
+    tick: int,
+    board: chess.Board,
+    move: Optional[chess.Move],
+    env: Dict[str, Any],
+    g: Graph,
+) -> Dict[str, Any]:
+    """Export a single frame for KPK legs visualization."""
+    
+    # Node states and activations
+    node_states = {}
+    node_activations = {}
+    
+    for nid, node in g.nodes.items():
+        node_states[nid] = node.state.name
+        
+        # Get activation from meta or activation state
+        activation = 0.0
+        if "activation" in node.meta:
+            activation = float(node.meta["activation"])
+        elif hasattr(node, 'activation') and hasattr(node.activation, 'value'):
+            activation = float(node.activation.value)
+        elif node.state in (NodeState.TRUE, NodeState.CONFIRMED):
+            activation = 1.0
+        
+        node_activations[nid] = round(activation, 3)
+    
+    # Leg-specific data
+    legs_data = env.get("kpk", {}).get("legs", {})
+    policy_data = env.get("kpk", {}).get("policy", {})
+    
+    return {
+        "tick": tick,
+        "label": f"{move.uci() if move else 'Start'}",
+        "board_fen": board.fen(),
+        "move_uci": move.uci() if move else None,
+        "turn": "white" if board.turn else "black",
+        "node_states": node_states,
+        "node_activations": node_activations,
+        "legs": legs_data,
+        "policy": policy_data,
+    }
+
+
+def play_kpk_legs_demo(
+    output_path: Path,
+    max_moves: int = 50,
+    initial_fen: Optional[str] = None,
+    verbose: bool = True,
+) -> bool:
+    """Play a KPK game using the new legs architecture and export for visualization."""
+    
+    if initial_fen is None:
+        # Guardian_D position: pawn on d6
+        initial_fen = "7k/2K5/3P4/8/8/8/8/8 w - - 0 1"
+    
+    # Build KPK legs network (new architecture)
+    g = build_kpk_legs_network()
+    
+    board = chess.Board(initial_fen)
+    frames: List[Dict[str, Any]] = []
+    
+    # Export graph topology
+    topology = export_graph_topology(g, filter_subgraphs={"main", "kpk"})
+    positions = compute_layout(topology)
+    
+    if verbose:
+        print(f"Starting KPK Legs Demo: {initial_fen}")
+        print(f"Graph: {len(topology['nodes'])} nodes, {len(topology['edges'])} edges")
+    
+    # Initial frame
+    env = {"board": board}
+    frames.append(export_kpk_legs_frame(0, board, None, env, g))
+    
+    move_count = 0
+    while not board.is_game_over() and move_count < max_moves:
+        env = {"board": board.copy()}
+        
+        # Execute leg predicates in order (simulating POR sequence)
+        pawn_leg = g.nodes.get("kpk_pawn_leg")
+        king_leg = g.nodes.get("kpk_king_leg")
+        arbiter = g.nodes.get("kpk_arbiter")
+        
+        if pawn_leg and pawn_leg.predicate:
+            pawn_leg.predicate(pawn_leg, env)
+        if king_leg and king_leg.predicate:
+            king_leg.predicate(king_leg, env)
+        if arbiter and arbiter.predicate:
+            arbiter.predicate(arbiter, env)
+        
+        # Run activation propagation
+        g.propagate_microtick(num_steps=5, eta=0.2)
+        
+        # Get move from policy
+        move_uci = env.get("kpk", {}).get("policy", {}).get("suggested_move")
+        move = None
+        
+        if move_uci:
+            try:
+                candidate = chess.Move.from_uci(move_uci)
+                if candidate in board.legal_moves:
+                    move = candidate
+            except:
+                pass
+        
+        # Fallback
+        if move is None:
+            legal = list(board.legal_moves)
+            if not legal:
+                break
+            promos = [m for m in legal if m.promotion]
+            move = promos[0] if promos else legal[0]
+        
+        board.push(move)
+        move_count += 1
+        
+        frames.append(export_kpk_legs_frame(move_count, board, move, env, g))
+        
+        if verbose:
+            legs = env.get("kpk", {}).get("legs", {})
+            pawn_act = legs.get("pawn", {}).get("activation", 0)
+            king_act = legs.get("king", {}).get("activation", 0)
+            winner = env.get("kpk", {}).get("policy", {}).get("winner", "?")
+            print(f"  {move_count}: {move.uci()} (pawn={pawn_act:.2f}, king={king_act:.2f}, winner={winner})")
+        
+        # Check for promotion (game continues as KQK after)
+        if move.promotion:
+            if verbose:
+                print(f"  ** Promotion! Game becomes KQK **")
+            break  # Stop here for KPK demo
+        
+        # Opponent move (random)
+        if not board.is_game_over():
+            opp_moves = list(board.legal_moves)
+            if opp_moves:
+                opp_move = random.choice(opp_moves)
+                board.push(opp_move)
+                move_count += 1
+                frames.append(export_kpk_legs_frame(move_count, board, opp_move, {"board": board}, g))
+    
+    # Result
+    if board.is_checkmate():
+        result = "checkmate"
+        winner = "black" if board.turn else "white"
+        if verbose:
+            print(f"\n✓ Checkmate! {winner.capitalize()} wins in {move_count} moves")
+    elif board.is_game_over():
+        result = board.result()
+        if verbose:
+            print(f"\n{result}")
+    else:
+        result = "promotion" if any(m.promotion for m in [chess.Move.from_uci(f["move_uci"]) for f in frames if f.get("move_uci")]) else "timeout"
+        if verbose:
+            print(f"\n{'Promoted to Queen' if result == 'promotion' else 'Timeout'} after {move_count} moves")
+    
+    # Build output with topology
+    output = {
+        "version": "kpk_legs_v1",
+        "architecture": "legs",
+        "initial_fen": initial_fen,
+        "result": result,
+        "total_moves": move_count,
+        "topology": topology,
+        "positions": positions,
+        "frames": frames,
+    }
+    
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w") as f:
+        json.dump(output, f, indent=2)
+    
+    if verbose:
+        print(f"Exported {len(frames)} frames to {output_path}")
+    
+    return result in ("checkmate", "promotion")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Export bridge game for visualization")
     parser.add_argument("--output", "-o", type=Path, 
@@ -464,19 +647,32 @@ def main():
     parser.add_argument("--fen", type=str, default=None)
     parser.add_argument("--no-weights", action="store_true", 
                        help="Run with untrained (default) weights")
+    parser.add_argument("--legs", action="store_true",
+                       help="Use KPK legs architecture (new) instead of unified graph")
     parser.add_argument("--quiet", "-q", action="store_true")
     args = parser.parse_args()
     
-    success = play_and_export(
-        output_path=args.output,
-        max_moves=args.moves,
-        initial_fen=args.fen,
-        load_weights=not args.no_weights,
-        verbose=not args.quiet,
-    )
+    if args.legs:
+        # Use new KPK legs architecture
+        success = play_kpk_legs_demo(
+            output_path=args.output,
+            max_moves=args.moves,
+            initial_fen=args.fen,
+            verbose=not args.quiet,
+        )
+    else:
+        # Use unified graph (original)
+        success = play_and_export(
+            output_path=args.output,
+            max_moves=args.moves,
+            initial_fen=args.fen,
+            load_weights=not args.no_weights,
+            verbose=not args.quiet,
+        )
     
     return 0 if success else 1
 
 
 if __name__ == "__main__":
     exit(main())
+

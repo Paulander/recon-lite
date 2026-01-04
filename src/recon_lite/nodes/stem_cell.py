@@ -34,7 +34,7 @@ Usage:
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from pathlib import Path
-from typing import Dict, List, Optional, Any, Callable, Tuple
+from typing import Dict, List, Optional, Any, Callable, Tuple, Set
 import json
 import random
 
@@ -549,6 +549,101 @@ class StemCellTerminal:
             "trial_node_id": self.trial_node_id,
             "state": self.state.name,
         }
+    
+    # =========================================================================
+    # M5 Intelligent Growth - Success-Triggered Spawning
+    # =========================================================================
+    
+    def spawn_neighbors(
+        self,
+        manager: "StemCellManager",
+        high_utility_features: Optional[List[str]] = None,
+        spawn_count: int = 2,
+    ) -> List[str]:
+        """
+        Spawn neighbor cells on successful solidification (100 XP).
+        
+        For Sensors: Spawn AND gates combining this sensor with high-utility features.
+        For Scripts: Spawn actuator legs to explore alternative strategies.
+        
+        Args:
+            manager: StemCellManager to spawn new cells
+            high_utility_features: Feature names to combine with (for sensors)
+            spawn_count: Number of neighbors to spawn
+            
+        Returns:
+            List of spawned cell IDs
+        """
+        if self.state != StemCellState.MATURE:
+            return []
+        
+        spawned_ids = []
+        
+        # Determine if this is a sensor or script based on trial signature
+        is_sensor = self.pattern_signature is not None
+        
+        for i in range(spawn_count):
+            new_cell = manager.spawn_cell()
+            if new_cell is None:
+                break
+            
+            # Set parent relationship for survival bond
+            new_cell.metadata["parent_cell_id"] = self.cell_id
+            new_cell.metadata["parent_node_id"] = self.trial_node_id
+            new_cell.metadata["spawn_reason"] = "success_triggered"
+            new_cell.metadata["spawn_type"] = "sensor_and_gate" if is_sensor else "script_leg"
+            
+            # Pre-configure pattern signature for faster learning
+            if is_sensor and self.pattern_signature:
+                # Copy parent signature as starting point
+                new_cell.metadata["initial_signature"] = self.pattern_signature.copy()
+                if high_utility_features:
+                    new_cell.metadata["combine_with"] = high_utility_features[:2]
+            
+            spawned_ids.append(new_cell.cell_id)
+        
+        self.metadata["spawned_neighbors"] = spawned_ids
+        return spawned_ids
+    
+    # =========================================================================
+    # M5 Survival Bond - Hierarchical Dependency
+    # =========================================================================
+    
+    def accelerated_decay(self, multiplier: float = 2.0) -> int:
+        """
+        Apply accelerated XP decay (survival bond: parent death).
+        
+        When a parent node is pruned, children experience 2x decay rate.
+        
+        Args:
+            multiplier: Decay rate multiplier (default 2x)
+            
+        Returns:
+            XP after accelerated decay
+        """
+        if self.state != StemCellState.TRIAL:
+            return self.xp
+        
+        # Apply multiplied decay
+        accelerated_decay = int(self.XP_DECAY * multiplier)
+        self.xp += accelerated_decay  # XP_DECAY is negative
+        self.metadata["orphan_decay_applied"] = True
+        return self.xp
+    
+    def is_orphaned(self, live_node_ids: Set[str]) -> bool:
+        """
+        Check if this cell's parent has been pruned.
+        
+        Args:
+            live_node_ids: Set of currently active node IDs
+            
+        Returns:
+            True if parent was pruned (orphaned)
+        """
+        parent_id = self.metadata.get("parent_node_id")
+        if not parent_id:
+            return False  # No parent = not orphaned
+        return parent_id not in live_node_ids
 
     
     def specialize(self) -> Optional[Dict[str, Any]]:
@@ -1073,4 +1168,125 @@ class StemCellManager:
                 created.append(intermediate_id)
         
         return created
-
+    
+    # =========================================================================
+    # M5 Identity Audit - Representational Parsimony
+    # =========================================================================
+    
+    def identity_audit(
+        self,
+        candidate_id: str,
+        graph: "Graph",  # type: ignore
+        min_improvement: float = 0.2,
+    ) -> bool:
+        """
+        Check if a candidate node justifies its complexity over simpler alternatives.
+        
+        A new branch is only made permanent if its z_sur (confirmation strength)
+        is significantly higher (>20% better) than existing simpler branches.
+        
+        Args:
+            candidate_id: Cell ID to audit
+            graph: The graph to check existing branches
+            min_improvement: Minimum improvement ratio (default 0.2 = 20%)
+            
+        Returns:
+            True if candidate should be kept, False if it should be pruned
+        """
+        cell = self.cells.get(candidate_id)
+        if not cell or cell.state != StemCellState.TRIAL:
+            return True  # Only audit TRIAL cells
+        
+        # Get candidate's confirmation strength
+        candidate_sig = cell.pattern_signature
+        if not candidate_sig:
+            return True  # No signature = nothing to compare
+        
+        candidate_complexity = len([x for x in candidate_sig if abs(x) > 0.1])
+        
+        # Find simpler existing cells with similar pattern
+        for cid, other in self.cells.items():
+            if cid == candidate_id or other.state not in (StemCellState.TRIAL, StemCellState.MATURE):
+                continue
+            
+            other_sig = other.pattern_signature
+            if not other_sig:
+                continue
+            
+            other_complexity = len([x for x in other_sig if abs(x) > 0.1])
+            
+            # Only compare if other is simpler
+            if other_complexity >= candidate_complexity:
+                continue
+            
+            # Check similarity
+            similarity = self.compute_pattern_similarity(cell, other)
+            if similarity < 0.7:  # Only compare functionally similar cells
+                continue
+            
+            # Compare confirmation strength (XP as proxy for z_sur)
+            candidate_strength = cell.xp
+            other_strength = other.xp
+            
+            if other_strength <= 0:
+                continue
+            
+            improvement = (candidate_strength - other_strength) / max(1, other_strength)
+            
+            if improvement < min_improvement:
+                # Candidate doesn't justify extra complexity
+                cell.metadata["audit_result"] = "prune_no_improvement"
+                cell.metadata["simpler_alternative"] = cid
+                cell.metadata["improvement_ratio"] = improvement
+                return False
+        
+        cell.metadata["audit_result"] = "keep"
+        return True
+    
+    # =========================================================================
+    # M5 Survival Bond - Orphan Sweep
+    # =========================================================================
+    
+    def orphan_sweep(
+        self,
+        graph: "Graph",  # type: ignore
+        decay_multiplier: float = 2.0,
+    ) -> Dict[str, Any]:
+        """
+        Apply accelerated decay to orphaned cells (parent was pruned).
+        
+        Implements survival bond: if a parent node dies, its children's
+        XP decay is accelerated by 2x, causing faster pruning of
+        branches whose foundation has been removed.
+        
+        Args:
+            graph: The graph to check for live nodes
+            decay_multiplier: Decay rate multiplier (default 2x)
+            
+        Returns:
+            Stats about orphan processing
+        """
+        live_nodes = set(graph.nodes.keys())
+        
+        orphaned = []
+        accelerated = []
+        demoted = []
+        
+        for cid, cell in self.cells.items():
+            if cell.state != StemCellState.TRIAL:
+                continue
+            
+            if cell.is_orphaned(live_nodes):
+                orphaned.append(cid)
+                cell.accelerated_decay(decay_multiplier)
+                accelerated.append(cid)
+                
+                # Check if should be demoted
+                if cell.xp <= 0:
+                    demoted.append(cid)
+        
+        return {
+            "orphaned": len(orphaned),
+            "accelerated": accelerated,
+            "demoted": demoted,
+        }
