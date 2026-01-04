@@ -110,6 +110,7 @@ class EvolutionConfig:
     stem_cell_spawn_rate: float = 0.05
     stem_cell_max_cells: int = 10
     stem_cell_min_samples: int = 30
+    stem_cells_load_path: Optional[Path] = None  # Load from previous stage
     
     # Curriculum settings
     use_curriculum: bool = True
@@ -554,18 +555,29 @@ def run_evolution_training(config: EvolutionConfig) -> List[CycleResult]:
     # Initialize stem cell manager
     stem_manager = None
     if HAS_STEM_CELL:
-        stem_cfg = StemCellConfig(
-            min_samples=config.stem_cell_min_samples,
-            max_samples=200,
-            reward_threshold=0.2,
-            specialization_threshold=0.6,
-            exploration_budget=500,
-        )
-        stem_manager = StemCellManager(
-            max_cells=config.stem_cell_max_cells,
-            spawn_rate=config.stem_cell_spawn_rate,
-            config=stem_cfg,
-        )
+        # Load from previous stage if path exists
+        if config.stem_cells_load_path and config.stem_cells_load_path.exists():
+            try:
+                stem_manager = StemCellManager.load(config.stem_cells_load_path)
+                print(f"  Loaded {len(stem_manager.cells)} stem cells from previous stage")
+            except Exception as e:
+                print(f"  Warning: Could not load stem cells: {e}")
+                stem_manager = None
+        
+        # Create fresh manager if no load or load failed
+        if stem_manager is None:
+            stem_cfg = StemCellConfig(
+                min_samples=config.stem_cell_min_samples,
+                max_samples=200,
+                reward_threshold=0.2,
+                specialization_threshold=0.6,
+                exploration_budget=500,
+            )
+            stem_manager = StemCellManager(
+                max_cells=config.stem_cell_max_cells,
+                spawn_rate=config.stem_cell_spawn_rate,
+                config=stem_cfg,
+            )
     
     # Create output directories
     config.snapshot_dir.mkdir(parents=True, exist_ok=True)
@@ -693,6 +705,12 @@ def run_evolution_training(config: EvolutionConfig) -> List[CycleResult]:
     
     print(f"Summary saved to: {summary_path}")
     
+    # Save stem cells for next stage
+    if stem_manager and HAS_STEM_CELL:
+        stem_cells_path = config.snapshot_dir / "stem_cells.json"
+        stem_manager.save(stem_cells_path)
+        print(f"Stem cells saved to: {stem_cells_path}")
+    
     return results
 
 
@@ -778,6 +796,7 @@ def main():
     
     # Run stages sequentially
     prev_topology_path = args.topology
+    prev_stem_cells_path = None  # Track stem cells path between stages
     
     for stage_idx in range(start_stage, end_stage + 1):
         stage_name = f"stage{stage_idx}"
@@ -796,6 +815,7 @@ def main():
             trace_dir=base_trace,
             current_stage_idx=stage_idx,
             stage_promotion_threshold=args.win_threshold,
+            stem_cells_load_path=prev_stem_cells_path,  # Inherit stem cells
         )
         
         # Ensure directories exist
@@ -817,6 +837,11 @@ def main():
         if last_cycle_snap.exists():
             prev_topology_path = last_cycle_snap
             print(f"  → Weights inherited from: {last_cycle_snap}")
+        
+        # Get stem cells path for next stage (stem cell inheritance!)
+        stem_cells_snap = config.snapshot_dir / "stem_cells.json"
+        if stem_cells_snap.exists():
+            prev_stem_cells_path = stem_cells_snap
         
         # Check if we should stop early (win rate too low)
         if results:
