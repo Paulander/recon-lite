@@ -847,7 +847,6 @@ class StemCellManager:
             "by_state": states,
             "next_id": self._next_id,
         }
-    
     def save(self, path: Path) -> None:
         """Save manager state."""
         path = Path(path)
@@ -877,4 +876,201 @@ class StemCellManager:
             for cid, cdata in data.get("cells", {}).items()
         }
         return manager
+
+    # =========================================================================
+    # VERTICAL M5 GROWTH: Sensor Hoisting
+    # =========================================================================
+    
+    def compute_pattern_similarity(
+        self, cell_a: StemCellTerminal, cell_b: StemCellTerminal
+    ) -> float:
+        """
+        Compute pattern similarity between two cells.
+        
+        Uses cosine similarity of pattern_signature vectors.
+        
+        Returns:
+            Similarity score in [0, 1] where 1 = identical patterns
+        """
+        sig_a = cell_a.pattern_signature
+        sig_b = cell_b.pattern_signature
+        
+        if sig_a is None or sig_b is None:
+            return 0.0
+        
+        if len(sig_a) != len(sig_b):
+            return 0.0
+        
+        # Cosine similarity
+        dot = sum(a * b for a, b in zip(sig_a, sig_b))
+        norm_a = sum(a * a for a in sig_a) ** 0.5
+        norm_b = sum(b * b for b in sig_b) ** 0.5
+        
+        if norm_a < 1e-8 or norm_b < 1e-8:
+            return 0.0
+        
+        return (dot / (norm_a * norm_b) + 1) / 2  # Map [-1,1] to [0,1]
+    
+    def find_correlated_clusters(
+        self, min_similarity: float = 0.85, min_cluster_size: int = 2
+    ) -> List[List[str]]:
+        """
+        Find clusters of TRIAL cells with highly correlated patterns.
+        
+        These clusters are candidates for hoisting into intermediate nodes.
+        
+        Args:
+            min_similarity: Minimum cosine similarity to cluster (default 0.85)
+            min_cluster_size: Minimum cells to form a cluster (default 2)
+            
+        Returns:
+            List of cell_id clusters, each cluster is a list of IDs
+        """
+        # Get all TRIAL cells with pattern signatures
+        trial_cells = [
+            (cid, cell) for cid, cell in self.cells.items()
+            if cell.state == StemCellState.TRIAL and cell.pattern_signature
+        ]
+        
+        if len(trial_cells) < min_cluster_size:
+            return []
+        
+        # Build similarity matrix
+        n = len(trial_cells)
+        similarity = [[0.0] * n for _ in range(n)]
+        
+        for i in range(n):
+            for j in range(i + 1, n):
+                sim = self.compute_pattern_similarity(trial_cells[i][1], trial_cells[j][1])
+                similarity[i][j] = sim
+                similarity[j][i] = sim
+        
+        # Simple greedy clustering
+        clustered = set()
+        clusters = []
+        
+        for i in range(n):
+            if i in clustered:
+                continue
+            
+            # Find all cells similar enough to this one
+            cluster = [i]
+            for j in range(i + 1, n):
+                if j in clustered:
+                    continue
+                if similarity[i][j] >= min_similarity:
+                    cluster.append(j)
+            
+            if len(cluster) >= min_cluster_size:
+                cluster_ids = [trial_cells[idx][0] for idx in cluster]
+                clusters.append(cluster_ids)
+                clustered.update(cluster)
+        
+        return clusters
+    
+    def hoist_cluster(
+        self,
+        cluster_ids: List[str],
+        graph: "Graph",  # type: ignore
+        parent_node_id: str = "kpk_execute",
+    ) -> Optional[str]:
+        """
+        Hoist a cluster of correlated sensors into a new Intermediate Script Node.
+        
+        This implements vertical M5 growth by:
+        1. Creating a new Script node as parent of the cluster
+        2. Moving SUB edges from old parent to new intermediate
+        3. The intermediate aggregates activations from the cluster
+        
+        Args:
+            cluster_ids: List of cell IDs to hoist
+            graph: The Graph to modify
+            parent_node_id: Current parent of the cluster cells
+            
+        Returns:
+            ID of the new intermediate node, or None if failed
+        """
+        from ..graph import Node, NodeType, LinkType
+        
+        if len(cluster_ids) < 2:
+            return None
+        
+        # Compute merged pattern signature (average of cluster)
+        signatures = []
+        for cid in cluster_ids:
+            cell = self.cells.get(cid)
+            if cell and cell.pattern_signature:
+                signatures.append(cell.pattern_signature)
+        
+        if not signatures:
+            return None
+        
+        # Average signature
+        merged_sig = [
+            sum(s[i] for s in signatures) / len(signatures)
+            for i in range(len(signatures[0]))
+        ]
+        
+        # Create intermediate node ID
+        intermediate_id = f"cluster_{self._next_id:04d}"
+        self._next_id += 1
+        
+        # Create the intermediate Script node
+        intermediate_node = Node(
+            nid=intermediate_id,
+            ntype=NodeType.SCRIPT,
+        )
+        intermediate_node.meta["cluster_members"] = cluster_ids
+        intermediate_node.meta["pattern_signature"] = merged_sig
+        intermediate_node.meta["origin"] = "hoisted"
+        
+        # Add to graph
+        graph.add_node(intermediate_node)
+        
+        # Connect intermediate to parent
+        graph.add_edge(parent_node_id, intermediate_id, LinkType.SUB)
+        
+        # Connect cluster members as children of intermediate
+        for cid in cluster_ids:
+            # Check if the cell has a corresponding node in graph
+            if cid in graph.nodes:
+                # Remove old SUB edge from parent
+                old_edges = [
+                    e for e in graph.edges
+                    if e.src == parent_node_id and e.dst == cid and e.ltype == LinkType.SUB
+                ]
+                for edge in old_edges:
+                    graph.edges.remove(edge)
+                
+                # Add new SUB edge from intermediate
+                graph.add_edge(intermediate_id, cid, LinkType.SUB)
+        
+        return intermediate_id
+    
+    def auto_hoist(
+        self,
+        graph: "Graph",  # type: ignore
+        parent_node_id: str = "kpk_execute",
+        min_similarity: float = 0.85,
+    ) -> List[str]:
+        """
+        Automatically find and hoist all correlated clusters.
+        
+        Args:
+            graph: The Graph to modify
+            parent_node_id: Parent node for hoisted clusters
+            min_similarity: Minimum similarity to cluster
+            
+        Returns:
+            List of created intermediate node IDs
+        """
+        clusters = self.find_correlated_clusters(min_similarity=min_similarity)
+        created = []
+        
+        for cluster in clusters:
+            intermediate_id = self.hoist_cluster(cluster, graph, parent_node_id)
+            if intermediate_id:
+                created.append(intermediate_id)
+        
+        return created
 
