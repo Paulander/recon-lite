@@ -323,7 +323,17 @@ def _play_single_game(
             tick_count += 1
             ticks_this_move += 1
             
-            # Check for suggested move in env (from kpk_move_selector)
+            # Explicitly call leg predicates if they exist (legs are SCRIPT nodes)
+            # ReConEngine only calls TERMINAL predicates, so we call legs manually
+            for leg_name in ["kpk_pawn_leg", "kpk_king_leg", "kpk_arbiter"]:
+                leg_node = graph.nodes.get(leg_name)
+                if leg_node and leg_node.predicate:
+                    try:
+                        leg_node.predicate(leg_node, env)
+                    except Exception:
+                        pass
+            
+            # Check for suggested move in env (from kpk_move_selector or kpk_arbiter)
             kpk_policy = env.get("kpk", {}).get("policy", {})
             if "suggested_move" in kpk_policy:
                 suggested_move = kpk_policy["suggested_move"]

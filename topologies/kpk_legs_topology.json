@@ -1,8 +1,8 @@
 {
-  "version": "1.0",
-  "network": "kpk",
-  "created": "2026-01-02T14:11:00Z",
-  "last_modified": "2026-01-04T23:08:40.505617",
+  "version": "2.0",
+  "network": "kpk_legs",
+  "description": "KPK with legs architecture (pawn_leg/king_leg/arbiter)",
+  "created": "2026-01-04T23:12:00Z",
   "nodes": [
     {
       "id": "kpk_root",
@@ -68,11 +68,31 @@
       "meta": {}
     },
     {
-      "id": "kpk_move_selector",
-      "type": "TERMINAL",
+      "id": "kpk_pawn_leg",
+      "type": "SCRIPT",
       "group": "actuator",
-      "factory": "recon_lite_chess.scripts.kpk:create_kpk_move_selector",
-      "meta": {}
+      "factory": "recon_lite_chess.scripts.kpk:create_kpk_pawn_leg",
+      "meta": {
+        "layer": "actuator"
+      }
+    },
+    {
+      "id": "kpk_king_leg",
+      "type": "SCRIPT",
+      "group": "actuator",
+      "factory": "recon_lite_chess.scripts.kpk:create_kpk_king_leg",
+      "meta": {
+        "layer": "actuator"
+      }
+    },
+    {
+      "id": "kpk_arbiter",
+      "type": "SCRIPT",
+      "group": "actuator",
+      "factory": "recon_lite_chess.scripts.kpk:create_kpk_arbiter",
+      "meta": {
+        "layer": "actuator"
+      }
     },
     {
       "id": "kpk_wait_for_change",
@@ -133,7 +153,23 @@
     },
     {
       "src": "kpk_execute",
-      "dst": "kpk_move_selector",
+      "dst": "kpk_pawn_leg",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_execute",
+      "dst": "kpk_king_leg",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_execute",
+      "dst": "kpk_arbiter",
       "type": "SUB",
       "weight": 1.0,
       "consolidate": true,
@@ -186,9 +222,31 @@
       "weight": 1.0,
       "consolidate": true,
       "confirmation_count": 0
+    },
+    {
+      "src": "kpk_pawn_leg",
+      "dst": "kpk_king_leg",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_pawn_leg",
+      "dst": "kpk_arbiter",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_king_leg",
+      "dst": "kpk_arbiter",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
     }
   ],
-  "stem_cells": [],
-  "promoted_nodes": [],
-  "evolution_history": []
+  "last_modified": "2026-01-04T23:20:20.787119"
 }
