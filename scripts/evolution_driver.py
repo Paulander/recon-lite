@@ -70,6 +70,18 @@ except ImportError:
     KPK_STAGES = []
     KPKStage = None
 
+# Per-stage cycle configuration (more cycles for harder stages)
+STAGE_CYCLES = {
+    0: 5,    # SPRINTER - easy, just push
+    1: 20,   # ESCORT - learn king support
+    2: 30,   # SQUARE_RULE - learn the square
+    3: 30,   # BARRIER - learn barrier concept
+    4: 40,   # OPPOSITION - key technique
+    5: 40,   # SHOULDER - advanced technique
+    6: 50,   # TEMPO - timing concepts
+    7: 50,   # DISTANT_OPP - hardest
+}
+
 try:
     from recon_lite_chess.features.kpk_features import extract_kpk_features
     HAS_FEATURES = True
@@ -806,10 +818,13 @@ def main():
         base_trace = Path("traces/evolution") / run_name / stage_name
         base_output = args.output_dir / run_name / stage_name
         
+        # Get cycles for this stage (use per-stage config, or CLI arg as override)
+        stage_cycles = STAGE_CYCLES.get(stage_idx, args.cycles) if args.cycles == 20 else args.cycles
+        
         config = EvolutionConfig(
             topology_path=prev_topology_path,
             games_per_cycle=10 if args.quick else args.games_per_cycle,
-            max_cycles=2 if args.quick else args.cycles,
+            max_cycles=2 if args.quick else stage_cycles,
             output_dir=base_output,
             snapshot_dir=base_snap,
             trace_dir=base_trace,
