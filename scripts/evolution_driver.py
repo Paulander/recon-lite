@@ -101,6 +101,72 @@ except ImportError:
     HAS_REWARDS = False
 
 
+def build_graph_for_depth_report(registry: TopologyRegistry) -> Graph:
+    """Build graph from registry for depth computation."""
+    if HAS_BUILDER:
+        return build_graph_from_topology(registry.topology_path, registry)
+    return Graph()
+
+
+def compute_hierarchy_stats(graph: Graph) -> Optional[Dict[str, Any]]:
+    """
+    Compute hierarchical depth statistics for the graph.
+    
+    Returns:
+        Dict with max_depth, non_backbone_count, busiest_node, busiest_children
+    """
+    if not graph.nodes:
+        return None
+    
+    backbone_nodes = {"kpk_root", "kpk_detect", "kpk_execute", "kpk_finish", "kpk_wait"}
+    
+    # Build parent-children map from SUB edges
+    children_map: Dict[str, List[str]] = {}
+    parent_map: Dict[str, str] = {}
+    
+    for src, edges in graph.edges.items():
+        for dst, edge_list in edges.items():
+            for edge in edge_list:
+                if edge.ltype.name == "SUB":
+                    if src not in children_map:
+                        children_map[src] = []
+                    children_map[src].append(dst)
+                    parent_map[dst] = src
+    
+    # Compute max depth (BFS from root)
+    max_depth = 0
+    root = "kpk_root"
+    if root in graph.nodes:
+        queue = [(root, 0)]
+        while queue:
+            node, depth = queue.pop(0)
+            max_depth = max(max_depth, depth)
+            for child in children_map.get(node, []):
+                queue.append((child, depth + 1))
+    
+    # Count nodes NOT parented to backbone
+    non_backbone_count = 0
+    for node_id in graph.nodes:
+        parent = parent_map.get(node_id)
+        if parent and parent not in backbone_nodes:
+            non_backbone_count += 1
+    
+    # Find busiest node (most children)
+    busiest_node = "none"
+    busiest_children = 0
+    for node_id, children in children_map.items():
+        if len(children) > busiest_children:
+            busiest_node = node_id
+            busiest_children = len(children)
+    
+    return {
+        "max_depth": max_depth,
+        "non_backbone_count": non_backbone_count,
+        "busiest_node": busiest_node,
+        "busiest_children": busiest_children,
+    }
+
+
 @dataclass
 class EvolutionConfig:
     """Configuration for evolution training."""
@@ -657,7 +723,9 @@ def run_evolution_training(config: EvolutionConfig) -> List[CycleResult]:
         trial_count = struct_stats.get('trial_promotions', 0)
         solid_count = struct_stats.get('solidified', 0)
         demote_count = struct_stats.get('demoted', 0)
-        print(f"    → TRIAL: {trial_count}  SOLID: {solid_count}  DEMOTED: {demote_count}")
+        hoisted_count = len(struct_stats.get('hoisted_clusters', []))
+        spawned_count = len(struct_stats.get('spawned_neighbors', []))
+        print(f"    → TRIAL: {trial_count}  SOLID: {solid_count}  DEMOTED: {demote_count}  HOISTED: {hoisted_count}  SPAWNED: {spawned_count}")
         
         # Show trial errors if any
         for err in struct_stats.get('trial_errors', [])[:2]:
@@ -695,6 +763,16 @@ def run_evolution_training(config: EvolutionConfig) -> List[CycleResult]:
         if stem_manager:
             stats = stem_manager.stats()
             print(f"  Stem cells: {stats['total_cells']} ({stats.get('by_state', {})})")
+        
+        # HIERARCHICAL DEPTH REPORT
+        try:
+            # Compute graph hierarchy stats
+            graph = build_graph_for_depth_report(registry)
+            depth_stats = compute_hierarchy_stats(graph)
+            if depth_stats:
+                print(f"  📊 Hierarchy: max_depth={depth_stats['max_depth']}  non_backbone={depth_stats['non_backbone_count']}  busiest={depth_stats['busiest_node']}({depth_stats['busiest_children']})")
+        except Exception:
+            pass  # Silent fail on hierarchy computation
     
     # Final report
     print(f"\n{'='*60}")

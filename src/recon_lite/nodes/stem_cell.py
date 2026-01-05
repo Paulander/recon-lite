@@ -330,6 +330,7 @@ class StemCellTerminal:
         registry: Any,  # TopologyRegistry
         parent_id: str,
         current_tick: int = 0,
+        min_consistency: float = 0.50,  # Balanced threshold (was 0.35, then 0.65)
     ) -> bool:
         """
         Promote cell to TRIAL tier as a transient vertex.
@@ -341,6 +342,7 @@ class StemCellTerminal:
             registry: TopologyRegistry for metadata (node created on solidification)
             parent_id: Parent node to wire to
             current_tick: Current tick for metadata
+            min_consistency: Minimum pattern consistency (default 0.65, raised from 0.35)
             
         Returns:
             True if promotion successful
@@ -349,7 +351,8 @@ class StemCellTerminal:
             return False
         
         consistency, signature = self.analyze_pattern()
-        if consistency < 0.35:
+        # RAISED from 0.35 to 0.65 to force high-quality "pure" features
+        if consistency < min_consistency:
             return False
         
         # Generate trial node ID (will be created on solidification)
@@ -559,9 +562,12 @@ class StemCellTerminal:
         manager: "StemCellManager",
         high_utility_features: Optional[List[str]] = None,
         spawn_count: int = 2,
+        target_leg: Optional[str] = None,
     ) -> List[str]:
         """
         Spawn neighbor cells on successful solidification (100 XP).
+        
+        RECURSIVE OUTGROWTH RULE: Only called when cell reaches MATURE (100 XP).
         
         For Sensors: Spawn AND gates combining this sensor with high-utility features.
         For Scripts: Spawn actuator legs to explore alternative strategies.
@@ -569,11 +575,13 @@ class StemCellTerminal:
         Args:
             manager: StemCellManager to spawn new cells
             high_utility_features: Feature names to combine with (for sensors)
-            spawn_count: Number of neighbors to spawn
+            spawn_count: Number of neighbors to spawn (default 2-3)
+            target_leg: Specific leg to target ('kpk_pawn_leg' or 'kpk_king_leg')
             
         Returns:
             List of spawned cell IDs
         """
+        # RECURSIVE OUTGROWTH: Only spawn at 100 XP solidification
         if self.state != StemCellState.MATURE:
             return []
         
@@ -587,11 +595,16 @@ class StemCellTerminal:
             if new_cell is None:
                 break
             
-            # Set parent relationship for survival bond
+            # Set parent relationship for survival bond and sparsity audit
             new_cell.metadata["parent_cell_id"] = self.cell_id
             new_cell.metadata["parent_node_id"] = self.trial_node_id
-            new_cell.metadata["spawn_reason"] = "success_triggered"
+            new_cell.metadata["parent_xp"] = self.xp  # For sparsity comparison
+            new_cell.metadata["spawn_reason"] = "recursive_outgrowth"
             new_cell.metadata["spawn_type"] = "sensor_and_gate" if is_sensor else "script_leg"
+            
+            # LEG-TARGETED SPAWNING: Children should target specific legs
+            if target_leg:
+                new_cell.metadata["target_leg"] = target_leg
             
             # Pre-configure pattern signature for faster learning
             if is_sensor and self.pattern_signature:
@@ -1006,6 +1019,87 @@ class StemCellManager:
         
         return (dot / (norm_a * norm_b) + 1) / 2  # Map [-1,1] to [0,1]
     
+    # =========================================================================
+    # SPATIAL CLUSTERING: Merge Similar Cells (prevent bloat)
+    # =========================================================================
+    
+    def find_similar_cell(
+        self,
+        signature: List[float],
+        min_similarity: float = 0.95,  # 95% = <5% centroid distance
+    ) -> Optional[str]:
+        """
+        Find an existing cell with similar pattern signature.
+        
+        SPATIAL CLUSTERING: Before spawning a new cell, check if its pattern
+        centroid is within 5% of an existing cell. If so, merge instead of spawn.
+        
+        Args:
+            signature: Pattern signature to compare
+            min_similarity: Minimum similarity (default 0.95 = 5% distance)
+            
+        Returns:
+            Cell ID of similar existing cell, or None if no match
+        """
+        for cell_id, cell in self.cells.items():
+            if cell.pattern_signature is None:
+                continue
+            if len(cell.pattern_signature) != len(signature):
+                continue
+            
+            # Compute similarity
+            sig_a = signature
+            sig_b = cell.pattern_signature
+            dot = sum(a * b for a, b in zip(sig_a, sig_b))
+            norm_a = sum(a * a for a in sig_a) ** 0.5
+            norm_b = sum(b * b for b in sig_b) ** 0.5
+            
+            if norm_a < 1e-8 or norm_b < 1e-8:
+                continue
+            
+            similarity = (dot / (norm_a * norm_b) + 1) / 2
+            
+            if similarity >= min_similarity:
+                return cell_id
+        
+        return None
+    
+    def merge_into_cell(
+        self,
+        existing_cell_id: str,
+        new_samples: List[Any],
+    ) -> bool:
+        """
+        Merge samples into an existing cell instead of spawning a new one.
+        
+        This prevents combinatorial bloat by consolidating similar patterns.
+        
+        Args:
+            existing_cell_id: Cell ID to merge into
+            new_samples: Samples from the would-be new cell
+            
+        Returns:
+            True if merge successful
+        """
+        cell = self.cells.get(existing_cell_id)
+        if cell is None:
+            return False
+        
+        # Add samples to existing cell
+        for sample in new_samples:
+            cell.samples.append(sample)
+        
+        # Trim samples if over limit
+        max_samples = cell.config.max_samples
+        if len(cell.samples) > max_samples:
+            cell.samples = cell.samples[-max_samples:]
+        
+        # Re-analyze pattern with merged samples
+        cell.analyze_pattern()
+        
+        cell.metadata["merge_count"] = cell.metadata.get("merge_count", 0) + 1
+        return True
+    
     def find_correlated_clusters(
         self, min_similarity: float = 0.85, min_cluster_size: int = 2
     ) -> List[List[str]]:
@@ -1177,13 +1271,14 @@ class StemCellManager:
         self,
         candidate_id: str,
         graph: "Graph",  # type: ignore
-        min_improvement: float = 0.2,
+        min_improvement: float = 0.1,  # SPARSITY CONSTRAINT: 10% better than parent
     ) -> bool:
         """
         Check if a candidate node justifies its complexity over simpler alternatives.
         
-        A new branch is only made permanent if its z_sur (confirmation strength)
-        is significantly higher (>20% better) than existing simpler branches.
+        SPARSITY CONSTRAINT: A new branch is only made permanent if its z_sur
+        (confirmation strength) is >10% better than existing simpler branches.
+        This forces 'Elegant' solutions over 'Brute Force' clusters.
         
         Args:
             candidate_id: Cell ID to audit
@@ -1241,6 +1336,55 @@ class StemCellManager:
                 return False
         
         cell.metadata["audit_result"] = "keep"
+        return True
+    
+    def sparsity_audit_vs_parent(
+        self,
+        candidate_id: str,
+        min_improvement: float = 0.1,
+    ) -> bool:
+        """
+        SPARSITY CONSTRAINT: Compare child's z_sur specifically to its parent's.
+        
+        If a new node's confirmation (z_sur) is less than 10% better than its
+        parent's, prune it. This forces 'Elegant' solutions over 'Brute Force'.
+        
+        Args:
+            candidate_id: Cell ID to audit
+            min_improvement: Minimum improvement ratio (default 0.1 = 10%)
+            
+        Returns:
+            True if candidate should be kept, False if it should be pruned
+        """
+        cell = self.cells.get(candidate_id)
+        if not cell or cell.state != StemCellState.TRIAL:
+            return True  # Only audit TRIAL cells
+        
+        # Get parent's XP (stored during spawn)
+        parent_xp = cell.metadata.get("parent_xp")
+        parent_cell_id = cell.metadata.get("parent_cell_id")
+        
+        if parent_xp is None:
+            return True  # No parent data = pass (original cells)
+        
+        # Compare to parent
+        candidate_xp = cell.xp
+        
+        if parent_xp <= 0:
+            return True  # Parent had no XP
+        
+        improvement = (candidate_xp - parent_xp) / max(1, parent_xp)
+        
+        if improvement < min_improvement:
+            # Child doesn't improve >10% over parent → prune
+            cell.metadata["sparsity_result"] = "prune_below_parent"
+            cell.metadata["parent_cell_id"] = parent_cell_id
+            cell.metadata["parent_xp"] = parent_xp
+            cell.metadata["improvement_vs_parent"] = improvement
+            return False
+        
+        cell.metadata["sparsity_result"] = "keep_improves_parent"
+        cell.metadata["improvement_vs_parent"] = improvement
         return True
     
     # =========================================================================

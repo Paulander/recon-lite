@@ -465,10 +465,10 @@ class StructureLearner:
             if cell.state != StemCellState.CANDIDATE:
                 continue
             
-            # Check if ready for trial
+            # Check if ready for trial - quality threshold (was 0.35, raised to 0.50)
             consistency, _ = cell.analyze_pattern()
-            if consistency < 0.35:
-                trial_errors.append(f"{cell.cell_id}: consistency {consistency:.2f} < 0.35")
+            if consistency < 0.50:
+                trial_errors.append(f"{cell.cell_id}: consistency {consistency:.2f} < 0.50")
                 continue
             
             # Choose parent
@@ -487,7 +487,22 @@ class StructureLearner:
                 new_xp = cell.decay_xp()
                 xp_decays.append((cell.cell_id, new_xp))
         
-        # Step 5: Check for solidification (XP >= 100) or demotion (XP <= 0)
+        # Step 4b: MATURITY BOOST - Fast-track high-quality cells
+        # If a TRIAL node has consistency > 0.70 and survived 500+ ticks, promote immediately
+        maturity_boosted: List[str] = []
+        for cell in list(stem_manager.cells.values()):
+            if cell.state != StemCellState.TRIAL:
+                continue
+            
+            consistency = cell.trial_consistency or 0.0
+            ticks_survived = current_tick - (cell.trial_tick or current_tick)
+            
+            if consistency > 0.70 and ticks_survived >= 500:
+                # Immediately boost to MATURE
+                if cell.solidify_to_mature(self.registry, current_tick):
+                    maturity_boosted.append(cell.cell_id)
+        
+        # Step 5: Check for normal solidification (XP >= 100) or demotion (XP <= 0)
         solidified: List[str] = []
         demoted: List[str] = []
         
@@ -507,6 +522,35 @@ class StructureLearner:
         # Step 6: Collection confirmation stats for pruning
         pruning_results: List[PruningResult] = []
         
+        # Step 7: AUTO_HOIST - Find correlated clusters and create intermediate nodes
+        hoisted_clusters: List[str] = []
+        if solidified:  # Only hoist after successful solidification
+            try:
+                # Build graph to pass to auto_hoist
+                from recon_lite_chess.graph.builder import build_graph_from_topology
+                graph = build_graph_from_topology(self.registry.topology_path, self.registry)
+                hoisted_clusters = stem_manager.auto_hoist(
+                    graph,
+                    parent_node_id="kpk_detect",
+                    min_similarity=0.80,  # 80% correlation → hoist into intermediate
+                )
+                if hoisted_clusters:
+                    # Save the updated graph back to registry
+                    self.registry.save()
+            except Exception as e:
+                hoisted_clusters = [f"error: {e}"]
+        
+        # Step 8: SPAWN_NEIGHBORS - Recursive outgrowth for solidified cells
+        spawned_neighbors: List[str] = []
+        for cell_id in solidified:
+            cell = stem_manager.cells.get(cell_id)
+            if cell and cell.state == StemCellState.MATURE:
+                # Spawn 2-3 children targeting specific legs
+                from random import choice
+                target_leg = choice(["kpk_pawn_leg", "kpk_king_leg"])
+                new_ids = cell.spawn_neighbors(stem_manager, target_leg=target_leg, spawn_count=2)
+                spawned_neighbors.extend(new_ids)
+        
         # Save changes
         self.registry.save()
         
@@ -518,10 +562,14 @@ class StructureLearner:
             "trial_promoted": trial_promotions,
             "trial_errors": trial_errors,
             "xp_decays": len(xp_decays),
-            "solidified": len(solidified),
-            "solidified_cells": solidified,
+            "solidified": len(solidified) + len(maturity_boosted),
+            "solidified_cells": solidified + maturity_boosted,
+            "maturity_boosted": maturity_boosted,
             "demoted": len(demoted),
             "demoted_cells": demoted,
+            # NEW: Vertical growth stats
+            "hoisted_clusters": hoisted_clusters,
+            "spawned_neighbors": spawned_neighbors,
             # Legacy compat
             "promotions_attempted": len(trial_promotions),
             "promotions_succeeded": len(trial_promotions),
