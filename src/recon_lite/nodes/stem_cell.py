@@ -331,6 +331,8 @@ class StemCellTerminal:
         parent_id: str = "kpk_detect",
         current_tick: int = 0,
         min_consistency: float = 0.50,  # Balanced threshold (was 0.35, then 0.65)
+        wire_to_legs: bool = True,  # NEW: Also wire as child of legs for gating
+        leg_node_ids: Optional[List[str]] = None,  # NEW: Which legs to wire to
     ) -> bool:
         """
         Promote cell to TRIAL tier as a transient vertex.
@@ -338,11 +340,17 @@ class StemCellTerminal:
         MANIFEST: Now injects TRIAL nodes directly into the TopologyRegistry
         so they appear in the runtime graph and can actually activate.
         
+        NEW: When wire_to_legs=True, TRIAL nodes are ALSO added as SUB children
+        of the leg nodes. This enables gating (require_child_confirm) to work:
+        Legs will wait for TRIAL children to confirm before suggesting moves.
+        
         Args:
             registry: TopologyRegistry to add the TRIAL node to
             parent_id: Parent node to wire to (kpk_detect for sensors, kpk_execute for managers)
             current_tick: Current tick for metadata
             min_consistency: Minimum pattern consistency (default 0.50)
+            wire_to_legs: If True, also wire TRIAL as child of leg nodes for gating
+            leg_node_ids: List of leg node IDs to wire to (default: ["kpk_pawn_leg", "kpk_king_leg"])
             
         Returns:
             True if promotion successful
@@ -353,6 +361,10 @@ class StemCellTerminal:
         consistency, signature = self.analyze_pattern()
         if consistency < min_consistency:
             return False
+        
+        # Default leg nodes for KPK
+        if leg_node_ids is None:
+            leg_node_ids = ["kpk_pawn_leg", "kpk_king_leg"]
         
         # Generate trial node ID
         self.trial_node_id = f"TRIAL_{self.cell_id}_{current_tick}"
@@ -390,7 +402,7 @@ class StemCellTerminal:
         try:
             registry.add_node(node_spec, tick=current_tick)
             
-            # DUAL-WIRING: Connect to appropriate parent with exploratory weight
+            # PRIMARY WIRING: Connect to sensor parent (e.g., kpk_detect)
             # Weight 0.5 allows activation without hijacking the strategy
             registry.add_edge(
                 parent_id,
@@ -399,6 +411,25 @@ class StemCellTerminal:
                 weight=0.5,  # Exploratory - not hijacking
                 tick=current_tick
             )
+            
+            # LEG WIRING: Also connect as child of legs for GATING support
+            # This enables require_child_confirm to work on legs:
+            # Legs will wait for TRIAL children to confirm before acting.
+            if wire_to_legs:
+                for leg_id in leg_node_ids:
+                    try:
+                        # Check if leg exists in registry
+                        if registry.get_node(leg_id) is not None:
+                            registry.add_edge(
+                                leg_id,
+                                self.trial_node_id,
+                                "SUB",
+                                weight=0.5,  # Exploratory weight
+                                tick=current_tick
+                            )
+                    except Exception:
+                        pass  # Skip if leg doesn't exist
+            
             registry.save()
         except ValueError:
             pass  # Node already exists (e.g., from previous cycle)
