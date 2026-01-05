@@ -105,6 +105,97 @@ except ImportError:
     HAS_REWARDS = False
 
 
+# =============================================================================
+# M5.1 STALL RECOVERY - Configuration
+# =============================================================================
+
+# Stall detection thresholds (can be overridden via environment variables)
+import os
+
+STALL_THRESHOLD_WIN_RATE = float(os.environ.get("M5_STALL_THRESHOLD_WIN_RATE", "0.10"))
+STALL_THRESHOLD_CYCLES = int(os.environ.get("M5_STALL_THRESHOLD_CYCLES", "3"))
+STALL_SPAWN_MULTIPLIER = float(os.environ.get("M5_STALL_SPAWN_MULTIPLIER", "2.0"))
+ENABLE_SCENT_SHAPING = os.environ.get("M5_ENABLE_SCENT_SHAPING", "1") == "1"
+SCENT_REWARD = 0.1  # Reward for draws showing King→Pawn approach
+
+
+def compute_king_pawn_distance(board: chess.Board, our_color: chess.Color) -> Optional[int]:
+    """
+    Compute the Manhattan distance between our King and enemy Pawn's promotion path.
+    
+    For KPK endgames, this measures how close the King is to supporting
+    the Pawn's promotion (or blocking the enemy from doing so).
+    
+    Returns:
+        Distance in squares, or None if position doesn't have K+P vs K
+    """
+    # Find our king and pawn
+    our_king_sq = None
+    pawn_sq = None
+    
+    for sq in chess.SQUARES:
+        piece = board.piece_at(sq)
+        if piece is None:
+            continue
+        
+        if piece.piece_type == chess.KING and piece.color == our_color:
+            our_king_sq = sq
+        elif piece.piece_type == chess.PAWN and piece.color == our_color:
+            pawn_sq = sq
+    
+    if our_king_sq is None or pawn_sq is None:
+        return None
+    
+    # Compute distance from king to pawn
+    king_file = chess.square_file(our_king_sq)
+    king_rank = chess.square_rank(our_king_sq)
+    pawn_file = chess.square_file(pawn_sq)
+    pawn_rank = chess.square_rank(pawn_sq)
+    
+    # Manhattan distance
+    return abs(king_file - pawn_file) + abs(king_rank - pawn_rank)
+
+
+def compute_scent_reward(
+    start_board: chess.Board,
+    end_board: chess.Board,
+    our_color: chess.Color,
+    result: str,
+) -> float:
+    """
+    M5.1 Scent-Based Shaping Reward.
+    
+    For draws that show King approaching the Pawn's promotion path,
+    provide a small positive reward (0.1) to encourage exploration
+    in the right direction during stall recovery.
+    
+    Args:
+        start_board: Board state at game start
+        end_board: Board state at game end
+        our_color: Our color
+        result: Game result ("win", "draw", "loss")
+        
+    Returns:
+        Scent reward (0.1 if draw with improved position, 0.0 otherwise)
+    """
+    # Only apply to draws
+    if result != "draw":
+        return 0.0
+    
+    # Compute distance change
+    start_dist = compute_king_pawn_distance(start_board, our_color)
+    end_dist = compute_king_pawn_distance(end_board, our_color)
+    
+    if start_dist is None or end_dist is None:
+        return 0.0
+    
+    # Reward if King got closer to Pawn
+    if end_dist < start_dist:
+        return SCENT_REWARD
+    
+    return 0.0
+
+
 def build_graph_for_depth_report(registry: TopologyRegistry) -> Graph:
     """Build graph from registry for depth computation."""
     if HAS_BUILDER:
@@ -238,6 +329,7 @@ def run_online_phase(
     registry: TopologyRegistry,
     stem_manager: Optional["StemCellManager"],
     cycle: int,
+    apply_scent_shaping: bool = False,  # M5.1: Stall recovery scent reward
 ) -> Tuple[List[EpisodeRecord], Dict[str, Any]]:
     """
     Online Phase (ThinkPad/Teacher):
@@ -314,6 +406,7 @@ def run_online_phase(
             episode_id=episode_id,
             max_moves=config.max_moves_per_game,
             max_ticks=config.max_ticks_per_move,
+            apply_scent_shaping=apply_scent_shaping,  # M5.1
         )
         
         # Store stage info in episode for later analysis
@@ -363,11 +456,23 @@ def _play_single_game(
     episode_id: str,
     max_moves: int,
     max_ticks: int,
+    apply_scent_shaping: bool = False,  # M5.1: Enable scent reward for draws
 ) -> Tuple[str, EpisodeRecord]:
     """
     Play a single KPK game and return (result, episode_record).
     
     Uses proper subgraph locking pattern from full_game_train.py.
+    
+    Args:
+        board: Starting chess board
+        engine: ReConEngine for move generation
+        graph: ReCoN graph
+        plasticity_cfg: Plasticity configuration
+        stem_manager: Optional stem cell manager
+        episode_id: Unique episode identifier
+        max_moves: Maximum moves before draw
+        max_ticks: Maximum ticks per move
+        apply_scent_shaping: M5.1 - If True, apply scent reward for draws
     """
     from recon_lite.plasticity import init_plasticity_state
     from recon_lite_chess.sensors.structure import summarize_kpk_material
@@ -383,6 +488,9 @@ def _play_single_game(
     # Initialize episode record
     ep = EpisodeRecord(episode_id=episode_id)
     ep.summary = EpisodeSummary()
+    
+    # M5.1: Save starting position for scent reward calculation
+    start_board = board.copy()
     
     # Reset all node states for fresh game
     for node in graph.nodes.values():
@@ -539,6 +647,15 @@ def _play_single_game(
         result = "draw"  # Max moves reached
     
     ep.result = {"win": "1-0", "loss": "0-1", "draw": "1/2-1/2"}.get(result, "1/2-1/2")
+    
+    # M5.1: Apply scent reward for draws showing King→Pawn approach
+    if apply_scent_shaping and result == "draw" and stem_manager and HAS_STEM_CELL:
+        scent = compute_scent_reward(start_board, board, our_color, result)
+        if scent > 0:
+            # Apply scent reward to stem cells
+            stem_manager.tick(board, scent, tick_count)
+            ep.notes = ep.notes or {}
+            ep.notes["scent_reward"] = scent
     
     return result, ep
 
@@ -719,21 +836,31 @@ def run_evolution_training(config: EvolutionConfig) -> List[CycleResult]:
     
     results: List[CycleResult] = []
     
+    # M5.1 STALL RECOVERY - Track consecutive low win-rate cycles
+    stall_counter = 0
+    stall_recovery_active = False
+    original_spawn_rate = config.stem_cell_spawn_rate
+    
     for cycle in range(1, config.max_cycles + 1):
         cycle_start = time.time()
         
         print(f"\n--- Cycle {cycle}/{config.max_cycles} ---")
         
+        # M5.1: Show stall recovery status
+        if stall_recovery_active:
+            print(f"  🔥 STALL RECOVERY MODE (cycle {stall_counter}/{STALL_THRESHOLD_CYCLES})")
+        
         # Get pre-cycle snapshot for diff
         old_snapshot = registry.get_snapshot()
         
-        # Online Phase
+        # Online Phase - with scent shaping during stall recovery
         print(f"  Online Phase: Playing {config.games_per_cycle} games...")
         episodes, online_stats = run_online_phase(
             config=config,
             registry=registry,
             stem_manager=stem_manager,
             cycle=cycle,
+            apply_scent_shaping=stall_recovery_active and ENABLE_SCENT_SHAPING,  # M5.1
         )
         print(f"    Win rate: {online_stats['win_rate']:.1%}")
         print(f"    Games: {online_stats['wins']}W / {online_stats['draws']}D / {online_stats['losses']}L")
@@ -743,6 +870,38 @@ def run_evolution_training(config: EvolutionConfig) -> List[CycleResult]:
         if per_stage:
             stage_parts = [f"S{s}:{r:.0%}" for s, r in sorted(per_stage.items())]
             print(f"    📊 Per-stage: {' | '.join(stage_parts)}")
+        
+        # =====================================================================
+        # M5.1 STALL DETECTION & RECOVERY
+        # If win_rate < 10% for 3 consecutive cycles:
+        # 1. Double spawn_rate for more exploration
+        # 2. Enable scent-based shaping for draws
+        # =====================================================================
+        current_win_rate = online_stats['win_rate']
+        
+        if current_win_rate < STALL_THRESHOLD_WIN_RATE:
+            stall_counter += 1
+            if stall_counter >= STALL_THRESHOLD_CYCLES and not stall_recovery_active:
+                # ACTIVATE STALL RECOVERY
+                stall_recovery_active = True
+                if stem_manager:
+                    # Double spawn rate
+                    stem_manager.spawn_rate = original_spawn_rate * STALL_SPAWN_MULTIPLIER
+                    # Increase plasticity for more aggressive learning
+                    config.plasticity_eta = min(0.15, config.plasticity_eta * 1.5)
+                print(f"    ⚠️  STALL DETECTED: {stall_counter} cycles < {STALL_THRESHOLD_WIN_RATE:.0%}")
+                print(f"    🔥 Activating recovery: spawn_rate={stem_manager.spawn_rate if stem_manager else 'N/A'}, scent_shaping=ON")
+        else:
+            # Reset stall counter on good performance
+            if current_win_rate >= STALL_THRESHOLD_WIN_RATE * 2:  # 20%+ resets
+                stall_counter = 0
+                if stall_recovery_active:
+                    # Deactivate stall recovery, restore original rates
+                    stall_recovery_active = False
+                    if stem_manager:
+                        stem_manager.spawn_rate = original_spawn_rate
+                    config.plasticity_eta = 0.05  # Reset to default
+                    print(f"    ✅ Stall recovery successful, returning to normal mode")
         
         # Save traces
         trace_path = config.trace_dir / f"cycle_{cycle:04d}.jsonl"

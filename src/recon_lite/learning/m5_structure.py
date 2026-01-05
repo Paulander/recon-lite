@@ -248,6 +248,107 @@ def wrap_terminal_as_script(
 
 
 # =============================================================================
+# M5.1 MICRO-TEMPORAL POR DISCOVERY - Short Game Sequence Analysis
+# =============================================================================
+
+def analyze_micro_temporal_sequences(
+    episodes: List[Any],
+    stem_manager: "StemCellManager",
+    max_game_length: int = 10,
+    min_games: int = 5,
+) -> Dict[Tuple[str, str], float]:
+    """
+    Analyze tick-by-tick sequences for short games (<10 ticks) to find
+    strong temporal dependencies like King -> Pawn.
+    
+    For very short games, every tick matters. This function tracks the
+    exact firing order of nodes within each game and calculates the
+    probability that node A fires before node B in winning games.
+    
+    Args:
+        episodes: List of EpisodeRecord objects
+        stem_manager: Manager with cell tracking info
+        max_game_length: Maximum game length to consider "short"
+        min_games: Minimum games to calculate confidence
+        
+    Returns:
+        Dict mapping (predecessor_cell_id, successor_cell_id) to confidence score
+    """
+    # Track firing order in short winning games
+    # Key: (cell_a, cell_b), Value: {"a_before_b": count, "b_before_a": count}
+    order_counts: Dict[Tuple[str, str], Dict[str, int]] = {}
+    
+    for episode in episodes:
+        # Check if this was a win
+        outcome = getattr(episode, 'outcome', None)
+        if outcome != 'win':
+            continue
+        
+        ticks = getattr(episode, 'ticks', [])
+        if len(ticks) > max_game_length:
+            continue  # Skip long games
+        
+        # Track first activation tick for each cell
+        first_activation: Dict[str, int] = {}
+        
+        for tick in ticks:
+            tick_id = getattr(tick, 'tick_id', 0)
+            active_nodes = getattr(tick, 'active_nodes', [])
+            
+            for node_id in active_nodes:
+                # Find corresponding cell
+                for cell_id, cell in stem_manager.cells.items():
+                    if cell.trial_node_id == node_id:
+                        if cell_id not in first_activation:
+                            first_activation[cell_id] = tick_id
+                        break
+        
+        # Compare all pairs of activated cells
+        activated_cells = list(first_activation.keys())
+        for i, cell_a in enumerate(activated_cells):
+            for cell_b in activated_cells[i+1:]:
+                tick_a = first_activation[cell_a]
+                tick_b = first_activation[cell_b]
+                
+                # Create canonical key (sorted)
+                key = tuple(sorted([cell_a, cell_b]))
+                if key not in order_counts:
+                    order_counts[key] = {"a_before_b": 0, "b_before_a": 0, "same_tick": 0}
+                
+                # Determine order
+                if tick_a < tick_b:
+                    if cell_a < cell_b:
+                        order_counts[key]["a_before_b"] += 1
+                    else:
+                        order_counts[key]["b_before_a"] += 1
+                elif tick_b < tick_a:
+                    if cell_b < cell_a:
+                        order_counts[key]["a_before_b"] += 1
+                    else:
+                        order_counts[key]["b_before_a"] += 1
+                else:
+                    order_counts[key]["same_tick"] += 1
+    
+    # Calculate confidence scores for each pair
+    result: Dict[Tuple[str, str], float] = {}
+    
+    for (cell_a, cell_b), counts in order_counts.items():
+        total = counts["a_before_b"] + counts["b_before_a"]
+        if total < min_games:
+            continue
+        
+        # Confidence = how consistently one fires before the other
+        if counts["a_before_b"] > counts["b_before_a"]:
+            confidence = counts["a_before_b"] / total
+            result[(cell_a, cell_b)] = confidence
+        else:
+            confidence = counts["b_before_a"] / total
+            result[(cell_b, cell_a)] = confidence
+    
+    return result
+
+
+# =============================================================================
 # M5 RECURSIVE BRANCHING - POR Chain Discovery
 # =============================================================================
 
@@ -257,6 +358,7 @@ def discover_por_chains(
     registry: "TopologyRegistry",
     min_sequence_confidence: float = 0.7,
     current_tick: int = 0,
+    episodes: Optional[List[Any]] = None,  # For micro-temporal analysis
 ) -> List[Tuple[str, str, float]]:
     """
     Discover sequential patterns like Opposition -> Protect -> Promote.
@@ -265,12 +367,16 @@ def discover_por_chains(
     fires BEFORE B during winning games. Creates POR links between
     SCRIPT nodes (wrapping terminals if needed).
     
+    MICRO-TEMPORAL MODE: For short games (<10 ticks), uses tick-by-tick
+    analysis to find strong King -> Pawn dependencies.
+    
     Args:
         graph: The Graph to modify
         stem_manager: Manager with win-coactivation data
         registry: TopologyRegistry for persisting changes
         min_sequence_confidence: Minimum confidence to create POR link (default 0.7)
         current_tick: Current tick for metadata
+        episodes: Episode list for micro-temporal analysis
         
     Returns:
         List of (predecessor_id, successor_id, confidence) tuples for created POR links
@@ -279,16 +385,41 @@ def discover_por_chains(
     
     discovered_chains: List[Tuple[str, str, float]] = []
     
+    # MICRO-TEMPORAL ANALYSIS: Prioritize short game sequences
+    micro_temporal_pairs: Dict[Tuple[str, str], float] = {}
+    if episodes:
+        micro_temporal_pairs = analyze_micro_temporal_sequences(
+            episodes=episodes,
+            stem_manager=stem_manager,
+            max_game_length=10,  # Focus on games < 10 ticks
+            min_games=5,
+        )
+    
     # Find highly correlated cell pairs from win-coactivation tracking
     correlated_pairs = stem_manager.find_win_correlated_pairs(
         min_coactivations=30,  # Lower threshold for sequence detection
         min_ratio=min_sequence_confidence,
     )
     
-    if not correlated_pairs:
+    # Merge micro-temporal pairs with regular correlated pairs
+    # Micro-temporal has higher priority for short games
+    all_pairs_to_process: List[Tuple[str, str, float, int, bool]] = []
+    
+    # Add micro-temporal pairs (priority)
+    for (cell_a, cell_b), confidence in micro_temporal_pairs.items():
+        if confidence >= min_sequence_confidence:
+            all_pairs_to_process.append((cell_a, cell_b, confidence, 0, True))  # True = micro-temporal
+    
+    # Add regular correlated pairs
+    for cell_a, cell_b, ratio, co_count in correlated_pairs:
+        # Skip if already in micro-temporal
+        if (cell_a, cell_b) not in micro_temporal_pairs and (cell_b, cell_a) not in micro_temporal_pairs:
+            all_pairs_to_process.append((cell_a, cell_b, ratio, co_count, False))
+    
+    if not all_pairs_to_process:
         return discovered_chains
     
-    for cell_a, cell_b, ratio, co_count in correlated_pairs:
+    for cell_a, cell_b, ratio, co_count, is_micro_temporal in all_pairs_to_process:
         # Get the corresponding graph nodes for these cells
         cell_obj_a = stem_manager.cells.get(cell_a)
         cell_obj_b = stem_manager.cells.get(cell_b)
@@ -311,18 +442,25 @@ def discover_por_chains(
         samples_a = cell_obj_a.samples
         samples_b = cell_obj_b.samples
         
-        if not samples_a or not samples_b:
-            continue
-        
-        # Calculate average tick for each cell
-        avg_tick_a = sum(s.tick for s in samples_a) / len(samples_a)
-        avg_tick_b = sum(s.tick for s in samples_b) / len(samples_b)
-        
-        # Predecessor fires first (lower average tick)
-        if avg_tick_a < avg_tick_b:
+        # Determine temporal order
+        if is_micro_temporal:
+            # Micro-temporal analysis already determined order
+            # cell_a is the predecessor, cell_b is the successor
             pred_node_id, succ_node_id = node_a, node_b
         else:
-            pred_node_id, succ_node_id = node_b, node_a
+            # Use sample timestamps for regular pairs
+            if not samples_a or not samples_b:
+                continue
+            
+            # Calculate average tick for each cell
+            avg_tick_a = sum(s.tick for s in samples_a) / len(samples_a)
+            avg_tick_b = sum(s.tick for s in samples_b) / len(samples_b)
+            
+            # Predecessor fires first (lower average tick)
+            if avg_tick_a < avg_tick_b:
+                pred_node_id, succ_node_id = node_a, node_b
+            else:
+                pred_node_id, succ_node_id = node_b, node_a
         
         # Get actual nodes
         pred_node = graph.nodes.get(pred_node_id)
@@ -369,10 +507,11 @@ def discover_por_chains(
             # Mark edge metadata
             for edge in graph.edges:
                 if edge.src == pred_node_id and edge.dst == succ_node_id and edge.ltype == LinkType.POR:
-                    edge.meta["origin"] = "por_discovery"
+                    edge.meta["origin"] = "micro_temporal" if is_micro_temporal else "por_discovery"
                     edge.meta["confidence"] = ratio
                     edge.meta["co_activations"] = co_count
                     edge.meta["created_tick"] = current_tick
+                    edge.meta["is_micro_temporal"] = is_micro_temporal
                     break
             
             # Persist to registry
@@ -1064,18 +1203,32 @@ class StructureLearner:
             if cell.state != StemCellState.CANDIDATE:
                 continue
             
-            # PERFECT SUCCESS BYPASS: 100% win rate over 50+ samples
-            # "Success is the ultimate consistency" - bypass ALL checks
+            # =====================================================================
+            # M5.1 SUCCESS-BASED PROMOTION ("Bypass")
+            # If reward_average > 0.90 over 50+ samples, force-promote even if
+            # consistency math is undefined/zero (Zero-Variance Trap escape)
+            # =====================================================================
             sample_count = len(cell.samples) if hasattr(cell, 'samples') else 0
-            perfect_success = (
-                current_win_rate >= 1.0 and 
-                sample_count >= 50
-            )
+            
+            # Calculate reward average from samples
+            if sample_count >= 50:
+                avg_reward = sum(s.reward for s in cell.samples) / sample_count
+            else:
+                avg_reward = 0.0
+            
+            # SUCCESS BYPASS: High average reward bypasses consistency check
+            success_bypass = (avg_reward > 0.90 and sample_count >= 50)
+            
+            # PERFECT SUCCESS BYPASS: 100% win rate is ultimate consistency
+            perfect_success = (current_win_rate >= 1.0 and sample_count >= 50)
+            
+            # Either bypass allows promotion without consistency check
+            bypass_enabled = success_bypass or perfect_success
             
             # Check if ready for trial - EXPANSION: lowered to 0.40
             consistency, _ = cell.analyze_pattern()
             
-            if not perfect_success and consistency < 0.40:
+            if not bypass_enabled and consistency < 0.40:
                 trial_errors.append(f"{cell.cell_id}: consistency {consistency:.2f} < 0.40")
                 continue
             
@@ -1112,10 +1265,15 @@ class StructureLearner:
             # Promote to TRIAL (not MATURE yet)
             if cell.promote_to_trial(self.registry, parent_id, current_tick):
                 trial_promotions.append(cell.cell_id)
-                if perfect_success:
+                # Track promotion reason for debugging
+                if success_bypass and not perfect_success:
+                    cell.metadata["promotion_reason"] = f"success_bypass_avg_{avg_reward:.2f}"
+                elif perfect_success:
                     cell.metadata["promotion_reason"] = "perfect_success"
-                if cell.metadata.get("vertical_promotion"):
+                elif cell.metadata.get("vertical_promotion"):
                     cell.metadata["promotion_reason"] = "vertical_to_" + parent_id
+                else:
+                    cell.metadata["promotion_reason"] = f"consistency_{consistency:.2f}"
             else:
                 trial_errors.append(f"{cell.cell_id}: trial promotion failed")
         
@@ -1180,6 +1338,60 @@ class StructureLearner:
             except Exception as e:
                 hoisted_clusters = [f"error: {e}"]
         
+        # Step 7b: SPECULATIVE HOISTING - Hoist CANDIDATE cells if 85%+ win-coactivation
+        # M5.1 Unblock: Don't wait for TRIAL - hoist promising CANDIDATE pairs early
+        speculative_hoists: List[str] = []
+        try:
+            # Get win-correlated pairs including candidates
+            win_correlated = stem_manager.find_win_correlated_pairs(
+                min_coactivations=20,  # Lower bar for speculation
+                min_ratio=0.85,
+            )
+            
+            for cell_a_id, cell_b_id, ratio, co_count in win_correlated:
+                cell_a = stem_manager.cells.get(cell_a_id)
+                cell_b = stem_manager.cells.get(cell_b_id)
+                
+                # Include CANDIDATE cells (not just TRIAL)
+                if not cell_a or not cell_b:
+                    continue
+                
+                # At least one must be CANDIDATE for "speculative"
+                is_speculative = (
+                    cell_a.state == StemCellState.CANDIDATE or 
+                    cell_b.state == StemCellState.CANDIDATE
+                )
+                
+                if not is_speculative:
+                    continue  # Already handled by TRIAL hoisting
+                
+                # Both must be at least CANDIDATE state
+                valid_states = {StemCellState.CANDIDATE, StemCellState.TRIAL, StemCellState.MATURE}
+                if cell_a.state not in valid_states or cell_b.state not in valid_states:
+                    continue
+                
+                # Trigger speculative hoist
+                from recon_lite_chess.graph.builder import build_graph_from_topology
+                graph = build_graph_from_topology(self.registry.topology_path, self.registry)
+                
+                cluster_id = stem_manager.hoist_cluster(
+                    [cell_a_id, cell_b_id],
+                    graph,
+                    parent_node_id="kpk_detect",
+                    aggregation_mode="and",  # True AND gate for tactical patterns
+                )
+                
+                if cluster_id:
+                    speculative_hoists.append(cluster_id)
+                    # Mark as speculative
+                    if cluster_id in graph.nodes:
+                        graph.nodes[cluster_id].meta["speculative"] = True
+                        graph.nodes[cluster_id].meta["win_correlation"] = ratio
+                    self.registry.save()
+                    
+        except Exception as e:
+            speculative_hoists.append(f"error: {e}")
+        
         # Step 8: SPAWN_NEIGHBORS - Recursive outgrowth for solidified cells
         spawned_neighbors: List[str] = []
         for cell_id in solidified:
@@ -1204,6 +1416,7 @@ class StructureLearner:
                 registry=self.registry,
                 min_sequence_confidence=0.7,
                 current_tick=current_tick,
+                episodes=episodes,  # Enable micro-temporal analysis
             )
             
             if discovered_por_chains:
@@ -1243,6 +1456,7 @@ class StructureLearner:
             "demoted_cells": demoted,
             # NEW: Vertical growth stats (M5 Recursive Branching)
             "hoisted_clusters": hoisted_clusters,
+            "speculative_hoists": speculative_hoists,  # M5.1: CANDIDATE-level hoisting
             "spawned_neighbors": spawned_neighbors,
             "vertical_promotions": vertical_promotions,  # Nodes parented to SOLID, not backbone
             # POR Chain Discovery (Sequential Gating)

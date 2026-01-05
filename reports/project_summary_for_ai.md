@@ -288,6 +288,95 @@ uv run python scripts/evolution_driver.py \
 
 ---
 
+## M5.1: Structural Hyper-Sweeping
+
+M5.1 extends M5 with systematic hyperparameter exploration and stall recovery mechanisms.
+
+### HyperSweep Engine (`learning/sweep_engine.py`)
+
+Orchestrates multiple isolated training runs to find optimal configurations:
+
+```python
+from recon_lite.learning.sweep_engine import HyperSweepEngine, SweepConfig
+
+engine = HyperSweepEngine()
+configs = [
+    SweepConfig(trial_name="conservative", consistency_threshold=0.50, hoist_threshold=0.90),
+    SweepConfig(trial_name="speculative", consistency_threshold=0.30, hoist_threshold=0.75),
+    SweepConfig(trial_name="recursive", enable_success_bypass=True, enable_speculative_hoisting=True),
+]
+results = engine.run_sweep(configs)
+```
+
+### M5.1 Unblock Mechanisms
+
+#### 1. Success-Based Promotion ("Bypass")
+If `reward_average > 0.90` over 50+ samples, force-promote even if consistency math is undefined (Zero-Variance Trap escape):
+```
+Cell with avg_reward=0.95, samples=60 → Promoted despite consistency=NaN
+```
+
+#### 2. Speculative Hoisting on CANDIDATEs
+Don't wait for TRIAL - hoist CANDIDATE cells at 85%+ win-coactivation:
+```
+CANDIDATE(A) + CANDIDATE(B) co-activate 90% → Hoisted to AND-gate immediately
+```
+
+#### 3. Stall Recovery
+If `win_rate < 10%` for 3 consecutive cycles:
+- Double `spawn_rate` for more exploration
+- Enable **Scent-Based Shaping**: +0.1 reward for draws showing King approaching Pawn's promotion path
+- Increase `plasticity_eta` by 50%
+
+#### 4. Micro-Temporal POR Discovery
+For short games (<10 ticks), analyze tick-by-tick sequences to find strong King → Pawn dependencies:
+```
+Game 1 (7 ticks): King fires tick 2, Pawn fires tick 5 → King precedes Pawn
+Game 2 (6 ticks): King fires tick 1, Pawn fires tick 4 → Consistent!
+→ Create POR link: goal_king → goal_pawn
+```
+
+### Healthy Growth Signature
+
+Monitor these metrics to distinguish "flat memorization" from "hierarchical reasoning":
+
+| Metric | Flat Behavior | Healthy Target | Meaning |
+|--------|---------------|----------------|---------|
+| Max Depth | 2 | >= 4 | Sensor → Sub-goal → Leg → Backbone |
+| Branching Factor | 1.0 | >= 1.5 | Non-backbone SCRIPTs have multiple children |
+| POR Edges | 0 | > 0 | Sequential patterns discovered |
+| Edge Types | 99% SUB | 70% SUB, 30% POR | Sequences encoded |
+| Vertical Promotions | 0% | >= 50% | New nodes parent to SOLID, not backbone |
+| Speculative ANDs | 0 | Growing | Tactical patterns forming before solidification |
+
+### Sweep Analysis
+
+Use `scripts/analyze_sweep.py` to generate comparison reports:
+```bash
+python scripts/analyze_sweep.py snapshots/sweeps/stage1_validation/
+```
+
+Generates markdown with:
+- Summary comparison table
+- Configuration differences
+- Win rate progression
+- Learning speed analysis
+- Structural maturity assessment
+- Recommendations
+
+### Environment Variable Overrides
+
+Sweep configurations can be injected via environment:
+```bash
+M5_CONSISTENCY_THRESHOLD=0.30 \
+M5_HOIST_THRESHOLD=0.75 \
+M5_ENABLE_SUCCESS_BYPASS=1 \
+M5_ENABLE_SCENT_SHAPING=1 \
+python scripts/evolution_driver.py --stage 1
+```
+
+---
+
 ## Mental Model for AI Assistant
 
 1. **ReCoN = Request/Confirm Network**: Top-down requests (SUB/POR), bottom-up confirmations (SUR/RET)
