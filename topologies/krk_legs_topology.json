@@ -1,0 +1,314 @@
+{
+  "version": "2.0",
+  "network": "krk_legs",
+  "description": "KRK with legs architecture (rook_leg/king_leg/arbiter) for M5 evolution",
+  "created": "2026-01-05T16:05:26.233827",
+  "nodes": [
+    {
+      "id": "krk_root",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {}
+    },
+    {
+      "id": "krk_detect",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {}
+    },
+    {
+      "id": "krk_execute",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {}
+    },
+    {
+      "id": "krk_finish",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {}
+    },
+    {
+      "id": "krk_wait",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {}
+    },
+    {
+      "id": "krk_king_distance",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.krk_nodes:create_king_edge_detector",
+      "meta": {
+        "universal": true,
+        "transfer_from": "king_distance"
+      }
+    },
+    {
+      "id": "krk_opposition_probe",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.krk_nodes:create_opposition_evaluator",
+      "meta": {
+        "universal": true,
+        "transfer_from": "opposition"
+      }
+    },
+    {
+      "id": "krk_box_area",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.krk_nodes:create_box_shrink_evaluator",
+      "meta": {
+        "krk_specific": true
+      }
+    },
+    {
+      "id": "krk_cut_established",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.krk_nodes:create_cut_established_detector",
+      "meta": {
+        "krk_specific": true
+      }
+    },
+    {
+      "id": "krk_mate_ready",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.krk_nodes:create_mate_deliver_evaluator",
+      "meta": {
+        "krk_specific": true
+      }
+    },
+    {
+      "id": "krk_stalemate_danger",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.krk_nodes:create_stalemate_detector",
+      "meta": {
+        "krk_specific": true
+      }
+    },
+    {
+      "id": "krk_rook_leg",
+      "type": "SCRIPT",
+      "group": "actuator",
+      "factory": "recon_lite_chess.krk_nodes:create_box_shrink_moves",
+      "meta": {
+        "layer": "actuator",
+        "piece": "rook"
+      }
+    },
+    {
+      "id": "krk_king_leg",
+      "type": "SCRIPT",
+      "group": "actuator",
+      "factory": "recon_lite_chess.krk_nodes:create_king_drive_moves",
+      "meta": {
+        "layer": "actuator",
+        "piece": "king",
+        "universal": true
+      }
+    },
+    {
+      "id": "krk_arbiter",
+      "type": "SCRIPT",
+      "group": "actuator",
+      "factory": "recon_lite_chess.krk_nodes:create_phase0_choose_moves",
+      "meta": {
+        "layer": "actuator"
+      }
+    },
+    {
+      "id": "krk_checkmate_probe",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.krk_nodes:create_mate_deliver_evaluator",
+      "meta": {}
+    },
+    {
+      "id": "krk_wait_for_change",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.krk_nodes:create_wait_for_board_change",
+      "meta": {}
+    }
+  ],
+  "edges": [
+    {
+      "src": "krk_root",
+      "dst": "krk_detect",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_root",
+      "dst": "krk_execute",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_root",
+      "dst": "krk_finish",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_root",
+      "dst": "krk_wait",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "krk_king_distance",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "krk_opposition_probe",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "krk_box_area",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "krk_cut_established",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "krk_mate_ready",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "krk_stalemate_danger",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_execute",
+      "dst": "krk_rook_leg",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_execute",
+      "dst": "krk_king_leg",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_execute",
+      "dst": "krk_arbiter",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_finish",
+      "dst": "krk_checkmate_probe",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_wait",
+      "dst": "krk_wait_for_change",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "krk_execute",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_execute",
+      "dst": "krk_finish",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_finish",
+      "dst": "krk_wait",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_rook_leg",
+      "dst": "krk_king_leg",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_rook_leg",
+      "dst": "krk_arbiter",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_king_leg",
+      "dst": "krk_arbiter",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    }
+  ],
+  "last_modified": "2026-01-05T16:05:26.233838"
+}

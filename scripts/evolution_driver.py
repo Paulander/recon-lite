@@ -48,12 +48,13 @@ from recon_lite.viz.evolution_viz import (
 )
 
 try:
-    from recon_lite.nodes.stem_cell import StemCellManager, StemCellConfig
+    from recon_lite.nodes.stem_cell import StemCellManager, StemCellConfig, StemCellState
     HAS_STEM_CELL = True
 except ImportError:
     HAS_STEM_CELL = False
     StemCellManager = None
     StemCellConfig = None
+    StemCellState = None
 
 try:
     from recon_lite_chess.graph.builder import build_graph_from_topology
@@ -117,6 +118,21 @@ STALL_THRESHOLD_CYCLES = int(os.environ.get("M5_STALL_THRESHOLD_CYCLES", "3"))
 STALL_SPAWN_MULTIPLIER = float(os.environ.get("M5_STALL_SPAWN_MULTIPLIER", "2.0"))
 ENABLE_SCENT_SHAPING = os.environ.get("M5_ENABLE_SCENT_SHAPING", "1") == "1"
 SCENT_REWARD = 0.1  # Reward for draws showing King→Pawn approach
+
+# M5.1 Emergent Spawning - for "Failure Frontier" exploration
+ENABLE_EMERGENT_SPAWNING = os.environ.get("M5_ENABLE_EMERGENT_SPAWNING", "0") == "1"
+EMERGENT_SPAWN_THRESHOLD_CYCLES = int(os.environ.get("M5_EMERGENT_SPAWN_THRESHOLD_CYCLES", "5"))
+EMERGENT_SPAWN_THRESHOLD_WIN_RATE = 0.50  # Below 50% win rate triggers emergent spawning
+EMERGENT_SPAWN_COUNT = int(os.environ.get("M5_EMERGENT_SPAWN_COUNT", "10"))
+
+# M5.1 Aggressive Hoisting - lower threshold for speculation
+MIN_COACTIVATIONS_FOR_HOIST = int(os.environ.get("M5_MIN_COACTIVATIONS_FOR_HOIST", "50"))
+
+# M5.1 Forced Hierarchy (Gauntlet mode)
+ENABLE_FORCED_HOISTING = os.environ.get("M5_ENABLE_FORCED_HOISTING", "0") == "1"
+FORCED_HOIST_THRESHOLD_WIN_RATE = float(os.environ.get("M5_FORCED_HOIST_THRESHOLD_WIN_RATE", "0.20"))
+FORCED_HOIST_INTERVAL_CYCLES = int(os.environ.get("M5_FORCED_HOIST_INTERVAL_CYCLES", "5"))
+LEG_LINK_XP_MULTIPLIER = float(os.environ.get("M5_LEG_LINK_XP_MULTIPLIER", "1.0"))
 
 
 def compute_king_pawn_distance(board: chess.Board, our_color: chess.Color) -> Optional[int]:
@@ -419,6 +435,18 @@ def run_online_phase(
         if result == "win":
             wins += 1
             per_stage_wins[stage_idx] = per_stage_wins.get(stage_idx, 0) + 1
+            
+            # Track active cells in winning games for sensor reuse
+            if stem_manager and HAS_STEM_CELL:
+                active_cells = [
+                    tick.active_nodes for tick in ep.ticks
+                ]
+                # Flatten and dedupe active cells across all ticks
+                all_active = set()
+                for nodes in active_cells:
+                    all_active.update(nodes)
+                active_cell_ids = [n for n in all_active if n.startswith(("stem_", "TRIAL_", "universal_"))]
+                stem_manager.track_win_coactivation(active_cell_ids, game_won=True)
         elif result == "draw":
             draws += 1
         else:
@@ -432,6 +460,12 @@ def run_online_phase(
         stage_wins = per_stage_wins.get(stage, 0)
         per_stage_win_rates[stage] = stage_wins / games if games > 0 else 0.0
     
+    # Compute sensor reuse ratio (for knowledge transfer tracking)
+    sensor_reuse_ratio = 0.0
+    if stem_manager and HAS_STEM_CELL and hasattr(stem_manager, 'get_reuse_stats'):
+        reuse_stats = stem_manager.get_reuse_stats()
+        sensor_reuse_ratio = reuse_stats.get('avg_reuse_ratio', 0.0)
+    
     stats = {
         "games_played": total,
         "wins": wins,
@@ -442,6 +476,8 @@ def run_online_phase(
         # PHASE-AWARE stats
         "per_stage_win_rates": per_stage_win_rates,
         "per_stage_games": per_stage_games,
+        # KNOWLEDGE TRANSFER stats
+        "sensor_reuse_ratio": sensor_reuse_ratio,
     }
     
     return episodes, stats
@@ -841,6 +877,10 @@ def run_evolution_training(config: EvolutionConfig) -> List[CycleResult]:
     stall_recovery_active = False
     original_spawn_rate = config.stem_cell_spawn_rate
     
+    # M5.1 EMERGENT SPAWNING - Track consecutive cycles below 50% (Failure Frontier)
+    emergent_spawn_counter = 0
+    emergent_spawns_triggered = 0
+    
     for cycle in range(1, config.max_cycles + 1):
         cycle_start = time.time()
         
@@ -864,6 +904,15 @@ def run_evolution_training(config: EvolutionConfig) -> List[CycleResult]:
         )
         print(f"    Win rate: {online_stats['win_rate']:.1%}")
         print(f"    Games: {online_stats['wins']}W / {online_stats['draws']}D / {online_stats['losses']}L")
+        
+        # KNOWLEDGE TRANSFER: Show sensor reuse ratio (Bridge Metric)
+        reuse_ratio = online_stats.get('sensor_reuse_ratio', 0.0)
+        if reuse_ratio > 0:
+            emoji = "🔗" if reuse_ratio > 0.5 else "🌉"
+            print(f"    {emoji} Sensor Reuse: {reuse_ratio:.1%}")
+            if reuse_ratio > 0.5 and stem_manager and HAS_STEM_CELL:
+                # Increase plasticity for general strategies (Bridge success)
+                config.plasticity_eta = min(0.15, config.plasticity_eta * 1.2)
         
         # PHASE-AWARE: Show per-stage breakdown
         per_stage = online_stats.get('per_stage_win_rates', {})
@@ -903,6 +952,59 @@ def run_evolution_training(config: EvolutionConfig) -> List[CycleResult]:
                     config.plasticity_eta = 0.05  # Reset to default
                     print(f"    ✅ Stall recovery successful, returning to normal mode")
         
+        # =====================================================================
+        # M5.1 EMERGENT SPAWNING - "Failure Frontier" Exploration
+        # When win_rate stays below 50% for N cycles, spawn new sensors
+        # tied to the most active King-leg nodes to explore new hypotheses
+        # =====================================================================
+        if ENABLE_EMERGENT_SPAWNING:
+            if current_win_rate < EMERGENT_SPAWN_THRESHOLD_WIN_RATE:
+                emergent_spawn_counter += 1
+                
+                if emergent_spawn_counter >= EMERGENT_SPAWN_THRESHOLD_CYCLES:
+                    # TRIGGER EMERGENT SPAWNING
+                    emergent_spawns_triggered += 1
+                    print(f"    🌱 EMERGENT SPAWNING triggered (cycle {emergent_spawn_counter}/{EMERGENT_SPAWN_THRESHOLD_CYCLES})")
+                    
+                    if stem_manager and HAS_STEM_CELL:
+                        # Find most active King-leg related sensors
+                        king_leg_cells = [
+                            c for c in stem_manager.cells.values()
+                            if "king" in c.cell_id.lower() or 
+                               c.metadata.get("local_root_id", "").startswith("kpk_king")
+                        ]
+                        
+                        # Sort by sample count (most active first)
+                        king_leg_cells.sort(key=lambda c: len(c.samples), reverse=True)
+                        
+                        spawned_count = 0
+                        for parent_cell in king_leg_cells[:3]:  # Top 3 most active
+                            if parent_cell.state in (StemCellState.TRIAL, StemCellState.MATURE):
+                                # Spawn children tied to this King-leg sensor
+                                spawn_per_parent = EMERGENT_SPAWN_COUNT // 3
+                                new_ids = parent_cell.spawn_neighbors(
+                                    stem_manager, 
+                                    spawn_count=spawn_per_parent,
+                                    target_leg="kpk_king_leg"
+                                )
+                                spawned_count += len(new_ids)
+                        
+                        # Also spawn some general exploratory cells
+                        general_spawns = stem_manager.spawn_exploratory_cells(
+                            count=EMERGENT_SPAWN_COUNT - spawned_count,
+                            target_legs=["kpk_king_leg", "kpk_pawn_leg"],
+                        )
+                        spawned_count += len(general_spawns) if general_spawns else 0
+                        
+                        print(f"    🌱 Spawned {spawned_count} new sensors for exploration")
+                    
+                    # Reset counter but don't disable (allow repeated spawning)
+                    emergent_spawn_counter = 0
+            else:
+                # Good performance, reset emergent counter
+                if current_win_rate >= EMERGENT_SPAWN_THRESHOLD_WIN_RATE + 0.1:  # 60%+ resets
+                    emergent_spawn_counter = 0
+        
         # Save traces
         trace_path = config.trace_dir / f"cycle_{cycle:04d}.jsonl"
         trace_db = TraceDB(trace_path)
@@ -928,8 +1030,14 @@ def run_evolution_training(config: EvolutionConfig) -> List[CycleResult]:
         solid_count = struct_stats.get('solidified', 0)
         demote_count = struct_stats.get('demoted', 0)
         hoisted_count = len(struct_stats.get('hoisted_clusters', []))
+        speculative_count = len(struct_stats.get('speculative_hoists', []))
+        forced_count = len(struct_stats.get('forced_hoists', []))
         spawned_count = len(struct_stats.get('spawned_neighbors', []))
         print(f"    → TRIAL: {trial_count}  SOLID: {solid_count}  DEMOTED: {demote_count}  HOISTED: {hoisted_count}  SPAWNED: {spawned_count}")
+        
+        # M5.1 Forced Hierarchy stats
+        if speculative_count > 0 or forced_count > 0:
+            print(f"    🔨 Crisis Mode: speculative_hoists={speculative_count}  forced_hoists={forced_count}")
         
         # M5 Recursive Branching stats (new)
         vertical_promo = struct_stats.get('vertical_promotions', 0)

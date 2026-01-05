@@ -14,7 +14,7 @@ import argparse
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 
 def load_sweep_results(sweep_dir: Path) -> List[Dict[str, Any]]:
@@ -214,6 +214,97 @@ def generate_structural_analysis(results: List[Dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
+def compute_structural_win_score(result: Dict[str, Any]) -> Tuple[float, str]:
+    """
+    Compute "Structural Win" score that values depth over raw win rate.
+    
+    80% win rate with Depth 3 > 100% win rate with Depth 1
+    
+    Returns:
+        (score, explanation)
+    """
+    win_rate = result.get("final_win_rate", 0)
+    max_depth = result.get("max_depth", 0)
+    branching = result.get("branching_factor", 0)
+    por_edges = result.get("por_edges", 0)
+    solid_nodes = result.get("solid_nodes", 0)
+    hoisted = result.get("hoisted_clusters", 0)
+    
+    # Base score from win rate (but diminishing returns above 80%)
+    if win_rate >= 0.80:
+        win_score = 80 + (win_rate - 0.80) * 50  # 80% = 80, 100% = 90
+    else:
+        win_score = win_rate * 100
+    
+    # Structural bonuses (these are what we REALLY want)
+    depth_bonus = max_depth * 20  # Depth 4 = +80 points
+    branching_bonus = branching * 15  # Factor 2.0 = +30 points
+    por_bonus = por_edges * 10  # Each POR edge = +10 points
+    solid_bonus = solid_nodes * 5  # Each SOLID node = +5 points
+    hoisted_bonus = hoisted * 8  # Each hoisted cluster = +8 points
+    
+    total = win_score + depth_bonus + branching_bonus + por_bonus + solid_bonus + hoisted_bonus
+    
+    explanation = (
+        f"win={win_score:.0f} + depth={depth_bonus:.0f} + "
+        f"branch={branching_bonus:.0f} + por={por_bonus:.0f} + "
+        f"solid={solid_bonus:.0f} + hoist={hoisted_bonus:.0f}"
+    )
+    
+    return total, explanation
+
+
+def generate_structural_win_section(results: List[Dict[str, Any]]) -> str:
+    """Generate Structural Win analysis - values hierarchy over raw wins."""
+    lines = [
+        "## Structural Win Analysis",
+        "",
+        "**Philosophy:** 80% win rate with Depth 3 is better than 100% with Depth 1.",
+        "We want a \"Growing Brain\", not a \"Prodigy who wins by instinct.\"",
+        "",
+        "| Trial | Win Rate | Depth | Branching | Structural Score | Breakdown |",
+        "|-------|----------|-------|-----------|------------------|-----------|",
+    ]
+    
+    scored_results = []
+    for r in results:
+        score, breakdown = compute_structural_win_score(r)
+        scored_results.append((r, score, breakdown))
+    
+    # Sort by structural score
+    scored_results.sort(key=lambda x: -x[1])
+    
+    for r, score, breakdown in scored_results:
+        trial = r.get("trial_name", "unknown")
+        win_rate = r.get("final_win_rate", 0)
+        depth = r.get("max_depth", 0)
+        branching = r.get("branching_factor", 0)
+        
+        lines.append(
+            f"| {trial} | {win_rate:.1%} | {depth} | {branching:.2f} | "
+            f"**{score:.0f}** | {breakdown} |"
+        )
+    
+    lines.append("")
+    
+    # Winner announcement
+    if scored_results:
+        winner = scored_results[0]
+        lines.append(f"**Structural Winner:** {winner[0]['trial_name']} (score: {winner[1]:.0f})")
+        
+        # Check if winner has actual structural growth
+        if winner[0].get("max_depth", 0) > 2:
+            lines.append("")
+            lines.append("This trial shows true hierarchical growth - the brain is building Middle Managers!")
+        elif winner[0].get("final_win_rate", 0) >= 0.95:
+            lines.append("")
+            lines.append("**WARNING:** High win rate but flat hierarchy. This is the \"Success Trap\" - "
+                        "the agent is winning by instinct without building internal structure. "
+                        "Consider running on a harder stage to trigger structural learning.")
+    
+    return "\n".join(lines)
+
+
 def generate_recommendations(results: List[Dict[str, Any]]) -> str:
     """Generate recommendations based on analysis."""
     lines = [
@@ -221,17 +312,10 @@ def generate_recommendations(results: List[Dict[str, Any]]) -> str:
         "",
     ]
     
-    # Find best overall performer
+    # Find best overall performer using Structural Win score
     scored_results = []
     for r in results:
-        score = 0
-        score += r.get("final_win_rate", 0) * 100  # Win rate (0-100)
-        score += r.get("max_depth", 0) * 10  # Depth bonus
-        score += r.get("por_edges", 0) * 5  # POR bonus
-        cycles_80 = r.get("cycles_to_80_percent")
-        if cycles_80:
-            score += (20 - cycles_80) * 2  # Speed bonus (faster = more points)
-        
+        score, _ = compute_structural_win_score(r)
         scored_results.append((r, score))
     
     scored_results.sort(key=lambda x: -x[1])
@@ -299,6 +383,10 @@ def generate_sweep_report(
         "---",
         "",
         generate_structural_analysis(results),
+        "",
+        "---",
+        "",
+        generate_structural_win_section(results),
         "",
         "---",
         "",

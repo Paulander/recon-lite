@@ -1052,6 +1052,61 @@ class StemCellManager:
             "top_pairs": self.find_win_correlated_pairs(min_coactivations=10, min_ratio=0.5)[:5],
         }
     
+    def spawn_exploratory_cells(
+        self,
+        count: int = 5,
+        target_legs: Optional[List[str]] = None,
+    ) -> List[str]:
+        """
+        M5.1 Emergent Spawning: Create new exploratory stem cells.
+        
+        Used when the agent is stuck at a "Failure Frontier" and needs
+        to explore new hypotheses. Creates fresh EXPLORING cells that
+        will start collecting samples immediately.
+        
+        Args:
+            count: Number of cells to spawn
+            target_legs: Optional list of leg names to target (e.g., ["kpk_king_leg"])
+            
+        Returns:
+            List of new cell IDs
+        """
+        new_ids = []
+        
+        for i in range(count):
+            if len(self.cells) >= self.max_cells:
+                break
+            
+            # Generate unique ID
+            cell_id = f"emergent_{self._next_id}"
+            self._next_id += 1
+            
+            # Create new exploratory cell
+            cell = StemCellTerminal(
+                cell_id=cell_id,
+                config=self.default_config,
+            )
+            
+            # Mark as emergent spawning
+            cell.metadata["spawn_reason"] = "emergent_spawning"
+            cell.metadata["spawn_cycle"] = "unknown"  # Will be set by caller
+            
+            # Target a specific leg if specified
+            if target_legs:
+                target_leg = random.choice(target_legs)
+                cell.metadata["target_leg"] = target_leg
+                # Bias the cell toward king-related features if targeting king leg
+                if "king" in target_leg.lower():
+                    cell.metadata["feature_bias"] = "king_focus"
+            
+            # Start in EXPLORING state
+            cell.state = StemCellState.EXPLORING
+            
+            self.cells[cell_id] = cell
+            new_ids.append(cell_id)
+        
+        return new_ids
+    
     def save(self, path: Path) -> None:
         """Save manager state including win-coactivation tracking."""
         path = Path(path)
@@ -1559,4 +1614,213 @@ class StemCellManager:
             "orphaned": len(orphaned),
             "accelerated": accelerated,
             "demoted": demoted,
+        }
+    
+    # =========================================================================
+    # KNOWLEDGE TRANSFER - Cross-Endgame Inheritance
+    # =========================================================================
+    
+    @classmethod
+    def load_with_transfer(
+        cls,
+        source_path: Path,
+        prefix_map: Optional[Dict[str, str]] = None,
+        states_to_transfer: Optional[List[str]] = None,
+        top_n: Optional[int] = None,
+        new_domain: str = "krk",
+    ) -> "StemCellManager":
+        """
+        Load stem cells from another domain with knowledge transfer.
+        
+        This enables cross-endgame inheritance: sensors learned in KPK
+        can be transferred to KRK, allowing "Universal Sensors" like
+        king_distance to work across multiple endgames.
+        
+        KNOWLEDGE BANK: Cells are renamed with prefix_map to indicate
+        their origin and universal applicability.
+        
+        Args:
+            source_path: Path to source stem_cells.json (e.g., from KPK)
+            prefix_map: Mapping for cell ID renaming (e.g., {"kpk_": "universal_"})
+            states_to_transfer: List of state names to transfer (default: ["TRIAL", "MATURE"])
+            top_n: Only transfer top N cells by XP (default: all matching states)
+            new_domain: New domain name for metadata (default: "krk")
+            
+        Returns:
+            New StemCellManager with transferred cells
+        """
+        # Default prefix map
+        if prefix_map is None:
+            prefix_map = {
+                "kpk_sensor_": "universal_sensor_",
+                "kpk_": "universal_",
+                "stem_": "universal_stem_",
+                "TRIAL_": "universal_TRIAL_",
+            }
+        
+        # Default states to transfer
+        if states_to_transfer is None:
+            states_to_transfer = ["TRIAL", "MATURE"]
+        
+        # Load source manager
+        with open(source_path) as f:
+            data = json.load(f)
+        
+        # Create new manager
+        manager = cls(
+            max_cells=data.get("max_cells", 50),  # Increase for transfer
+            spawn_rate=data.get("spawn_rate", 0.1),
+        )
+        
+        # Filter cells by state
+        source_cells = data.get("cells", {})
+        transferable = []
+        
+        for cell_id, cell_data in source_cells.items():
+            state = cell_data.get("state", "DORMANT")
+            if state in states_to_transfer:
+                cell_data["_original_id"] = cell_id
+                cell_data["_xp"] = cell_data.get("xp", 0)
+                transferable.append(cell_data)
+        
+        # Sort by XP descending and take top N
+        transferable.sort(key=lambda c: c.get("_xp", 0), reverse=True)
+        if top_n is not None:
+            transferable = transferable[:top_n]
+        
+        # Transfer cells with renaming
+        transferred_count = 0
+        for cell_data in transferable:
+            old_id = cell_data["_original_id"]
+            
+            # Apply prefix mapping
+            new_id = old_id
+            for old_prefix, new_prefix in prefix_map.items():
+                if old_id.startswith(old_prefix):
+                    new_id = new_prefix + old_id[len(old_prefix):]
+                    break
+            else:
+                # No prefix match - add universal prefix
+                new_id = f"universal_{old_id}"
+            
+            # Update cell_id
+            cell_data["cell_id"] = new_id
+            
+            # Add transfer metadata
+            cell_data["metadata"] = cell_data.get("metadata", {})
+            cell_data["metadata"]["origin"] = "kpk_transfer"
+            cell_data["metadata"]["original_id"] = old_id
+            cell_data["metadata"]["transfer_domain"] = new_domain
+            cell_data["metadata"]["source_xp"] = cell_data.get("xp", 0)
+            
+            # Reset XP to 50% of original for new domain
+            # This gives transferred cells a head start but requires them to prove utility
+            original_xp = cell_data.get("xp", 0)
+            cell_data["xp"] = max(25, original_xp // 2)
+            
+            # Keep pattern signature for universal features
+            # The signature captures patterns that may work across domains
+            
+            # Create cell from dict
+            try:
+                cell = StemCellTerminal.from_dict(cell_data)
+                manager.cells[new_id] = cell
+                transferred_count += 1
+            except Exception as e:
+                print(f"Warning: Failed to transfer cell {old_id}: {e}")
+        
+        # Copy win-coactivation data with renaming
+        win_coact_raw = data.get("win_coactivation", {})
+        for key, count in win_coact_raw.items():
+            try:
+                a, b = key.split("|")
+                # Rename if in transferred cells
+                new_a = next((c.cell_id for c in manager.cells.values() 
+                              if c.metadata.get("original_id") == a), a)
+                new_b = next((c.cell_id for c in manager.cells.values() 
+                              if c.metadata.get("original_id") == b), b)
+                manager.win_coactivation[(new_a, new_b)] = count
+            except Exception:
+                pass
+        
+        # Copy win counts with renaming
+        for cell_id, count in data.get("win_active_counts", {}).items():
+            new_id = next((c.cell_id for c in manager.cells.values() 
+                          if c.metadata.get("original_id") == cell_id), cell_id)
+            manager.win_active_counts[new_id] = count
+        
+        manager._next_id = max(
+            int(cid.split("_")[-1]) if cid.split("_")[-1].isdigit() else 0
+            for cid in manager.cells.keys()
+        ) + 1 if manager.cells else 0
+        
+        print(f"✅ Transferred {transferred_count} cells from {source_path}")
+        print(f"   States: {states_to_transfer}")
+        print(f"   Top N: {top_n if top_n else 'all'}")
+        
+        return manager
+    
+    def get_transferred_cells(self) -> List[StemCellTerminal]:
+        """Get all cells that were transferred from another domain."""
+        return [
+            c for c in self.cells.values()
+            if c.metadata.get("origin") == "kpk_transfer"
+        ]
+    
+    def compute_sensor_reuse_ratio(
+        self,
+        active_cell_ids: List[str],
+        game_won: bool,
+    ) -> float:
+        """
+        Compute the ratio of transferred sensors contributing to wins.
+        
+        BRIDGE METRIC: Tracks how many "KPK-born" sensors are contributing
+        to KRK wins. A ratio > 0.5 indicates successful knowledge transfer.
+        
+        Args:
+            active_cell_ids: Cell IDs that were active in this game
+            game_won: Whether the game was won
+            
+        Returns:
+            Ratio of transferred cells among active cells (0.0 to 1.0)
+        """
+        if not active_cell_ids:
+            return 0.0
+        
+        # Count transferred cells among active
+        transferred_active = sum(
+            1 for cid in active_cell_ids
+            if cid in self.cells and 
+            self.cells[cid].metadata.get("origin") == "kpk_transfer"
+        )
+        
+        ratio = transferred_active / len(active_cell_ids)
+        
+        # Track in metadata for reporting
+        if game_won:
+            self.metadata = getattr(self, 'metadata', {})
+            if 'reuse_ratios' not in self.metadata:
+                self.metadata['reuse_ratios'] = []
+            self.metadata['reuse_ratios'].append(ratio)
+            # Keep last 100
+            self.metadata['reuse_ratios'] = self.metadata['reuse_ratios'][-100:]
+        
+        return ratio
+    
+    def get_reuse_stats(self) -> Dict[str, Any]:
+        """Get statistics about sensor reuse from transfers."""
+        transferred = self.get_transferred_cells()
+        metadata = getattr(self, 'metadata', {})
+        ratios = metadata.get('reuse_ratios', [])
+        
+        return {
+            "transferred_count": len(transferred),
+            "transferred_by_state": {
+                state.name: len([c for c in transferred if c.state == state])
+                for state in StemCellState
+            },
+            "avg_reuse_ratio": sum(ratios) / len(ratios) if ratios else 0.0,
+            "recent_reuse_ratios": ratios[-10:] if ratios else [],
+            "high_reuse_games": sum(1 for r in ratios if r > 0.5),
         }

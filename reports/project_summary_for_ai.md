@@ -377,6 +377,110 @@ python scripts/evolution_driver.py --stage 1
 
 ---
 
+## M5.2: Knowledge Bank & Cross-Endgame Transfer
+
+The Knowledge Bank enables transfer learning between endgames (e.g., KPK → KRK).
+
+### Universal Sensors
+
+Sensors that work across multiple endgames are identified and preserved:
+
+| Feature | KPK Source | KRK Application | Transfer Score |
+|---------|------------|-----------------|----------------|
+| `king_distance` | Distance between kings | Same - kings always interact | High |
+| `opposition_status` | Direct/distant opposition | Same mechanic applies | High |
+| `enemy_edge_distance` | King proximity to board edge | Drive enemy to edge | High |
+| `cut_established` | KPK: pawn path clear | KRK: rook fence established | Medium |
+
+### Knowledge Transfer API
+
+```python
+from recon_lite.nodes.stem_cell import StemCellManager
+
+# Load KPK stem cells and rename for KRK
+stem_manager = StemCellManager.load_with_transfer(
+    source_path="snapshots/kpk_run/stem_cells.json",
+    prefix_map={
+        "kpk_sensor_": "universal_sensor_",
+        "stem_": "universal_stem_",
+    },
+    states_to_transfer=["TRIAL", "MATURE"],
+    top_n=20,  # Transfer top 20 by XP
+    new_domain="krk",
+)
+
+# Track transfer success
+reuse_stats = stem_manager.get_reuse_stats()
+print(f"Transferred: {reuse_stats['transferred_count']}")
+print(f"Avg reuse ratio: {reuse_stats['avg_reuse_ratio']:.1%}")
+```
+
+### Bridge Metric: `sensor_reuse_ratio`
+
+Tracks how many "KPK-born" sensors contribute to KRK wins:
+
+| Ratio | Interpretation | Action |
+|-------|----------------|--------|
+| < 0.3 | Transfer failed | More KRK-specific exploration needed |
+| 0.3-0.5 | Partial transfer | Some universal sensors working |
+| > 0.5 | **Successful transfer** | Increase plasticity, lock in universals |
+
+When `sensor_reuse_ratio > 0.5`, the system automatically:
+- Increases `plasticity_eta` by 20% to reward general strategies
+- Flags transferred sensors for potential solidification
+
+### KRK Box Method Discovery
+
+The "Box Method" is a specific checkmating technique in KRK:
+
+```
+Rook_Cuts_Rank → King_Approaches → Rook_Shrinks_Box
+```
+
+This sequence **cannot be vibed** - doing step 3 before step 2 lets the enemy escape.
+
+When detected in >70% of wins, the system creates a `Tactical_Box_Manager`:
+- POR-linked SCRIPT nodes for each step
+- Enforces proper sequencing via soft-POR gates
+
+### KRK Evolution Driver
+
+```bash
+# Fresh KRK training
+python scripts/krk_evolution_driver.py \
+    --topology topologies/krk_legs_topology.json \
+    --games-per-cycle 100 \
+    --cycles 30
+
+# With knowledge transfer from KPK
+python scripts/krk_evolution_driver.py \
+    --transfer-from snapshots/kpk_run/stem_cells.json \
+    --transfer-top-n 20 \
+    --topology topologies/krk_legs_topology.json
+```
+
+### Expected Transfer Outcomes
+
+| Metric | Cold Start | Successful Transfer |
+|--------|------------|---------------------|
+| Initial Win Rate | <20% | >30% |
+| Sensor Reuse Ratio | 0% | >50% |
+| First Hybrid AND-gate | Never | Cycles 3-5 |
+| Box Method POR | Never | Cycles 10-15 |
+
+### File Reference for Knowledge Transfer
+
+| File | Purpose |
+|------|---------|
+| `scripts/export_krk_topology.py` | Export KRK network to JSON |
+| `scripts/krk_evolution_driver.py` | KRK training with transfer |
+| `src/recon_lite_chess/features/krk_features.py` | KRK feature extraction |
+| `src/recon_lite/nodes/stem_cell.py` | `load_with_transfer()` method |
+| `src/recon_lite/learning/m5_structure.py` | `discover_krk_box_method_por()` |
+| `topologies/krk_legs_topology.json` | KRK network definition |
+
+---
+
 ## Mental Model for AI Assistant
 
 1. **ReCoN = Request/Confirm Network**: Top-down requests (SUB/POR), bottom-up confirmations (SUR/RET)

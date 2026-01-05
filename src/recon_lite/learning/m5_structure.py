@@ -532,6 +532,218 @@ def discover_por_chains(
 
 
 # =============================================================================
+# M5 RECURSIVE BRANCHING - KRK Box Method POR Discovery
+# =============================================================================
+
+def discover_krk_box_method_por(
+    graph: "Graph",
+    stem_manager: "StemCellManager",
+    registry: "TopologyRegistry",
+    episodes: List[Any],
+    min_sequence_confidence: float = 0.70,
+    current_tick: int = 0,
+) -> Dict[str, Any]:
+    """
+    Discover the "Box Method" sequential pattern for KRK endgames.
+    
+    The Box Method is a specific checkmating technique:
+    1. Rook_Cuts_Rank (establishes fence) → 
+    2. King_Approaches (closes the net) → 
+    3. Rook_Shrinks_Box (tightens confinement)
+    
+    This sequence CANNOT be "vibed" - if you do step 3 before step 2,
+    the enemy king escapes. This is where POR-gating proves its value.
+    
+    Args:
+        graph: The Graph to modify
+        stem_manager: Manager with stem cells
+        registry: TopologyRegistry for persisting changes  
+        episodes: Episode list for sequence analysis
+        min_sequence_confidence: Minimum confidence to create POR (default 0.70)
+        current_tick: Current tick for metadata
+        
+    Returns:
+        Dict with discovered patterns and stats
+    """
+    from ..graph import Node, NodeType, LinkType
+    import os
+    
+    results = {
+        "box_method_sequences_found": 0,
+        "rook_cuts_then_king": 0,
+        "king_then_shrink": 0,
+        "por_links_created": [],
+        "tactical_manager_created": False,
+    }
+    
+    # Only process KRK episodes
+    krk_episodes = [
+        ep for ep in episodes
+        if hasattr(ep, 'notes') and ep.notes and ep.notes.get('domain') == 'krk'
+    ]
+    
+    if not krk_episodes:
+        # Check if any episodes have krk-related node activations
+        krk_episodes = [
+            ep for ep in episodes
+            if any('krk' in str(tick.active_nodes).lower() for tick in ep.ticks if hasattr(tick, 'active_nodes'))
+        ]
+    
+    if not krk_episodes:
+        return results
+    
+    # Track sequence patterns
+    rook_before_king_count = 0
+    king_before_shrink_count = 0
+    total_wins = 0
+    
+    # Analyze winning episodes for sequence patterns
+    for ep in krk_episodes:
+        if not hasattr(ep, 'result') or ep.result not in ('1-0', 'win'):
+            continue
+        
+        total_wins += 1
+        
+        # Track when key actions happen
+        rook_cut_tick = None
+        king_approach_tick = None
+        box_shrink_tick = None
+        
+        for tick in ep.ticks:
+            if not hasattr(tick, 'active_nodes'):
+                continue
+            
+            active = tick.active_nodes or []
+            tick_id = getattr(tick, 'tick_id', 0)
+            
+            # Detect Rook cut action
+            if any('rook_leg' in n.lower() or 'cut' in n.lower() or 'fence' in n.lower() for n in active):
+                if rook_cut_tick is None:
+                    rook_cut_tick = tick_id
+            
+            # Detect King approach action
+            if any('king_leg' in n.lower() or 'king_drive' in n.lower() or 'approach' in n.lower() for n in active):
+                if king_approach_tick is None:
+                    king_approach_tick = tick_id
+            
+            # Detect Box shrink action
+            if any('shrink' in n.lower() or 'box' in n.lower() or 'confinement' in n.lower() for n in active):
+                if box_shrink_tick is None:
+                    box_shrink_tick = tick_id
+        
+        # Check for Box Method sequence: Rook → King → Shrink
+        if rook_cut_tick is not None and king_approach_tick is not None:
+            if rook_cut_tick < king_approach_tick:
+                rook_before_king_count += 1
+        
+        if king_approach_tick is not None and box_shrink_tick is not None:
+            if king_approach_tick < box_shrink_tick:
+                king_before_shrink_count += 1
+    
+    if total_wins == 0:
+        return results
+    
+    # Calculate confidence for each sequence
+    rook_king_confidence = rook_before_king_count / total_wins if total_wins > 0 else 0
+    king_shrink_confidence = king_before_shrink_count / total_wins if total_wins > 0 else 0
+    
+    results["rook_cuts_then_king"] = rook_before_king_count
+    results["king_then_shrink"] = king_before_shrink_count
+    
+    # If both sequences detected in >70% of wins, create Tactical Box Manager
+    if rook_king_confidence >= min_sequence_confidence and king_shrink_confidence >= min_sequence_confidence:
+        results["box_method_sequences_found"] = total_wins
+        
+        # Force-hoist a SCRIPT manager called Tactical_Box_Manager
+        try:
+            tactical_manager_id = f"tactical_box_manager_{current_tick}"
+            
+            tactical_node = Node(
+                nid=tactical_manager_id,
+                ntype=NodeType.SCRIPT,
+            )
+            tactical_node.meta["origin"] = "box_method_discovery"
+            tactical_node.meta["aggregation"] = "sequence"  # Sequential execution
+            tactical_node.meta["rook_king_confidence"] = rook_king_confidence
+            tactical_node.meta["king_shrink_confidence"] = king_shrink_confidence
+            tactical_node.meta["total_wins_analyzed"] = total_wins
+            tactical_node.meta["created_tick"] = current_tick
+            
+            graph.add_node(tactical_node)
+            
+            # Wire to KRK execute phase
+            if "krk_execute" in graph.nodes:
+                graph.add_edge("krk_execute", tactical_manager_id, LinkType.SUB)
+            elif "krk_root" in graph.nodes:
+                graph.add_edge("krk_root", tactical_manager_id, LinkType.SUB)
+            
+            # Create POR-linked child nodes for the sequence
+            # Step 1: Rook cuts
+            rook_cut_node_id = f"rook_cuts_step_{current_tick}"
+            rook_cut_node = Node(nid=rook_cut_node_id, ntype=NodeType.SCRIPT)
+            rook_cut_node.meta["box_method_step"] = 1
+            rook_cut_node.meta["action"] = "establish_fence"
+            graph.add_node(rook_cut_node)
+            graph.add_edge(tactical_manager_id, rook_cut_node_id, LinkType.SUB)
+            
+            # Step 2: King approaches
+            king_approach_node_id = f"king_approaches_step_{current_tick}"
+            king_approach_node = Node(nid=king_approach_node_id, ntype=NodeType.SCRIPT)
+            king_approach_node.meta["box_method_step"] = 2
+            king_approach_node.meta["action"] = "close_net"
+            graph.add_node(king_approach_node)
+            graph.add_edge(tactical_manager_id, king_approach_node_id, LinkType.SUB)
+            
+            # Step 3: Rook shrinks box
+            box_shrink_node_id = f"rook_shrinks_step_{current_tick}"
+            box_shrink_node = Node(nid=box_shrink_node_id, ntype=NodeType.SCRIPT)
+            box_shrink_node.meta["box_method_step"] = 3
+            box_shrink_node.meta["action"] = "tighten_confinement"
+            graph.add_node(box_shrink_node)
+            graph.add_edge(tactical_manager_id, box_shrink_node_id, LinkType.SUB)
+            
+            # Create POR links for sequence: Step1 → Step2 → Step3
+            graph.add_edge(rook_cut_node_id, king_approach_node_id, LinkType.POR)
+            graph.add_edge(king_approach_node_id, box_shrink_node_id, LinkType.POR)
+            
+            # Set Soft-POR policy
+            king_approach_node.meta["por_policy"] = "weighted"
+            king_approach_node.meta["por_theta"] = 0.5
+            box_shrink_node.meta["por_policy"] = "weighted"
+            box_shrink_node.meta["por_theta"] = 0.5
+            
+            results["tactical_manager_created"] = True
+            results["por_links_created"] = [
+                (rook_cut_node_id, king_approach_node_id, rook_king_confidence),
+                (king_approach_node_id, box_shrink_node_id, king_shrink_confidence),
+            ]
+            
+            # Persist to registry
+            if registry:
+                registry.add_node({
+                    "id": tactical_manager_id,
+                    "type": "SCRIPT",
+                    "group": "tactical",
+                    "meta": dict(tactical_node.meta),
+                }, tick=current_tick)
+                
+                registry.add_edge("krk_execute" if "krk_execute" in graph.nodes else "krk_root",
+                                  tactical_manager_id, "SUB", weight=1.0, tick=current_tick)
+                
+                for src, dst, conf in results["por_links_created"]:
+                    registry.add_edge(src, dst, "POR", weight=conf, tick=current_tick)
+            
+            print(f"    📦 KRK BOX METHOD: Created Tactical_Box_Manager")
+            print(f"       Rook→King confidence: {rook_king_confidence:.1%}")
+            print(f"       King→Shrink confidence: {king_shrink_confidence:.1%}")
+            
+        except Exception as e:
+            results["error"] = str(e)
+    
+    return results
+
+
+# =============================================================================
 # M5 RECURSIVE BRANCHING - Maturation Metrics
 # =============================================================================
 
@@ -1392,6 +1604,55 @@ class StructureLearner:
         except Exception as e:
             speculative_hoists.append(f"error: {e}")
         
+        # Step 7c: FORCED HOISTING - "Structural Crisis" Mode
+        # When struggling badly (< 20% win rate), seed hierarchy with AND-gates
+        # Takes the two most active sensors in winning games and force-creates an AND-gate
+        import os
+        forced_hoists: List[str] = []
+        force_hoist_enabled = os.environ.get("M5_ENABLE_FORCED_HOISTING", "0") == "1"
+        force_hoist_threshold = float(os.environ.get("M5_FORCED_HOIST_THRESHOLD_WIN_RATE", "0.20"))
+        force_hoist_interval = int(os.environ.get("M5_FORCED_HOIST_INTERVAL_CYCLES", "5"))
+        
+        if force_hoist_enabled and current_win_rate < force_hoist_threshold:
+            # Check if we're at the right cycle interval (use current_tick as proxy)
+            cycle_number = current_tick // 100  # Approximate cycle from tick
+            if cycle_number % force_hoist_interval == 0 and stem_manager.win_active_counts:
+                # Find the two most active sensors in winning games
+                win_active = sorted(
+                    stem_manager.win_active_counts.items(),
+                    key=lambda x: -x[1]
+                )[:2]
+                
+                if len(win_active) >= 2:
+                    cell_a_id, count_a = win_active[0]
+                    cell_b_id, count_b = win_active[1]
+                    
+                    cell_a = stem_manager.cells.get(cell_a_id)
+                    cell_b = stem_manager.cells.get(cell_b_id)
+                    
+                    if cell_a and cell_b:
+                        try:
+                            from recon_lite_chess.graph.builder import build_graph_from_topology
+                            graph = build_graph_from_topology(self.registry.topology_path, self.registry)
+                            
+                            cluster_id = stem_manager.hoist_cluster(
+                                [cell_a_id, cell_b_id],
+                                graph,
+                                parent_node_id="kpk_detect",
+                                aggregation_mode="and",
+                            )
+                            
+                            if cluster_id:
+                                forced_hoists.append(cluster_id)
+                                if cluster_id in graph.nodes:
+                                    graph.nodes[cluster_id].meta["forced"] = True
+                                    graph.nodes[cluster_id].meta["crisis_mode"] = True
+                                    graph.nodes[cluster_id].meta["source_cells"] = [cell_a_id, cell_b_id]
+                                    graph.nodes[cluster_id].meta["source_win_counts"] = [count_a, count_b]
+                                self.registry.save()
+                        except Exception as e:
+                            forced_hoists.append(f"error: {e}")
+        
         # Step 8: SPAWN_NEIGHBORS - Recursive outgrowth for solidified cells
         spawned_neighbors: List[str] = []
         for cell_id in solidified:
@@ -1425,6 +1686,32 @@ class StructureLearner:
         except Exception as e:
             discovered_por_chains = []
         
+        # Step 9b: KRK-SPECIFIC BOX METHOD POR DISCOVERY
+        # Discover the "Box Method" sequential pattern for KRK endgames
+        # Sequence: Rook_Cuts_Rank → King_Approaches → Rook_Shrinks_Box
+        krk_box_method_results: Dict[str, Any] = {}
+        try:
+            # Check if we're in a KRK domain (look for krk nodes)
+            is_krk_domain = any('krk' in node_id.lower() for node_id in self.registry.list_nodes())
+            
+            if is_krk_domain and episodes:
+                from recon_lite_chess.graph.builder import build_graph_from_topology
+                graph = build_graph_from_topology(self.registry.topology_path, self.registry)
+                
+                krk_box_method_results = discover_krk_box_method_por(
+                    graph=graph,
+                    stem_manager=stem_manager,
+                    registry=self.registry,
+                    episodes=episodes,
+                    min_sequence_confidence=0.70,
+                    current_tick=current_tick,
+                )
+                
+                if krk_box_method_results.get("tactical_manager_created"):
+                    self.registry.save()
+        except Exception as e:
+            krk_box_method_results = {"error": str(e)}
+        
         # Save changes
         self.registry.save()
         
@@ -1457,12 +1744,15 @@ class StructureLearner:
             # NEW: Vertical growth stats (M5 Recursive Branching)
             "hoisted_clusters": hoisted_clusters,
             "speculative_hoists": speculative_hoists,  # M5.1: CANDIDATE-level hoisting
+            "forced_hoists": forced_hoists,  # M5.1: Crisis mode forced AND-gates
             "spawned_neighbors": spawned_neighbors,
             "vertical_promotions": vertical_promotions,  # Nodes parented to SOLID, not backbone
             # POR Chain Discovery (Sequential Gating)
             "discovered_por_chains": len(discovered_por_chains),
             "por_chain_details": [(p, s, round(c, 3)) for p, s, c in discovered_por_chains],
             "sequence_confidence": round(sequence_confidence, 3),
+            # KRK Box Method Discovery
+            "krk_box_method": krk_box_method_results,
             # Legacy compat
             "promotions_attempted": len(trial_promotions),
             "promotions_succeeded": len(trial_promotions),

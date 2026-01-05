@@ -64,6 +64,20 @@ class SweepConfig:
     stall_spawn_multiplier: float = 2.0
     enable_scent_shaping: bool = True  # Scent-based reward for King→Pawn approach
     
+    # M5.1 Aggressive Hoisting Settings (for Failure Frontier)
+    min_coactivations_for_hoist: int = 50  # Lower = more speculative AND-gates
+    
+    # M5.1 Emergent Spawning (for stuck situations)
+    enable_emergent_spawning: bool = False
+    emergent_spawn_threshold_cycles: int = 5  # Cycles below 50% before triggering
+    emergent_spawn_count: int = 10  # How many new sensors to spawn
+    
+    # M5.1 Forced Hierarchy (for "Gauntlet" mode - Stage 8)
+    enable_forced_hoisting: bool = False
+    forced_hoist_threshold_win_rate: float = 0.20  # Below 20% triggers forced hoisting
+    forced_hoist_interval_cycles: int = 5  # Force-create AND-gate every N cycles
+    leg_link_xp_multiplier: float = 1.0  # XP multiplier for HOISTED→LEG links
+    
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         d = asdict(self)
@@ -289,6 +303,17 @@ class HyperSweepEngine:
             "M5_STALL_SPAWN_MULTIPLIER": str(config.stall_spawn_multiplier),
             "M5_ENABLE_SCENT_SHAPING": "1" if config.enable_scent_shaping else "0",
             "M5_SPAWN_RATE": str(config.spawn_rate),
+            # M5.1 Aggressive Hoisting
+            "M5_MIN_COACTIVATIONS_FOR_HOIST": str(config.min_coactivations_for_hoist),
+            # M5.1 Emergent Spawning
+            "M5_ENABLE_EMERGENT_SPAWNING": "1" if config.enable_emergent_spawning else "0",
+            "M5_EMERGENT_SPAWN_THRESHOLD_CYCLES": str(config.emergent_spawn_threshold_cycles),
+            "M5_EMERGENT_SPAWN_COUNT": str(config.emergent_spawn_count),
+            # M5.1 Forced Hierarchy (Gauntlet mode)
+            "M5_ENABLE_FORCED_HOISTING": "1" if config.enable_forced_hoisting else "0",
+            "M5_FORCED_HOIST_THRESHOLD_WIN_RATE": str(config.forced_hoist_threshold_win_rate),
+            "M5_FORCED_HOIST_INTERVAL_CYCLES": str(config.forced_hoist_interval_cycles),
+            "M5_LEG_LINK_XP_MULTIPLIER": str(config.leg_link_xp_multiplier),
         }
     
     def _run_evolution_driver(
@@ -658,6 +683,183 @@ def create_stage1_validation_sweep() -> List[SweepConfig]:
             enable_scent_shaping=True,
             games_per_cycle=50,
             max_cycles=20,
+        ),
+    ]
+
+
+def create_opposition_sweep() -> List[SweepConfig]:
+    """
+    Create the Stage 5 (Opposition_Lite) "Failure Frontier" sweep configs.
+    
+    This is the TRUE test of M5.1 structural learning. Stage 5 requires
+    the King to take specific opposition squares - pure "pawn vibes" won't work.
+    
+    Three personas designed for STRUGGLE, not instant success:
+    - Baseline: Standard settings to establish the "wall"
+    - Aggressive: Very low thresholds, early speculation
+    - Recursive_Turbo: Maximum aggression with emergent spawning
+    """
+    return [
+        # Baseline: See where Hector naturally struggles
+        SweepConfig(
+            trial_name="baseline",
+            stage_id=5,  # Opposition_Lite
+            consistency_threshold=0.40,
+            hoist_threshold=0.85,
+            enable_success_bypass=False,
+            enable_speculative_hoisting=False,
+            enable_stall_recovery=True,
+            enable_scent_shaping=True,
+            spawn_rate=0.05,
+            games_per_cycle=50,
+            max_cycles=25,
+        ),
+        # Aggressive: Lower bars for hypothesis formation
+        SweepConfig(
+            trial_name="aggressive",
+            stage_id=5,
+            consistency_threshold=0.25,  # Very low - let weak patterns through
+            hoist_threshold=0.70,  # Hoist at 70% correlation
+            enable_success_bypass=True,
+            enable_speculative_hoisting=True,
+            enable_stall_recovery=True,
+            enable_scent_shaping=True,
+            spawn_rate=0.10,  # Double spawn rate
+            games_per_cycle=50,
+            max_cycles=25,
+            # Lower co-activation threshold for hoisting
+            min_coactivations_for_hoist=20,  # Down from 50
+        ),
+        # Recursive_Turbo: Maximum structural aggression
+        SweepConfig(
+            trial_name="recursive_turbo",
+            stage_id=5,
+            consistency_threshold=0.20,  # Accept almost anything
+            hoist_threshold=0.65,  # Hoist early and often
+            enable_success_bypass=True,
+            enable_speculative_hoisting=True,
+            enable_stall_recovery=True,
+            enable_scent_shaping=True,
+            spawn_rate=0.15,  # 3x spawn rate
+            games_per_cycle=50,
+            max_cycles=25,
+            min_coactivations_for_hoist=15,  # Very aggressive hoisting
+            # NEW: Emergent Spawning trigger
+            enable_emergent_spawning=True,
+            emergent_spawn_threshold_cycles=5,  # Trigger after 5 cycles below 50%
+            emergent_spawn_count=10,  # Spawn 10 new sensors
+        ),
+    ]
+
+
+def create_escort_sweep() -> List[SweepConfig]:
+    """
+    Create the Stage 6 (ESCORT) sweep - the original "Stage 1" difficulty.
+    
+    This is the classic KPK challenge where King must actively support
+    pawn promotion. Good for validating structural growth after Opposition.
+    """
+    return [
+        SweepConfig(
+            trial_name="escort_baseline",
+            stage_id=6,
+            consistency_threshold=0.35,
+            hoist_threshold=0.80,
+            enable_success_bypass=True,
+            enable_speculative_hoisting=True,
+            enable_stall_recovery=True,
+            enable_scent_shaping=True,
+            spawn_rate=0.10,
+            games_per_cycle=50,
+            max_cycles=30,
+        ),
+        SweepConfig(
+            trial_name="escort_turbo",
+            stage_id=6,
+            consistency_threshold=0.20,
+            hoist_threshold=0.65,
+            enable_success_bypass=True,
+            enable_speculative_hoisting=True,
+            enable_stall_recovery=True,
+            enable_scent_shaping=True,
+            spawn_rate=0.15,
+            games_per_cycle=50,
+            max_cycles=30,
+            enable_emergent_spawning=True,
+            emergent_spawn_threshold_cycles=5,
+            emergent_spawn_count=10,
+        ),
+    ]
+
+
+def create_gauntlet_sweep() -> List[SweepConfig]:
+    """
+    Stage 8 (Full Escort / FRONTAL_BLOCKADE) - The Gauntlet.
+    
+    This is where FLAT NETWORKS DIE. The enemy King is active,
+    and only hierarchical scripts (If Opposition then Shouldering then Push)
+    can win consistently.
+    
+    The "Vibe Ceiling" is broken here - random sensor firing won't work.
+    
+    Includes "Forced Hierarchy" trial that seeds AND-gates when struggling.
+    """
+    return [
+        # Baseline: See how badly flat network fails
+        SweepConfig(
+            trial_name="gauntlet_baseline",
+            stage_id=8,  # FRONTAL_BLOCKADE
+            consistency_threshold=0.40,
+            hoist_threshold=0.85,
+            enable_success_bypass=False,
+            enable_speculative_hoisting=False,
+            enable_stall_recovery=True,
+            enable_scent_shaping=True,
+            spawn_rate=0.05,
+            games_per_cycle=50,
+            max_cycles=30,
+        ),
+        # Aggressive: All M5.1 features enabled
+        SweepConfig(
+            trial_name="gauntlet_aggressive",
+            stage_id=8,
+            consistency_threshold=0.20,
+            hoist_threshold=0.60,
+            enable_success_bypass=True,
+            enable_speculative_hoisting=True,
+            enable_stall_recovery=True,
+            enable_scent_shaping=True,
+            spawn_rate=0.15,
+            games_per_cycle=50,
+            max_cycles=30,
+            min_coactivations_for_hoist=15,
+            enable_emergent_spawning=True,
+            emergent_spawn_threshold_cycles=3,
+            emergent_spawn_count=10,
+        ),
+        # Forced Hierarchy: THE SLEDGEHAMMER
+        # Seeds AND-gates when struggling badly (< 20% win rate)
+        SweepConfig(
+            trial_name="forced_hierarchy",
+            stage_id=8,
+            consistency_threshold=0.15,  # Accept almost anything
+            hoist_threshold=0.50,  # Hoist at 50% correlation
+            enable_success_bypass=True,
+            enable_speculative_hoisting=True,
+            enable_stall_recovery=True,
+            enable_scent_shaping=True,
+            spawn_rate=0.20,  # 4x spawn rate
+            games_per_cycle=50,
+            max_cycles=30,
+            min_coactivations_for_hoist=10,  # Very aggressive
+            enable_emergent_spawning=True,
+            emergent_spawn_threshold_cycles=3,  # Faster trigger
+            emergent_spawn_count=15,
+            # FORCED HIERARCHY: Seed the brain with structural guesses
+            enable_forced_hoisting=True,
+            forced_hoist_threshold_win_rate=0.20,  # Below 20% triggers
+            forced_hoist_interval_cycles=5,  # Every 5 cycles
+            leg_link_xp_multiplier=5.0,  # 5x XP for HOISTED→LEG links
         ),
     ]
 
