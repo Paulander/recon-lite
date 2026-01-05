@@ -1021,7 +1021,7 @@ def spawn_hypothesis_links(
                 cluster_id = stem_manager.hoist_cluster(
                     [new_cell.cell_id, active_cell.cell_id],
                     graph,
-                    parent_node_id="kpk_detect",
+                    parent_node_id="kpk_execute",  # Managers connect to execute for move influence
                     aggregation_mode="and",  # TRUE AND gate!
                 )
                 result["hoisted"] = cluster_id
@@ -1472,7 +1472,8 @@ class StructureLearner:
                     parent_id = parent_candidates[0] if parent_candidates else "kpk_detect"
             else:
                 # Regular cell - use backbone parent
-                parent_id = parent_candidates[0] if parent_candidates else "kpk_root"
+                # DUAL-WIRING: Sensors connect to kpk_detect (for sensing/activation)
+                parent_id = parent_candidates[0] if parent_candidates else "kpk_detect"
             
             # Promote to TRIAL (not MATURE yet)
             if cell.promote_to_trial(self.registry, parent_id, current_tick):
@@ -1541,11 +1542,28 @@ class StructureLearner:
                 graph = build_graph_from_topology(self.registry.topology_path, self.registry)
                 hoisted_clusters = stem_manager.auto_hoist(
                     graph,
-                    parent_node_id="kpk_detect",
+                    parent_node_id="kpk_execute",  # Managers connect to execute for move influence
                     min_similarity=0.85,  # ACTIVE: 85% correlation for TRIAL hoisting
                 )
                 if hoisted_clusters:
-                    # Save the updated graph back to registry
+                    # PERSIST: Add hoisted clusters to registry
+                    for cluster_id in hoisted_clusters:
+                        if cluster_id in graph.nodes:
+                            node = graph.nodes[cluster_id]
+                            node_spec = {
+                                "id": cluster_id,
+                                "type": node.ntype.name if hasattr(node.ntype, "name") else str(node.ntype),
+                                "group": "hoisted",
+                                "factory": None,
+                                "meta": node.meta,
+                            }
+                            try:
+                                self.registry.add_node(node_spec, tick=current_tick)
+                                # Managers connect to execute for move influence
+                                self.registry.add_edge("kpk_execute", cluster_id, "SUB", 0.5, tick=current_tick)
+                            except ValueError:
+                                pass  # Already exists
+                    # Save the updated registry
                     self.registry.save()
             except Exception as e:
                 hoisted_clusters = [f"error: {e}"]
@@ -1589,7 +1607,7 @@ class StructureLearner:
                 cluster_id = stem_manager.hoist_cluster(
                     [cell_a_id, cell_b_id],
                     graph,
-                    parent_node_id="kpk_detect",
+                    parent_node_id="kpk_execute",  # Managers connect to execute for move influence
                     aggregation_mode="and",  # True AND gate for tactical patterns
                 )
                 
@@ -1599,21 +1617,48 @@ class StructureLearner:
                     if cluster_id in graph.nodes:
                         graph.nodes[cluster_id].meta["speculative"] = True
                         graph.nodes[cluster_id].meta["win_correlation"] = ratio
+                        
+                        # PERSIST: Add cluster node to registry
+                        node = graph.nodes[cluster_id]
+                        node_spec = {
+                            "id": cluster_id,
+                            "type": node.ntype.name if hasattr(node.ntype, "name") else str(node.ntype),
+                            "group": "hoisted",
+                            "factory": None,
+                            "meta": node.meta,
+                        }
+                        try:
+                            self.registry.add_node(node_spec, tick=current_tick)
+                            # Managers connect to execute for move influence
+                            self.registry.add_edge("kpk_execute", cluster_id, "SUB", 0.5, tick=current_tick)
+                        except ValueError:
+                            pass  # Already exists
                     self.registry.save()
                     
         except Exception as e:
             speculative_hoists.append(f"error: {e}")
         
-        # Step 7c: FORCED HOISTING - "Structural Crisis" Mode
-        # When struggling badly (< 20% win rate), seed hierarchy with AND-gates
-        # Takes the two most active sensors in winning games and force-creates an AND-gate
+        # Step 7c: FORCED HOISTING - "Structural Crisis" or "Success Trap" Mode
+        # 
+        # Two triggers:
+        # 1. Crisis Mode: win_rate < 20% - struggling, need structural help
+        # 2. Success Trap Mode: win_rate > 95% - doing too well, force hierarchy growth
+        #
+        # The Success Trap prevents "vibe ceiling" where flat networks win without
+        # building any hierarchical structure. By forcing AND-gates even at high
+        # win rates, we seed the hierarchy before weight inertia sets in.
         import os
         forced_hoists: List[str] = []
         force_hoist_enabled = os.environ.get("M5_ENABLE_FORCED_HOISTING", "0") == "1"
-        force_hoist_threshold = float(os.environ.get("M5_FORCED_HOIST_THRESHOLD_WIN_RATE", "0.20"))
+        force_hoist_threshold_low = float(os.environ.get("M5_FORCED_HOIST_THRESHOLD_WIN_RATE", "0.20"))
+        force_hoist_threshold_high = float(os.environ.get("M5_FORCED_HOIST_THRESHOLD_HIGH", "0.95"))
         force_hoist_interval = int(os.environ.get("M5_FORCED_HOIST_INTERVAL_CYCLES", "5"))
         
-        if force_hoist_enabled and current_win_rate < force_hoist_threshold:
+        # Check both triggers: struggling OR succeeding too well
+        crisis_mode = current_win_rate < force_hoist_threshold_low
+        success_trap = current_win_rate > force_hoist_threshold_high
+        
+        if force_hoist_enabled and (crisis_mode or success_trap):
             # Check if we're at the right cycle interval (use current_tick as proxy)
             cycle_number = current_tick // 100  # Approximate cycle from tick
             if cycle_number % force_hoist_interval == 0 and stem_manager.win_active_counts:
@@ -1638,7 +1683,7 @@ class StructureLearner:
                             cluster_id = stem_manager.hoist_cluster(
                                 [cell_a_id, cell_b_id],
                                 graph,
-                                parent_node_id="kpk_detect",
+                                parent_node_id="kpk_execute",  # Managers connect to execute for move influence
                                 aggregation_mode="and",
                             )
                             
@@ -1646,9 +1691,56 @@ class StructureLearner:
                                 forced_hoists.append(cluster_id)
                                 if cluster_id in graph.nodes:
                                     graph.nodes[cluster_id].meta["forced"] = True
-                                    graph.nodes[cluster_id].meta["crisis_mode"] = True
+                                    graph.nodes[cluster_id].meta["crisis_mode"] = crisis_mode
+                                    graph.nodes[cluster_id].meta["success_trap"] = success_trap
                                     graph.nodes[cluster_id].meta["source_cells"] = [cell_a_id, cell_b_id]
                                     graph.nodes[cluster_id].meta["source_win_counts"] = [count_a, count_b]
+                                    graph.nodes[cluster_id].meta["trigger_win_rate"] = current_win_rate
+                                    
+                                    # PERSIST: Add cluster node to registry
+                                    node = graph.nodes[cluster_id]
+                                    node_spec = {
+                                        "id": cluster_id,
+                                        "type": node.ntype.name if hasattr(node.ntype, "name") else str(node.ntype),
+                                        "group": "hoisted",
+                                        "factory": None,
+                                        "meta": node.meta,
+                                    }
+                                    try:
+                                        self.registry.add_node(node_spec, tick=current_tick)
+                                    except ValueError:
+                                        pass  # Node already exists
+                                    
+                                    # PERSIST: Add edges from parent to cluster and cluster to children
+                                    # Managers connect to execute for move influence
+                                    try:
+                                        self.registry.add_edge(
+                                            src="kpk_execute",
+                                            dst=cluster_id,
+                                            ltype="SUB",
+                                            weight=0.5,
+                                            tick=current_tick,
+                                        )
+                                    except ValueError:
+                                        pass  # Edge already exists
+                                    
+                                    # Add edges from cluster to source cells (if they have TRIAL nodes)
+                                    for cell_id in [cell_a_id, cell_b_id]:
+                                        trial_node_id = f"TRIAL_{cell_id}_{stem_manager._next_id - 1}"
+                                        cell = stem_manager.cells.get(cell_id)
+                                        if cell and cell.trial_node_id:
+                                            trial_node_id = cell.trial_node_id
+                                        try:
+                                            self.registry.add_edge(
+                                                src=cluster_id,
+                                                dst=trial_node_id,
+                                                ltype="SUB",
+                                                weight=0.5,
+                                                tick=current_tick,
+                                            )
+                                        except ValueError:
+                                            pass  # Edge already exists
+                                    
                                 self.registry.save()
                         except Exception as e:
                             forced_hoists.append(f"error: {e}")

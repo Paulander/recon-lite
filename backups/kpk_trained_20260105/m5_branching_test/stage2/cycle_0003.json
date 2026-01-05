@@ -1,0 +1,607 @@
+{
+  "nodes": {
+    "kpk_root": {
+      "id": "kpk_root",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {}
+    },
+    "kpk_detect": {
+      "id": "kpk_detect",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {}
+    },
+    "kpk_execute": {
+      "id": "kpk_execute",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {}
+    },
+    "kpk_finish": {
+      "id": "kpk_finish",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {}
+    },
+    "kpk_wait": {
+      "id": "kpk_wait",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {}
+    },
+    "kpk_material_check": {
+      "id": "kpk_material_check",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.scripts.kpk:create_kpk_material_detector",
+      "meta": {}
+    },
+    "kpk_push_window": {
+      "id": "kpk_push_window",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.scripts.kpk:create_kpk_push_window",
+      "meta": {}
+    },
+    "kpk_opposition_probe": {
+      "id": "kpk_opposition_probe",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.scripts.kpk:create_kpk_opposition_probe",
+      "meta": {}
+    },
+    "kpk_promotion_probe": {
+      "id": "kpk_promotion_probe",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.scripts.kpk:create_kpk_promotion_probe",
+      "meta": {}
+    },
+    "kpk_move_selector": {
+      "id": "kpk_move_selector",
+      "type": "TERMINAL",
+      "group": "actuator",
+      "factory": "recon_lite_chess.scripts.kpk:create_kpk_move_selector",
+      "meta": {}
+    },
+    "kpk_wait_for_change": {
+      "id": "kpk_wait_for_change",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess:create_wait_for_board_change",
+      "meta": {}
+    },
+    "TRIAL_stem_0000_1": {
+      "id": "TRIAL_stem_0000_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0000",
+        "xp": 27,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 49,
+        "consistency": 0.0
+      },
+      "transient": true
+    },
+    "TRIAL_stem_0001_1": {
+      "id": "TRIAL_stem_0001_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0001",
+        "xp": 27,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 41,
+        "consistency": 0.0
+      },
+      "transient": true
+    },
+    "TRIAL_stem_0002_1": {
+      "id": "TRIAL_stem_0002_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0002",
+        "xp": 28,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 53,
+        "consistency": 0.0
+      },
+      "transient": true
+    },
+    "TRIAL_stem_0003_1": {
+      "id": "TRIAL_stem_0003_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0003",
+        "xp": 28,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 41,
+        "consistency": 0.0
+      },
+      "transient": true
+    },
+    "TRIAL_stem_0004_1": {
+      "id": "TRIAL_stem_0004_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0004",
+        "xp": 29,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 37,
+        "consistency": 0.0
+      },
+      "transient": true
+    },
+    "TRIAL_stem_0005_1": {
+      "id": "TRIAL_stem_0005_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0005",
+        "xp": 30,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 77,
+        "consistency": 0.0
+      },
+      "transient": true
+    },
+    "TRIAL_stem_0006_1": {
+      "id": "TRIAL_stem_0006_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0006",
+        "xp": 30,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 61,
+        "consistency": 0.0
+      },
+      "transient": true
+    },
+    "TRIAL_stem_0007_2": {
+      "id": "TRIAL_stem_0007_2",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0007",
+        "xp": 31,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 94,
+        "consistency": 0.0
+      },
+      "transient": true
+    },
+    "TRIAL_stem_0008_2": {
+      "id": "TRIAL_stem_0008_2",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0008",
+        "xp": 31,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 93,
+        "consistency": 0.0
+      },
+      "transient": true
+    },
+    "TRIAL_stem_0009_1": {
+      "id": "TRIAL_stem_0009_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0009",
+        "xp": 32,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 141,
+        "consistency": 0.0
+      },
+      "transient": true
+    },
+    "TRIAL_stem_0010_1": {
+      "id": "TRIAL_stem_0010_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0010",
+        "xp": 32,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 135,
+        "consistency": 0.0
+      },
+      "transient": true
+    },
+    "TRIAL_stem_0011_2": {
+      "id": "TRIAL_stem_0011_2",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0011",
+        "xp": 33,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 149,
+        "consistency": 0.0
+      },
+      "transient": true
+    },
+    "TRIAL_stem_0012_2": {
+      "id": "TRIAL_stem_0012_2",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0012",
+        "xp": 33,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 125,
+        "consistency": 0.0
+      },
+      "transient": true
+    },
+    "TRIAL_stem_0013_1": {
+      "id": "TRIAL_stem_0013_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0013",
+        "xp": 34,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 104,
+        "consistency": 0.0
+      },
+      "transient": true
+    },
+    "TRIAL_stem_0014_1": {
+      "id": "TRIAL_stem_0014_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0014",
+        "xp": 34,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 68,
+        "consistency": 0.0
+      },
+      "transient": true
+    },
+    "TRIAL_stem_0015_1": {
+      "id": "TRIAL_stem_0015_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0015",
+        "xp": 35,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 120,
+        "consistency": 0.0
+      },
+      "transient": true
+    },
+    "TRIAL_stem_0016_1": {
+      "id": "TRIAL_stem_0016_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0016",
+        "xp": 35,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 64,
+        "consistency": 0.0
+      },
+      "transient": true
+    },
+    "TRIAL_stem_0017_1": {
+      "id": "TRIAL_stem_0017_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0017",
+        "xp": 36,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 113,
+        "consistency": 0.0
+      },
+      "transient": true
+    },
+    "TRIAL_stem_0018_1": {
+      "id": "TRIAL_stem_0018_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0018",
+        "xp": 36,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 108,
+        "consistency": 0.0
+      },
+      "transient": true
+    }
+  },
+  "edges": {
+    "kpk_root->kpk_detect:SUB": {
+      "src": "kpk_root",
+      "dst": "kpk_detect",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    "kpk_root->kpk_execute:SUB": {
+      "src": "kpk_root",
+      "dst": "kpk_execute",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    "kpk_root->kpk_finish:SUB": {
+      "src": "kpk_root",
+      "dst": "kpk_finish",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    "kpk_root->kpk_wait:SUB": {
+      "src": "kpk_root",
+      "dst": "kpk_wait",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    "kpk_detect->kpk_material_check:SUB": {
+      "src": "kpk_detect",
+      "dst": "kpk_material_check",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    "kpk_detect->kpk_push_window:SUB": {
+      "src": "kpk_detect",
+      "dst": "kpk_push_window",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    "kpk_execute->kpk_move_selector:SUB": {
+      "src": "kpk_execute",
+      "dst": "kpk_move_selector",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    "kpk_execute->kpk_opposition_probe:SUB": {
+      "src": "kpk_execute",
+      "dst": "kpk_opposition_probe",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    "kpk_finish->kpk_promotion_probe:SUB": {
+      "src": "kpk_finish",
+      "dst": "kpk_promotion_probe",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    "kpk_wait->kpk_wait_for_change:SUB": {
+      "src": "kpk_wait",
+      "dst": "kpk_wait_for_change",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    "kpk_detect->kpk_execute:POR": {
+      "src": "kpk_detect",
+      "dst": "kpk_execute",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    "kpk_execute->kpk_finish:POR": {
+      "src": "kpk_execute",
+      "dst": "kpk_finish",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    "kpk_finish->kpk_wait:POR": {
+      "src": "kpk_finish",
+      "dst": "kpk_wait",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    "kpk_detect->TRIAL_stem_0000_1:SUB": {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0000_1",
+      "type": "SUB",
+      "weight": 0.5
+    },
+    "kpk_detect->TRIAL_stem_0001_1:SUB": {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0001_1",
+      "type": "SUB",
+      "weight": 0.5
+    },
+    "kpk_detect->TRIAL_stem_0002_1:SUB": {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0002_1",
+      "type": "SUB",
+      "weight": 0.5
+    },
+    "kpk_detect->TRIAL_stem_0003_1:SUB": {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0003_1",
+      "type": "SUB",
+      "weight": 0.5
+    },
+    "kpk_detect->TRIAL_stem_0004_1:SUB": {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0004_1",
+      "type": "SUB",
+      "weight": 0.5
+    },
+    "kpk_detect->TRIAL_stem_0005_1:SUB": {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0005_1",
+      "type": "SUB",
+      "weight": 0.5
+    },
+    "kpk_detect->TRIAL_stem_0006_1:SUB": {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0006_1",
+      "type": "SUB",
+      "weight": 0.5
+    },
+    "kpk_detect->TRIAL_stem_0007_2:SUB": {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0007_2",
+      "type": "SUB",
+      "weight": 0.5
+    },
+    "kpk_detect->TRIAL_stem_0008_2:SUB": {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0008_2",
+      "type": "SUB",
+      "weight": 0.5
+    },
+    "kpk_detect->TRIAL_stem_0009_1:SUB": {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0009_1",
+      "type": "SUB",
+      "weight": 0.5
+    },
+    "kpk_detect->TRIAL_stem_0010_1:SUB": {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0010_1",
+      "type": "SUB",
+      "weight": 0.5
+    },
+    "kpk_detect->TRIAL_stem_0011_2:SUB": {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0011_2",
+      "type": "SUB",
+      "weight": 0.5
+    },
+    "kpk_detect->TRIAL_stem_0012_2:SUB": {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0012_2",
+      "type": "SUB",
+      "weight": 0.5
+    },
+    "kpk_detect->TRIAL_stem_0013_1:SUB": {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0013_1",
+      "type": "SUB",
+      "weight": 0.5
+    },
+    "kpk_detect->TRIAL_stem_0014_1:SUB": {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0014_1",
+      "type": "SUB",
+      "weight": 0.5
+    },
+    "kpk_detect->TRIAL_stem_0015_1:SUB": {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0015_1",
+      "type": "SUB",
+      "weight": 0.5
+    },
+    "kpk_detect->TRIAL_stem_0016_1:SUB": {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0016_1",
+      "type": "SUB",
+      "weight": 0.5
+    },
+    "kpk_detect->TRIAL_stem_0017_1:SUB": {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0017_1",
+      "type": "SUB",
+      "weight": 0.5
+    },
+    "kpk_detect->TRIAL_stem_0018_1:SUB": {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0018_1",
+      "type": "SUB",
+      "weight": 0.5
+    }
+  },
+  "timestamp": "2026-01-05T14:18:48.719405",
+  "cycle": 3
+}

@@ -215,7 +215,7 @@ def compute_scent_reward(
 def build_graph_for_depth_report(registry: TopologyRegistry) -> Graph:
     """Build graph from registry for depth computation."""
     if HAS_BUILDER:
-        return build_graph_from_topology(registry.topology_path, registry)
+        return build_graph_from_topology(registry.path, registry)
     return Graph()
 
 
@@ -365,9 +365,20 @@ def run_online_phase(
         apply_fast_update,
     )
     
-    # Build graph from topology
+    # Build graph from registry (includes any TRIAL nodes added during structural phase)
+    # CRITICAL FIX: Build from registry, not static topology file
+    # This ensures TRIAL nodes persisted to the registry actually appear in the graph
     if HAS_BUILDER:
-        graph = build_graph_from_topology(config.topology_path, registry)
+        # Use registry.path to get the base, then refresh with registry state
+        graph = build_graph_from_topology(registry.path, registry)
+        
+        # Hot-reload any newly added nodes from the registry
+        from recon_lite_chess.graph.builder import refresh_graph_from_registry
+        changes = refresh_graph_from_registry(graph, registry)
+        if changes:
+            trial_changes = [k for k in changes.keys() if "TRIAL" in k or "cluster" in k]
+            if trial_changes:
+                print(f"    [Graph] Hot-loaded {len(trial_changes)} TRIAL/cluster nodes")
     else:
         # Fallback: import KPK network builder
         from recon_lite_chess.scripts.kpk import build_kpk_network
@@ -763,41 +774,59 @@ def save_cycle_snapshot(
     # Get new snapshot from registry
     new_snapshot = registry.get_snapshot()
     
-    # Add TRIAL cells to snapshot for visualization
+    # Add/update TRIAL cells in snapshot for visualization
+    # NOTE: TRIAL nodes are now added via promote_to_trial() which includes
+    # critical metadata like 'subgraph'. This code updates XP stats and adds
+    # nodes that might not be in the registry yet.
     if stem_manager and HAS_STEM_CELL:
         trial_cells = stem_manager.get_trial_cells()
         for cell in trial_cells:
             # Create node entry for TRIAL cell  
             node_id = cell.trial_node_id or f"TRIAL_{cell.cell_id}_{cycle}"
+            parent_id = getattr(cell, "trial_parent_id", None) or "kpk_detect"
+            
+            # Extract subgraph from parent_id (critical for subgraph execution)
+            subgraph_name = parent_id.split("_")[0] if "_" in parent_id else parent_id
+            
+            # Preserve existing meta if node already in snapshot
+            existing_meta = {}
+            if node_id in new_snapshot["nodes"]:
+                existing_meta = new_snapshot["nodes"][node_id].get("meta", {})
+            
+            # Merge: preserve existing meta, update with current XP stats
+            merged_meta = existing_meta.copy()
+            merged_meta.update({
+                "cell_id": cell.cell_id,
+                "xp": cell.xp,
+                "xp_successes": cell.xp_successes,
+                "xp_failures": cell.xp_failures,
+                "tier": "trial",
+                "samples": len(cell.samples),
+                "consistency": getattr(cell, "trial_consistency", 0),
+                "subgraph": subgraph_name,  # CRITICAL: Required for subgraph execution
+            })
+            
             node_entry = {
                 "id": node_id,
                 "type": "TERMINAL",
-                "group": "trial",  # visualization-only marker
+                "group": "trial",
                 "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
-                "meta": {
-                    "cell_id": cell.cell_id,
-                    "xp": cell.xp,
-                    "xp_successes": cell.xp_successes,
-                    "xp_failures": cell.xp_failures,
-                    "tier": "trial",
-                    "samples": len(cell.samples),
-                    "consistency": getattr(cell, "trial_consistency", 0),
-                },
-                "transient": True,  # Mark as visualization-only
+                "meta": merged_meta,
+                "transient": True,
             }
             # Add to nodes dict (keyed by node_id)
             new_snapshot["nodes"][node_id] = node_entry
             
-            # Add edge from parent to TRIAL cell
-            parent_id = getattr(cell, "trial_parent_id", None) or "kpk_detect"
+            # Add edge from parent to TRIAL cell if not exists
             edge_key = f"{parent_id}->{node_id}:SUB"
-            edge_entry = {
-                "src": parent_id,
-                "dst": node_id,
-                "type": "SUB",
-                "weight": 0.5,  # Trial weight
-            }
-            new_snapshot["edges"][edge_key] = edge_entry
+            if edge_key not in new_snapshot["edges"]:
+                edge_entry = {
+                    "src": parent_id,
+                    "dst": node_id,
+                    "type": "SUB",
+                    "weight": 0.5,
+                }
+                new_snapshot["edges"][edge_key] = edge_entry
     
     # Compute diff
     diff = diff_topologies(old_snapshot, new_snapshot)

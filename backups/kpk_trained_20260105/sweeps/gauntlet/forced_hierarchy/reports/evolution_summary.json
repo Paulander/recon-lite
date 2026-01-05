@@ -1,0 +1,240 @@
+{
+  "completed_at": "2026-01-05T15:51:31.415410",
+  "total_cycles": 30,
+  "total_games": 1500,
+  "avg_win_rate": 0.9079999999999999,
+  "total_promotions": 14,
+  "cycles": [
+    {
+      "cycle": 1,
+      "games": 50,
+      "win_rate": 0.84,
+      "promotions": [],
+      "duration": 0.16527485847473145
+    },
+    {
+      "cycle": 2,
+      "games": 50,
+      "win_rate": 0.88,
+      "promotions": [],
+      "duration": 0.20904994010925293
+    },
+    {
+      "cycle": 3,
+      "games": 50,
+      "win_rate": 0.9,
+      "promotions": [],
+      "duration": 0.2213592529296875
+    },
+    {
+      "cycle": 4,
+      "games": 50,
+      "win_rate": 0.9,
+      "promotions": [
+        "stem_0007",
+        "stem_0006"
+      ],
+      "duration": 0.21224141120910645
+    },
+    {
+      "cycle": 5,
+      "games": 50,
+      "win_rate": 0.9,
+      "promotions": [],
+      "duration": 0.17940497398376465
+    },
+    {
+      "cycle": 6,
+      "games": 50,
+      "win_rate": 0.94,
+      "promotions": [],
+      "duration": 0.1948838233947754
+    },
+    {
+      "cycle": 7,
+      "games": 50,
+      "win_rate": 0.86,
+      "promotions": [],
+      "duration": 0.2005777359008789
+    },
+    {
+      "cycle": 8,
+      "games": 50,
+      "win_rate": 0.92,
+      "promotions": [
+        "stem_0010",
+        "stem_0011"
+      ],
+      "duration": 0.22768259048461914
+    },
+    {
+      "cycle": 9,
+      "games": 50,
+      "win_rate": 0.9,
+      "promotions": [],
+      "duration": 0.22412967681884766
+    },
+    {
+      "cycle": 10,
+      "games": 50,
+      "win_rate": 0.98,
+      "promotions": [],
+      "duration": 0.21463727951049805
+    },
+    {
+      "cycle": 11,
+      "games": 50,
+      "win_rate": 0.96,
+      "promotions": [],
+      "duration": 0.23711562156677246
+    },
+    {
+      "cycle": 12,
+      "games": 50,
+      "win_rate": 0.86,
+      "promotions": [
+        "stem_0012",
+        "stem_0013"
+      ],
+      "duration": 0.2203061580657959
+    },
+    {
+      "cycle": 13,
+      "games": 50,
+      "win_rate": 0.84,
+      "promotions": [],
+      "duration": 0.18990230560302734
+    },
+    {
+      "cycle": 14,
+      "games": 50,
+      "win_rate": 0.88,
+      "promotions": [],
+      "duration": 0.20699763298034668
+    },
+    {
+      "cycle": 15,
+      "games": 50,
+      "win_rate": 1.0,
+      "promotions": [],
+      "duration": 0.21654891967773438
+    },
+    {
+      "cycle": 16,
+      "games": 50,
+      "win_rate": 0.96,
+      "promotions": [
+        "stem_0015",
+        "stem_0014"
+      ],
+      "duration": 0.19325685501098633
+    },
+    {
+      "cycle": 17,
+      "games": 50,
+      "win_rate": 0.9,
+      "promotions": [],
+      "duration": 0.17567038536071777
+    },
+    {
+      "cycle": 18,
+      "games": 50,
+      "win_rate": 0.92,
+      "promotions": [],
+      "duration": 0.17978835105895996
+    },
+    {
+      "cycle": 19,
+      "games": 50,
+      "win_rate": 0.88,
+      "promotions": [],
+      "duration": 0.2205519676208496
+    },
+    {
+      "cycle": 20,
+      "games": 50,
+      "win_rate": 0.94,
+      "promotions": [
+        "stem_0016",
+        "stem_0017"
+      ],
+      "duration": 0.20319509506225586
+    },
+    {
+      "cycle": 21,
+      "games": 50,
+      "win_rate": 0.92,
+      "promotions": [],
+      "duration": 0.20371198654174805
+    },
+    {
+      "cycle": 22,
+      "games": 50,
+      "win_rate": 0.9,
+      "promotions": [],
+      "duration": 0.20506811141967773
+    },
+    {
+      "cycle": 23,
+      "games": 50,
+      "win_rate": 0.96,
+      "promotions": [],
+      "duration": 0.18624472618103027
+    },
+    {
+      "cycle": 24,
+      "games": 50,
+      "win_rate": 0.9,
+      "promotions": [
+        "stem_0019",
+        "stem_0018"
+      ],
+      "duration": 0.1753861904144287
+    },
+    {
+      "cycle": 25,
+      "games": 50,
+      "win_rate": 0.9,
+      "promotions": [],
+      "duration": 0.18025541305541992
+    },
+    {
+      "cycle": 26,
+      "games": 50,
+      "win_rate": 0.88,
+      "promotions": [],
+      "duration": 0.2144794464111328
+    },
+    {
+      "cycle": 27,
+      "games": 50,
+      "win_rate": 0.9,
+      "promotions": [],
+      "duration": 0.2117757797241211
+    },
+    {
+      "cycle": 28,
+      "games": 50,
+      "win_rate": 0.96,
+      "promotions": [
+        "stem_0021",
+        "stem_0020"
+      ],
+      "duration": 0.21255826950073242
+    },
+    {
+      "cycle": 29,
+      "games": 50,
+      "win_rate": 0.88,
+      "promotions": [],
+      "duration": 0.19318604469299316
+    },
+    {
+      "cycle": 30,
+      "games": 50,
+      "win_rate": 0.88,
+      "promotions": [],
+      "duration": 0.25983428955078125
+    }
+  ]
+}

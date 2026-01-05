@@ -328,21 +328,21 @@ class StemCellTerminal:
     def promote_to_trial(
         self,
         registry: Any,  # TopologyRegistry
-        parent_id: str,
+        parent_id: str = "kpk_detect",
         current_tick: int = 0,
         min_consistency: float = 0.50,  # Balanced threshold (was 0.35, then 0.65)
     ) -> bool:
         """
         Promote cell to TRIAL tier as a transient vertex.
         
-        Creates a temporary node in the registry that can be solidified
-        or removed based on XP performance.
+        MANIFEST: Now injects TRIAL nodes directly into the TopologyRegistry
+        so they appear in the runtime graph and can actually activate.
         
         Args:
-            registry: TopologyRegistry for metadata (node created on solidification)
-            parent_id: Parent node to wire to
+            registry: TopologyRegistry to add the TRIAL node to
+            parent_id: Parent node to wire to (kpk_detect for sensors, kpk_execute for managers)
             current_tick: Current tick for metadata
-            min_consistency: Minimum pattern consistency (default 0.65, raised from 0.35)
+            min_consistency: Minimum pattern consistency (default 0.50)
             
         Returns:
             True if promotion successful
@@ -351,18 +351,57 @@ class StemCellTerminal:
             return False
         
         consistency, signature = self.analyze_pattern()
-        # RAISED from 0.35 to 0.65 to force high-quality "pure" features
         if consistency < min_consistency:
             return False
         
-        # Generate trial node ID (will be created on solidification)
+        # Generate trial node ID
         self.trial_node_id = f"TRIAL_{self.cell_id}_{current_tick}"
         
-        # Store trial preparation data (don't add to registry yet to avoid graph issues)
+        # Store trial preparation data
         self.trial_parent_id = parent_id
         self.trial_consistency = consistency
         self.trial_signature = signature
         self.trial_tick = current_tick
+        
+        # =========================================================================
+        # MANIFEST: Inject TRIAL node into registry immediately
+        # This ensures the node appears in the runtime graph and can activate.
+        # =========================================================================
+        
+        # Extract subgraph from parent_id (e.g., "kpk_detect" -> "kpk")
+        # This is CRITICAL: nodes must belong to the subgraph to be processed
+        subgraph_name = parent_id.split("_")[0] if "_" in parent_id else parent_id
+        
+        node_spec = {
+            "id": self.trial_node_id,
+            "type": "TERMINAL",
+            "group": "trial",
+            "factory": None,
+            "meta": {
+                "cell_id": self.cell_id,
+                "tier": "trial",
+                "consistency": consistency,
+                "promoted_tick": current_tick,
+                "pattern_signature": signature,
+                "subgraph": subgraph_name,  # CRITICAL: Required for subgraph execution
+            }
+        }
+        
+        try:
+            registry.add_node(node_spec, tick=current_tick)
+            
+            # DUAL-WIRING: Connect to appropriate parent with exploratory weight
+            # Weight 0.5 allows activation without hijacking the strategy
+            registry.add_edge(
+                parent_id,
+                self.trial_node_id,
+                "SUB",
+                weight=0.5,  # Exploratory - not hijacking
+                tick=current_tick
+            )
+            registry.save()
+        except ValueError:
+            pass  # Node already exists (e.g., from previous cycle)
         
         # Update state to TRIAL
         self.state = StemCellState.TRIAL
@@ -1824,3 +1863,71 @@ class StemCellManager:
             "recent_reuse_ratios": ratios[-10:] if ratios else [],
             "high_reuse_games": sum(1 for r in ratios if r > 0.5),
         }
+    
+    def get_active_transferred_cells(
+        self,
+        current_features: Optional[Dict[str, Any]] = None,
+    ) -> List[str]:
+        """
+        Get IDs of transferred cells that are actively contributing.
+        
+        For transfer tracking, we consider a transferred cell "active" if:
+        1. It's in TRIAL state (hasn't been pruned)
+        2. It has samples (captured patterns)
+        
+        This provides a simpler metric than pattern matching, since
+        feature spaces may differ between KPK and KRK domains.
+        
+        Args:
+            current_features: Optional current position features (not used yet)
+            
+        Returns:
+            List of cell IDs that are actively contributing
+        """
+        active = []
+        for cell in self.get_transferred_cells():
+            # Cell is "active" if it's still in play (TRIAL state)
+            # and has captured patterns
+            if cell.state == StemCellState.TRIAL and len(cell.samples) > 0:
+                active.append(cell.cell_id)
+                # Also track via trial_node_id if present
+                if cell.trial_node_id:
+                    active.append(cell.trial_node_id)
+        return active
+    
+    def compute_transfer_contribution(self, game_won: bool) -> float:
+        """
+        Compute how much transferred cells are contributing to outcomes.
+        
+        This is a simpler metric that counts transferred TRIAL cells
+        as "contributing" if they're still active (not pruned).
+        
+        Args:
+            game_won: Whether the current game was won
+            
+        Returns:
+            Ratio of surviving transferred cells to total transferred
+        """
+        transferred = self.get_transferred_cells()
+        if not transferred:
+            return 0.0
+        
+        # Count cells still in TRIAL (surviving)
+        surviving = sum(
+            1 for c in transferred 
+            if c.state == StemCellState.TRIAL
+        )
+        
+        ratio = surviving / len(transferred)
+        
+        # Track contribution over time
+        if game_won:
+            metadata = getattr(self, 'metadata', {})
+            if 'transfer_contributions' not in metadata:
+                metadata['transfer_contributions'] = []
+            metadata['transfer_contributions'].append(ratio)
+            # Keep last 100
+            metadata['transfer_contributions'] = metadata['transfer_contributions'][-100:]
+            self.metadata = metadata
+        
+        return ratio

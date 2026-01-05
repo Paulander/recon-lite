@@ -1,0 +1,22 @@
+{
+  "trial_name": "recursive_turbo",
+  "stage_id": 5,
+  "starting_topology": null,
+  "consistency_threshold": 0.2,
+  "hoist_threshold": 0.65,
+  "enable_success_bypass": true,
+  "enable_speculative_hoisting": true,
+  "enable_stall_recovery": true,
+  "spawn_rate": 0.15,
+  "max_cycles": 25,
+  "games_per_cycle": 50,
+  "win_threshold": 0.8,
+  "stall_threshold_win_rate": 0.1,
+  "stall_threshold_cycles": 3,
+  "stall_spawn_multiplier": 2.0,
+  "enable_scent_shaping": true,
+  "min_coactivations_for_hoist": 15,
+  "enable_emergent_spawning": true,
+  "emergent_spawn_threshold_cycles": 5,
+  "emergent_spawn_count": 10
+}

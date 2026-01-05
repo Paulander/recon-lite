@@ -188,9 +188,18 @@ def run_online_phase(
         if result == "win":
             wins += 1
             # Track sensor reuse for wins
-            if stem_manager and HAS_STEM_CELL and active_cell_ids:
-                stem_manager.track_win_coactivation(active_cell_ids, game_won=True)
-                ratio = stem_manager.compute_sensor_reuse_ratio(active_cell_ids, game_won=True)
+            if stem_manager and HAS_STEM_CELL:
+                # Get active transferred cells directly from stem manager
+                transferred_active = stem_manager.get_active_transferred_cells()
+                
+                # Combine with graph-based active cells for tracking
+                all_active = list(set(active_cell_ids + transferred_active))
+                
+                if all_active:
+                    stem_manager.track_win_coactivation(all_active, game_won=True)
+                
+                # Use transfer contribution ratio (simpler, more reliable)
+                ratio = stem_manager.compute_transfer_contribution(game_won=True)
                 reuse_ratios.append(ratio)
         elif result == "draw":
             draws += 1
@@ -200,6 +209,11 @@ def run_online_phase(
     total = wins + draws + losses
     avg_reuse = sum(reuse_ratios) / len(reuse_ratios) if reuse_ratios else 0.0
     
+    # Also get transfer stats for reporting
+    transfer_stats = {}
+    if stem_manager and HAS_STEM_CELL:
+        transfer_stats = stem_manager.get_reuse_stats()
+    
     stats = {
         "games_played": total,
         "wins": wins,
@@ -208,6 +222,7 @@ def run_online_phase(
         "win_rate": wins / total if total > 0 else 0,
         "sensor_reuse_ratio": avg_reuse,
         "high_reuse_games": sum(1 for r in reuse_ratios if r > 0.5),
+        "transfer_stats": transfer_stats,
     }
     
     return episodes, stats
@@ -454,9 +469,21 @@ def run_krk_evolution(config: KRKEvolutionConfig) -> List[CycleResult]:
         
         # Show sensor reuse ratio (Bridge Metric)
         reuse_ratio = online_stats.get("sensor_reuse_ratio", 0.0)
-        if reuse_ratio > 0:
-            emoji = "🔗" if reuse_ratio > 0.5 else "🌉"
-            print(f"    {emoji} Sensor Reuse: {reuse_ratio:.1%}")
+        transfer_stats = online_stats.get("transfer_stats", {})
+        transferred_count = transfer_stats.get("transferred_count", 0)
+        
+        if transferred_count > 0:
+            by_state = transfer_stats.get("transferred_by_state", {})
+            trial_count = by_state.get("TRIAL", 0)
+            survival_rate = trial_count / transferred_count if transferred_count > 0 else 0.0
+            
+            emoji = "🔗" if survival_rate > 0.8 else "🌉"
+            print(f"    {emoji} Transfer Survival: {survival_rate:.1%} ({trial_count}/{transferred_count} cells in TRIAL)")
+            
+            if online_stats["wins"] > 0:
+                print(f"    📊 Win contribution: {reuse_ratio:.1%}")
+            else:
+                print(f"    ⚠️ No wins yet - can't measure contribution")
         
         # Save traces
         trace_path = config.trace_dir / f"cycle_{cycle:04d}.jsonl"
