@@ -568,6 +568,11 @@ class StemCellTerminal:
         Spawn neighbor cells on successful solidification (100 XP).
         
         RECURSIVE OUTGROWTH RULE: Only called when cell reaches MATURE (100 XP).
+        Children are Specialized Variations of the parent's successful pattern.
+        
+        M5 VERTICAL PARENTING: Children link to THIS node as their "local_root",
+        NOT to backbone (kpk_detect). This breaks the flat topology and creates
+        hierarchical tactical reasoning trees.
         
         For Sensors: Spawn AND gates combining this sensor with high-utility features.
         For Scripts: Spawn actuator legs to explore alternative strategies.
@@ -595,7 +600,12 @@ class StemCellTerminal:
             if new_cell is None:
                 break
             
-            # Set parent relationship for survival bond and sparsity audit
+            # =====================================================================
+            # M5 VERTICAL PARENTING - KEY CHANGE: local_root_id
+            # Children link to THIS SOLID node as their local root, not backbone.
+            # This enables hierarchical growth: Sensor -> Sub-goal -> Leg -> Backbone
+            # =====================================================================
+            new_cell.metadata["local_root_id"] = self.trial_node_id  # VERTICAL PARENT!
             new_cell.metadata["parent_cell_id"] = self.cell_id
             new_cell.metadata["parent_node_id"] = self.trial_node_id
             new_cell.metadata["parent_xp"] = self.xp  # For sparsity comparison
@@ -606,10 +616,18 @@ class StemCellTerminal:
             if target_leg:
                 new_cell.metadata["target_leg"] = target_leg
             
-            # Pre-configure pattern signature for faster learning
-            if is_sensor and self.pattern_signature:
-                # Copy parent signature as starting point
+            # =====================================================================
+            # INHERIT TACTICAL CONTEXT - Specialized Variations
+            # Children inherit parent's pattern signature as a prior for faster
+            # convergence. They become specialized variations, not random mutations.
+            # =====================================================================
+            if self.pattern_signature:
+                # Copy parent signature as starting context
+                new_cell.metadata["inherit_context"] = self.pattern_signature.copy()
                 new_cell.metadata["initial_signature"] = self.pattern_signature.copy()
+                # Seed pattern_centroid with parent's pattern for faster learning
+                new_cell.pattern_centroid = self.pattern_signature.copy()
+                
                 if high_utility_features:
                     new_cell.metadata["combine_with"] = high_utility_features[:2]
             
@@ -780,6 +798,10 @@ class StemCellManager:
         self.default_config = config or StemCellConfig()
         self.cells: Dict[str, StemCellTerminal] = {}
         self._next_id = 0
+        
+        # Win-coactivation tracking for AND-gate discovery (M5 Recursive Branching)
+        self.win_coactivation: Dict[Tuple[str, str], int] = {}  # (a,b) -> co-fire count
+        self.win_active_counts: Dict[str, int] = {}  # cell_id -> wins where active
         
         # Default feature extractor for chess boards
         if feature_extractor is not None:
@@ -955,22 +977,106 @@ class StemCellManager:
             "by_state": states,
             "next_id": self._next_id,
         }
+    
+    # =========================================================================
+    # WIN-COACTIVATION TRACKING (M5 Recursive Branching - AND-Gate Discovery)
+    # =========================================================================
+    
+    def track_win_coactivation(self, active_cell_ids: List[str], game_won: bool) -> None:
+        """
+        Track which cells fire together during wins for AND-gate detection.
+        
+        CRITICAL: Normalization is per-cell, not per-game. This prevents rare
+        but impactful tactical patterns from being washed out by common features.
+        
+        Args:
+            active_cell_ids: List of cell IDs that were active during the game
+            game_won: Whether the game was won
+        """
+        if not game_won or not active_cell_ids:
+            return
+        
+        # Track individual cell activity in wins (for normalization)
+        for cell_id in active_cell_ids:
+            self.win_active_counts[cell_id] = self.win_active_counts.get(cell_id, 0) + 1
+        
+        # Track co-activations (pairs that fire together)
+        for i, a in enumerate(active_cell_ids):
+            for b in active_cell_ids[i+1:]:
+                key = tuple(sorted([a, b]))
+                self.win_coactivation[key] = self.win_coactivation.get(key, 0) + 1
+    
+    def find_win_correlated_pairs(
+        self, 
+        min_coactivations: int = 50, 
+        min_ratio: float = 0.85
+    ) -> List[Tuple[str, str, float, int]]:
+        """
+        Find cell pairs that fire together 85%+ of the time during wins.
+        
+        NORMALIZATION: ratio = co_fires / min(wins_a_active, wins_b_active)
+        This prevents rare but impactful patterns from being diluted by
+        common positional features (Zero-Variance Trap prevention).
+        
+        Args:
+            min_coactivations: Minimum co-fire count to consider (default 50)
+            min_ratio: Minimum correlation ratio (default 0.85 = 85%)
+            
+        Returns:
+            List of (cell_a, cell_b, ratio, co_count) tuples, sorted by ratio desc
+        """
+        correlated_pairs = []
+        for key, co_count in self.win_coactivation.items():
+            if co_count < min_coactivations:
+                continue
+            
+            a, b = key
+            
+            # Normalize by the smaller of the two activity counts
+            wins_a = self.win_active_counts.get(a, 0)
+            wins_b = self.win_active_counts.get(b, 0)
+            denominator = min(wins_a, wins_b) if min(wins_a, wins_b) > 0 else 1
+            
+            ratio = co_count / denominator
+            if ratio >= min_ratio:
+                correlated_pairs.append((a, b, ratio, co_count))
+        
+        return sorted(correlated_pairs, key=lambda x: -x[2])  # Sort by ratio desc
+    
+    def get_coactivation_stats(self) -> Dict[str, Any]:
+        """Get statistics about win-coactivation tracking."""
+        return {
+            "tracked_pairs": len(self.win_coactivation),
+            "tracked_cells": len(self.win_active_counts),
+            "total_coactivations": sum(self.win_coactivation.values()),
+            "top_pairs": self.find_win_correlated_pairs(min_coactivations=10, min_ratio=0.5)[:5],
+        }
+    
     def save(self, path: Path) -> None:
-        """Save manager state."""
+        """Save manager state including win-coactivation tracking."""
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Convert tuple keys to string for JSON serialization
+        win_coact_serializable = {
+            f"{a}|{b}": count for (a, b), count in self.win_coactivation.items()
+        }
+        
         data = {
             "max_cells": self.max_cells,
             "spawn_rate": self.spawn_rate,
             "next_id": self._next_id,
             "cells": {cid: c.to_dict() for cid, c in self.cells.items()},
+            # Win-coactivation tracking (M5 Recursive Branching)
+            "win_coactivation": win_coact_serializable,
+            "win_active_counts": self.win_active_counts,
         }
         with open(path, "w") as f:
             json.dump(data, f)
     
     @classmethod
     def load(cls, path: Path) -> "StemCellManager":
-        """Load manager state."""
+        """Load manager state including win-coactivation tracking."""
         with open(path) as f:
             data = json.load(f)
         
@@ -983,6 +1089,14 @@ class StemCellManager:
             cid: StemCellTerminal.from_dict(cdata)
             for cid, cdata in data.get("cells", {}).items()
         }
+        
+        # Restore win-coactivation tracking (M5 Recursive Branching)
+        win_coact_raw = data.get("win_coactivation", {})
+        manager.win_coactivation = {
+            tuple(k.split("|")): v for k, v in win_coact_raw.items()
+        }
+        manager.win_active_counts = data.get("win_active_counts", {})
+        
         return manager
 
     # =========================================================================
@@ -1162,6 +1276,7 @@ class StemCellManager:
         cluster_ids: List[str],
         graph: "Graph",  # type: ignore
         parent_node_id: str = "kpk_execute",
+        aggregation_mode: str = "and",  # "and" = min(), "avg" = weighted average
     ) -> Optional[str]:
         """
         Hoist a cluster of correlated sensors into a new Intermediate Script Node.
@@ -1171,10 +1286,15 @@ class StemCellManager:
         2. Moving SUB edges from old parent to new intermediate
         3. The intermediate aggregates activations from the cluster
         
+        AGGREGATION MODES:
+        - "and": Uses min() - fires ONLY when ALL children are active (TRUE AND gate)
+        - "avg": Uses weighted average - fires based on combined child activations
+        
         Args:
             cluster_ids: List of cell IDs to hoist
             graph: The Graph to modify
             parent_node_id: Current parent of the cluster cells
+            aggregation_mode: "and" for logical AND (min), "avg" for weighted average
             
         Returns:
             ID of the new intermediate node, or None if failed
@@ -1212,6 +1332,12 @@ class StemCellManager:
         intermediate_node.meta["cluster_members"] = cluster_ids
         intermediate_node.meta["pattern_signature"] = merged_sig
         intermediate_node.meta["origin"] = "hoisted"
+        # TRUE AND GATE: Set aggregation mode for propagate_activation
+        intermediate_node.meta["aggregation"] = aggregation_mode
+        # SPECULATIVE: Mark as hypothesis - will be pruned if no improvement after 50 games
+        intermediate_node.meta["speculative"] = True
+        intermediate_node.meta["birth_game"] = 0  # Will be set by caller
+        intermediate_node.meta["prune_after_games"] = 50
         
         # Add to graph
         graph.add_node(intermediate_node)

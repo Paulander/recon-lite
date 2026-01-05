@@ -36,7 +36,11 @@ import chess
 from recon_lite.graph import Graph, Node, NodeType, NodeState
 from recon_lite.trace_db import EpisodeRecord, TickRecord, TraceDB, EpisodeSummary
 from recon_lite.models.registry import TopologyRegistry
-from recon_lite.learning.m5_structure import StructureLearner
+from recon_lite.learning.m5_structure import (
+    StructureLearner,
+    compute_branching_metrics,
+    BACKBONE_NODES,
+)
 from recon_lite.viz.evolution_viz import (
     diff_topologies,
     render_evolution_snapshot,
@@ -112,8 +116,11 @@ def compute_hierarchy_stats(graph: Graph) -> Optional[Dict[str, Any]]:
     """
     Compute hierarchical depth statistics for the graph.
     
+    Now uses compute_branching_metrics() from m5_structure for M5 Recursive Branching.
+    
     Returns:
-        Dict with max_depth, non_backbone_count, busiest_node, busiest_children
+        Dict with max_depth, non_backbone_count, busiest_node, busiest_children,
+        and new M5 branching metrics (speculative_ands, branching_factor, etc.)
     """
     if not graph.nodes:
         return None
@@ -159,11 +166,19 @@ def compute_hierarchy_stats(graph: Graph) -> Optional[Dict[str, Any]]:
             busiest_node = node_id
             busiest_children = len(children)
     
+    # Get M5 Recursive Branching metrics
+    try:
+        branching_metrics = compute_branching_metrics(graph, BACKBONE_NODES)
+    except Exception:
+        branching_metrics = {}
+    
     return {
         "max_depth": max_depth,
         "non_backbone_count": non_backbone_count,
         "busiest_node": busiest_node,
         "busiest_children": busiest_children,
+        # M5 Recursive Branching metrics
+        **branching_metrics,
     }
 
 
@@ -267,6 +282,10 @@ def run_online_phase(
     draws = 0
     losses = 0
     
+    # PHASE-AWARE: Track per-stage outcomes
+    per_stage_wins: Dict[int, int] = {}
+    per_stage_games: Dict[int, int] = {}
+    
     for game_idx in range(config.games_per_cycle):
         # Generate starting position - use curriculum if enabled
         if config.use_curriculum and HAS_GENERATORS and KPK_STAGES:
@@ -274,9 +293,11 @@ def run_online_phase(
             gen_board = generate_kpk_curriculum_position(KPK_STAGES[stage_idx])
             fen = gen_board.fen()
         elif HAS_GENERATORS:
+            stage_idx = 0  # Default stage
             gen_board = generate_kpk_position()
             fen = gen_board.fen() if hasattr(gen_board, 'fen') else str(gen_board)
         else:
+            stage_idx = 0
             # Default KPK position
             fen = "8/8/8/4k3/8/4K3/4P3/8 w - - 0 1"
         
@@ -295,17 +316,29 @@ def run_online_phase(
             max_ticks=config.max_ticks_per_move,
         )
         
+        # Store stage info in episode for later analysis
+        ep.notes = ep.notes or {}
+        ep.notes["stage_idx"] = stage_idx
         episodes.append(ep)
         
-        # Track outcome
+        # Track outcome - global and per-stage
+        per_stage_games[stage_idx] = per_stage_games.get(stage_idx, 0) + 1
         if result == "win":
             wins += 1
+            per_stage_wins[stage_idx] = per_stage_wins.get(stage_idx, 0) + 1
         elif result == "draw":
             draws += 1
         else:
             losses += 1
     
     total = wins + draws + losses
+    
+    # Compute per-stage win rates
+    per_stage_win_rates: Dict[int, float] = {}
+    for stage, games in per_stage_games.items():
+        stage_wins = per_stage_wins.get(stage, 0)
+        per_stage_win_rates[stage] = stage_wins / games if games > 0 else 0.0
+    
     stats = {
         "games_played": total,
         "wins": wins,
@@ -313,6 +346,9 @@ def run_online_phase(
         "losses": losses,
         "win_rate": wins / total if total > 0 else 0,
         "draw_rate": draws / total if total > 0 else 0,
+        # PHASE-AWARE stats
+        "per_stage_win_rates": per_stage_win_rates,
+        "per_stage_games": per_stage_games,
     }
     
     return episodes, stats
@@ -514,6 +550,7 @@ def run_structural_phase(
     stem_manager: Optional["StemCellManager"],
     episodes: List[EpisodeRecord],
     cycle: int,
+    current_win_rate: float = 0.0,  # For Perfect Success bypass
 ) -> Dict[str, Any]:
     """
     Structural Phase (GPU/Dreamer):
@@ -543,11 +580,12 @@ def run_structural_phase(
             "pruning_results": [],
         }
     
-    # Run structural phase
+    # Run structural phase with win rate for Perfect Success bypass
     stats = learner.apply_structural_phase(
         stem_manager=stem_manager,
         episodes=episodes,
         max_promotions=config.max_promotions_per_cycle,
+        current_win_rate=current_win_rate,
     )
     
     return stats
@@ -700,6 +738,12 @@ def run_evolution_training(config: EvolutionConfig) -> List[CycleResult]:
         print(f"    Win rate: {online_stats['win_rate']:.1%}")
         print(f"    Games: {online_stats['wins']}W / {online_stats['draws']}D / {online_stats['losses']}L")
         
+        # PHASE-AWARE: Show per-stage breakdown
+        per_stage = online_stats.get('per_stage_win_rates', {})
+        if per_stage:
+            stage_parts = [f"S{s}:{r:.0%}" for s, r in sorted(per_stage.items())]
+            print(f"    📊 Per-stage: {' | '.join(stage_parts)}")
+        
         # Save traces
         trace_path = config.trace_dir / f"cycle_{cycle:04d}.jsonl"
         trace_db = TraceDB(trace_path)
@@ -715,6 +759,7 @@ def run_evolution_training(config: EvolutionConfig) -> List[CycleResult]:
             stem_manager=stem_manager,
             episodes=episodes,
             cycle=cycle,
+            current_win_rate=online_stats['win_rate'],  # For Perfect Success bypass
         )
         print(f"    Spikes found: {struct_stats['spikes_found']}")
         print(f"    High-impact cells: {struct_stats['high_impact_cells']}")
@@ -726,6 +771,13 @@ def run_evolution_training(config: EvolutionConfig) -> List[CycleResult]:
         hoisted_count = len(struct_stats.get('hoisted_clusters', []))
         spawned_count = len(struct_stats.get('spawned_neighbors', []))
         print(f"    → TRIAL: {trial_count}  SOLID: {solid_count}  DEMOTED: {demote_count}  HOISTED: {hoisted_count}  SPAWNED: {spawned_count}")
+        
+        # M5 Recursive Branching stats (new)
+        vertical_promo = struct_stats.get('vertical_promotions', 0)
+        por_chains = struct_stats.get('discovered_por_chains', 0)
+        seq_conf = struct_stats.get('sequence_confidence', 0)
+        if vertical_promo > 0 or por_chains > 0:
+            print(f"    🌿 Branching: vertical_promos={vertical_promo}  POR_chains={por_chains}  seq_confidence={seq_conf:.2f}")
         
         # Show trial errors if any
         for err in struct_stats.get('trial_errors', [])[:2]:
@@ -764,13 +816,22 @@ def run_evolution_training(config: EvolutionConfig) -> List[CycleResult]:
             stats = stem_manager.stats()
             print(f"  Stem cells: {stats['total_cells']} ({stats.get('by_state', {})})")
         
-        # HIERARCHICAL DEPTH REPORT
+        # HIERARCHICAL DEPTH REPORT (M5 Recursive Branching Metrics)
         try:
             # Compute graph hierarchy stats
             graph = build_graph_for_depth_report(registry)
             depth_stats = compute_hierarchy_stats(graph)
             if depth_stats:
+                # Basic hierarchy stats
                 print(f"  📊 Hierarchy: max_depth={depth_stats['max_depth']}  non_backbone={depth_stats['non_backbone_count']}  busiest={depth_stats['busiest_node']}({depth_stats['busiest_children']})")
+                
+                # M5 Branching metrics (new)
+                if depth_stats.get('branching_factor') is not None:
+                    spec_ands = depth_stats.get('speculative_ands', 0)
+                    branch_factor = depth_stats.get('branching_factor', 0)
+                    por_count = depth_stats.get('por_count', 0)
+                    por_ratio = depth_stats.get('por_ratio', 0)
+                    print(f"  🌿 Branching: spec_ANDs={spec_ands}  branch_factor={branch_factor}  POR_edges={por_count} ({por_ratio:.1%})")
         except Exception:
             pass  # Silent fail on hierarchy computation
     

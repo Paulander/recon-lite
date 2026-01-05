@@ -6,212 +6,300 @@
 - Paper reference: "Request confirmation networks for neuro-symbolic script execution" (Bach & Herger). Use this as the canonical conceptual anchor.
 
 ## History & Milestones (M1→M8)
-- **M1** (KRK, continuous layer): micro-ticks and soft activations (`core/activations.py`, `time/microtick.py`), binding tables (`binding/manager.py`), KRK strategic layer + viz (`recon_lite_chess/strategy.py`).
+- **M1** (KRK, continuous layer): micro-ticks and soft activations (`core/activations.py`, `time/microtick.py`), binding tables (`binding/manager.py`), KRK strategic layer + viz.
 - **M2/M2.5** (macrograph + instrumentation): macrograph spec and Subgraph Weight Packs (SWPs) for KRK/KPK/rook techniques; TraceDB (`trace_db.py`, `macro_trace.py`); Stockfish teacher and batch/block eval pipelines.
 - **M3** (fast plasticity + bandits): within-game weight updates on selected POR/SUB edges, bandit gating for sibling scripts, goal-aware modulation (`plasticity/fast.py`, `bandit.py`, `modulation.py`).
 - **M4** (slow consolidation + eval upgrade): cross-game consolidation of `w_base` from episode summaries (`plasticity/consolidate.py`), bandit priors refresh, richer heuristic/Stockfish/hybrid eval manager.
-- **M5** (structure learning): motif extraction, clustering, script proposals, trust scoring, tactical + rook subgraphs (`motifs/`, `trust/`, `scripts/tactics.py`, `scripts/rook_endgame.py`).
+- **M5** (structure learning + EVOLUTION): **Current focus.** Motif extraction, clustering, script proposals, trust scoring, stem cell lifecycle with XP system, recursive branching, vertical topology growth.
 - **M6** (full-game, multi-scale dynamics): fan-in terminals, goal hierarchy (Ultimate→Strategic→Tactical→Sensor), plan persistence, opening/middlegame scripts.
 - **M7** (distillation): Feature extraction for ML, Stockfish data collection, distilled eval model training (stub implementation).
-- **M8** (reverse curriculum + FeatureHub): Continuous affordance signals, global feature hoisting, CurriculumManager for 4-phase reverse training, KQK endgame network. **Current focus**.
+- **M8** (reverse curriculum + FeatureHub): Continuous affordance signals, global feature hoisting, CurriculumManager for 4-phase reverse training.
 
 Source docs: `updates_continuous.md`, `recon_roadmap_m3_fast_plasticity.md`, `recon_roadmap_m5_structure_learning.md`, `recon_roadmap_m6_full_game_architecture.md`.
+
+---
 
 ## Current Architecture Snapshot
 
 ### Core ReCoN Engine (`src/recon_lite/`)
-- Graph/state machine with `sub/sur/por/ret` link types
-- Continuous activations and micro-ticks
-- Bindings and namespaces
-- TraceDB logging (JSONL format)
-- Fan-in terminals (multiple parents per sensor)
-- **Plasticity**: M3 fast (within-game) + M4 slow (cross-game) consolidation
-- **Bandits**: UCB/softmax gating among sibling scripts
 
-### Chess Layer (`src/recon_lite_chess/`)
+#### Graph Structure (`graph.py`)
+- **Node Types**: `SCRIPT` (intermediate goals) and `TERMINAL` (sensors/actuators)
+- **Node States**: INACTIVE, REQUESTED, ACTIVE, SUPPRESSED, WAITING, TRUE, CONFIRMED, FAILED
+- **Link Types**:
+  - `SUB` (subgraph): Parent → Child (top-down request)
+  - `SUR` (super): Child → Parent (bottom-up confirmation)  
+  - `POR` (predecessor): Previous → Next in sequence (temporal ordering)
+  - `RET` (return): Reverse temporal confirmation
+- **Key Constraint**: TERMINAL nodes can only receive SUB and send SUR. POR/RET require SCRIPT nodes.
 
-**Endgame Networks** (`scripts/`):
-| Network | File | Goal | Current Win Rate |
-|---------|------|------|-----------------|
+#### Engine (`engine.py`)
+- Discrete-time state machine with request/confirmation cycles
+- Subgraph locking: `lock_subgraph(root_id, sentinel_fn)` keeps specific network active
+- Microtick propagation for continuous activations
+
+#### Continuous Activations
+- Each node has `ActivationState` with value in [0.0, 1.0]
+- Propagation: `z_i = Σ(w_ij * a_j)` smoothed via exponential moving average
+- Supports aggregation modes: "avg" (OR-like), "and" (min, TRUE AND gate)
+
+### Plasticity System
+
+| Layer | File | Scope | Description |
+|-------|------|-------|-------------|
+| M3 Fast | `plasticity/fast.py` | Per-episode | Δw on whitelisted edges, eligibility traces |
+| M3 Bandit | `plasticity/bandit.py` | Per-episode | UCB/softmax gating among siblings |
+| M4 Slow | `plasticity/consolidate.py` | Cross-game | Aggregates summaries to update `w_base` |
+
+---
+
+## M5 Evolution System ⭐ (Latest Focus)
+
+The M5 system enables the ReCoN graph to **grow its own topology** through a biological-inspired lifecycle.
+
+### Three-Tier Stem Cell Lifecycle
+
+```
+DORMANT → EXPLORING → CANDIDATE → TRIAL → MATURE
+                                    ↓
+                                DEMOTED (XP ≤ 0)
+```
+
+| Tier | State | Description |
+|------|-------|-------------|
+| 1 | EXPLORING | Collects samples during high-reward moments |
+| 1 | CANDIDATE | Has enough samples (≥50), awaits trial |
+| 2 | TRIAL | Transient vertex in graph, earns XP to prove utility |
+| 3 | MATURE | Permanent node in topology.json, fully trusted |
+
+### XP System (TRIAL tier)
+- **Initial XP**: 50 (on promotion to TRIAL)
+- **Success** (positive affordance delta): +10 XP
+- **Failure** (negative affordance delta): -10 XP
+- **Decay**: -1 XP per cycle (cost of living)
+- **Solidify threshold**: XP ≥ 100 → MATURE
+- **Demotion threshold**: XP ≤ 0 → back to EXPLORING
+
+### Key M5 Concepts
+
+#### Recursive Branching
+When a stem cell reaches MATURE (100 XP), it can **spawn children**:
+- Children inherit parent's `pattern_signature` as starting context
+- Children link to parent as their `local_root_id` (vertical parenting)
+- Creates hierarchical tactical reasoning trees instead of flat topology
+
+#### Vertical Parenting vs Backbone
+- **Backbone nodes**: kpk_root, kpk_detect, kpk_execute, kpk_finish, kpk_wait
+- **Old behavior**: All new sensors wire to backbone (flat)
+- **M5 behavior**: Children wire to their MATURE parent (hierarchical)
+- **Depth limit**: MAX_BRANCH_DEPTH = 5 (prevents O(n²) propagation)
+
+#### Sparsity Constraint
+A new node must be >10% better (z_sur) than its parent to survive. Forces "elegant" solutions over redundant clusters.
+
+#### Survival Bond
+If a parent is pruned, its children experience 2x XP decay (accelerated death of orphaned branches).
+
+#### AND-Gate Hoisting
+When TRIAL cells correlate ≥85% in win-coactivations, they're hoisted into an intermediate SCRIPT node using `aggregation="and"` (min function). This creates TRUE logical AND gates.
+
+#### POR Chain Discovery
+Analyzes temporal patterns (A fires before B in wins) to create POR links between SCRIPT-wrapped sensors. Enables sequential reasoning: Opposition → Protect → Promote.
+
+### Evolution Data Flow
+
+```
+evolution_driver.py
+    ├── Online Phase (play games)
+    │   ├── ReConEngine runs microticks
+    │   ├── StemCellManager collects samples
+    │   └── TraceDB logs episodes
+    │
+    └── Structural Phase (analyze & grow)
+        ├── StructureLearner.scan_for_affordance_spikes()
+        ├── StructureLearner.find_high_impact_stem_cells()
+        ├── Promote CANDIDATE → TRIAL (if consistency ≥ 0.40)
+        ├── Decay XP for all TRIAL cells
+        ├── Solidify TRIAL → MATURE (if XP ≥ 100)
+        ├── Demote TRIAL → EXPLORING (if XP ≤ 0)
+        ├── Spawn children from MATURE cells
+        ├── Hoist correlated clusters into AND gates
+        ├── Discover POR chains from temporal patterns
+        └── Save snapshot to snapshots/evolution/
+```
+
+### snapshots/evolution/ Directory Structure
+
+```
+snapshots/evolution/
+├── {run_name}/
+│   ├── stage0/
+│   │   ├── cycle_0001.json  # Topology snapshot
+│   │   ├── cycle_0002.json
+│   │   ├── ...
+│   │   └── stem_cells.json  # StemCellManager state
+│   ├── stage1/
+│   │   ├── cycle_0001.json
+│   │   └── stem_cells.json  # Inherited from stage0
+│   └── ...
+```
+
+Each `cycle_XXXX.json` contains:
+- `nodes`: Dict of node specs (including transient TRIAL cells)
+- `edges`: Dict of edge specs with weights
+- `timestamp`, `cycle` metadata
+
+Each `stem_cells.json` contains:
+- All `StemCellTerminal` instances with samples, XP, state
+- Win-coactivation tracking data for AND-gate discovery
+- Can be loaded for next stage (weight inheritance)
+
+---
+
+## Chess Layer (`src/recon_lite_chess/`)
+
+### Endgame Networks (`scripts/`)
+| Network | File | Goal | Win Rate |
+|---------|------|------|----------|
 | KRK | `krk_nodes.py`, `krk_strategy.py` | Checkmate | 90% |
 | KPK | `scripts/kpk.py` | Pawn promotion | 80% |
 | KQK | `scripts/kqk.py` | Checkmate | 70%+ |
 | Rook Endings | `scripts/rook_endgame.py` | Lucena/Philidor | Partial |
 
-**Affordance Sensors** (`affordance/sensors.py`):
-- Continuous [0.0, 1.0] signals for endgame proximity
-- `compute_krk_affordance()`, `compute_kpk_affordance()`, `compute_kqk_affordance()`
-- Used by M3 bandit for "scent" gradients toward winning positions
+### KPK Backbone Structure
+```
+kpk_root
+├── kpk_detect
+│   ├── kpk_material_check (TERMINAL/sensor)
+│   └── kpk_push_window (TERMINAL/sensor)
+├── kpk_execute
+│   ├── kpk_move_selector (TERMINAL/actuator)
+│   └── kpk_opposition_probe (TERMINAL/sensor)
+├── kpk_finish
+│   └── kpk_promotion_probe (TERMINAL/sensor)
+└── kpk_wait
+    └── kpk_wait_for_change (TERMINAL/sensor)
 
-**FeatureHub** (`features/hub.py`):
-Global registry of 30+ hoisted features across 6 categories:
-- **TACTICAL**: `fork_available`, `pin_present`, `hanging_piece`, `skewer`, `back_rank_vulnerable`, `discovered_attack`, `double_check`
-- **GEOMETRIC**: `opposition_status`
-- **MATERIAL**: `material_advantage`
-- **POSITIONAL**: `king_safety`, `center_control`, `pawn_structure`, `color_complex_weakness`
-- **DYNAMIC**: `mobility`
-- **PHASE**: `phase_opening`, `phase_endgame`, `affordance_krk`, `affordance_kpk`, `affordance_kqk`
-- Plus 20+ additional sensors from `sensors_v2.py` for sensor flooding
-
-**Evaluation** (`eval/`):
-- `heuristic.py`: Material, king safety, mobility, pawn structure, piece activity
-- `manager.py`: EvalManager with modes (HEURISTIC, STOCKFISH, HYBRID, DISTILLED)
-- `features.py`: 77-feature extraction for ML training
-
-**Goals & Strategy** (`goals/`, `sensors/`):
-- Ultimate goals: WIN/DRAW/SURVIVE
-- Strategic plans: AttackKing, Simplify, Develop
-- Phase detection: Soft weights (opening/middlegame/endgame)
-
-### Training Infrastructure (`training/`, `scripts/`)
-
-**CurriculumManager** (`training/curriculum.py`):
-4-phase reverse curriculum strategy:
-1. **Anchor**: Perfect endgame conversion (KRK, KPK, KQK) → 99% win rate
-2. **Bridge**: Simplified middlegame → discover liquidation strategies
-3. **Wilderness**: Full material tactical positions
-4. **Integration**: Full games from starting position
-
-**Position Generators** (`training/generators.py`):
-- `generate_krk_position()`, `generate_kpk_position()`, `generate_kqk_position()`
-- `generate_bridge_position()`, `generate_wilderness_position()`
-
-**Training Scripts**:
-```bash
-# Quick curriculum training (50 games per endgame)
-./scripts/curriculum_training.sh --quick --phase anchor
-
-# Full curriculum (500 games, all phases)
-./scripts/curriculum_training.sh
-
-# Analysis with markdown report
-uv run python scripts/analyze_training.py --report-dir reports/curriculum/latest/ --markdown
+POR sequence: detect → execute → finish → wait
 ```
 
-## Learning & Training Mechanics
+### Curriculum System (13 Stages)
 
-### Subgraph Weight Packs (SWPs)
-Serialized weight/threshold packs loaded at build time; used as baselines:
-- `weights/macro_weight_pack.swp` - Macro-level weights
-- `weights/subgraphs/*.swp` - Per-subgraph weights
-- `weights/nightly/*_consol.json` - Consolidated weights from training
+Training uses reverse curriculum: start from easy endgames, work backward.
 
-### Fast Plasticity (M3)
-- Per-episode Δw on whitelisted POR/SUB edges
-- Reward: `reward_tick = eval_after − eval_before` (clipped centipawns)
-- Eligibility traces and goal-aware scaling
-- Reset each episode
+| Idx | Stage | Description |
+|-----|-------|-------------|
+| 0 | SPRINTER | Pawn on 7th, king far. Just push! |
+| 1-5 | Discovery Bridge | Baby steps: guardian, step-aside, shouldering |
+| 6 | ESCORT | King support (original Stage 1) |
+| 7 | SQUARE_RULE | Racing calculation |
+| 8 | FRONTAL_BLOCKADE | Shouldering |
+| 9 | KEY_SQUARES | Direct opposition |
+| 10 | PIVOT | Distant opposition |
+| 11 | CORNER_TRAP | Rook pawn draws |
+| 12 | ZUGZWANG | Triangulation |
 
-### Bandit Control (M3)
-- UCB/softmax gating among sibling scripts
-- **Affordance delta** now incorporated in reward computation
-- Per-episode stats with optional priors for warm starts
+### FeatureHub (`features/hub.py`)
+Global registry of 30+ hoisted features across 6 categories:
+- **TACTICAL**: fork_available, pin_present, hanging_piece, skewer, back_rank_vulnerable
+- **GEOMETRIC**: opposition_status
+- **MATERIAL**: material_advantage
+- **POSITIONAL**: king_safety, center_control, pawn_structure
+- **DYNAMIC**: mobility
+- **PHASE**: phase_opening, phase_endgame, affordance_krk, affordance_kpk, affordance_kqk
 
-### Slow Consolidation (M4)
-- Aggregates episode summaries into updated `w_base`
-- Bounds and versioning for safety
-- Exportable as packs
+---
 
-### Structure Learning (M5)
-- Motif extraction → clustering → script proposals
-- Trust scoring to freeze/promote/prune edges
-- Human review via `tools/review_proposal.py`
+## Key File Reference
 
-## Key Files Reference
+### Core ReCoN
+| File | Purpose |
+|------|---------|
+| `src/recon_lite/graph.py` | Node, Edge, Graph, LinkType definitions |
+| `src/recon_lite/engine.py` | ReConEngine with subgraph locking |
+| `src/recon_lite/nodes/stem_cell.py` | StemCellTerminal, StemCellManager, XP system |
+| `src/recon_lite/learning/m5_structure.py` | StructureLearner, POR discovery, AND-gate hoisting |
+| `src/recon_lite/models/registry.py` | TopologyRegistry for dynamic graph loading |
+| `src/recon_lite/viz/evolution_viz.py` | Graph visualization, diff rendering |
 
-### Endgame Networks
-- `src/recon_lite_chess/scripts/kpk.py` - KPK with promotion detection
-- `src/recon_lite_chess/scripts/kqk.py` - KQK with stalemate protection
-- `src/recon_lite_chess/krk_nodes.py`, `krk_strategy.py` - KRK network
+### Chess Domain
+| File | Purpose |
+|------|---------|
+| `src/recon_lite_chess/scripts/kpk.py` | KPK network with promotion detection |
+| `src/recon_lite_chess/training/generators.py` | Position generators, KPK_STAGES curriculum |
+| `src/recon_lite_chess/features/hub.py` | Global FeatureHub |
+| `src/recon_lite_chess/affordance/sensors.py` | Continuous affordance signals |
 
-### Affordance & Features
-- `src/recon_lite_chess/affordance/sensors.py` - Continuous affordance signals
-- `src/recon_lite_chess/features/hub.py` - Global FeatureHub (18+ features)
-- `src/recon_lite_chess/features/integration.py` - Wire features to graph
+### Training & Scripts
+| File | Purpose |
+|------|---------|
+| `scripts/evolution_driver.py` | Main evolution training loop |
+| `scripts/curriculum_training.sh` | End-to-end training script |
+| `scripts/analyze_training.py` | Statistics and markdown reports |
+| `topologies/kpk_topology.json` | Base KPK network definition |
 
-### Training
-- `src/recon_lite_chess/training/curriculum.py` - CurriculumManager
-- `src/recon_lite_chess/training/generators.py` - Position generators
-- `scripts/curriculum_training.sh` - End-to-end training script
-- `scripts/analyze_training.py` - Statistics and markdown reports
-
-### Demos
-- `demos/persistent/krk_persistent_demo.py` - KRK with plasticity/bandit
-- `demos/persistent/kpk_persistent_demo.py` - KPK with promotion
-- `demos/persistent/kqk_persistent_demo.py` - KQK with stalemate protection
-- `demos/persistent/full_game_demo.py` - Full game from start
-- `demos/persistent/full_game_train.py` - Full game training with plasticity, consolidation, and stem cells
-
-### Plasticity
-- `src/recon_lite/plasticity/fast.py` - M3 fast plasticity
-- `src/recon_lite/plasticity/bandit.py` - Bandit control + affordance delta
-- `src/recon_lite/plasticity/consolidate.py` - M4 slow consolidation
-
-### Tools
-- `tools/trace_summarize.py` - Aggregate trace metrics
-- `tools/consolidate_batch.py` - Offline batch consolidation
-- `tools/bandit_refresh.py` - Update bandit priors
-- `demos/experiments/extract_motifs.py` - M5 motif extraction
+---
 
 ## Typical Commands
 
 ```bash
-# KRK training with plasticity and bandit
-uv run python demos/persistent/krk_persistent_demo.py \
-  --batch 50 --plasticity --bandit --consolidate \
-  --trace-out reports/krk_trace.jsonl
+# Quick M5 evolution test (10 games, 2 cycles)
+uv run python scripts/evolution_driver.py --quick
 
-# KPK training (promotion as success)
-uv run python demos/persistent/kpk_persistent_demo.py \
-  --batch 50 --plasticity --consolidate \
-  --trace-out reports/kpk_trace.jsonl
+# Full evolution run (100 games/cycle, 10 cycles)
+uv run python scripts/evolution_driver.py \
+  --topology topologies/kpk_topology.json \
+  --games-per-cycle 100 \
+  --cycles 10 \
+  --output-dir reports/evolution/
 
-# KQK training (checkmate with stalemate protection)
-uv run python demos/persistent/kqk_persistent_demo.py \
-  --batch 50 --plasticity --consolidate \
-  --trace-out reports/kqk_trace.jsonl
+# Multi-stage evolution (runs all 13 curriculum stages)
+uv run python scripts/evolution_driver.py --all-stages \
+  --games-per-cycle 50 --win-threshold 0.9
 
-# Full curriculum training
-./scripts/curriculum_training.sh --quick --phase anchor
-
-# Generate training report
-uv run python scripts/analyze_training.py \
-  --report-dir reports/curriculum/latest/ --markdown
+# Single stage evolution
+uv run python scripts/evolution_driver.py \
+  --stage 5 --cycles 20 --run-name my_experiment
 ```
+
+---
 
 ## Current Status & Next Steps
 
-### What's Working Well
-- **KRK**: 90% win rate, mature network
-- **KPK**: 80% win rate with promotion detection
-- **KQK**: 70%+ with stalemate protection (recently fixed)
-- **FeatureHub**: 18+ hoisted features for global visibility
-- **Affordance signals**: Continuous scent for bridge discovery
-- **Training infrastructure**: JSONL traces, markdown reports, curriculum phases
+### What's Working Well (Jan 2025)
+- **Stem Cell Lifecycle**: Full EXPLORING → TRIAL → MATURE pipeline
+- **XP System**: Proper +10/-10/decay mechanics with solidification
+- **Evolution Snapshots**: JSON topology + stem_cells.json saved per cycle
+- **Vertical Parenting**: Children wire to MATURE parents, not just backbone
+- **AND-Gate Hoisting**: Correlated cells merged into min() nodes
+- **POR Discovery**: Sequential patterns detected from temporal correlation
+- **Curriculum**: 13-stage KPK training with position generators
 
-### Ready for Training
-The system is ready for "Reverse Curriculum" training:
-1. Train Anchor phase (KRK/KPK/KQK) to 95%+ win rates
-2. Let Bridge phase discover liquidation strategies via affordance crossings
-3. Apply learned patterns to full-game play
-
-### Candidate Next Steps
-1. **More endgames**: KBB (two bishops), KBN (bishop+knight), KRR, KRRK
-2. **Bridge discovery**: Run M5 motif extraction on affordance crossings
-3. **Tactical coverage**: Expand FeatureHub with discovered pins/forks patterns
-4. **Stem cells**: Pattern induction pipeline (`src/recon_lite/nodes/stem_cell.py`, `src/recon_lite/motifs/induction.py`) - exists but needs wiring
+### Active Development Areas
+1. **Sparsity Audit**: Ensure children improve >10% over parent
+2. **Survival Bond**: Accelerated decay for orphaned children
+3. **Link-XP Pruning**: Neural Darwinism for weak edges (25-game fast kill)
+4. **Pattern Signature Clustering**: Spatial dedup (95% similarity = merge)
 
 ### Known Issues
-- Some KRK starting positions cause immediate stalemate (edge cases)
-- KQK win rate can be improved with better king approach logic
+- Some KPK starting positions cause immediate stalemate (edge cases)
+- TRIAL cells sometimes have 0 consistency (feature extraction gaps)
 - Bridge phase generators need tuning for realistic positions
+
+---
 
 ## Mental Model for AI Assistant
 
-- **ReCoN as orchestrator**: Training adjusts edge preferences (fast/slow plasticity) and scripts via SWPs; topology changes go through proposal/trust pipeline
-- **Milestone alignment**: M3=within-game, M4=cross-game, M5=structure learning, M6=full-game, M7=distillation, M8=curriculum
-- **Affordance signals**: The key innovation for bridge discovery - continuous scent toward winning positions
-- **FeatureHub**: Hoisted features enable M5 to detect patterns in novel contexts
-- **Reverse curriculum**: Train backwards from anchors to discover bridges
+1. **ReCoN = Request/Confirm Network**: Top-down requests (SUB/POR), bottom-up confirmations (SUR/RET)
+2. **Stem Cells = Exploratory Sensors**: Collect samples, earn XP, mature into permanent nodes
+3. **XP = Darwinian Selection**: Good sensors live, bad ones die
+4. **Vertical Growth**: MATURE nodes spawn children, creating hierarchies
+5. **Snapshots = Evolution History**: Every cycle saves topology for replay/analysis
+6. **Backbone = Stable Trunk**: kpk_root/detect/execute/finish/wait are permanent
+7. **TRIAL = Probation**: Nodes exist in graph but aren't permanent until 100 XP
 
-When suggesting changes, preserve trace outputs and align with milestone scope. Encourage experiments comparing modes (plasticity on/off, different packs, affordance thresholds).
+When suggesting changes:
+- Preserve trace outputs and snapshot compatibility
+- Test with `--quick` flag first
+- Check `snapshots/evolution/` for latest topology state
+- Align with XP thresholds (50 initial, 100 solidify, 0 demote)

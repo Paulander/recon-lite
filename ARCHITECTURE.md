@@ -1,195 +1,696 @@
-# ReCoN Architecture & Design Decisions
+# ReCoN-lite Architecture
 
-## Overview
+> A visual and structural guide to the Request-Confirmation Network for chess
 
-This implementation provides a complete, minimal ReCoN (Request Confirmation Network) foundation specifically designed for the King+Rook vs King chess checkmate challenge (will build on top of that once it works, plan below). The architecture prioritizes clarity, testability, and extensibility while maintaining fidelity to the original ReCoN specification.
+---
 
-## Core Design Principles
-
-### 1. **Minimal but Complete Implementation**
-- **Decision**: Implement only the core ReCoN mechanics needed for chess checkmate
-- **Rationale**: Focus on delivering a working chess solver within the challenge timeframe
-- **Trade-off**: Some advanced features (neural implementation, learning mechanisms) are deferred
-- **Benefit**: Clear, maintainable codebase with well-defined scope
-
-### 2. **Separation of Concerns**
-- **Core ReCoN Logic**: `graph.py`, `engine.py` - Abstract, reusable components
-- **Chess Domain Logic**: `chess_nodes.py` - Domain-specific implementations
-- **Infrastructure**: `logger.py`, `plugins.py` - Supporting utilities
-
-### 3. **Extensibility First**
-- **Node Inheritance**: Chess nodes inherit from base `Node` class
-- **Factory Pattern**: Easy creation of chess-specific nodes
-- **Plugin System**: Terminal nodes use predicates for flexibility
-
-## ReCoN Specification Compliance
-
-### ✅ Fully Implemented
-- **Node States**: All 8 states (INACTIVE, REQUESTED, ACTIVE, SUPPRESSED, WAITING, TRUE, CONFIRMED, FAILED)
-- **Link Types**: SUB/SUR (hierarchy), POR/RET (sequences)
-- **Execution Flow**: Request/confirmation cycle with proper state transitions
-- **Terminal Nodes**: Predicate-based evaluation system
-- **Graph Structure**: Proper relationship management and validation
-
-### ⚠️ Intentionally Scoped Out
-- **Neural Implementation**: Threshold element arrays (Figure 3 from paper)
-- **Advanced Learning**: Weight adaptation mechanisms
-- **Complex Activation Functions**: Beyond simple predicates
-- **Message Passing**: Explicit message objects (functionally equivalent via state manipulation)
-
-### 🎯 Chess-Specific Extensions
-- **Board State Nodes**: Evaluate current chess position
-- **Move Testing Nodes**: Validate individual chess moves
-- **Checkmate Detection**: Goal condition evaluation
-- **Strategy Nodes**: Hierarchical organization of checkmate approaches
-
-## Architecture Benefits
-
-### For Chess Challenge
-- **Immediate Usability**: Can start building checkmate networks immediately
-- **Clear Debugging**: Simple state machine makes issues easy to trace
-- **Visualization Ready**: Structured logging supports the existing viz system
-
-### For Future Extensions
-- **Learning Ready**: Weight arrays and activation values are in place
-- **Neural Ready**: Can add threshold elements without breaking existing code
-- **Domain Agnostic**: Core ReCoN engine works for any hierarchical planning task
-
-## Detailed File Organization
-
-### Core ReCoN Library (`src/recon_lite/`)
-
-#### Core Components
-```
-├── __init__.py       # Clean API exports (core components only)
-├── graph.py          # Core ReCoN data structures and graph management
-├── engine.py         # Execution engine with state machine logic
-├── logger.py         # Structured logging for visualization
-└── plugins.py        # Plugin interfaces for extensibility
-```
-
-#### File Details
-
-**`graph.py`** - Core ReCoN Foundation
-- `Node`, `NodeType`, `NodeState`, `LinkType` classes
-- `Edge` class with weight support
-- `Graph` class with relationship management
-- Factory functions for node creation
-- Validation logic for graph structure
-
-**`engine.py`** - Execution Engine
-- `ReConEngine` class with discrete-time execution
-- State transition logic for all node types
-- Request/confirmation cycle implementation
-- Terminal node evaluation system
-- Sequence and hierarchy handling
-
-**`logger.py`** - Visualization Support
-- `RunLogger` class for structured logging
-- Frame schema for replay and debugging
-- JSON export functionality
-- Timeline tracking
-
-**`plugins.py`** - Extensibility Framework
-- `TerminalPlugin` protocol for custom terminal nodes
-- Example implementations
-- Plugin registration system
-
-### Domain Modules (`src/`)
-
-#### Chess Module (`src/recon_lite_chess/`)
-```
-├── __init__.py       # Chess module exports
-├── krk_nodes.py      # KRK-specific node implementations
-└── vision.py         # Future: Computer vision integration
-```
-
-**`krk_nodes.py`** - Chess-Specific Nodes
-- Terminal evaluators (KingAtEdgeDetector, BoxShrinkEvaluator, etc.)
-- Script phase nodes (Phase1DriveToEdge, Phase2ShrinkBox, etc.)
-- Factory functions for easy node creation
-- Chess-specific logic and heuristics
-
-### Demo Applications (`demos/`)
-
-#### Core Demo
-```
-├── sequence_demo.py  # Basic ReCoN functionality demo
-└── sequence_log.json # Demo output data
-```
-
-#### Chess Demo
-```
-├── krk_checkmate_demo.py  # KRK checkmate solver
-└── chess/                 # Future: Chess package (if needed)
-```
-
-#### Visualization
-```
-└── visualization/
-    ├── index.html         # Main visualization interface
-    ├── standalone_html_example.html  # Self-contained version
-    ├── styles.css         # Styling
-    ├── utils.js           # Utility functions
-    ├── visualization.js   # Core visualization logic
-    └── README.md          # Visualization documentation
-```
-
-### Configuration & Documentation
+## 1. System Overview
 
 ```
-├── pyproject.toml         # Package configuration
-├── README.md              # High-level overview
-├── ARCHITECTURE.md        # Detailed design decisions
-├── VIS_SPEC.md           # Visualization specifications
-└── Article.md            # Original ReCoN paper
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           ReCoN-lite Chess System                           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐         │
+│  │  Core ReCoN     │    │  Chess Domain   │    │    Training     │         │
+│  │  Engine         │◄──►│  Layer          │◄──►│    System       │         │
+│  │                 │    │                 │    │                 │         │
+│  │  • Graph        │    │  • KRK/KPK/KQK  │    │  • Evolution    │         │
+│  │  • Engine       │    │  • Affordance   │    │  • Curriculum   │         │
+│  │  • Plasticity   │    │  • Features     │    │  • Snapshots    │         │
+│  │  • Stem Cells   │    │  • Actuators    │    │  • Traces       │         │
+│  └─────────────────┘    └─────────────────┘    └─────────────────┘         │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Test Suite
+---
+
+## 2. Directory Structure
 
 ```
-└── tests/
-    └── test_engine.py     # Core engine tests
+recon-lite/
+├── src/
+│   ├── recon_lite/                 # Core ReCoN Engine
+│   │   ├── graph.py                # Node, Edge, Graph, LinkType
+│   │   ├── engine.py               # ReConEngine state machine
+│   │   ├── core/
+│   │   │   └── activations.py      # Continuous activation values
+│   │   ├── nodes/
+│   │   │   └── stem_cell.py        # ⭐ Stem cell lifecycle + XP
+│   │   ├── learning/
+│   │   │   └── m5_structure.py     # ⭐ Structure learning + POR discovery
+│   │   ├── models/
+│   │   │   └── registry.py         # Topology persistence
+│   │   ├── plasticity/
+│   │   │   ├── fast.py             # M3 within-game learning
+│   │   │   ├── bandit.py           # UCB gating
+│   │   │   └── consolidate.py      # M4 cross-game learning
+│   │   ├── motifs/
+│   │   │   ├── extractors.py       # Pattern extraction
+│   │   │   └── induction.py        # Pattern induction
+│   │   ├── trust/
+│   │   │   └── scoring.py          # Trust computation
+│   │   └── viz/
+│   │       └── evolution_viz.py    # Graph visualization
+│   │
+│   └── recon_lite_chess/           # Chess Domain
+│       ├── scripts/
+│       │   ├── kpk.py              # ⭐ KPK endgame network
+│       │   ├── kqk.py              # KQK endgame network
+│       │   └── tactics.py          # Tactical patterns
+│       ├── training/
+│       │   ├── curriculum.py       # Phase management
+│       │   └── generators.py       # ⭐ Position generators + stages
+│       ├── affordance/
+│       │   └── sensors.py          # Continuous affordance signals
+│       └── features/
+│           └── hub.py              # Global FeatureHub
+│
+├── scripts/
+│   └── evolution_driver.py         # ⭐ Main training loop
+│
+├── topologies/
+│   └── kpk_topology.json           # Base network definition
+│
+├── snapshots/
+│   └── evolution/                  # ⭐ Training history
+│       ├── {run_name}/
+│       │   ├── stage0/
+│       │   │   ├── cycle_0001.json
+│       │   │   └── stem_cells.json
+│       │   └── stage1/...
+│
+└── weights/                        # Trained weight packs
 ```
 
-## Usage Example
+---
 
-```python
-from recon_lite import Graph, ReConEngine, LinkType
-from recon_lite import create_checkmate_detector, create_rook_strategy
+## 3. ReCoN Graph Model
 
-# Build checkmate network
-g = Graph()
-g.add_node(create_checkmate_detector("goal"))
-g.add_node(create_rook_strategy("rook_moves"))
-g.add_edge("goal", "rook_moves", LinkType.SUB)
+### 3.1 Node Types
 
-# Execute
-engine = ReConEngine(g)
-g.nodes["goal"].state = NodeState.REQUESTED
-while not all(n.state == NodeState.CONFIRMED for n in g.nodes.values()):
-    engine.step({"board": chess_board})
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         NODE TYPES                              │
+├───────────────────────┬─────────────────────────────────────────┤
+│        SCRIPT         │              TERMINAL                   │
+│   (Intermediate Goal) │         (Sensor/Actuator)               │
+├───────────────────────┼─────────────────────────────────────────┤
+│  ┌─────────────────┐  │  ┌─────────────────┐                   │
+│  │     □           │  │  │     ○           │   ○ = Sensor      │
+│  │  Script Node    │  │  │  Terminal Node  │   ◆ = Actuator    │
+│  │                 │  │  │                 │                   │
+│  │  Can have:      │  │  │  Can only:      │                   │
+│  │  • SUB children │  │  │  • Receive SUB  │                   │
+│  │  • POR sequence │  │  │  • Send SUR     │                   │
+│  │  • Aggregation  │  │  │  • Has predicate│                   │
+│  └─────────────────┘  │  └─────────────────┘                   │
+└───────────────────────┴─────────────────────────────────────────┘
 ```
 
-## Future Extension Points
+### 3.2 Link Types
 
-1. **Learning Integration**: Add weight updates to `engine.py`
-2. **Neural Nodes**: Implement threshold elements in `chess_nodes.py`
-3. **Advanced Activation**: Add complex functions to base `Node` class
-4. **Multi-Domain**: Extend for other planning tasks beyond chess
+```
+            SUB (Subgraph)                    POR (Predecessor)
+            Parent → Child                    Previous → Next
+            Top-down request                  Temporal ordering
 
-### Practical examples: 
-1. Add Pawn promotion ReCoN example. 
-2. COMBINE Pawn promotion and Rook endgame -> "goal promote pawn" -> identify "I can now aim for checkmate" -> call KRK ReCoN branch. 
-3. Extend leaf (sensor) nodes: input from 2D (online chess engines), 3D (photos of physical boards) -> internal representation -> same problem as original. 
+                 ┌───┐                            ┌───┐     ┌───┐
+                 │ P │                            │ A │────►│ B │
+                 └─┬─┘                            └───┘     └───┘
+                   │ SUB                          
+              ┌────┼────┐                     Sequence: A must confirm
+              ▼    ▼    ▼                     before B can activate
+            ┌───┐┌───┐┌───┐
+            │ C ││ C ││ C │
+            └───┘└───┘└───┘
 
-### Visualization: 
-**See:** `VIS_SPEC.md`
 
-## Quality Assurance
+            SUR (Super)                       RET (Return)
+            Child → Parent                    Next → Previous
+            Bottom-up confirmation            Temporal confirmation
 
-- **Test Coverage**: Core execution logic tested in `tests/test_engine.py`
-- **Type Hints**: Full type annotation for IDE support and documentation
-- **Documentation**: Comprehensive docstrings and architectural rationale
+                 ┌───┐                            ┌───┐     ┌───┐
+                 │ P │                            │ A │◄────│ B │
+                 └───┘                            └───┘     └───┘
+                   ▲ SUR
+              ┌────┼────┐                     Return confirmation
+              │    │    │
+            ┌───┐┌───┐┌───┐
+            │ C ││ C ││ C │
+            └───┘└───┘└───┘
+```
 
-This architecture delivers a production-ready ReCoN foundation that perfectly balances immediate usability with future extensibility, making it ideal for the chess checkmate challenge while maintaining the potential for broader applications.
+### 3.3 Node States
+
+```
+                    ┌─────────────┐
+                    │  INACTIVE   │ ◄── Initial state
+                    └──────┬──────┘
+                           │ request
+                           ▼
+                    ┌─────────────┐
+            ┌───────│  REQUESTED  │───────┐
+            │       └─────────────┘       │
+            │ satisfied                   │ blocked
+            ▼                             ▼
+     ┌─────────────┐              ┌─────────────┐
+     │   ACTIVE    │              │  WAITING    │
+     └──────┬──────┘              └──────┬──────┘
+            │                            │
+            │ children confirm           │ POR satisfied
+            ▼                            ▼
+     ┌─────────────┐              ┌─────────────┐
+     │    TRUE     │              │  ACTIVE     │
+     └──────┬──────┘              └─────────────┘
+            │
+            │ propagate up
+            ▼
+     ┌─────────────┐              ┌─────────────┐
+     │  CONFIRMED  │              │   FAILED    │
+     └─────────────┘              └─────────────┘
+```
+
+---
+
+## 4. KPK Backbone Network
+
+The KPK (King + Pawn vs King) endgame network demonstrates the core ReCoN structure.
+
+```
+                              ┌───────────────┐
+                              │   kpk_root    │ SCRIPT
+                              │   (backbone)  │
+                              └───────┬───────┘
+                                      │
+            ┌─────────────────────────┼─────────────────────────┐
+            │ SUB                     │ SUB                     │ SUB
+            ▼                         ▼                         ▼
+    ┌───────────────┐         ┌───────────────┐         ┌───────────────┐
+    │  kpk_detect   │ ──POR─► │  kpk_execute  │ ──POR─► │  kpk_finish   │
+    │   (backbone)  │         │   (backbone)  │         │   (backbone)  │
+    └───────┬───────┘         └───────┬───────┘         └───────┬───────┘
+            │                         │                         │
+      ┌─────┴─────┐             ┌─────┴─────┐                   │
+      │ SUB       │ SUB         │ SUB       │ SUB               │ SUB
+      ▼           ▼             ▼           ▼                   ▼
+┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐    ┌──────────────┐
+│ material │ │  push    │ │  move    │ │opposition│    │  promotion   │
+│  check   │ │ window   │ │ selector │ │  probe   │    │    probe     │
+│    ○     │ │    ○     │ │    ◆     │ │    ○     │    │      ○       │
+└──────────┘ └──────────┘ └──────────┘ └──────────┘    └──────────────┘
+  TERMINAL     TERMINAL     TERMINAL     TERMINAL          TERMINAL
+   sensor       sensor      actuator      sensor            sensor
+
+
+    Legend:
+    ┌───┐                ┌───┐
+    │ □ │ = SCRIPT       │ ○ │ = TERMINAL (sensor)
+    └───┘                └───┘
+
+    ┌───┐
+    │ ◆ │ = TERMINAL (actuator)
+    └───┘
+
+    ──SUB──►  = Subgraph link (top-down)
+    ──POR──►  = Sequence link (temporal)
+```
+
+---
+
+## 5. M5 Stem Cell Evolution System
+
+### 5.1 Three-Tier Lifecycle
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        STEM CELL LIFECYCLE                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   TIER 1: EXPLORATORY           TIER 2: PROBATIONARY    TIER 3: PERMANENT  │
+│   ─────────────────────         ──────────────────────  ─────────────────  │
+│                                                                             │
+│   ┌──────────┐                  ┌──────────┐            ┌──────────┐       │
+│   │ DORMANT  │                  │  TRIAL   │            │  MATURE  │       │
+│   │   (⚪)    │                  │   (🟡)    │            │   (🟢)    │       │
+│   └────┬─────┘                  └────┬─────┘            └──────────┘       │
+│        │ activate                    │                                     │
+│        ▼                             │ XP ≥ 100                            │
+│   ┌──────────┐                       ├─────────────────────────►           │
+│   │EXPLORING │                       │                                     │
+│   │   (🔵)    │                       │                                     │
+│   └────┬─────┘                       │ XP ≤ 0                              │
+│        │ ≥50 samples                 ├─────────────────────────┐           │
+│        ▼                             │                         │           │
+│   ┌──────────┐    consistency        │                         ▼           │
+│   │CANDIDATE │────≥ 0.40 ───────────►│                    ┌──────────┐     │
+│   │   (🟣)    │                       │                    │ DEMOTED  │     │
+│   └──────────┘                       │                    │  (back   │     │
+│                                      │                    │   to 🔵)  │     │
+│                                      ▼                    └──────────┘     │
+│                               ┌──────────┐                                 │
+│                               │  PRUNED  │                                 │
+│                               │   (🔴)    │                                 │
+│                               └──────────┘                                 │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 5.2 XP System
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        XP MECHANICS                         │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   INITIAL XP (promotion to TRIAL):     50                   │
+│                                                             │
+│   ┌─────────────────────────────────────────────────────┐   │
+│   │                    XP Changes                       │   │
+│   ├─────────────────────────────────────────────────────┤   │
+│   │  Positive affordance delta    │   +10 XP  (success) │   │
+│   │  Negative affordance delta    │   -10 XP  (failure) │   │
+│   │  Each cycle (decay)           │    -1 XP  (cost)    │   │
+│   └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│   THRESHOLDS:                                               │
+│                                                             │
+│        0                    50                   100        │
+│        │                    │                     │         │
+│   ◄────┼────────────────────┼─────────────────────┼────►    │
+│        │                    │                     │         │
+│     DEMOTED              INITIAL              SOLIDIFY      │
+│   (back to                 XP                 (become       │
+│   EXPLORING)                                  MATURE)       │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 5.3 Recursive Branching (Vertical Growth)
+
+```
+                        BEFORE M5: FLAT TOPOLOGY
+                        ────────────────────────
+
+                              ┌────────────┐
+                              │ kpk_detect │ backbone
+                              └─────┬──────┘
+                                    │
+          ┌─────────────────────────┼─────────────────────────┐
+          │ SUB                     │ SUB                     │ SUB
+          ▼                         ▼                         ▼
+     ┌─────────┐              ┌─────────┐              ┌─────────┐
+     │ Sensor1 │              │ Sensor2 │              │ Sensor3 │
+     └─────────┘              └─────────┘              └─────────┘
+     stem cell                stem cell                stem cell
+
+
+                        AFTER M5: HIERARCHICAL TOPOLOGY
+                        ───────────────────────────────
+
+                              ┌────────────┐
+                              │ kpk_detect │ backbone
+                              └─────┬──────┘
+                                    │ SUB
+                                    ▼
+                              ┌────────────┐
+                              │  MATURE_1  │ solidified parent
+                              │    (🟢)     │ (100 XP achieved)
+                              └─────┬──────┘
+                                    │
+                    ┌───────────────┼───────────────┐
+                    │ SUB           │ SUB           │ SUB
+                    ▼               ▼               ▼
+               ┌─────────┐    ┌─────────┐    ┌─────────┐
+               │ TRIAL_A │    │ TRIAL_B │    │ TRIAL_C │ spawned children
+               │   (🟡)   │    │   (🟡)   │    │   (🟡)   │ (local_root = MATURE_1)
+               └─────────┘    └─────────┘    └─────────┘
+
+                    Children inherit parent's pattern_signature
+                    Children link to parent, NOT backbone
+                    Creates tactical reasoning trees
+```
+
+### 5.4 AND-Gate Hoisting
+
+When two TRIAL cells correlate ≥85% in win co-activations, they are hoisted:
+
+```
+                        BEFORE HOISTING
+                        ───────────────
+
+                              ┌────────────┐
+                              │ kpk_detect │
+                              └─────┬──────┘
+                                    │
+                    ┌───────────────┼───────────────┐
+                    │ SUB           │ SUB           │ SUB
+                    ▼               ▼               ▼
+               ┌─────────┐    ┌─────────┐    ┌─────────┐
+               │ TRIAL_X │    │ TRIAL_Y │    │ TRIAL_Z │
+               └─────────┘    └─────────┘    └─────────┘
+
+                        85% correlation detected
+                        between X and Y
+                              │
+                              ▼
+
+                        AFTER HOISTING
+                        ──────────────
+
+                              ┌────────────┐
+                              │ kpk_detect │
+                              └─────┬──────┘
+                                    │
+                    ┌───────────────┼───────────────┐
+                    │ SUB                           │ SUB
+                    ▼                               ▼
+               ┌─────────────┐                ┌─────────┐
+               │ cluster_001 │ NEW            │ TRIAL_Z │
+               │  (AND gate) │ aggregation=   └─────────┘
+               │             │ "and" (min)
+               └──────┬──────┘
+                      │
+              ┌───────┴───────┐
+              │ SUB           │ SUB
+              ▼               ▼
+         ┌─────────┐    ┌─────────┐
+         │ TRIAL_X │    │ TRIAL_Y │
+         └─────────┘    └─────────┘
+
+         cluster_001 fires ONLY when
+         BOTH X AND Y are active (min function)
+```
+
+---
+
+## 6. Evolution Training Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        EVOLUTION DRIVER FLOW                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   ┌─────────────────────────────────────────────────────────────────────┐   │
+│   │                    CYCLE N (repeat per cycle)                       │   │
+│   └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│   ┌──────────────────────────────────────────┐                             │
+│   │          ONLINE PHASE                    │                             │
+│   │          (Play games)                    │                             │
+│   ├──────────────────────────────────────────┤                             │
+│   │                                          │                             │
+│   │   for game in range(games_per_cycle):    │                             │
+│   │       1. Generate position (curriculum)  │                             │
+│   │       2. ReConEngine.step() microticks   │                             │
+│   │       3. Stem cells collect samples      │                             │
+│   │       4. TraceDB logs episode            │                             │
+│   │       5. Track win/loss outcome          │                             │
+│   │                                          │                             │
+│   └──────────────────────────────────────────┘                             │
+│                         │                                                   │
+│                         ▼                                                   │
+│   ┌──────────────────────────────────────────┐                             │
+│   │       STRUCTURAL PHASE                   │                             │
+│   │       (Analyze & grow)                   │                             │
+│   ├──────────────────────────────────────────┤                             │
+│   │                                          │                             │
+│   │   1. scan_for_affordance_spikes()        │ ◄─ Find high-reward moments │
+│   │   2. find_high_impact_stem_cells()       │ ◄─ Which cells fired?       │
+│   │   3. Promote CANDIDATE → TRIAL           │ ◄─ If consistency ≥ 0.40    │
+│   │   4. decay_xp() for all TRIAL cells      │ ◄─ -1 XP per cycle          │
+│   │   5. check_solidification():             │                             │
+│   │      • XP ≥ 100 → MATURE (solidify)      │                             │
+│   │      • XP ≤ 0  → EXPLORING (demote)      │                             │
+│   │   6. spawn_neighbors() for MATURE cells  │ ◄─ Recursive outgrowth      │
+│   │   7. auto_hoist() correlated clusters    │ ◄─ Create AND gates         │
+│   │   8. discover_por_chains()               │ ◄─ Sequential patterns      │
+│   │                                          │                             │
+│   └──────────────────────────────────────────┘                             │
+│                         │                                                   │
+│                         ▼                                                   │
+│   ┌──────────────────────────────────────────┐                             │
+│   │         SNAPSHOT PHASE                   │                             │
+│   │         (Save state)                     │                             │
+│   ├──────────────────────────────────────────┤                             │
+│   │                                          │                             │
+│   │   snapshots/evolution/{run}/{stage}/     │                             │
+│   │       ├── cycle_NNNN.json   (topology)   │                             │
+│   │       └── stem_cells.json   (cell state) │                             │
+│   │                                          │                             │
+│   └──────────────────────────────────────────┘                             │
+│                                                                             │
+│   ═══════════════════════════════════════════════════════════════════════   │
+│   │  STAGE TRANSITION (if win_rate > threshold)                         │   │
+│   │  → Load next curriculum stage                                       │   │
+│   │  → Inherit topology from previous stage                             │   │
+│   │  → Inherit stem cells from previous stage                           │   │
+│   ═══════════════════════════════════════════════════════════════════════   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 7. Snapshot Data Format
+
+### 7.1 cycle_NNNN.json
+
+```json
+{
+  "nodes": {
+    "kpk_root": {
+      "id": "kpk_root",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {}
+    },
+    "TRIAL_stem_0001_5": {
+      "id": "TRIAL_stem_0001_5",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0001",
+        "xp": 75,
+        "tier": "trial",
+        "samples": 120,
+        "consistency": 0.62
+      },
+      "transient": true
+    }
+  },
+  "edges": {
+    "kpk_root->kpk_detect:SUB": {
+      "src": "kpk_root",
+      "dst": "kpk_detect",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    "kpk_detect->TRIAL_stem_0001_5:SUB": {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0001_5",
+      "type": "SUB",
+      "weight": 0.5
+    }
+  },
+  "timestamp": "2026-01-05T14:17:16Z",
+  "cycle": 5
+}
+```
+
+### 7.2 stem_cells.json
+
+```json
+{
+  "max_cells": 10,
+  "spawn_rate": 0.05,
+  "next_id": 15,
+  "cells": {
+    "stem_0001": {
+      "cell_id": "stem_0001",
+      "state": "TRIAL",
+      "xp": 75,
+      "xp_successes": 12,
+      "xp_failures": 3,
+      "trial_node_id": "TRIAL_stem_0001_5",
+      "pattern_signature": [0.2, 0.8, 0.3, ...],
+      "samples": [...]
+    }
+  },
+  "win_coactivation": {
+    "stem_0001|stem_0003": 45
+  },
+  "win_active_counts": {
+    "stem_0001": 80,
+    "stem_0003": 70
+  }
+}
+```
+
+---
+
+## 8. Curriculum Stages (KPK)
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        KPK CURRICULUM PROGRESSION                           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   Stage 0: SPRINTER                 Stage 6: ESCORT                         │
+│   ┌─────────────────┐               ┌─────────────────┐                     │
+│   │ . . . . . . . . │               │ . . . . . . . . │                     │
+│   │ . . . . P . . . │ ←─ 7th rank   │ . . . . P K . . │ ←─ King support     │
+│   │ . . . . K . . . │    Just push! │ . . . . . . . . │                     │
+│   │ . . . . . . . . │               │ . . . . . . . . │                     │
+│   │ . . . . . . . . │               │ . . . . k . . . │                     │
+│   │ . . . . . . . . │               │ . . . . . . . . │                     │
+│   │ . . . . . . . . │               │ . . . . . . . . │                     │
+│   │ . . . . k . . . │ ←─ King far   │ . . . . . . . . │                     │
+│   └─────────────────┘               └─────────────────┘                     │
+│                                                                             │
+│   Stage 9: KEY_SQUARES              Stage 12: ZUGZWANG                      │
+│   ┌─────────────────┐               ┌─────────────────┐                     │
+│   │ . . . . . . . . │               │ . . . . . . . . │                     │
+│   │ . . . . . . . . │               │ . . . . . . . . │                     │
+│   │ . . . . k . . . │ ←─ Opposition │ . . . k . . . . │ ←─ Triangulation    │
+│   │ . . . . . . . . │               │ . . . P . . . . │                     │
+│   │ . . . . P . . . │               │ . . . K . . . . │                     │
+│   │ . . . K . . . . │               │ . . . . . . . . │                     │
+│   │ . . . . . . . . │               │ . . . . . . . . │                     │
+│   │ . . . . . . . . │               │ . . . . . . . . │                     │
+│   └─────────────────┘               └─────────────────┘                     │
+│                                                                             │
+│   PROGRESSION: 0 → 1 → 2 → ... → 12                                         │
+│   • Each stage unlocks when win_rate > threshold (0.9 default)              │
+│   • Topology and stem cells inherited between stages                        │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 9. Component Interaction Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     COMPONENT INTERACTIONS                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│                        ┌───────────────────┐                                │
+│                        │  evolution_driver │                                │
+│                        │        .py        │                                │
+│                        └────────┬──────────┘                                │
+│                                 │                                           │
+│              ┌──────────────────┼──────────────────┐                        │
+│              │                  │                  │                        │
+│              ▼                  ▼                  ▼                        │
+│   ┌───────────────────┐ ┌───────────────┐ ┌───────────────────┐             │
+│   │ TopologyRegistry  │ │  ReConEngine  │ │ StemCellManager   │             │
+│   │   (registry.py)   │ │  (engine.py)  │ │  (stem_cell.py)   │             │
+│   └─────────┬─────────┘ └───────┬───────┘ └─────────┬─────────┘             │
+│             │                   │                   │                        │
+│             │ load/save         │ step()           │ tick()                  │
+│             │ topology          │                   │ observe()              │
+│             ▼                   ▼                   ▼                        │
+│   ┌───────────────────┐ ┌───────────────┐ ┌───────────────────┐             │
+│   │ kpk_topology.json │ │    Graph      │ │ stem_cells.json   │             │
+│   └───────────────────┘ │  (graph.py)   │ └───────────────────┘             │
+│                         └───────┬───────┘                                   │
+│                                 │                                           │
+│                    ┌────────────┼────────────┐                              │
+│                    │            │            │                              │
+│                    ▼            ▼            ▼                              │
+│              ┌──────────┐ ┌──────────┐ ┌──────────┐                         │
+│              │ kpk_root │ │  TRIAL   │ │  MATURE  │                         │
+│              │ backbone │ │  cells   │ │  cells   │                         │
+│              └──────────┘ └──────────┘ └──────────┘                         │
+│                    │            │            │                              │
+│                    └────────────┴────────────┘                              │
+│                                 │                                           │
+│                                 ▼                                           │
+│                      ┌───────────────────┐                                  │
+│                      │  StructureLearner │                                  │
+│                      │ (m5_structure.py) │                                  │
+│                      └─────────┬─────────┘                                  │
+│                                │                                           │
+│           ┌────────────────────┼────────────────────┐                      │
+│           │                    │                    │                      │
+│           ▼                    ▼                    ▼                      │
+│   ┌───────────────┐   ┌───────────────┐   ┌───────────────┐                │
+│   │  Promote to   │   │  Hoist AND    │   │  Discover     │                │
+│   │    TRIAL      │   │    gates      │   │  POR chains   │                │
+│   └───────────────┘   └───────────────┘   └───────────────┘                │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 10. Visualization Color Scheme
+
+For generating visual representations:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    VISUALIZATION COLORS                         │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   NODE COLORS:                                                  │
+│   ┌──────────┬───────────────────┬──────────────────┐          │
+│   │  Group   │  Color            │  Hex Code        │          │
+│   ├──────────┼───────────────────┼──────────────────┤          │
+│   │ backbone │  Dark Gray        │  #34495E         │          │
+│   │ sensor   │  Blue             │  #3498DB         │          │
+│   │ actuator │  Orange           │  #E67E22         │          │
+│   │ trial    │  Yellow           │  #F1C40F         │          │
+│   │ mature   │  Purple           │  #9B59B6         │          │
+│   │ new      │  Green            │  #2ECC71         │          │
+│   │ pruned   │  Red              │  #E74C3C         │          │
+│   └──────────┴───────────────────┴──────────────────┘          │
+│                                                                 │
+│   NODE SHAPES:                                                  │
+│   ┌──────────┬───────────────────┐                             │
+│   │  Type    │  Shape            │                             │
+│   ├──────────┼───────────────────┤                             │
+│   │  SCRIPT  │  Square (□)       │                             │
+│   │ TERMINAL │  Circle (○)       │                             │
+│   │ actuator │  Diamond (◆)      │                             │
+│   └──────────┴───────────────────┘                             │
+│                                                                 │
+│   EDGE COLORS:                                                  │
+│   ┌──────────┬───────────────────┬──────────────────┐          │
+│   │  Type    │  Color            │  Style           │          │
+│   ├──────────┼───────────────────┼──────────────────┤          │
+│   │  SUB     │  Gray             │  Solid           │          │
+│   │  POR     │  Blue             │  Dashed          │          │
+│   │  new     │  Green            │  Bold            │          │
+│   └──────────┴───────────────────┴──────────────────┘          │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Quick Reference Commands
+
+```bash
+# Quick evolution test
+uv run python scripts/evolution_driver.py --quick
+
+# Full stage run
+uv run python scripts/evolution_driver.py --stage 5 --cycles 20
+
+# All stages with high threshold
+uv run python scripts/evolution_driver.py --all-stages --win-threshold 0.9
+
+# Analyze results
+uv run python scripts/analyze_training.py \
+  --report-dir reports/evolution/latest/ --markdown
+```
+
+---
+
+*Last updated: January 2026*

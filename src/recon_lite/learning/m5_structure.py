@@ -21,7 +21,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 try:
     from ..nodes.stem_cell import StemCellTerminal, StemCellManager, StemCellState
@@ -34,6 +34,21 @@ try:
     HAS_REGISTRY = True
 except ImportError:
     HAS_REGISTRY = False
+
+
+# =============================================================================
+# M5 RECURSIVE BRANCHING - Depth Limiting Constants
+# =============================================================================
+
+# Backbone nodes that form the "trunk" of the network
+BACKBONE_NODES: Set[str] = {
+    "kpk_root", "kpk_detect", "kpk_execute", "kpk_finish", "kpk_wait",
+    "krk_root", "krk_detect", "krk_execute", "krk_finish",
+    "kqk_root", "kqk_detect", "kqk_execute", "kqk_finish",
+}
+
+# Maximum depth for vertical branches (beyond this, hoist to new manager)
+MAX_BRANCH_DEPTH = 5
 
 
 @dataclass
@@ -79,6 +94,588 @@ class PruningResult:
     new_weight: float
     pruned: bool
     games_at_zero: int
+
+
+# =============================================================================
+# M5 RECURSIVE BRANCHING - Depth Computation
+# =============================================================================
+
+def compute_node_depth(graph: "Graph", node_id: str, backbone_nodes: Set[str] = None) -> int:
+    """
+    Compute depth from backbone to a node.
+    
+    Depth 0 = backbone node
+    Depth 1 = direct child of backbone
+    Depth 2+ = nested in hierarchy
+    
+    Args:
+        graph: The Graph to traverse
+        node_id: Node to compute depth for
+        backbone_nodes: Set of backbone node IDs (uses BACKBONE_NODES if None)
+        
+    Returns:
+        Depth from nearest backbone ancestor (0 if node is backbone)
+    """
+    if backbone_nodes is None:
+        backbone_nodes = BACKBONE_NODES
+    
+    if node_id in backbone_nodes:
+        return 0
+    
+    depth = 0
+    current = node_id
+    visited = set()
+    
+    while current and current not in backbone_nodes and current not in visited:
+        visited.add(current)
+        parent = graph.parent_of(current)
+        if parent:
+            depth += 1
+            current = parent
+        else:
+            break
+    
+    return depth
+
+
+def is_at_max_depth(graph: "Graph", node_id: str, max_depth: int = MAX_BRANCH_DEPTH) -> bool:
+    """Check if a node is at maximum allowed branch depth."""
+    return compute_node_depth(graph, node_id) >= max_depth
+
+
+# =============================================================================
+# M5 RECURSIVE BRANCHING - SCRIPT Wrappers for POR Links
+# =============================================================================
+
+def wrap_terminal_as_script(
+    graph: "Graph",
+    registry: "TopologyRegistry",
+    terminal_id: str,
+    current_tick: int = 0,
+) -> Optional[str]:
+    """
+    Wrap a TERMINAL sensor in a SCRIPT node to enable POR links.
+    
+    This transforms a "Sensor" into a "Tactical Goal" that can participate
+    in sequential reasoning chains. POR links can only connect SCRIPT nodes
+    (per graph.py validation), so we need this wrapper to enable sequential
+    patterns like Opposition -> Protect -> Promote.
+    
+    Args:
+        graph: The Graph to modify
+        registry: TopologyRegistry for persisting changes
+        terminal_id: ID of the terminal to wrap
+        current_tick: Current tick for metadata
+        
+    Returns:
+        ID of the new wrapper SCRIPT node, or None if failed
+    """
+    from ..graph import Node, NodeType, LinkType
+    
+    if terminal_id not in graph.nodes:
+        return None
+    
+    terminal_node = graph.nodes[terminal_id]
+    if terminal_node.ntype != NodeType.TERMINAL:
+        return None  # Only wrap terminals
+    
+    # Check if already wrapped
+    for edge in graph.edges:
+        if edge.dst == terminal_id and edge.ltype == LinkType.SUB:
+            parent = graph.nodes.get(edge.src)
+            if parent and parent.meta.get("origin") == "por_wrapper":
+                # Already wrapped
+                return edge.src
+    
+    wrapper_id = f"goal_{terminal_id}"
+    
+    # Create SCRIPT wrapper node
+    wrapper_node = Node(
+        nid=wrapper_id,
+        ntype=NodeType.SCRIPT,
+    )
+    wrapper_node.meta["wrapped_terminal"] = terminal_id
+    wrapper_node.meta["origin"] = "por_wrapper"
+    wrapper_node.meta["created_tick"] = current_tick
+    
+    # Find terminal's current parent
+    old_parent = graph.parent_of(terminal_id)
+    
+    try:
+        # Add wrapper node to graph
+        graph.add_node(wrapper_node)
+        
+        if old_parent:
+            # Remove old SUB edge from parent to terminal
+            graph.edges = [
+                e for e in graph.edges
+                if not (e.src == old_parent and e.dst == terminal_id and e.ltype == LinkType.SUB)
+            ]
+            # Update parent tracking
+            graph.parent[terminal_id] = None
+            if terminal_id in graph.parents_fanin:
+                graph.parents_fanin[terminal_id] = [
+                    p for p in graph.parents_fanin[terminal_id] if p != old_parent
+                ]
+            
+            # Wire wrapper under old parent
+            graph.add_edge(old_parent, wrapper_id, LinkType.SUB)
+        
+        # Wire terminal under wrapper
+        graph.add_edge(wrapper_id, terminal_id, LinkType.SUB)
+        
+        # Persist to registry
+        if registry:
+            node_spec = {
+                "id": wrapper_id,
+                "type": "SCRIPT",
+                "group": "por_wrapper",
+                "factory": None,
+                "meta": wrapper_node.meta,
+            }
+            registry.add_node(node_spec, tick=current_tick)
+            if old_parent:
+                registry.add_edge(old_parent, wrapper_id, "SUB", weight=1.0, tick=current_tick)
+            registry.add_edge(wrapper_id, terminal_id, "SUB", weight=1.0, tick=current_tick)
+        
+        return wrapper_id
+        
+    except Exception as e:
+        # Rollback on failure
+        if wrapper_id in graph.nodes:
+            graph.remove_node(wrapper_id)
+        return None
+
+
+# =============================================================================
+# M5 RECURSIVE BRANCHING - POR Chain Discovery
+# =============================================================================
+
+def discover_por_chains(
+    graph: "Graph",
+    stem_manager: "StemCellManager",
+    registry: "TopologyRegistry",
+    min_sequence_confidence: float = 0.7,
+    current_tick: int = 0,
+) -> List[Tuple[str, str, float]]:
+    """
+    Discover sequential patterns like Opposition -> Protect -> Promote.
+    
+    Analyzes activation history to find pairs where A consistently
+    fires BEFORE B during winning games. Creates POR links between
+    SCRIPT nodes (wrapping terminals if needed).
+    
+    Args:
+        graph: The Graph to modify
+        stem_manager: Manager with win-coactivation data
+        registry: TopologyRegistry for persisting changes
+        min_sequence_confidence: Minimum confidence to create POR link (default 0.7)
+        current_tick: Current tick for metadata
+        
+    Returns:
+        List of (predecessor_id, successor_id, confidence) tuples for created POR links
+    """
+    from ..graph import Node, NodeType, LinkType
+    
+    discovered_chains: List[Tuple[str, str, float]] = []
+    
+    # Find highly correlated cell pairs from win-coactivation tracking
+    correlated_pairs = stem_manager.find_win_correlated_pairs(
+        min_coactivations=30,  # Lower threshold for sequence detection
+        min_ratio=min_sequence_confidence,
+    )
+    
+    if not correlated_pairs:
+        return discovered_chains
+    
+    for cell_a, cell_b, ratio, co_count in correlated_pairs:
+        # Get the corresponding graph nodes for these cells
+        cell_obj_a = stem_manager.cells.get(cell_a)
+        cell_obj_b = stem_manager.cells.get(cell_b)
+        
+        if not cell_obj_a or not cell_obj_b:
+            continue
+        
+        # Only consider TRIAL or MATURE cells with graph nodes
+        node_a = cell_obj_a.trial_node_id
+        node_b = cell_obj_b.trial_node_id
+        
+        if not node_a or not node_b:
+            continue
+        
+        if node_a not in graph.nodes or node_b not in graph.nodes:
+            continue
+        
+        # Determine temporal order (which fires first)
+        # Use sample timestamps if available
+        samples_a = cell_obj_a.samples
+        samples_b = cell_obj_b.samples
+        
+        if not samples_a or not samples_b:
+            continue
+        
+        # Calculate average tick for each cell
+        avg_tick_a = sum(s.tick for s in samples_a) / len(samples_a)
+        avg_tick_b = sum(s.tick for s in samples_b) / len(samples_b)
+        
+        # Predecessor fires first (lower average tick)
+        if avg_tick_a < avg_tick_b:
+            pred_node_id, succ_node_id = node_a, node_b
+        else:
+            pred_node_id, succ_node_id = node_b, node_a
+        
+        # Get actual nodes
+        pred_node = graph.nodes.get(pred_node_id)
+        succ_node = graph.nodes.get(succ_node_id)
+        
+        if not pred_node or not succ_node:
+            continue
+        
+        # POR links can only connect SCRIPT nodes - wrap terminals if needed
+        if pred_node.ntype == NodeType.TERMINAL:
+            wrapped_pred = wrap_terminal_as_script(graph, registry, pred_node_id, current_tick)
+            if wrapped_pred:
+                pred_node_id = wrapped_pred
+                pred_node = graph.nodes.get(pred_node_id)
+            else:
+                continue  # Skip if wrapping failed
+        
+        if succ_node.ntype == NodeType.TERMINAL:
+            wrapped_succ = wrap_terminal_as_script(graph, registry, succ_node_id, current_tick)
+            if wrapped_succ:
+                succ_node_id = wrapped_succ
+                succ_node = graph.nodes.get(succ_node_id)
+            else:
+                continue  # Skip if wrapping failed
+        
+        # Check if POR link already exists
+        existing_por = False
+        for edge in graph.edges:
+            if edge.src == pred_node_id and edge.dst == succ_node_id and edge.ltype == LinkType.POR:
+                existing_por = True
+                break
+        
+        if existing_por:
+            continue  # Already connected
+        
+        # Create POR link
+        try:
+            graph.add_edge(pred_node_id, succ_node_id, LinkType.POR)
+            
+            # Configure Soft-POR on successor for weighted gating
+            succ_node.meta["por_policy"] = "weighted"
+            succ_node.meta["por_theta"] = 0.4  # Lowered threshold for easier triggering
+            
+            # Mark edge metadata
+            for edge in graph.edges:
+                if edge.src == pred_node_id and edge.dst == succ_node_id and edge.ltype == LinkType.POR:
+                    edge.meta["origin"] = "por_discovery"
+                    edge.meta["confidence"] = ratio
+                    edge.meta["co_activations"] = co_count
+                    edge.meta["created_tick"] = current_tick
+                    break
+            
+            # Persist to registry
+            if registry:
+                registry.add_edge(
+                    pred_node_id, succ_node_id, "POR",
+                    weight=ratio,  # Use correlation as weight
+                    tick=current_tick,
+                )
+            
+            discovered_chains.append((pred_node_id, succ_node_id, ratio))
+            
+        except ValueError as e:
+            # POR link validation failed (e.g., not both SCRIPT nodes)
+            continue
+    
+    return discovered_chains
+
+
+# =============================================================================
+# M5 RECURSIVE BRANCHING - Maturation Metrics
+# =============================================================================
+
+def compute_branching_metrics(
+    graph: "Graph",
+    backbone_nodes: Set[str] = None,
+) -> Dict[str, Any]:
+    """
+    Compute metrics for the 'Budding' process (M5 Recursive Branching).
+    
+    These metrics help monitor the transition from flat to hierarchical topology.
+    
+    Args:
+        graph: The Graph to analyze
+        backbone_nodes: Set of backbone node IDs (uses BACKBONE_NODES if None)
+        
+    Returns:
+        Dict with branching metrics:
+        - speculative_ands: Count of min()-aggregated nodes
+        - branching_factor: Avg children per non-backbone SCRIPT
+        - non_backbone_scripts: Count of SCRIPT nodes not in backbone
+        - max_depth: Maximum depth from backbone
+        - por_count: Number of POR edges
+        - sub_count: Number of SUB edges
+    """
+    from ..graph import NodeType, LinkType
+    
+    if backbone_nodes is None:
+        backbone_nodes = BACKBONE_NODES
+    
+    # Find non-backbone SCRIPT nodes
+    non_backbone_scripts = [
+        nid for nid, n in graph.nodes.items()
+        if n.ntype == NodeType.SCRIPT and nid not in backbone_nodes
+    ]
+    
+    # Count children per non-backbone SCRIPT
+    children_counts = [len(graph.children(nid)) for nid in non_backbone_scripts]
+    branching_factor = (
+        sum(children_counts) / len(children_counts) 
+        if children_counts else 0.0
+    )
+    
+    # Count speculative AND nodes (min-aggregated)
+    speculative_ands = sum(
+        1 for nid in non_backbone_scripts
+        if graph.nodes[nid].meta.get("aggregation") == "and"
+        and graph.nodes[nid].meta.get("speculative")
+    )
+    
+    # Count all AND nodes (not just speculative)
+    total_and_nodes = sum(
+        1 for nid in non_backbone_scripts
+        if graph.nodes[nid].meta.get("aggregation") == "and"
+    )
+    
+    # Compute max depth
+    max_depth = 0
+    for nid in graph.nodes:
+        depth = compute_node_depth(graph, nid, backbone_nodes)
+        max_depth = max(max_depth, depth)
+    
+    # Count edge types
+    por_count = sum(1 for e in graph.edges if e.ltype == LinkType.POR)
+    sub_count = sum(1 for e in graph.edges if e.ltype == LinkType.SUB)
+    total_edges = len(graph.edges)
+    
+    # Calculate edge type ratios
+    por_ratio = por_count / total_edges if total_edges > 0 else 0.0
+    sub_ratio = sub_count / total_edges if total_edges > 0 else 0.0
+    
+    # Count POR wrappers (terminals wrapped for sequential gating)
+    por_wrappers = sum(
+        1 for nid, n in graph.nodes.items()
+        if n.meta.get("origin") == "por_wrapper"
+    )
+    
+    return {
+        "speculative_ands": speculative_ands,
+        "total_and_nodes": total_and_nodes,
+        "branching_factor": round(branching_factor, 2),
+        "non_backbone_scripts": len(non_backbone_scripts),
+        "max_depth": max_depth,
+        "por_count": por_count,
+        "sub_count": sub_count,
+        "por_ratio": round(por_ratio, 3),
+        "sub_ratio": round(sub_ratio, 3),
+        "por_wrappers": por_wrappers,
+    }
+
+
+# =============================================================================
+# LINK-XP: Neural Darwinism for Edge Pruning
+# =============================================================================
+
+def edge_key(src: str, dst: str, ltype: str) -> str:
+    """Generate canonical edge key for tracking."""
+    return f"{src}->{dst}:{ltype}"
+
+
+def update_link_xp_for_game(
+    graph: "Graph",  # type: ignore
+    active_edges: List[str],  # Edge keys that were active
+    game_won: bool,
+) -> Dict[str, int]:
+    """
+    Update link_xp for all active edges based on game outcome.
+    
+    NEURAL DARWINISM: Links that were active during wins get +1 XP.
+    Links that were active during losses get -1 XP.
+    
+    Args:
+        graph: The Graph containing edges
+        active_edges: List of edge keys that fired during the game
+        game_won: Whether the game was won
+        
+    Returns:
+        Dict mapping edge_key to new xp value
+    """
+    xp_changes = {}
+    delta = 1 if game_won else -1
+    
+    for edge in graph.edges:
+        key = edge_key(edge.src, edge.dst, edge.ltype.name)
+        if key in active_edges:
+            current_xp = edge.meta.get("link_xp", 0)
+            new_xp = current_xp + delta
+            edge.meta["link_xp"] = new_xp
+            edge.meta["link_games"] = edge.meta.get("link_games", 0) + 1
+            xp_changes[key] = new_xp
+    
+    return xp_changes
+
+
+def prune_weak_links(
+    graph: "Graph",  # type: ignore
+    fast_threshold_games: int = 25,
+    audit_threshold_games: int = 100,
+    min_contribution: float = 0.05,
+) -> List[str]:
+    """
+    Two-tier aggressive link pruning.
+    
+    Tier 1 (25-game fast kill): If xp <= 0 after 25 games, kill immediately.
+    Tier 2 (100-game audit): If contribution < 5% after 100 games, kill.
+    
+    Args:
+        graph: The Graph to prune
+        fast_threshold_games: Games for tier 1 fast kill
+        audit_threshold_games: Games for tier 2 audit
+        min_contribution: Minimum contribution ratio for tier 2
+        
+    Returns:
+        List of pruned edge keys
+    """
+    pruned = []
+    edges_to_remove = []
+    
+    for edge in graph.edges:
+        key = edge_key(edge.src, edge.dst, edge.ltype.name)
+        games = edge.meta.get("link_games", 0)
+        xp = edge.meta.get("link_xp", 0)
+        
+        # Skip non-hypothesis edges (no tracking data)
+        if games == 0:
+            continue
+        
+        # Tier 1: Fast kill (25 games, xp <= 0)
+        if games >= fast_threshold_games and xp <= 0:
+            edges_to_remove.append(edge)
+            pruned.append(key)
+            continue
+        
+        # Tier 2: Audit (100 games, contribution < 5%)
+        if games >= audit_threshold_games:
+            # Contribution = (xp / games) normalized to 0-1
+            # xp can be -games to +games, so contribution = (xp + games) / (2 * games)
+            contribution = (xp + games) / (2 * games) if games > 0 else 0.5
+            if contribution < min_contribution:
+                edges_to_remove.append(edge)
+                pruned.append(key)
+    
+    # Remove pruned edges
+    for edge in edges_to_remove:
+        if edge in graph.edges:
+            graph.edges.remove(edge)
+    
+    return pruned
+
+
+def spawn_hypothesis_links(
+    graph: "Graph",  # type: ignore
+    new_node_id: str,
+    stem_manager: "StemCellManager",  # type: ignore
+    most_active_sensor_id: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Relational Spawning: Create 3 hypothesis links for a new terminal.
+    
+    Instead of just connecting to backbone, create lateral/upward connections:
+    1. SUB to a random leg (kpk_pawn_leg or kpk_king_leg)
+    2. SUR (confirmation) to an existing SOLID node with Soft-POR config
+    3. Trigger hoist if correlated with most active sensor
+    
+    Args:
+        graph: The Graph to modify
+        new_node_id: ID of the newly created node
+        stem_manager: Manager with SOLID cells info
+        most_active_sensor_id: ID of most active sensor for hoisting
+        
+    Returns:
+        Dict with spawned link info
+    """
+    from ..graph import LinkType, Node
+    from random import choice
+    
+    result = {
+        "leg_link": None,
+        "sur_link": None,
+        "hoisted": None,
+    }
+    
+    # Link 1: SUB to random leg
+    legs = ["kpk_pawn_leg", "kpk_king_leg"]
+    target_leg = choice(legs)
+    if target_leg in graph.nodes:
+        graph.add_edge(target_leg, new_node_id, LinkType.SUB)
+        # Track this as hypothesis link
+        for edge in graph.edges:
+            if edge.src == target_leg and edge.dst == new_node_id:
+                edge.meta["hypothesis"] = True
+                edge.meta["link_xp"] = 0
+                edge.meta["link_games"] = 0
+                break
+        result["leg_link"] = target_leg
+    
+    # Link 2: SUR (confirmation) to existing SOLID node with Soft-POR
+    solid_cells = [
+        c for c in stem_manager.cells.values()
+        if c.state == StemCellState.MATURE and c.trial_node_id
+    ]
+    if solid_cells:
+        target_solid = choice(solid_cells)
+        target_id = target_solid.trial_node_id
+        if target_id in graph.nodes:
+            graph.add_edge(new_node_id, target_id, LinkType.SUR)
+            # Configure Soft-POR on the target node
+            target_node = graph.nodes[target_id]
+            target_node.meta["por_policy"] = "weighted"
+            target_node.meta["por_theta"] = 0.4  # EXPANSION: lowered from 0.5 for easier triggering
+            # Track as hypothesis link
+            for edge in graph.edges:
+                if edge.src == new_node_id and edge.dst == target_id and edge.ltype == LinkType.SUR:
+                    edge.meta["hypothesis"] = True
+                    edge.meta["link_xp"] = 0
+                    edge.meta["link_games"] = 0
+                    break
+            result["sur_link"] = target_id
+    
+    # Link 3: Trigger hoist if correlated with active sensor
+    if most_active_sensor_id and most_active_sensor_id in graph.nodes:
+        # Try to hoist these two into an AND cluster
+        new_cell = next(
+            (c for c in stem_manager.cells.values() if c.trial_node_id == new_node_id),
+            None
+        )
+        active_cell = next(
+            (c for c in stem_manager.cells.values() if c.trial_node_id == most_active_sensor_id),
+            None
+        )
+        if new_cell and active_cell:
+            # Compute similarity
+            similarity = stem_manager.compute_pattern_similarity(new_cell, active_cell)
+            if similarity > 0.8:
+                cluster_id = stem_manager.hoist_cluster(
+                    [new_cell.cell_id, active_cell.cell_id],
+                    graph,
+                    parent_node_id="kpk_detect",
+                    aggregation_mode="and",  # TRUE AND gate!
+                )
+                result["hoisted"] = cluster_id
+    
+    return result
 
 
 class StructureLearner:
@@ -419,6 +1016,7 @@ class StructureLearner:
         episodes: List[Any],
         max_promotions: int = 2,
         parent_candidates: Optional[List[str]] = None,
+        current_win_rate: float = 0.0,  # For Perfect Success bypass
     ) -> Dict[str, Any]:
         """
         Run a full structural phase:
@@ -432,6 +1030,7 @@ class StructureLearner:
             episodes: List of EpisodeRecord from recent games
             max_promotions: Max nodes to promote this cycle
             parent_candidates: Optional list of eligible parent node IDs
+            current_win_rate: Current cycle win rate for Perfect Success bypass
             
         Returns:
             Stats dict with counts and results
@@ -465,18 +1064,58 @@ class StructureLearner:
             if cell.state != StemCellState.CANDIDATE:
                 continue
             
-            # Check if ready for trial - quality threshold (was 0.35, raised to 0.50)
+            # PERFECT SUCCESS BYPASS: 100% win rate over 50+ samples
+            # "Success is the ultimate consistency" - bypass ALL checks
+            sample_count = len(cell.samples) if hasattr(cell, 'samples') else 0
+            perfect_success = (
+                current_win_rate >= 1.0 and 
+                sample_count >= 50
+            )
+            
+            # Check if ready for trial - EXPANSION: lowered to 0.40
             consistency, _ = cell.analyze_pattern()
-            if consistency < 0.50:
-                trial_errors.append(f"{cell.cell_id}: consistency {consistency:.2f} < 0.50")
+            
+            if not perfect_success and consistency < 0.40:
+                trial_errors.append(f"{cell.cell_id}: consistency {consistency:.2f} < 0.40")
                 continue
             
-            # Choose parent
-            parent_id = parent_candidates[0] if parent_candidates else "kpk_root"
+            # =====================================================================
+            # M5 VERTICAL PARENTING: Use local_root_id for spawned children
+            # This enables hierarchical growth: Sensor -> Sub-goal -> Leg -> Backbone
+            # =====================================================================
+            local_root_id = cell.metadata.get("local_root_id")
+            
+            if local_root_id:
+                # This cell was spawned from a SOLID parent - use vertical parenting
+                # Check depth limit to keep propagate_activation() efficient
+                try:
+                    from recon_lite_chess.graph.builder import build_graph_from_topology
+                    graph = build_graph_from_topology(self.registry.topology_path, self.registry)
+                    
+                    current_depth = compute_node_depth(graph, local_root_id, BACKBONE_NODES)
+                    if current_depth >= MAX_BRANCH_DEPTH:
+                        # At max depth - fall back to backbone
+                        parent_id = parent_candidates[0] if parent_candidates else "kpk_detect"
+                        cell.metadata["depth_limited"] = True
+                        cell.metadata["original_local_root"] = local_root_id
+                    else:
+                        # Use vertical parent (local_root)
+                        parent_id = local_root_id
+                        cell.metadata["vertical_promotion"] = True
+                except Exception:
+                    # Fall back to backbone on error
+                    parent_id = parent_candidates[0] if parent_candidates else "kpk_detect"
+            else:
+                # Regular cell - use backbone parent
+                parent_id = parent_candidates[0] if parent_candidates else "kpk_root"
             
             # Promote to TRIAL (not MATURE yet)
             if cell.promote_to_trial(self.registry, parent_id, current_tick):
                 trial_promotions.append(cell.cell_id)
+                if perfect_success:
+                    cell.metadata["promotion_reason"] = "perfect_success"
+                if cell.metadata.get("vertical_promotion"):
+                    cell.metadata["promotion_reason"] = "vertical_to_" + parent_id
             else:
                 trial_errors.append(f"{cell.cell_id}: trial promotion failed")
         
@@ -522,17 +1161,18 @@ class StructureLearner:
         # Step 6: Collection confirmation stats for pruning
         pruning_results: List[PruningResult] = []
         
-        # Step 7: AUTO_HOIST - Find correlated clusters and create intermediate nodes
+        # Step 7: ACTIVE HOISTING - Trigger for TRIAL nodes at 0.85 correlation
+        # EXPANSION: Don't wait for solidification - hoist as soon as TRIAL nodes correlate
         hoisted_clusters: List[str] = []
-        if solidified:  # Only hoist after successful solidification
+        trial_cells = [c for c in stem_manager.cells.values() if c.state == StemCellState.TRIAL]
+        if len(trial_cells) >= 2:  # Need at least 2 to hoist
             try:
-                # Build graph to pass to auto_hoist
                 from recon_lite_chess.graph.builder import build_graph_from_topology
                 graph = build_graph_from_topology(self.registry.topology_path, self.registry)
                 hoisted_clusters = stem_manager.auto_hoist(
                     graph,
                     parent_node_id="kpk_detect",
-                    min_similarity=0.80,  # 80% correlation → hoist into intermediate
+                    min_similarity=0.85,  # ACTIVE: 85% correlation for TRIAL hoisting
                 )
                 if hoisted_clusters:
                     # Save the updated graph back to registry
@@ -551,8 +1191,42 @@ class StructureLearner:
                 new_ids = cell.spawn_neighbors(stem_manager, target_leg=target_leg, spawn_count=2)
                 spawned_neighbors.extend(new_ids)
         
+        # Step 9: POR CHAIN DISCOVERY - Sequential Gating
+        # Discover temporal patterns like Opposition -> Protect -> Promote
+        discovered_por_chains: List[Tuple[str, str, float]] = []
+        try:
+            from recon_lite_chess.graph.builder import build_graph_from_topology
+            graph = build_graph_from_topology(self.registry.topology_path, self.registry)
+            
+            discovered_por_chains = discover_por_chains(
+                graph=graph,
+                stem_manager=stem_manager,
+                registry=self.registry,
+                min_sequence_confidence=0.7,
+                current_tick=current_tick,
+            )
+            
+            if discovered_por_chains:
+                # Save updated graph with POR links
+                self.registry.save()
+        except Exception as e:
+            discovered_por_chains = []
+        
         # Save changes
         self.registry.save()
+        
+        # Count vertical promotions (M5 Recursive Branching metric)
+        vertical_promotions = sum(
+            1 for cid in trial_promotions
+            if stem_manager.cells.get(cid) and 
+               stem_manager.cells[cid].metadata.get("vertical_promotion")
+        )
+        
+        # Compute sequence confidence (average correlation for discovered POR links)
+        sequence_confidence = (
+            sum(conf for _, _, conf in discovered_por_chains) / len(discovered_por_chains)
+            if discovered_por_chains else 0.0
+        )
         
         return {
             "spikes_found": len(spikes),
@@ -567,9 +1241,14 @@ class StructureLearner:
             "maturity_boosted": maturity_boosted,
             "demoted": len(demoted),
             "demoted_cells": demoted,
-            # NEW: Vertical growth stats
+            # NEW: Vertical growth stats (M5 Recursive Branching)
             "hoisted_clusters": hoisted_clusters,
             "spawned_neighbors": spawned_neighbors,
+            "vertical_promotions": vertical_promotions,  # Nodes parented to SOLID, not backbone
+            # POR Chain Discovery (Sequential Gating)
+            "discovered_por_chains": len(discovered_por_chains),
+            "por_chain_details": [(p, s, round(c, 3)) for p, s, c in discovered_por_chains],
+            "sequence_confidence": round(sequence_confidence, 3),
             # Legacy compat
             "promotions_attempted": len(trial_promotions),
             "promotions_succeeded": len(trial_promotions),

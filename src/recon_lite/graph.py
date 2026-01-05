@@ -404,12 +404,23 @@ class Graph:
                 node.activation.nudge(target, eta)
                 new_activations[nid] = node.activation.value
             elif node.ntype == NodeType.SCRIPT:
-                # Compute target from children
-                z = self.compute_z_sur(nid)
-                # Normalize by number of children
+                # Compute target from children based on aggregation mode
                 children = self.get_sub_children(nid)
-                if children:
-                    z /= len(children)
+                aggregation = node.meta.get("aggregation", "avg")
+                
+                if aggregation == "and" and children:
+                    # TRUE AND GATE: Uses min() - fires ONLY when ALL children active
+                    child_activations = []
+                    for child_id in children:
+                        child = self.nodes.get(child_id)
+                        if child:
+                            child_activations.append(child.activation.value)
+                    z = min(child_activations) if child_activations else 0.0
+                else:
+                    # Default: Weighted average (OR-like behavior)
+                    z = self.compute_z_sur(nid)
+                    if children:
+                        z /= len(children)
                 
                 # Smooth update
                 new_val = node.activation.nudge(z, eta)
