@@ -324,6 +324,11 @@ class EvolutionConfig:
     stage_promotion_threshold: float = 0.8  # Win rate to advance
     min_games_per_stage: int = 50
     use_stockfish_rewards: bool = True
+    
+    # Engine tick settings (for TRIAL node activation)
+    # min_internal_ticks: Mandatory propagation depth before allowing early exit.
+    # Set to 3+ during Structural Spurt to ensure TRIAL nodes activate.
+    min_internal_ticks: int = 0  # 0 = disabled (legacy behavior)
 
 
 @dataclass
@@ -434,6 +439,7 @@ def run_online_phase(
             max_moves=config.max_moves_per_game,
             max_ticks=config.max_ticks_per_move,
             apply_scent_shaping=apply_scent_shaping,  # M5.1
+            min_internal_ticks=config.min_internal_ticks,  # Mandatory tick depth
         )
         
         # Store stage info in episode for later analysis
@@ -504,6 +510,7 @@ def _play_single_game(
     max_moves: int,
     max_ticks: int,
     apply_scent_shaping: bool = False,  # M5.1: Enable scent reward for draws
+    min_internal_ticks: int = 0,  # Mandatory tick depth for TRIAL activation
 ) -> Tuple[str, EpisodeRecord]:
     """
     Play a single KPK game and return (result, episode_record).
@@ -520,6 +527,8 @@ def _play_single_game(
         max_moves: Maximum moves before draw
         max_ticks: Maximum ticks per move
         apply_scent_shaping: M5.1 - If True, apply scent reward for draws
+        min_internal_ticks: Mandatory propagation depth before allowing early exit.
+                           Set to 3+ during Structural Spurt to ensure TRIAL nodes activate.
     """
     from recon_lite.plasticity import init_plasticity_state
     from recon_lite_chess.sensors.structure import summarize_kpk_material
@@ -551,8 +560,13 @@ def _play_single_game(
     our_color = board.turn
     
     # Lock into KPK subgraph (this is the key fix!)
+    # min_internal_ticks ensures TRIAL nodes have time to activate before Legs suggest moves
     if "kpk_root" in graph.nodes:
-        engine.lock_subgraph("kpk_root", kpk_sentinel)
+        engine.lock_subgraph(
+            "kpk_root", 
+            kpk_sentinel,
+            min_internal_ticks=min_internal_ticks
+        )
     
     while not board.is_game_over() and move_count < max_moves:
         # Reset node states for fresh move evaluation (but keep lock)
@@ -1239,6 +1253,13 @@ def main():
         action="store_true",
         help="Quick test mode (10 games, 2 cycles)"
     )
+    parser.add_argument(
+        "--min-tick-depth",
+        type=int,
+        default=0,
+        help="Mandatory internal tick depth before allowing move suggestion (0=disabled). "
+             "Set to 3+ during Structural Spurt to ensure TRIAL nodes activate."
+    )
     
     args = parser.parse_args()
     
@@ -1282,6 +1303,7 @@ def main():
             current_stage_idx=stage_idx,
             stage_promotion_threshold=args.win_threshold,
             stem_cells_load_path=prev_stem_cells_path,  # Inherit stem cells
+            min_internal_ticks=args.min_tick_depth,  # Mandatory tick depth for TRIAL activation
         )
         
         # Ensure directories exist

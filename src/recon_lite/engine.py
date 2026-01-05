@@ -13,12 +13,19 @@ class SubgraphLock:
     When locked, the engine only ticks nodes within this subgraph,
     completing internal execution before returning control. The sentinel
     function is checked each step to detect exceptional exits.
+    
+    Mandatory Tick Depth:
+    - min_internal_ticks forces propagation to reach deeper nodes (e.g., TRIAL)
+      before allowing early exit via move suggestion.
+    - This is crucial during "Structural Spurt" phases where exploratory nodes
+      need time to "speak" before Legs make decisions.
     """
     subgraph_root: str                          # e.g., "kpk_root"
     entry_tick: int                             # When we locked in
     sentinel_fn: Callable[[Dict[str, Any]], bool]  # Returns False to exit
     goal_achieved: bool = False                 # Subgraph completed successfully
     max_internal_ticks: int = 10                # Prevent infinite loops
+    min_internal_ticks: int = 0                 # Mandatory propagation depth (0 = disabled)
 
 
 class ReConEngine:
@@ -119,6 +126,47 @@ class ReConEngine:
             child.state = NodeState.REQUESTED
             child.tick_entered = self.tick
             now_requested[child_id] = True
+
+    def _has_any_child_confirmed(self, parent_id: str) -> bool:
+        """
+        Check if at least one child of the parent has reached CONFIRMED state.
+        
+        Used for GATING mature/solidified nodes: a Leg with require_child_confirm=True
+        cannot suggest moves until at least one child sensor/manager confirms.
+        This forces the hierarchy to "speak" before the Leg acts.
+        """
+        children = self.g.children(parent_id)
+        if not children:
+            return True  # No children = no gating requirement
+        
+        for child_id in children:
+            child = self.g.nodes.get(child_id)
+            if child and child.state == NodeState.CONFIRMED:
+                return True
+        return False
+
+    def _gating_satisfied(self, subgraph_nodes: Set[str]) -> bool:
+        """
+        Check if gating requirements are satisfied for mature/solidified nodes.
+        
+        GATING for mature nodes: Legs (actuators) marked with require_child_confirm=True
+        must have at least one child in CONFIRMED state before they can produce output.
+        
+        This is the "purist ReCoN" approach: a node shouldn't speak until spoken to.
+        For immature training, use min_internal_ticks instead (scaffolding).
+        
+        Returns:
+            True if all gating requirements are satisfied (or none exist)
+        """
+        for nid in subgraph_nodes:
+            node = self.g.nodes.get(nid)
+            if not node:
+                continue
+            # Check if this node requires child confirmation (mature/solidified gating)
+            if node.meta.get("require_child_confirm", False):
+                if not self._has_any_child_confirmed(nid):
+                    return False
+        return True
 
     def _children_confirmed_sequence_done(self, parent_id: str) -> bool:
         roots = [c for c in self.g.children(parent_id) if not self.g.predecessors(c)]
@@ -289,7 +337,8 @@ class ReConEngine:
         self, 
         subgraph_root: str, 
         sentinel_fn: Callable[[Dict[str, Any]], bool],
-        max_internal_ticks: int = 10
+        max_internal_ticks: int = 10,
+        min_internal_ticks: int = 0
     ) -> None:
         """
         Lock execution to a specific subgraph (goal delegation).
@@ -302,6 +351,9 @@ class ReConEngine:
             subgraph_root: Node ID of the subgraph root (e.g., "kpk_root")
             sentinel_fn: Called with env each step; returns False to exit
             max_internal_ticks: Prevent infinite loops (default 10)
+            min_internal_ticks: Mandatory propagation depth before allowing early
+                               exit. Set to 3+ during Structural Spurt to ensure
+                               TRIAL nodes have time to activate. (default 0)
         """
         if subgraph_root not in self.g.nodes:
             raise ValueError(f"Subgraph root '{subgraph_root}' not found in graph")
@@ -311,6 +363,7 @@ class ReConEngine:
             entry_tick=self.tick,
             sentinel_fn=sentinel_fn,
             max_internal_ticks=max_internal_ticks,
+            min_internal_ticks=min_internal_ticks,
         )
         
         # Request the subgraph root to start internal propagation
@@ -398,6 +451,9 @@ class ReConEngine:
         root_node.tick_entered = self.tick
         
         # Run internal ticks until actuator produces output or max reached
+        # MANDATORY TICK DEPTH: Must complete min_internal_ticks before allowing early exit
+        min_ticks = self.subgraph_lock.min_internal_ticks
+        
         for internal_tick in range(self.subgraph_lock.max_internal_ticks):
             # Update only subgraph terminals
             self._update_terminals_subset(env, now_requested, subgraph_nodes)
@@ -407,6 +463,19 @@ class ReConEngine:
             
             # Confirm only subgraph scripts
             self._confirm_script_completions_subset(subgraph_nodes)
+            
+            # MANDATORY TICK DEPTH CHECK:
+            # Only allow early exit AFTER min_internal_ticks have completed.
+            # This ensures TRIAL/exploratory nodes have time to activate before
+            # Legs make decisions. Critical for Structural Spurt training.
+            if internal_tick < min_ticks:
+                continue  # Force propagation to continue
+            
+            # GATING CHECK for mature nodes:
+            # If any node requires child confirmation, ensure that's satisfied
+            # before allowing early exit. This is the "purist" ReCoN approach.
+            if not self._gating_satisfied(subgraph_nodes):
+                continue  # Wait for children to confirm
             
             # Check if we have a move suggestion (actuator output)
             # This is specific to chess but could be generalized

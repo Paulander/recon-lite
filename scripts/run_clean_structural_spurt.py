@@ -154,6 +154,10 @@ def run_clean_structural_spurt():
     os.environ["M5_FORCED_HOIST_THRESHOLD_HIGH"] = "0.95"  # High threshold (success trap)
     os.environ["M5_FORCED_HOIST_INTERVAL_CYCLES"] = "3"
     
+    # MANDATORY TICK DEPTH for TRIAL node activation
+    # Set to 3 to ensure TRIAL nodes have time to "speak" before Legs act
+    MIN_INTERNAL_TICKS = 3
+    
     print("\n📋 Configuration:")
     print("  - Weights reset to 0.5 (fresh start)")
     print("  - Success Bypass: ON")
@@ -161,6 +165,7 @@ def run_clean_structural_spurt():
     print("  - Forced Hoist @ <10% win rate (crisis)")
     print("  - Forced Hoist @ >95% win rate (success trap)")
     print("  - Forced Pruning at Stage 5 if max_depth = 1")
+    print(f"  - Mandatory Tick Depth: {MIN_INTERNAL_TICKS} (TRIAL activation)")
     print()
     
     base_topo = Path("topologies/kpk_legs_topology.json")
@@ -214,6 +219,7 @@ def run_clean_structural_spurt():
             stem_cells_load_path=stem_cells_path,
             use_curriculum=True,
             current_stage_idx=stage_idx,
+            min_internal_ticks=MIN_INTERNAL_TICKS,  # TRIAL node activation
         )
         
         results = run_evolution_training(config)
