@@ -128,7 +128,9 @@ def run_stage11_logic_gauntlet():
     MIN_TICK_DEPTH = 3  # Forces: Root → Leg → TRIAL Sensor
     GATED_NODES = ["kpk_pawn_leg", "kpk_king_leg"]
     SOLIDIFY_XP_THRESHOLD = 20  # Accelerate locking
-    TARGET_STAGE = 11  # Zugzwang (or 12 if 0-indexed)
+    
+    # Stage selection - can be overridden by environment variable
+    TARGET_STAGE = int(os.environ.get("TARGET_STAGE", "12"))  # Default: 12 (Zugzwang Full)
     
     # Set environment variables for recursive_turbo persona
     os.environ["M5_ENABLE_FORCED_HOISTING"] = "1"
@@ -136,6 +138,13 @@ def run_stage11_logic_gauntlet():
     os.environ["M5_FORCED_HOIST_THRESHOLD_HIGH"] = "0.95"  # Success trap
     os.environ["M5_FORCED_HOIST_INTERVAL_CYCLES"] = "3"
     os.environ["M5_SOLIDIFY_XP_THRESHOLD"] = str(SOLIDIFY_XP_THRESHOLD)
+    
+    # HEURISTIC SUPPRESSION (Leg Capping):
+    # When enabled, disable the "approach" heuristic in king_leg
+    # This forces the network to rely on TRIAL sensors for direction
+    ENABLE_HEURISTIC_SUPPRESSION = os.environ.get("KPK_HEURISTIC_SUPPRESSION", "0") == "1"
+    if ENABLE_HEURISTIC_SUPPRESSION:
+        print("  - Heuristic Suppression: ON (king approach disabled)")
     
     print("📋 Configuration:")
     print(f"  - Tick Depth: {MIN_TICK_DEPTH} (Deep Propagation)")

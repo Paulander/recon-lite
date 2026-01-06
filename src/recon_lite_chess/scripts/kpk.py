@@ -188,12 +188,20 @@ def create_kpk_king_leg(nid: str) -> Node:
     - HIGH when king move improves position (closer to pawn, better opposition)
     - LOW when pawn push is available and safe
     
+    Heuristic Suppression (Leg Capping):
+    - When env["heuristic_suppression"] is True, disable the "approach" heuristic
+    - This forces the network to find alternative paths (e.g., triangulation)
+    - Used to break "vibing" and force deeper hierarchical reasoning
+    
     Stores proposal in env["kpk"]["legs"]["king"]
     """
     def _predicate(node: Node, env: Dict[str, Any]):
         weights = _load_cfg()
         board = env.get("board")
         summary = struct_sensors.summarize_kpk_material(board)
+        
+        # HEURISTIC SUPPRESSION: Disable "approach" heuristic when enabled
+        suppress_approach = env.get("heuristic_suppression", False)
         
         if not summary.get("is_kpk"):
             node.meta["activation"] = 0.0
@@ -253,8 +261,9 @@ def create_kpk_king_leg(nid: str) -> Node:
                 # Direct opposition
                 if new_file == dk_file and abs(new_rank - dk_rank) == 2:
                     score += 0.3
-                # Cutting off squares
-                if attacker_king is not None:
+                # Cutting off squares (SUPPRESSIBLE - this is the "vibe" heuristic)
+                # When suppressed, the king leg must rely on TRIAL sensors for direction
+                if attacker_king is not None and not suppress_approach:
                     cur_d = max(abs(chess.square_file(attacker_king) - dk_file),
                                abs(chess.square_rank(attacker_king) - dk_rank))
                     new_d = max(abs(new_file - dk_file), abs(new_rank - dk_rank))

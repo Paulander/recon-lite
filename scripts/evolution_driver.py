@@ -578,6 +578,10 @@ def _play_single_game(
             "board": board,
             "our_color": our_color,
             "move_count": move_count,
+            # HEURISTIC SUPPRESSION: When enabled, disable the "approach" heuristic
+            # in king_leg to force reliance on TRIAL sensors for direction.
+            # This breaks "vibing" and forces deeper hierarchical reasoning.
+            "heuristic_suppression": os.environ.get("KPK_HEURISTIC_SUPPRESSION", "0") == "1",
         }
         
         # Extract features for stem cells if available
@@ -658,11 +662,21 @@ def _play_single_game(
                 tick_reward = -0.1  # Bad move attempted
         
         # Create tick record WITH reward
+        # FIXED: Include all nodes that participated in this tick:
+        # - REQUESTED/WAITING/ACTIVE: Currently processing
+        # - TRUE/CONFIRMED: Completed successfully (including TRIAL nodes!)
+        # This ensures we capture "Hero Sensors" that unlock gated legs.
+        active_states = (
+            NodeState.ACTIVE, 
+            NodeState.WAITING, 
+            NodeState.REQUESTED,
+            NodeState.TRUE,       # Completed - critical for TRIAL nodes!
+            NodeState.CONFIRMED,  # Confirmed - critical for gating detection!
+        )
         tick_rec = TickRecord(
             tick_id=tick_count,
             board_fen=board.fen(),
-            active_nodes=[n.nid for n in graph.nodes.values() 
-                         if n.state in (NodeState.ACTIVE, NodeState.WAITING, NodeState.REQUESTED)],
+            active_nodes=[n.nid for n in graph.nodes.values() if n.state in active_states],
             action=suggested_move,
             reward_tick=tick_reward,  # Now stored for structural phase!
         )
