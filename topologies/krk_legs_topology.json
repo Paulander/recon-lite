@@ -154,6 +154,918 @@
         "description": "King approach/opposition patterns from KPK",
         "binding_space": "krk_king_binding"
       }
+    },
+    {
+      "id": "TRIAL_stem_0000_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0000",
+        "tier": "trial",
+        "consistency": 0.5312073216572075,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.4087301587301586,
+          0.492063492063492,
+          0.18253968253968259,
+          0.7182539682539684,
+          0.0
+        ],
+        "subgraph": "krk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0001_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0001",
+        "tier": "trial",
+        "consistency": 0.5312073216572075,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.4087301587301586,
+          0.492063492063492,
+          0.18253968253968259,
+          0.7182539682539684,
+          0.0
+        ],
+        "subgraph": "krk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0002_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0002",
+        "tier": "trial",
+        "consistency": 0.5653399800171108,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.3832752613240417,
+          0.5261324041811847,
+          0.17770034843205582,
+          0.7526132404181186,
+          0.0
+        ],
+        "subgraph": "krk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0003_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0003",
+        "tier": "trial",
+        "consistency": 0.5653399800171108,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.3832752613240417,
+          0.5261324041811847,
+          0.17770034843205582,
+          0.7526132404181186,
+          0.0
+        ],
+        "subgraph": "krk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0004_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0004",
+        "tier": "trial",
+        "consistency": 0.5208098751667098,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.3809523809523809,
+          0.5357142857142857,
+          0.23214285714285718,
+          0.7202380952380952,
+          0.0
+        ],
+        "subgraph": "krk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0005_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0005",
+        "tier": "trial",
+        "consistency": 0.5208098751667098,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.3809523809523809,
+          0.5357142857142857,
+          0.23214285714285718,
+          0.7202380952380952,
+          0.0
+        ],
+        "subgraph": "krk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0006_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0006",
+        "tier": "trial",
+        "consistency": 0.5003622177399372,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.35835351089588385,
+          0.5496368038740922,
+          0.3220338983050847,
+          0.7336561743341402,
+          0.0
+        ],
+        "subgraph": "krk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0007_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0007",
+        "tier": "trial",
+        "consistency": 0.5003622177399372,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.35835351089588385,
+          0.5496368038740922,
+          0.3220338983050847,
+          0.7336561743341402,
+          0.0
+        ],
+        "subgraph": "krk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0019_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0019",
+        "tier": "trial",
+        "consistency": 0.5062878704731505,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.2843406593406596,
+          0.29258241758241726,
+          0.7486263736263735,
+          0.7266483516483511,
+          0.0
+        ],
+        "subgraph": "krk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0020_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0020",
+        "tier": "trial",
+        "consistency": 0.5062878704731505,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.2843406593406596,
+          0.29258241758241726,
+          0.7486263736263735,
+          0.7266483516483511,
+          0.0
+        ],
+        "subgraph": "krk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0008_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0008",
+        "tier": "trial",
+        "consistency": 0.572910721210433,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.28831168831168835,
+          0.607792207792208,
+          0.28571428571428575,
+          0.7948051948051945,
+          0.0
+        ],
+        "subgraph": "krk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0009_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0009",
+        "tier": "trial",
+        "consistency": 0.572910721210433,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.28831168831168835,
+          0.607792207792208,
+          0.28571428571428575,
+          0.7948051948051945,
+          0.0
+        ],
+        "subgraph": "krk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0016_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0016",
+        "tier": "trial",
+        "consistency": 0.5593390014968946,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.6443148688046649,
+          0.4810495626822155,
+          0.8046647230320698,
+          0.6413994169096213,
+          0.0
+        ],
+        "subgraph": "krk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0017_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0017",
+        "tier": "trial",
+        "consistency": 0.5593390014968946,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.6443148688046649,
+          0.4810495626822155,
+          0.8046647230320698,
+          0.6413994169096213,
+          0.0
+        ],
+        "subgraph": "krk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0018_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0018",
+        "tier": "trial",
+        "consistency": 0.5457331304313169,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.6206088992974237,
+          0.45667447306791537,
+          0.7985948477751755,
+          0.6487119437939111,
+          0.0
+        ],
+        "subgraph": "krk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0021_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0021",
+        "tier": "trial",
+        "consistency": 0.6003913815830852,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.5565031982942431,
+          0.4285714285714282,
+          0.8315565031982941,
+          0.7078891257995734,
+          0.0
+        ],
+        "subgraph": "krk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0013_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0013",
+        "tier": "trial",
+        "consistency": 0.5276690131227273,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.5520833333333328,
+          0.43005952380952345,
+          0.7916666666666666,
+          0.6666666666666664,
+          0.0
+        ],
+        "subgraph": "krk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0014_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0014",
+        "tier": "trial",
+        "consistency": 0.5276690131227273,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.5520833333333328,
+          0.43005952380952345,
+          0.7916666666666666,
+          0.6666666666666664,
+          0.0
+        ],
+        "subgraph": "krk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0015_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0015",
+        "tier": "trial",
+        "consistency": 0.5243669431620801,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.46491228070175394,
+          0.3621553884711776,
+          0.8182957393483709,
+          0.6779448621553879,
+          0.0
+        ],
+        "subgraph": "krk"
+      }
     }
   ],
   "edges": [
@@ -348,7 +1260,1358 @@
       "weight": 1.0,
       "consolidate": true,
       "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "TRIAL_stem_0000_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_rook_leg",
+      "dst": "TRIAL_stem_0000_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_king_leg",
+      "dst": "TRIAL_stem_0000_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "TRIAL_stem_0001_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_rook_leg",
+      "dst": "TRIAL_stem_0001_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_king_leg",
+      "dst": "TRIAL_stem_0001_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "TRIAL_stem_0002_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_rook_leg",
+      "dst": "TRIAL_stem_0002_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_king_leg",
+      "dst": "TRIAL_stem_0002_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "TRIAL_stem_0003_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_rook_leg",
+      "dst": "TRIAL_stem_0003_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_king_leg",
+      "dst": "TRIAL_stem_0003_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "TRIAL_stem_0004_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_rook_leg",
+      "dst": "TRIAL_stem_0004_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_king_leg",
+      "dst": "TRIAL_stem_0004_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "TRIAL_stem_0005_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_rook_leg",
+      "dst": "TRIAL_stem_0005_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_king_leg",
+      "dst": "TRIAL_stem_0005_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "TRIAL_stem_0006_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_rook_leg",
+      "dst": "TRIAL_stem_0006_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_king_leg",
+      "dst": "TRIAL_stem_0006_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "TRIAL_stem_0007_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_rook_leg",
+      "dst": "TRIAL_stem_0007_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_king_leg",
+      "dst": "TRIAL_stem_0007_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "TRIAL_stem_0019_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_rook_leg",
+      "dst": "TRIAL_stem_0019_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_king_leg",
+      "dst": "TRIAL_stem_0019_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "TRIAL_stem_0020_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_rook_leg",
+      "dst": "TRIAL_stem_0020_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_king_leg",
+      "dst": "TRIAL_stem_0020_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "TRIAL_stem_0008_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_rook_leg",
+      "dst": "TRIAL_stem_0008_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_king_leg",
+      "dst": "TRIAL_stem_0008_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "TRIAL_stem_0009_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_rook_leg",
+      "dst": "TRIAL_stem_0009_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_king_leg",
+      "dst": "TRIAL_stem_0009_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "TRIAL_stem_0016_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_rook_leg",
+      "dst": "TRIAL_stem_0016_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_king_leg",
+      "dst": "TRIAL_stem_0016_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "TRIAL_stem_0017_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_rook_leg",
+      "dst": "TRIAL_stem_0017_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_king_leg",
+      "dst": "TRIAL_stem_0017_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "TRIAL_stem_0018_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_rook_leg",
+      "dst": "TRIAL_stem_0018_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_king_leg",
+      "dst": "TRIAL_stem_0018_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "TRIAL_stem_0021_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_rook_leg",
+      "dst": "TRIAL_stem_0021_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_king_leg",
+      "dst": "TRIAL_stem_0021_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "TRIAL_stem_0013_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_rook_leg",
+      "dst": "TRIAL_stem_0013_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_king_leg",
+      "dst": "TRIAL_stem_0013_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "TRIAL_stem_0014_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_rook_leg",
+      "dst": "TRIAL_stem_0014_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_king_leg",
+      "dst": "TRIAL_stem_0014_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "TRIAL_stem_0015_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_rook_leg",
+      "dst": "TRIAL_stem_0015_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_king_leg",
+      "dst": "TRIAL_stem_0015_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
     }
   ],
-  "last_modified": "2026-01-05T16:49:52.160139"
+  "last_modified": "2026-01-06T17:59:46.533718",
+  "evolution_history": [
+    {
+      "tick": 0,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0000_0",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-06T17:59:09.642874"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_detect->TRIAL_stem_0000_0:SUB",
+      "details": {
+        "src": "krk_detect",
+        "dst": "TRIAL_stem_0000_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:09.642973"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_rook_leg->TRIAL_stem_0000_0:SUB",
+      "details": {
+        "src": "krk_rook_leg",
+        "dst": "TRIAL_stem_0000_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:09.642984"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_king_leg->TRIAL_stem_0000_0:SUB",
+      "details": {
+        "src": "krk_king_leg",
+        "dst": "TRIAL_stem_0000_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:09.642990"
+    },
+    {
+      "tick": 0,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0001_0",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-06T17:59:09.643913"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_detect->TRIAL_stem_0001_0:SUB",
+      "details": {
+        "src": "krk_detect",
+        "dst": "TRIAL_stem_0001_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:09.643926"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_rook_leg->TRIAL_stem_0001_0:SUB",
+      "details": {
+        "src": "krk_rook_leg",
+        "dst": "TRIAL_stem_0001_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:09.643931"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_king_leg->TRIAL_stem_0001_0:SUB",
+      "details": {
+        "src": "krk_king_leg",
+        "dst": "TRIAL_stem_0001_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:09.643935"
+    },
+    {
+      "tick": 0,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0002_0",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-06T17:59:09.674721"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_detect->TRIAL_stem_0002_0:SUB",
+      "details": {
+        "src": "krk_detect",
+        "dst": "TRIAL_stem_0002_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:09.674738"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_rook_leg->TRIAL_stem_0002_0:SUB",
+      "details": {
+        "src": "krk_rook_leg",
+        "dst": "TRIAL_stem_0002_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:09.674742"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_king_leg->TRIAL_stem_0002_0:SUB",
+      "details": {
+        "src": "krk_king_leg",
+        "dst": "TRIAL_stem_0002_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:09.674745"
+    },
+    {
+      "tick": 0,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0003_0",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-06T17:59:09.675471"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_detect->TRIAL_stem_0003_0:SUB",
+      "details": {
+        "src": "krk_detect",
+        "dst": "TRIAL_stem_0003_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:09.675479"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_rook_leg->TRIAL_stem_0003_0:SUB",
+      "details": {
+        "src": "krk_rook_leg",
+        "dst": "TRIAL_stem_0003_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:09.675482"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_king_leg->TRIAL_stem_0003_0:SUB",
+      "details": {
+        "src": "krk_king_leg",
+        "dst": "TRIAL_stem_0003_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:09.675485"
+    },
+    {
+      "tick": 0,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0004_0",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-06T17:59:09.774534"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_detect->TRIAL_stem_0004_0:SUB",
+      "details": {
+        "src": "krk_detect",
+        "dst": "TRIAL_stem_0004_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:09.774551"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_rook_leg->TRIAL_stem_0004_0:SUB",
+      "details": {
+        "src": "krk_rook_leg",
+        "dst": "TRIAL_stem_0004_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:09.774555"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_king_leg->TRIAL_stem_0004_0:SUB",
+      "details": {
+        "src": "krk_king_leg",
+        "dst": "TRIAL_stem_0004_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:09.774557"
+    },
+    {
+      "tick": 0,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0005_0",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-06T17:59:09.775452"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_detect->TRIAL_stem_0005_0:SUB",
+      "details": {
+        "src": "krk_detect",
+        "dst": "TRIAL_stem_0005_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:09.775460"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_rook_leg->TRIAL_stem_0005_0:SUB",
+      "details": {
+        "src": "krk_rook_leg",
+        "dst": "TRIAL_stem_0005_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:09.775463"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_king_leg->TRIAL_stem_0005_0:SUB",
+      "details": {
+        "src": "krk_king_leg",
+        "dst": "TRIAL_stem_0005_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:09.775466"
+    },
+    {
+      "tick": 0,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0006_0",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-06T17:59:09.959693"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_detect->TRIAL_stem_0006_0:SUB",
+      "details": {
+        "src": "krk_detect",
+        "dst": "TRIAL_stem_0006_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:09.959712"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_rook_leg->TRIAL_stem_0006_0:SUB",
+      "details": {
+        "src": "krk_rook_leg",
+        "dst": "TRIAL_stem_0006_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:09.959717"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_king_leg->TRIAL_stem_0006_0:SUB",
+      "details": {
+        "src": "krk_king_leg",
+        "dst": "TRIAL_stem_0006_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:09.959720"
+    },
+    {
+      "tick": 0,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0007_0",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-06T17:59:09.960792"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_detect->TRIAL_stem_0007_0:SUB",
+      "details": {
+        "src": "krk_detect",
+        "dst": "TRIAL_stem_0007_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:09.960800"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_rook_leg->TRIAL_stem_0007_0:SUB",
+      "details": {
+        "src": "krk_rook_leg",
+        "dst": "TRIAL_stem_0007_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:09.960804"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_king_leg->TRIAL_stem_0007_0:SUB",
+      "details": {
+        "src": "krk_king_leg",
+        "dst": "TRIAL_stem_0007_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:09.960806"
+    },
+    {
+      "tick": 0,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0019_0",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-06T17:59:11.847055"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_detect->TRIAL_stem_0019_0:SUB",
+      "details": {
+        "src": "krk_detect",
+        "dst": "TRIAL_stem_0019_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:11.847077"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_rook_leg->TRIAL_stem_0019_0:SUB",
+      "details": {
+        "src": "krk_rook_leg",
+        "dst": "TRIAL_stem_0019_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:11.847086"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_king_leg->TRIAL_stem_0019_0:SUB",
+      "details": {
+        "src": "krk_king_leg",
+        "dst": "TRIAL_stem_0019_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:11.847090"
+    },
+    {
+      "tick": 0,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0020_0",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-06T17:59:11.848560"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_detect->TRIAL_stem_0020_0:SUB",
+      "details": {
+        "src": "krk_detect",
+        "dst": "TRIAL_stem_0020_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:11.848608"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_rook_leg->TRIAL_stem_0020_0:SUB",
+      "details": {
+        "src": "krk_rook_leg",
+        "dst": "TRIAL_stem_0020_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:11.848612"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_king_leg->TRIAL_stem_0020_0:SUB",
+      "details": {
+        "src": "krk_king_leg",
+        "dst": "TRIAL_stem_0020_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:11.848615"
+    },
+    {
+      "tick": 0,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0008_0",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-06T17:59:43.014509"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_detect->TRIAL_stem_0008_0:SUB",
+      "details": {
+        "src": "krk_detect",
+        "dst": "TRIAL_stem_0008_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:43.014532"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_rook_leg->TRIAL_stem_0008_0:SUB",
+      "details": {
+        "src": "krk_rook_leg",
+        "dst": "TRIAL_stem_0008_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:43.014538"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_king_leg->TRIAL_stem_0008_0:SUB",
+      "details": {
+        "src": "krk_king_leg",
+        "dst": "TRIAL_stem_0008_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:43.014543"
+    },
+    {
+      "tick": 0,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0009_0",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-06T17:59:43.015781"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_detect->TRIAL_stem_0009_0:SUB",
+      "details": {
+        "src": "krk_detect",
+        "dst": "TRIAL_stem_0009_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:43.015791"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_rook_leg->TRIAL_stem_0009_0:SUB",
+      "details": {
+        "src": "krk_rook_leg",
+        "dst": "TRIAL_stem_0009_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:43.015795"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_king_leg->TRIAL_stem_0009_0:SUB",
+      "details": {
+        "src": "krk_king_leg",
+        "dst": "TRIAL_stem_0009_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:43.015798"
+    },
+    {
+      "tick": 0,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0016_0",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-06T17:59:43.849730"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_detect->TRIAL_stem_0016_0:SUB",
+      "details": {
+        "src": "krk_detect",
+        "dst": "TRIAL_stem_0016_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:43.849764"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_rook_leg->TRIAL_stem_0016_0:SUB",
+      "details": {
+        "src": "krk_rook_leg",
+        "dst": "TRIAL_stem_0016_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:43.849772"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_king_leg->TRIAL_stem_0016_0:SUB",
+      "details": {
+        "src": "krk_king_leg",
+        "dst": "TRIAL_stem_0016_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:43.849796"
+    },
+    {
+      "tick": 0,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0017_0",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-06T17:59:43.851505"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_detect->TRIAL_stem_0017_0:SUB",
+      "details": {
+        "src": "krk_detect",
+        "dst": "TRIAL_stem_0017_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:43.851520"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_rook_leg->TRIAL_stem_0017_0:SUB",
+      "details": {
+        "src": "krk_rook_leg",
+        "dst": "TRIAL_stem_0017_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:43.851524"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_king_leg->TRIAL_stem_0017_0:SUB",
+      "details": {
+        "src": "krk_king_leg",
+        "dst": "TRIAL_stem_0017_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:43.851526"
+    },
+    {
+      "tick": 0,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0018_0",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-06T17:59:44.083504"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_detect->TRIAL_stem_0018_0:SUB",
+      "details": {
+        "src": "krk_detect",
+        "dst": "TRIAL_stem_0018_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:44.083523"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_rook_leg->TRIAL_stem_0018_0:SUB",
+      "details": {
+        "src": "krk_rook_leg",
+        "dst": "TRIAL_stem_0018_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:44.083527"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_king_leg->TRIAL_stem_0018_0:SUB",
+      "details": {
+        "src": "krk_king_leg",
+        "dst": "TRIAL_stem_0018_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:44.083533"
+    },
+    {
+      "tick": 0,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0021_0",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-06T17:59:44.321032"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_detect->TRIAL_stem_0021_0:SUB",
+      "details": {
+        "src": "krk_detect",
+        "dst": "TRIAL_stem_0021_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:44.321048"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_rook_leg->TRIAL_stem_0021_0:SUB",
+      "details": {
+        "src": "krk_rook_leg",
+        "dst": "TRIAL_stem_0021_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:44.321052"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_king_leg->TRIAL_stem_0021_0:SUB",
+      "details": {
+        "src": "krk_king_leg",
+        "dst": "TRIAL_stem_0021_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:44.321054"
+    },
+    {
+      "tick": 0,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0013_0",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-06T17:59:44.570031"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_detect->TRIAL_stem_0013_0:SUB",
+      "details": {
+        "src": "krk_detect",
+        "dst": "TRIAL_stem_0013_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:44.570050"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_rook_leg->TRIAL_stem_0013_0:SUB",
+      "details": {
+        "src": "krk_rook_leg",
+        "dst": "TRIAL_stem_0013_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:44.570055"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_king_leg->TRIAL_stem_0013_0:SUB",
+      "details": {
+        "src": "krk_king_leg",
+        "dst": "TRIAL_stem_0013_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:44.570058"
+    },
+    {
+      "tick": 0,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0014_0",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-06T17:59:44.571655"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_detect->TRIAL_stem_0014_0:SUB",
+      "details": {
+        "src": "krk_detect",
+        "dst": "TRIAL_stem_0014_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:44.571663"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_rook_leg->TRIAL_stem_0014_0:SUB",
+      "details": {
+        "src": "krk_rook_leg",
+        "dst": "TRIAL_stem_0014_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:44.571667"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_king_leg->TRIAL_stem_0014_0:SUB",
+      "details": {
+        "src": "krk_king_leg",
+        "dst": "TRIAL_stem_0014_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:44.571669"
+    },
+    {
+      "tick": 0,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0015_0",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-06T17:59:44.814652"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_detect->TRIAL_stem_0015_0:SUB",
+      "details": {
+        "src": "krk_detect",
+        "dst": "TRIAL_stem_0015_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:44.814669"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_rook_leg->TRIAL_stem_0015_0:SUB",
+      "details": {
+        "src": "krk_rook_leg",
+        "dst": "TRIAL_stem_0015_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:44.814673"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_king_leg->TRIAL_stem_0015_0:SUB",
+      "details": {
+        "src": "krk_king_leg",
+        "dst": "TRIAL_stem_0015_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T17:59:44.814676"
+    }
+  ]
 }

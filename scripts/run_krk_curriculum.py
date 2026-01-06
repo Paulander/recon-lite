@@ -388,9 +388,9 @@ def play_krk_game_recon(
             elif board.is_check():
                 interim_reward = 0.6
             elif current_box < initial_box_min:
-                interim_reward = 0.4  # Good - box is shrinking
+                interim_reward = 0.5  # Good - box is shrinking
             else:
-                interim_reward = 0.1
+                interim_reward = 0.2  # Neutral position (above threshold)
             
             # Feed to all exploring stem cells
             for cell in stem_manager.cells.values():
@@ -510,7 +510,12 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
         
         # Initialize stem cells for M5
         if config.enable_m5 and HAS_STEM_CELL:
-            stem_config = StemCellConfig(min_samples=30, max_samples=500)
+            # Lower reward threshold so more samples are collected
+            stem_config = StemCellConfig(
+                min_samples=30, 
+                max_samples=500,
+                reward_threshold=0.1,  # Lowered from 0.3 to capture more positions
+            )
             stem_manager = StemCellManager(max_cells=config.max_trial_slots, config=stem_config, max_trial_slots=config.max_trial_slots)
             
             # Seed initial stem cells to start observing
@@ -663,7 +668,36 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                     # Create structural learner
                     struct_learner = StructureLearner(registry=registry)
                     
-                    # Apply structural phase
+                    # Try to promote CANDIDATE cells directly based on consistency
+                    # (Manual promotion as alternative to episode-based)
+                    direct_promotions = 0
+                    can_promote = stem_manager.can_promote_to_trial()
+                    candidates_checked = 0
+                    
+                    for cell in list(stem_manager.cells.values()):
+                        if cell.state == StemCellState.CANDIDATE and len(cell.samples) >= 30:
+                            candidates_checked += 1
+                            consistency, _ = cell.analyze_pattern()
+                            
+                            # Debug: show first candidate's stats
+                            if candidates_checked == 1:
+                                print(f"    First candidate: {cell.cell_id}, samples={len(cell.samples)}, consistency={consistency:.2f}, can_promote={can_promote}")
+                            
+                            if consistency >= 0.35 and can_promote:
+                                # Promote manually
+                                success = cell.promote_to_trial(
+                                    registry=registry,
+                                    parent_id="krk_detect",
+                                    wire_to_legs=True,
+                                    leg_node_ids=["krk_rook_leg", "krk_king_leg"],
+                                )
+                                if success:
+                                    direct_promotions += 1
+                                    print(f"    ✓ Promoted {cell.cell_id} to TRIAL (consistency={consistency:.2f})")
+                                    if direct_promotions >= 2:  # Max 2 per cycle
+                                        break
+                    
+                    # Also run structural phase
                     struct_result = struct_learner.apply_structural_phase(
                         stem_manager=stem_manager,
                         episodes=[],  # TODO: Pass actual episodes for POR discovery
@@ -681,6 +715,16 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                     
                     if promoted > 0 or hoisted > 0 or depth > 1:
                         print(f"    M5: +{promoted} TRIAL, +{hoisted} HOISTED, depth={depth}")
+                    
+                    # Show stem cell stats
+                    cell_stats = stem_manager.stats()
+                    by_state = cell_stats.get("by_state", {})
+                    exploring = by_state.get("EXPLORING", 0)
+                    candidate = by_state.get("CANDIDATE", 0) 
+                    trial = by_state.get("TRIAL", 0)
+                    total_samples = sum(len(c.samples) for c in stem_manager.cells.values())
+                    if len(stem_manager.cells) > 0:
+                        print(f"    Cells: {exploring}E/{candidate}C/{trial}T, total_samples={total_samples}")
                     
                     # Spawn new sensors if win rate is low (Stall Recovery)
                     if win_rate < 0.3 and len(stem_manager.cells) < config.max_trial_slots and HAS_KRK_FEATURES:
