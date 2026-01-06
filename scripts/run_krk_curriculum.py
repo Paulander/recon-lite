@@ -78,6 +78,14 @@ try:
     HAS_ENGINE = True
 except ImportError:
     HAS_ENGINE = False
+    ReConEngine = None
+    GatingSchedule = None
+
+try:
+    from recon_lite.plasticity import PlasticityConfig, init_plasticity_state, apply_plasticity
+    HAS_PLASTICITY = True
+except ImportError:
+    HAS_PLASTICITY = False
 
 
 # ============================================================================
@@ -118,6 +126,14 @@ class KRKCurriculumConfig:
     gating_initial_strictness: float = 0.3
     gating_final_strictness: float = 1.0
     gating_ramp_games: int = 100
+    
+    # Mode: "simple" (heuristics only) or "recon" (full engine)
+    mode: str = "simple"
+    
+    # M5 structural learning
+    enable_m5: bool = False
+    m5_spawn_rate: float = 0.1
+    m5_hoist_threshold: float = 0.7
 
 
 # ============================================================================
@@ -234,6 +250,160 @@ def play_krk_game_simple(
     return result, move_count, box_escaped
 
 
+def play_krk_game_recon(
+    board: chess.Board,
+    engine: "ReConEngine",
+    graph: Graph,
+    config: KRKCurriculumConfig,
+    stage: KRKStage,
+) -> Tuple[str, int, bool, List[str]]:
+    """
+    Play a single KRK game using the ReCoN engine.
+    
+    Args:
+        board: Starting position
+        engine: ReConEngine instance
+        graph: ReCoN graph
+        config: Training configuration
+        stage: Current curriculum stage
+    
+    Returns:
+        (result, move_count, box_escaped, active_nodes_log)
+    """
+    move_count = 0
+    box_escaped = False
+    initial_box_min = box_min_side(board)
+    active_nodes_log = []
+    
+    # Sentinel for KRK positions
+    def krk_sentinel(env: Dict[str, Any]) -> bool:
+        b = env.get("board")
+        if not b:
+            return False
+        # Check if it's still a KRK position
+        pieces = list(b.piece_map().values())
+        has_rook = any(p.piece_type == chess.ROOK for p in pieces)
+        king_count = sum(1 for p in pieces if p.piece_type == chess.KING)
+        return has_rook and king_count == 2 and len(pieces) == 3
+    
+    # Lock the subgraph
+    try:
+        engine.lock_subgraph("krk_root", krk_sentinel)
+    except ValueError:
+        # Subgraph might already be locked or not exist
+        pass
+    
+    while move_count < config.max_moves_per_game:
+        if board.is_game_over():
+            break
+        
+        # Build environment
+        env = {"board": board}
+        
+        # Run engine ticks
+        suggested_move = None
+        ticks_this_move = 0
+        
+        while ticks_this_move < config.max_ticks_per_move:
+            try:
+                engine.step(env)
+            except Exception as e:
+                # Engine step failed, use fallback
+                break
+            ticks_this_move += 1
+            
+            # Log active nodes (for M5 analysis)
+            active = [
+                nid for nid, node in graph.nodes.items()
+                if node.state in (NodeState.ACTIVE, NodeState.TRUE, NodeState.CONFIRMED)
+            ]
+            if active:
+                active_nodes_log.extend(active)
+            
+            # Check for suggested move after min ticks
+            if ticks_this_move >= config.min_internal_ticks:
+                krk_data = env.get("krk_root", {})
+                policy = krk_data.get("policy", {})
+                suggested_move = policy.get("suggested_move")
+                if suggested_move:
+                    break
+        
+        # Make move
+        legal_ucis = [m.uci() for m in board.legal_moves]
+        if suggested_move and suggested_move in legal_ucis:
+            move = chess.Move.from_uci(suggested_move)
+        else:
+            # Fallback to simple heuristic if engine didn't suggest
+            legal = list(board.legal_moves)
+            if not legal:
+                break
+            
+            # Use simple box-shrinking heuristic as fallback
+            best_move = None
+            best_score = -1000
+            for m in legal[:20]:  # Limit for speed
+                score = 0
+                board.push(m)
+                if board.is_checkmate():
+                    score = 1000
+                elif board.is_check():
+                    score = 50
+                elif board.is_stalemate():
+                    score = -500
+                else:
+                    new_box = box_min_side(board)
+                    if new_box < initial_box_min:
+                        score = 20
+                board.pop()
+                if score > best_score:
+                    best_score = score
+                    best_move = m
+            move = best_move if best_move else random.choice(legal)
+        
+        board.push(move)
+        move_count += 1
+        
+        # Check for box escape
+        current_box_min = box_min_side(board)
+        if current_box_min > initial_box_min:
+            box_escaped = True
+            initial_box_min = current_box_min
+        
+        # Opponent's move
+        if not board.is_game_over():
+            legal = list(board.legal_moves)
+            if legal:
+                # Opponent tries to escape
+                opp_best = None
+                opp_best_score = -1000
+                for m in legal[:10]:
+                    board.push(m)
+                    opp_score = box_min_side(board)
+                    board.pop()
+                    if opp_score > opp_best_score:
+                        opp_best_score = opp_score
+                        opp_best = m
+                board.push(opp_best if opp_best else random.choice(legal))
+    
+    # Determine result
+    if board.is_checkmate():
+        result = "win" if board.turn == chess.BLACK else "loss"
+    elif board.is_stalemate():
+        result = "stalemate"
+    elif board.is_insufficient_material():
+        result = "loss"
+    else:
+        result = "draw"
+    
+    # Unlock
+    try:
+        engine.unlock_subgraph("krk_root")
+    except:
+        pass
+    
+    return result, move_count, box_escaped, active_nodes_log
+
+
 # ============================================================================
 # Training Loop
 # ============================================================================
@@ -267,9 +437,51 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
         win_rate_threshold=config.win_rate_threshold,
     )
     
-    # Note: For fast curriculum validation, we use simple heuristics
-    # Full ReCoN engine integration will be added after curriculum validation
-    print(f"\nUsing SIMPLE heuristic mode for fast validation")
+    # Initialize engine and graph based on mode
+    engine = None
+    graph = None
+    stem_manager = None
+    
+    if config.mode == "recon":
+        print(f"\nUsing RECON ENGINE mode with M5={config.enable_m5}")
+        
+        # Load topology and build graph
+        if not config.topology_path.exists():
+            print(f"ERROR: Topology not found: {config.topology_path}")
+            return {"error": "Topology not found"}
+        
+        registry = TopologyRegistry(config.topology_path)
+        
+        if HAS_BUILDER:
+            graph = build_graph_from_topology(config.topology_path)
+            print(f"  Graph loaded: {len(graph.nodes)} nodes")
+        else:
+            print("ERROR: Graph builder not available")
+            return {"error": "Builder not available"}
+        
+        if HAS_ENGINE:
+            engine = ReConEngine(graph)
+            
+            # Setup gating
+            if config.enable_gating and GatingSchedule:
+                gating_schedule = GatingSchedule(
+                    initial_strictness=config.gating_initial_strictness,
+                    final_strictness=config.gating_final_strictness,
+                    ramp_games=config.gating_ramp_games,
+                )
+                engine.gating_schedule = gating_schedule
+                print(f"  Gating enabled: {config.gating_initial_strictness} → {config.gating_final_strictness}")
+        else:
+            print("ERROR: ReConEngine not available")
+            return {"error": "Engine not available"}
+        
+        # Initialize stem cells for M5
+        if config.enable_m5 and HAS_STEM_CELL:
+            stem_config = StemCellConfig(min_samples=30, max_samples=500)
+            stem_manager = StemCellManager(stem_config, max_trial_slots=config.max_trial_slots)
+            print(f"  M5 enabled: max_trial_slots={config.max_trial_slots}")
+    else:
+        print(f"\nUsing SIMPLE heuristic mode for fast validation")
     
     # Training state
     total_games = 0
@@ -314,16 +526,30 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
             
             print(f"\n  Cycle {cycle}/{config.max_cycles_per_stage}")
             
+            active_node_counts = {}  # Track which nodes fire
+            
             for game_idx in range(config.games_per_cycle):
                 # Get position for current stage
                 board = curriculum.get_position()
                 
-                # Play game (simple mode for speed)
-                result, move_count, box_escaped = play_krk_game_simple(
-                    board=board,
-                    config=config,
-                    stage=stage,
-                )
+                # Play game based on mode
+                if config.mode == "recon" and engine and graph:
+                    result, move_count, box_escaped, active_log = play_krk_game_recon(
+                        board=board,
+                        engine=engine,
+                        graph=graph,
+                        config=config,
+                        stage=stage,
+                    )
+                    # Count active nodes for M5 analysis
+                    for nid in active_log:
+                        active_node_counts[nid] = active_node_counts.get(nid, 0) + 1
+                else:
+                    result, move_count, box_escaped = play_krk_game_simple(
+                        board=board,
+                        config=config,
+                        stage=stage,
+                    )
                 
                 # Progress indicator
                 if (game_idx + 1) % 10 == 0:
@@ -380,6 +606,11 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
             print(f"    Avg Reward: {avg_reward:.3f}")
             print(f"    Box Escapes: {escape_rate:.1%}")
             print(f"    Duration: {cycle_duration:.1f}s")
+            
+            # Show top active nodes if in ReCoN mode
+            if config.mode == "recon" and active_node_counts:
+                top_nodes = sorted(active_node_counts.items(), key=lambda x: -x[1])[:5]
+                print(f"    Top nodes: {', '.join(f'{n}({c})' for n, c in top_nodes)}")
             
             # Check if stage advanced during cycle
             if curriculum.current_stage_id > stage.stage_id:
@@ -492,6 +723,10 @@ def main():
                         help="Enable hierarchical gating")
     parser.add_argument("--no-gating", action="store_false", dest="enable_gating",
                         help="Disable hierarchical gating")
+    parser.add_argument("--mode", choices=["simple", "recon"], default="simple",
+                        help="Training mode: simple (heuristics) or recon (full engine)")
+    parser.add_argument("--enable-m5", action="store_true",
+                        help="Enable M5 structural learning (stem cells)")
     parser.add_argument("--quick", action="store_true",
                         help="Quick test mode (5 games, 3 cycles)")
     
@@ -507,6 +742,8 @@ def main():
         min_games_per_stage=5 if args.quick else args.min_games_per_stage,
         min_internal_ticks=args.min_tick_depth,
         enable_gating=args.enable_gating,
+        mode=args.mode,
+        enable_m5=args.enable_m5,
     )
     
     # Run training
