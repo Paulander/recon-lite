@@ -3,6 +3,11 @@
 Orchestrates multiple evolution_driver.py runs in isolation to systematically
 explore learning configurations and find the "Tactical Sweet Spot".
 
+Features:
+- Local sweep execution with configurable trials
+- Optional Weights & Biases (wandb) integration for distributed sweeps
+- Automatic metric logging and report generation
+
 Usage:
     from recon_lite.learning.sweep_engine import HyperSweepEngine, SweepConfig
     
@@ -15,6 +20,10 @@ Usage:
     
     results = engine.run_sweep(configs, stage_id=1)
     report = engine.generate_report(results)
+    
+    # With W&B logging:
+    engine = HyperSweepEngine(use_wandb=True, wandb_project="recon-lite-sweeps")
+    results = engine.run_sweep(configs)
 """
 
 from __future__ import annotations
@@ -33,6 +42,14 @@ try:
 except ImportError:
     pd = None
     HAS_PANDAS = False
+
+# Optional W&B support for distributed sweeps
+try:
+    import wandb
+    HAS_WANDB = True
+except ImportError:
+    wandb = None
+    HAS_WANDB = False
 
 
 @dataclass
@@ -149,16 +166,93 @@ class HyperSweepEngine:
     
     Each trial runs in isolation with its own output directory, allowing
     systematic comparison of different learning configurations.
+    
+    Features:
+    - Local execution with isolated directories per trial
+    - Optional W&B logging for distributed sweeps and visualization
+    - Automatic metric computation and report generation
     """
     
     def __init__(
         self,
         base_output_dir: Path = Path("snapshots/sweeps"),
         evolution_driver_path: Path = Path("scripts/evolution_driver.py"),
+        use_wandb: bool = False,
+        wandb_project: str = "recon-lite-sweeps",
+        wandb_entity: Optional[str] = None,
     ):
+        """Initialize sweep engine.
+        
+        Args:
+            base_output_dir: Directory for sweep outputs
+            evolution_driver_path: Path to evolution driver script
+            use_wandb: Enable Weights & Biases logging
+            wandb_project: W&B project name
+            wandb_entity: W&B entity (username/team)
+        """
         self.base_output_dir = Path(base_output_dir)
         self.evolution_driver_path = Path(evolution_driver_path)
         self.results: List[SweepResult] = []
+        
+        # W&B integration
+        self.use_wandb = use_wandb and HAS_WANDB
+        self.wandb_project = wandb_project
+        self.wandb_entity = wandb_entity
+        
+        if use_wandb and not HAS_WANDB:
+            print("Warning: wandb requested but not installed. Logging disabled.")
+    
+    def _wandb_init_trial(self, config: "SweepConfig") -> None:
+        """Initialize W&B run for a trial."""
+        if not self.use_wandb:
+            return
+        
+        wandb.init(
+            project=self.wandb_project,
+            entity=self.wandb_entity,
+            name=config.trial_name,
+            config=config.to_dict(),
+            reinit=True,
+        )
+    
+    def _wandb_log_metrics(self, result: "SweepResult", cycle: int = 0) -> None:
+        """Log metrics to W&B."""
+        if not self.use_wandb:
+            return
+        
+        # Calculate depth_win_score (primary metric for Deep-Pressure plan)
+        depth_win_score = result.final_win_rate * result.max_depth
+        
+        wandb.log({
+            "win_rate": result.final_win_rate,
+            "max_depth": result.max_depth,
+            "depth_win_score": depth_win_score,  # PRIMARY METRIC
+            "solid_nodes": result.solid_nodes,
+            "hoisted_clusters": result.hoisted_clusters,
+            "por_edges": result.por_edges,
+            "branching_factor": result.branching_factor,
+            "cycles_completed": result.cycles_completed,
+        }, step=cycle)
+    
+    def _wandb_finish_trial(self, result: "SweepResult") -> None:
+        """Finish W&B run and log summary."""
+        if not self.use_wandb:
+            return
+        
+        # Calculate depth_win_score
+        depth_win_score = result.final_win_rate * result.max_depth
+        
+        wandb.summary.update({
+            "final_win_rate": result.final_win_rate,
+            "final_max_depth": result.max_depth,
+            "final_depth_win_score": depth_win_score,
+            "cycles_to_80_percent": result.cycles_to_80_percent,
+            "solid_nodes": result.solid_nodes,
+            "hoisted_clusters": result.hoisted_clusters,
+            "success": result.success,
+        })
+        
+        wandb.finish()
     
     def run_trial(
         self,
@@ -184,6 +278,9 @@ class HyperSweepEngine:
             start_time=datetime.now().isoformat(),
         )
         
+        # Initialize W&B run if enabled
+        self._wandb_init_trial(config)
+        
         # Create trial output directory
         trial_dir = self.base_output_dir / config.trial_name
         trial_dir.mkdir(parents=True, exist_ok=True)
@@ -202,6 +299,8 @@ class HyperSweepEngine:
             print(f"  Hoist: {config.hoist_threshold}")
             print(f"  Success Bypass: {config.enable_success_bypass}")
             print(f"  Speculative Hoisting: {config.enable_speculative_hoisting}")
+            if self.use_wandb:
+                print(f"  W&B Logging: ENABLED")
         
         try:
             # Build environment variables for configuration injection
@@ -218,6 +317,9 @@ class HyperSweepEngine:
             # Extract metrics from results
             result = self._extract_metrics(result, cycle_results, trial_dir)
             result.success = True
+            
+            # Log metrics to W&B
+            self._wandb_log_metrics(result, cycle=result.cycles_completed)
             
         except Exception as e:
             result.success = False
@@ -239,6 +341,9 @@ class HyperSweepEngine:
         
         if verbose:
             self._print_trial_summary(result)
+        
+        # Finish W&B run
+        self._wandb_finish_trial(result)
         
         return result
     

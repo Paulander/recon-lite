@@ -179,6 +179,10 @@ class StemCellTerminal:
         
         # Pattern centroid for similarity comparison
         self.pattern_centroid: Optional[List[float]] = None
+        
+        # Inertia Pruning: Track when cell last contributed to CONFIRM signal
+        # Used to prune TRIAL cells that haven't been useful for N cycles
+        self.last_confirm_cycle: Optional[int] = None
     
     def activate(self) -> None:
         """Start exploration."""
@@ -514,6 +518,45 @@ class StemCellTerminal:
         else:
             return False, "stay"
     
+    # =========================================================================
+    # INERTIA PRUNING - Track CONFIRM Signal Contributions
+    # =========================================================================
+    
+    def mark_confirmed(self, cycle: int) -> None:
+        """
+        Mark that this cell contributed to a CONFIRM signal.
+        
+        Called when the cell's corresponding graph node reaches CONFIRMED state.
+        This resets the inertia timer.
+        
+        Args:
+            cycle: Current training cycle number
+        """
+        self.last_confirm_cycle = cycle
+    
+    def is_inert(self, current_cycle: int, max_inactive: int = 20) -> bool:
+        """
+        Check if cell hasn't contributed to CONFIRM signal in max_inactive cycles.
+        
+        Used for "Inertia Pruning" - removing TRIAL cells that aren't
+        contributing to actual network behavior despite being fired.
+        
+        Args:
+            current_cycle: Current training cycle number
+            max_inactive: Maximum cycles without CONFIRM before considered inert
+            
+        Returns:
+            True if cell is inert (hasn't confirmed in max_inactive cycles)
+        """
+        if self.state != StemCellState.TRIAL:
+            return False  # Only TRIAL cells can be inert
+        
+        if self.last_confirm_cycle is None:
+            # Never confirmed - consider inert if past max_inactive cycles
+            return current_cycle > max_inactive
+        
+        return (current_cycle - self.last_confirm_cycle) > max_inactive
+    
     def solidify_to_mature(self, registry: Any, current_tick: int = 0) -> bool:
         """
         Solidify trial node to permanent MATURE node.
@@ -818,6 +861,8 @@ class StemCellTerminal:
             "trial_node_id": self.trial_node_id,
             "trial_edge_key": self.trial_edge_key,
             "pattern_centroid": self.pattern_centroid,
+            # Inertia Pruning tracking
+            "last_confirm_cycle": self.last_confirm_cycle,
         }
     
     @classmethod
@@ -847,6 +892,8 @@ class StemCellTerminal:
         cell.trial_node_id = data.get("trial_node_id")
         cell.trial_edge_key = data.get("trial_edge_key")
         cell.pattern_centroid = data.get("pattern_centroid")
+        # Inertia Pruning tracking
+        cell.last_confirm_cycle = data.get("last_confirm_cycle")
         
         return cell
 
@@ -862,8 +909,10 @@ class StemCellManager:
         spawn_rate: float = 0.1,  # Probability of spawning new cell per tick
         config: Optional[StemCellConfig] = None,
         feature_extractor: Optional[Callable] = None,
+        max_trial_slots: int = 15,  # SPARSITY SLEDGEHAMMER: Max TRIAL cells (reduced to force competition)
     ):
         self.max_cells = max_cells
+        self.max_trial_slots = max_trial_slots  # Separate cap on TRIAL tier
         self.spawn_rate = spawn_rate
         self.default_config = config or StemCellConfig()
         self.cells: Dict[str, StemCellTerminal] = {}
@@ -1005,6 +1054,28 @@ class StemCellManager:
         """Get all cells in TRIAL state."""
         return [c for c in self.cells.values() if c.state == StemCellState.TRIAL]
     
+    def can_promote_to_trial(self) -> bool:
+        """
+        Check if there's room for another TRIAL cell.
+        
+        SPARSITY SLEDGEHAMMER: Limits TRIAL slots to force competition.
+        Only the top-performing sensors get to stay in TRIAL tier.
+        
+        Returns:
+            True if there's room for another TRIAL cell
+        """
+        current_trial_count = len(self.get_trial_cells())
+        return current_trial_count < self.max_trial_slots
+    
+    def get_trial_capacity(self) -> Dict[str, int]:
+        """Get TRIAL tier capacity info."""
+        current = len(self.get_trial_cells())
+        return {
+            "current": current,
+            "max": self.max_trial_slots,
+            "available": max(0, self.max_trial_slots - current),
+        }
+    
     def get_trial_stats(self) -> Dict[str, Any]:
         """Get statistics about TRIAL cells."""
         trial_cells = self.get_trial_cells()
@@ -1034,6 +1105,58 @@ class StemCellManager:
         for cid in pruned:
             del self.cells[cid]
         return len(pruned)
+    
+    def prune_inert_cells(self, current_cycle: int, max_inactive: int = 20) -> int:
+        """
+        Prune TRIAL cells that haven't contributed to CONFIRM signals.
+        
+        This is "Inertia Pruning" - removing cells that fire but don't
+        actually influence network behavior. Forces sparsity and survival
+        of the fittest.
+        
+        Args:
+            current_cycle: Current training cycle number
+            max_inactive: Maximum cycles without CONFIRM before pruning
+            
+        Returns:
+            Number of cells pruned
+        """
+        inert_cells = [
+            cid for cid, cell in self.cells.items()
+            if cell.state == StemCellState.TRIAL and cell.is_inert(current_cycle, max_inactive)
+        ]
+        
+        for cid in inert_cells:
+            self.cells[cid].state = StemCellState.PRUNED
+            self.cells[cid].metadata["pruned_reason"] = "inertia"
+            self.cells[cid].metadata["pruned_cycle"] = current_cycle
+            self.cells[cid].metadata["cycles_without_confirm"] = (
+                current_cycle - (self.cells[cid].last_confirm_cycle or 0)
+            )
+        
+        return len(inert_cells)
+    
+    def mark_cells_confirmed(self, confirmed_node_ids: List[str], current_cycle: int) -> int:
+        """
+        Mark cells as confirmed based on their graph node states.
+        
+        Called after a game/tick to update inertia tracking for cells whose
+        corresponding TRIAL nodes reached CONFIRMED state.
+        
+        Args:
+            confirmed_node_ids: List of graph node IDs that reached CONFIRMED
+            current_cycle: Current training cycle number
+            
+        Returns:
+            Number of cells marked as confirmed
+        """
+        count = 0
+        for cid, cell in self.cells.items():
+            if cell.state == StemCellState.TRIAL and cell.trial_node_id:
+                if cell.trial_node_id in confirmed_node_ids:
+                    cell.mark_confirmed(current_cycle)
+                    count += 1
+        return count
     
     def stats(self) -> Dict[str, Any]:
         """Get manager statistics."""
@@ -1189,6 +1312,7 @@ class StemCellManager:
         
         data = {
             "max_cells": self.max_cells,
+            "max_trial_slots": self.max_trial_slots,  # SPARSITY: TRIAL tier cap
             "spawn_rate": self.spawn_rate,
             "next_id": self._next_id,
             "cells": {cid: c.to_dict() for cid, c in self.cells.items()},
@@ -1208,6 +1332,7 @@ class StemCellManager:
         manager = cls(
             max_cells=data.get("max_cells", 20),
             spawn_rate=data.get("spawn_rate", 0.1),
+            max_trial_slots=data.get("max_trial_slots", 15),  # SPARSITY: TRIAL tier cap
         )
         manager._next_id = data.get("next_id", 0)
         manager.cells = {

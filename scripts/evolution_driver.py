@@ -318,6 +318,10 @@ class EvolutionConfig:
     stem_cell_min_samples: int = 30
     stem_cells_load_path: Optional[Path] = None  # Load from previous stage
     
+    # SPARSITY SLEDGEHAMMER: Max TRIAL slots (reduced from 65 to force competition)
+    # With max_trial_slots=15, only the top-performing sensors survive
+    max_trial_slots: int = 15
+    
     # Curriculum settings
     use_curriculum: bool = True
     current_stage_idx: int = 0
@@ -673,14 +677,24 @@ def _play_single_game(
             NodeState.TRUE,       # Completed - critical for TRIAL nodes!
             NodeState.CONFIRMED,  # Confirmed - critical for gating detection!
         )
+        
+        # Collect active nodes and confirmed nodes separately
+        active_node_ids = [n.nid for n in graph.nodes.values() if n.state in active_states]
+        confirmed_node_ids = [n.nid for n in graph.nodes.values() if n.state == NodeState.CONFIRMED]
+        
         tick_rec = TickRecord(
             tick_id=tick_count,
             board_fen=board.fen(),
-            active_nodes=[n.nid for n in graph.nodes.values() if n.state in active_states],
+            active_nodes=active_node_ids,
             action=suggested_move,
             reward_tick=tick_reward,  # Now stored for structural phase!
         )
         ep.ticks.append(tick_rec)
+        
+        # INERTIA PRUNING: Track which TRIAL nodes reached CONFIRMED state
+        # This is used to prune cells that fire but never contribute to gating
+        if stem_manager and HAS_STEM_CELL and confirmed_node_ids:
+            stem_manager.mark_cells_confirmed(confirmed_node_ids, current_cycle=move_count // 50)
         
         # Exit on promotion
         if promoted:
@@ -919,6 +933,7 @@ def run_evolution_training(config: EvolutionConfig) -> List[CycleResult]:
                 max_cells=config.stem_cell_max_cells,
                 spawn_rate=config.stem_cell_spawn_rate,
                 config=stem_cfg,
+                max_trial_slots=config.max_trial_slots,  # SPARSITY: Cap TRIAL tier
             )
     
     # Create output directories
@@ -1090,6 +1105,15 @@ def run_evolution_training(config: EvolutionConfig) -> List[CycleResult]:
         speculative_count = len(struct_stats.get('speculative_hoists', []))
         forced_count = len(struct_stats.get('forced_hoists', []))
         spawned_count = len(struct_stats.get('spawned_neighbors', []))
+        
+        # INERTIA PRUNING: Remove TRIAL cells that haven't contributed to CONFIRM signals
+        inert_count = 0
+        if stem_manager and HAS_STEM_CELL:
+            max_inactive = int(os.environ.get("M5_INERTIA_PRUNE_CYCLES", "20"))
+            inert_count = stem_manager.prune_inert_cells(cycle, max_inactive=max_inactive)
+            if inert_count > 0:
+                print(f"    ⚡ Inertia Pruning: {inert_count} idle TRIAL cells removed")
+        
         print(f"    → TRIAL: {trial_count}  SOLID: {solid_count}  DEMOTED: {demote_count}  HOISTED: {hoisted_count}  SPAWNED: {spawned_count}")
         
         # M5.1 Forced Hierarchy stats
