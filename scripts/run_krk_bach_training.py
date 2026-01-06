@@ -23,6 +23,7 @@ import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -44,7 +45,6 @@ def create_gated_krk_topology(
     Returns:
         Summary dict of modifications
     """
-    from typing import Optional
     
     # Load base topology
     with open(source_path) as f:
@@ -123,8 +123,6 @@ def create_gated_krk_topology(
 
 
 def main():
-    from typing import Optional
-    
     parser = argparse.ArgumentParser(description="KRK Bach-Integrated Training")
     
     # Paths

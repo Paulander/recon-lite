@@ -348,14 +348,6 @@
       "weight": 1.0,
       "consolidate": true,
       "confirmation_count": 0
-    },
-    {
-      "src": "krk_king_leg",
-      "dst": "universal_king_logic",
-      "type": "SUB",
-      "weight": 0.5,
-      "consolidate": true,
-      "confirmation_count": 0
     }
   ],
   "last_modified": "2026-01-05T16:49:52.160139"

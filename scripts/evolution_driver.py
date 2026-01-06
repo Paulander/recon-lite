@@ -463,7 +463,7 @@ def run_online_phase(
         episode_id = f"cycle{cycle:04d}_game{game_idx:04d}"
         
         # Set game number for progressive gating
-        engine.set_game_number(game_num)
+        engine.set_game_number(game_idx)
         
         # Play game
         result, ep = _play_single_game(

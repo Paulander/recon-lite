@@ -280,9 +280,12 @@ class KRKCheckmateRoot(Node):
 
 @dataclass
 class Phase0ChooseMoves(Node):
-    """Terminal that chooses a Phase-0 move and writes env['chosen_move']."""
+    """Leg/actuator that chooses a Phase-0 move and writes env['chosen_move'].
+    
+    Uses SCRIPT type to allow POR edges for leg sequencing.
+    """
     def __init__(self, nid: str):
-        super().__init__(nid=nid, ntype=NodeType.TERMINAL, predicate=self._choose)
+        super().__init__(nid=nid, ntype=NodeType.SCRIPT, predicate=self._choose)
 
     def _choose(self, node: Node, env: Dict[str, Any]) -> Tuple[bool, List[str]]:
         from .actuators import choose_move_phase0, choose_any_safe_move
@@ -313,8 +316,9 @@ class Phase0ChooseMoves(Node):
 
 @dataclass
 class KingDriveMoves(Node):
+    """Leg/actuator for king drive moves. Uses SCRIPT type for POR edge support."""
     def __init__(self, nid: str):
-        super().__init__(nid=nid, ntype=NodeType.TERMINAL, predicate=self._gen)
+        super().__init__(nid=nid, ntype=NodeType.SCRIPT, predicate=self._gen)
 
     def _gen(self, node: Node, env: Dict[str, Any]) -> Tuple[bool, List[str]]:
         from .actuators import choose_move_phase1
@@ -340,8 +344,9 @@ class KingDriveMoves(Node):
 
 @dataclass
 class BoxShrinkMoves(Node):
+    """Leg/actuator for box shrink moves. Uses SCRIPT type for POR edge support."""
     def __init__(self, nid: str):
-        super().__init__(nid=nid, ntype=NodeType.TERMINAL, predicate=self._gen)
+        super().__init__(nid=nid, ntype=NodeType.SCRIPT, predicate=self._gen)
 
     def _gen(self, node: Node, env: Dict[str, Any]) -> Tuple[bool, List[str]]:
         from .actuators import choose_move_phase2
