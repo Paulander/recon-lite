@@ -213,12 +213,60 @@ STAGE_2_EDGE_TRAPPED_TEMPO = KRKStage(
 
 
 # ============================================================================
+# Stage 2.5 (Bridge): Anchored_Cut (5 Positions)
+# King already adjacent to rook - removes coordination difficulty
+# Focus purely on the "Hold" mechanic
+# ============================================================================
+
+STAGE_2_5_ANCHORED_CUT = KRKStage(
+    stage_id=3,  # Position in final list (after stages 0, 1, 2)
+    name="Anchored_Cut",
+    description="King already anchored next to rook - maintain cut",
+    distance_to_mate="2 moves",
+    key_lesson="Hold the cut with pre-positioned king (coordination already done)",
+    target_win_rate=0.75,
+    positions=[
+        # a) King adjacent to rook, enemy at edge
+        KRKStagePosition(
+            fen="4k3/1R6/1K6/8/8/8/8/8 w - - 0 1",
+            optimal_moves=2,
+            description="Anchored: Kc6 then Rb8#",
+        ),
+        # b) King on b3, Rook on a3 (adjacent) - enemy on a1
+        KRKStagePosition(
+            fen="8/8/8/8/8/RK6/8/k7 w - - 0 1",
+            optimal_moves=2,
+            description="Anchored corner: Ka2 then Ra3#",
+        ),
+        # c) King on g5, Rook on h5 (adjacent) - enemy on h7
+        KRKStagePosition(
+            fen="8/7k/8/6KR/8/8/8/8 w - - 0 1",
+            optimal_moves=2,
+            description="Anchored edge: Kh6 then Rh1-h8#",
+        ),
+        # d) King on f7, Rook on e7 (adjacent) - enemy on h8
+        KRKStagePosition(
+            fen="7k/4RK2/8/8/8/8/8/8 w - - 0 1",
+            optimal_moves=1,
+            description="Anchored back rank: Re8#",
+        ),
+        # e) King on c6, Rook on c7 (adjacent) - enemy on a8
+        KRKStagePosition(
+            fen="k7/2R5/2K5/8/8/8/8/8 w - - 0 1",
+            optimal_moves=2,
+            description="Anchored: Kb6 then Ra7#",
+        ),
+    ],
+)
+
+
+# ============================================================================
 # Stage 3: Edge_Cut_Hold (4 Positions)
 # 1x8 box scenarios - DON'T LET KING ESCAPE
 # ============================================================================
 
 STAGE_3_EDGE_CUT_HOLD = KRKStage(
-    stage_id=3,
+    stage_id=4,  # Shifted after bridge stage
     name="Edge_Cut_Hold",
     description="Maintain cut while approaching (1x8 box)",
     distance_to_mate="2-3 moves",
@@ -263,7 +311,7 @@ STAGE_3_EDGE_CUT_HOLD = KRKStage(
 # ============================================================================
 
 STAGE_4_KING_CLOSE_1 = KRKStage(
-    stage_id=4,
+    stage_id=5,  # Shifted after bridge stage
     name="King_Close_1",
     description="King 1 square from ideal position",
     distance_to_mate="3-4 moves",
@@ -301,7 +349,7 @@ STAGE_4_KING_CLOSE_1 = KRKStage(
 # ============================================================================
 
 STAGE_5_KING_CLOSE_2 = KRKStage(
-    stage_id=5,
+    stage_id=6,  # Shifted after bridge stage
     name="King_Close_2",
     description="King 2 squares from ideal position",
     distance_to_mate="4-6 moves",
@@ -339,7 +387,7 @@ STAGE_5_KING_CLOSE_2 = KRKStage(
 # ============================================================================
 
 STAGE_6_KING_FAR_CUT_HELD = KRKStage(
-    stage_id=6,
+    stage_id=7,  # Shifted after bridge stage
     name="King_Far_Cut_Held",
     description="King far away, rook maintains cut",
     distance_to_mate="6-10 moves",
@@ -377,7 +425,7 @@ STAGE_6_KING_FAR_CUT_HELD = KRKStage(
 # ============================================================================
 
 STAGE_7_BOX_SMALL = KRKStage(
-    stage_id=7,
+    stage_id=8,  # Shifted after bridge stage
     name="Box_Small",
     description="3x3 confinement box shrinking",
     distance_to_mate="5-8 moves",
@@ -412,7 +460,7 @@ STAGE_7_BOX_SMALL = KRKStage(
 # ============================================================================
 
 STAGE_8_BOX_MEDIUM = KRKStage(
-    stage_id=8,
+    stage_id=9,  # Shifted after bridge stage
     name="Box_Medium",
     description="4x4 box requiring opposition",
     distance_to_mate="8-15 moves",
@@ -447,7 +495,7 @@ STAGE_8_BOX_MEDIUM = KRKStage(
 # ============================================================================
 
 STAGE_9_FULL_KRK = KRKStage(
-    stage_id=9,
+    stage_id=10,  # Shifted after bridge stage
     name="Full_KRK",
     description="Random winning KRK positions",
     distance_to_mate="15-30 moves",
@@ -480,16 +528,17 @@ STAGE_9_FULL_KRK = KRKStage(
 # ============================================================================
 
 KRK_STAGES: List[KRKStage] = [
-    STAGE_0_MATE_IN_1,
-    STAGE_1_MATE_IN_2,
-    STAGE_2_EDGE_TRAPPED_TEMPO,
-    STAGE_3_EDGE_CUT_HOLD,
-    STAGE_4_KING_CLOSE_1,
-    STAGE_5_KING_CLOSE_2,
-    STAGE_6_KING_FAR_CUT_HELD,
-    STAGE_7_BOX_SMALL,
-    STAGE_8_BOX_MEDIUM,
-    STAGE_9_FULL_KRK,
+    STAGE_0_MATE_IN_1,       # Stage 0: Mate in 1
+    STAGE_1_MATE_IN_2,       # Stage 1: Mate in 2
+    STAGE_2_EDGE_TRAPPED_TEMPO,  # Stage 2: Tempo/waiting moves
+    STAGE_2_5_ANCHORED_CUT,  # Stage 3 (BRIDGE): Pre-coordinated king+rook
+    STAGE_3_EDGE_CUT_HOLD,   # Stage 4: 1x8 box maintenance  
+    STAGE_4_KING_CLOSE_1,    # Stage 5: King approach 1
+    STAGE_5_KING_CLOSE_2,    # Stage 6: King approach 2
+    STAGE_6_KING_FAR_CUT_HELD,  # Stage 7: Long approach
+    STAGE_7_BOX_SMALL,       # Stage 8: 3x3 box
+    STAGE_8_BOX_MEDIUM,      # Stage 9: 4x4 box
+    STAGE_9_FULL_KRK,        # Stage 10: Full KRK
 ]
 
 

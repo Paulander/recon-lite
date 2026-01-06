@@ -1066,6 +1066,150 @@
         ],
         "subgraph": "krk"
       }
+    },
+    {
+      "id": "TRIAL_stem_0010_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0010",
+        "tier": "trial",
+        "consistency": 0.5001646258439657,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.46428571428571447,
+          0.31377551020408173,
+          0.18112244897959182,
+          0.6045918367346939,
+          0.0
+        ],
+        "subgraph": "krk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0011_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0011",
+        "tier": "trial",
+        "consistency": 0.5001646258439657,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.46428571428571447,
+          0.31377551020408173,
+          0.18112244897959182,
+          0.6045918367346939,
+          0.0
+        ],
+        "subgraph": "krk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0012_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0012",
+        "tier": "trial",
+        "consistency": 0.5180587200918698,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.5035516969218621,
+          0.5753749013417521,
+          0.7071823204419886,
+          0.7466456195737962,
+          0.0
+        ],
+        "subgraph": "krk"
+      }
     }
   ],
   "edges": [
@@ -1716,9 +1860,81 @@
       "weight": 0.5,
       "consolidate": true,
       "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "TRIAL_stem_0010_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_rook_leg",
+      "dst": "TRIAL_stem_0010_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_king_leg",
+      "dst": "TRIAL_stem_0010_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "TRIAL_stem_0011_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_rook_leg",
+      "dst": "TRIAL_stem_0011_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_king_leg",
+      "dst": "TRIAL_stem_0011_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "TRIAL_stem_0012_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_rook_leg",
+      "dst": "TRIAL_stem_0012_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_king_leg",
+      "dst": "TRIAL_stem_0012_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
     }
   ],
-  "last_modified": "2026-01-06T17:59:46.533718",
+  "last_modified": "2026-01-06T21:38:32.988625",
   "evolution_history": [
     {
       "tick": 0,
@@ -2612,6 +2828,147 @@
         "weight": 0.5
       },
       "timestamp": "2026-01-06T17:59:44.814676"
+    },
+    {
+      "tick": 0,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0010_0",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-06T21:32:16.425164"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_detect->TRIAL_stem_0010_0:SUB",
+      "details": {
+        "src": "krk_detect",
+        "dst": "TRIAL_stem_0010_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T21:32:16.425188"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_rook_leg->TRIAL_stem_0010_0:SUB",
+      "details": {
+        "src": "krk_rook_leg",
+        "dst": "TRIAL_stem_0010_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T21:32:16.425194"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_king_leg->TRIAL_stem_0010_0:SUB",
+      "details": {
+        "src": "krk_king_leg",
+        "dst": "TRIAL_stem_0010_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T21:32:16.425199"
+    },
+    {
+      "tick": 0,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0011_0",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-06T21:32:16.426954"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_detect->TRIAL_stem_0011_0:SUB",
+      "details": {
+        "src": "krk_detect",
+        "dst": "TRIAL_stem_0011_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T21:32:16.426964"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_rook_leg->TRIAL_stem_0011_0:SUB",
+      "details": {
+        "src": "krk_rook_leg",
+        "dst": "TRIAL_stem_0011_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T21:32:16.426970"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_king_leg->TRIAL_stem_0011_0:SUB",
+      "details": {
+        "src": "krk_king_leg",
+        "dst": "TRIAL_stem_0011_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T21:32:16.426973"
+    },
+    {
+      "tick": 0,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0012_0",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-06T21:38:10.248642"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_detect->TRIAL_stem_0012_0:SUB",
+      "details": {
+        "src": "krk_detect",
+        "dst": "TRIAL_stem_0012_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T21:38:10.248711"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_rook_leg->TRIAL_stem_0012_0:SUB",
+      "details": {
+        "src": "krk_rook_leg",
+        "dst": "TRIAL_stem_0012_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T21:38:10.248747"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_king_leg->TRIAL_stem_0012_0:SUB",
+      "details": {
+        "src": "krk_king_leg",
+        "dst": "TRIAL_stem_0012_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-06T21:38:10.248757"
     }
   ]
 }

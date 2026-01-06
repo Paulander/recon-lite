@@ -544,12 +544,13 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
             print("\n  All stages processed. Ending training.")
             break
         stages_completed.add(curriculum.current_stage_id)
+        start_stage_idx = curriculum.current_stage_id  # Track start position for advancement check
         stage = curriculum.current_stage
         stage_start_games = total_games
         cycle = 0
         
         print(f"\n{'='*60}")
-        print(f"STAGE {stage.stage_id}: {stage.name}")
+        print(f"STAGE {curriculum.current_stage_id}: {stage.name}")
         print(f"Description: {stage.description}")
         print(f"Key Lesson: {stage.key_lesson}")
         print(f"Target Win Rate: {stage.target_win_rate}")
@@ -706,11 +707,106 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                         current_win_rate=win_rate,
                     )
                     
+                    # ================================================================
+                    # FORCED AND-GATE HOISTING
+                    # When win rate is 0% but sensors are active (have vocabulary but no grammar)
+                    # ================================================================
+                    forced_hoists = []
+                    if win_rate == 0.0 and active_node_counts and len(active_node_counts) >= 2:
+                        # Find the top 2 most active TRIAL sensors
+                        trial_activations = [
+                            (node_id, count) for node_id, count in active_node_counts.items()
+                            if node_id.startswith("TRIAL_") or node_id.startswith("cluster_")
+                        ]
+                        trial_activations.sort(key=lambda x: -x[1])
+                        
+                        if len(trial_activations) >= 2:
+                            top_2 = trial_activations[:2]
+                            sensor_a_id, count_a = top_2[0]
+                            sensor_b_id, count_b = top_2[1]
+                            
+                            # Both must have significant activations (>100)
+                            if count_a > 100 and count_b > 100:
+                                # Find corresponding cells
+                                cell_a = None
+                                cell_b = None
+                                for cell in stem_manager.cells.values():
+                                    if cell.trial_node_id == sensor_a_id:
+                                        cell_a = cell
+                                    elif cell.trial_node_id == sensor_b_id:
+                                        cell_b = cell
+                                
+                                if cell_a and cell_b:
+                                    # Force-hoist into AND-gate (Coordination Manager)
+                                    cluster_id = stem_manager.hoist_cluster(
+                                        [cell_a.cell_id, cell_b.cell_id],
+                                        graph,
+                                        parent_node_id="krk_execute",
+                                        aggregation_mode="and",
+                                    )
+                                    if cluster_id:
+                                        forced_hoists.append(cluster_id)
+                                        # Mark as forced-crisis hoist
+                                        if cluster_id in graph.nodes:
+                                            graph.nodes[cluster_id].meta["forced_crisis"] = True
+                                            graph.nodes[cluster_id].meta["source_activations"] = [count_a, count_b]
+                                        
+                                        # Persist to registry
+                                        node = graph.nodes.get(cluster_id)
+                                        if node:
+                                            node_spec = {
+                                                "id": cluster_id,
+                                                "type": node.ntype.name,
+                                                "group": "hoisted",
+                                                "factory": None,
+                                                "meta": node.meta,
+                                            }
+                                            try:
+                                                registry.add_node(node_spec, tick=current_tick)
+                                            except Exception:
+                                                pass  # Node may already exist
+                                        
+                                        print(f"    ⚡ FORCED AND-GATE: {cluster_id} from {sensor_a_id}+{sensor_b_id}")
+                                        registry.save()
+                    
+                    # ================================================================
+                    # POR CHAIN CONSTRUCTION (Box Method Sequence)
+                    # Look for: Rook_Cuts → King_Approaches → Box_Shrinks
+                    # ================================================================
+                    if active_node_counts and len(active_node_counts) >= 2:
+                        # Identify functional node types
+                        cut_sensors = [n for n in active_node_counts if "cut" in n.lower() or "rook" in n.lower()]
+                        king_sensors = [n for n in active_node_counts if "king" in n.lower() or "distance" in n.lower()]
+                        
+                        # If we have both cut-related and king-related sensors active
+                        if cut_sensors and king_sensors:
+                            cut_id = max(cut_sensors, key=lambda x: active_node_counts[x])
+                            king_id = max(king_sensors, key=lambda x: active_node_counts[x])
+                            
+                            # Check if POR link already exists
+                            existing_por = any(
+                                e.src == cut_id and e.dst == king_id 
+                                for e in graph.edges
+                            )
+                            
+                            if not existing_por and cut_id in graph.nodes and king_id in graph.nodes:
+                                # Both must be SCRIPT nodes for POR
+                                cut_node = graph.nodes[cut_id]
+                                king_node = graph.nodes[king_id]
+                                
+                                if cut_node.ntype == NodeType.SCRIPT and king_node.ntype == NodeType.SCRIPT:
+                                    try:
+                                        from recon_lite.graph import LinkType
+                                        graph.add_edge(cut_id, king_id, LinkType.POR)
+                                        print(f"    🔗 POR CHAIN: {cut_id} → {king_id}")
+                                    except Exception as e:
+                                        pass  # POR may not be valid between these nodes
+                    
                     # Compute branching metrics
                     metrics = compute_branching_metrics(graph)
                     
                     promoted = struct_result.get("trial_promotions", 0)
-                    hoisted = struct_result.get("hoisted_count", 0)
+                    hoisted = struct_result.get("hoisted_count", 0) + len(forced_hoists)
                     depth = metrics.get("max_depth", 1)
                     
                     if promoted > 0 or hoisted > 0 or depth > 1:
@@ -742,7 +838,7 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                     print(f"    M5 Error: {e}")
             
             # Check if stage advanced during cycle
-            if curriculum.current_stage_id > stage.stage_id:
+            if curriculum.current_stage_id > start_stage_idx:
                 break
             
             # Force advance if we hit max cycles (allow progression even if win rate not met)
@@ -754,11 +850,11 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                 break
             
             # Save cycle snapshot
-            snapshot_path = config.output_dir / f"stage{stage.stage_id}" / f"cycle_{cycle:04d}.json"
+            snapshot_path = config.output_dir / f"stage{start_stage_idx}" / f"cycle_{cycle:04d}.json"
             snapshot_path.parent.mkdir(parents=True, exist_ok=True)
             
             snapshot_data = {
-                "stage_id": stage.stage_id,
+                "stage_id": start_stage_idx,
                 "stage_name": stage.name,
                 "cycle": cycle,
                 "games": config.games_per_cycle,
@@ -773,10 +869,10 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
         
         # Stage complete - record history
         stage_games = total_games - stage_start_games
-        stage_stats = curriculum.stage_stats[stage.stage_id]
+        stage_stats = curriculum.stage_stats[start_stage_idx]
         
         stage_history.append({
-            "stage_id": stage.stage_id,
+            "stage_id": start_stage_idx,
             "stage_name": stage.name,
             "games_played": stage_games,
             "cycles": cycle,
@@ -785,7 +881,7 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
             "escape_rate": stage_stats.escape_rate,
         })
         
-        print(f"\n  Stage {stage.stage_id} Complete:")
+        print(f"\n  Stage {start_stage_idx} Complete:")
         print(f"    Games: {stage_games}")
         print(f"    Cycles: {cycle}")
         print(f"    Final Win Rate: {stage_stats.win_rate:.1%}")
