@@ -92,21 +92,39 @@ def main():
         topo = json.load(f)
     
     # Enable gating on leg nodes
-    nodes = topo.get("nodes", {})
-    for leg_id in GATED_LEGS:
-        if leg_id in nodes:
-            if "meta" not in nodes[leg_id]:
-                nodes[leg_id]["meta"] = {}
-            nodes[leg_id]["meta"]["require_child_confirm"] = True
-            print(f"  - Gating enabled: {leg_id}")
+    # Handle both list and dict formats for nodes
+    nodes = topo.get("nodes", [])
+    if isinstance(nodes, list):
+        # List format: find nodes by id
+        for node in nodes:
+            if node.get("id") in GATED_LEGS:
+                if "meta" not in node:
+                    node["meta"] = {}
+                node["meta"]["require_child_confirm"] = True
+                print(f"  - Gating enabled: {node.get('id')}")
+    else:
+        # Dict format: key is node id
+        for leg_id in GATED_LEGS:
+            if leg_id in nodes:
+                if "meta" not in nodes[leg_id]:
+                    nodes[leg_id]["meta"] = {}
+                nodes[leg_id]["meta"]["require_child_confirm"] = True
+                print(f"  - Gating enabled: {leg_id}")
     
     # Reset edge weights to 0.5 (clean slate)
-    edges = topo.get("edges", {})
+    # Handle both list and dict formats for edges
+    edges = topo.get("edges", [])
     weight_reset_count = 0
-    for edge_key, edge_data in edges.items():
-        if isinstance(edge_data, dict) and "weight" in edge_data:
-            edge_data["weight"] = 0.5
-            weight_reset_count += 1
+    if isinstance(edges, list):
+        for edge in edges:
+            if isinstance(edge, dict) and "weight" in edge:
+                edge["weight"] = 0.5
+                weight_reset_count += 1
+    else:
+        for edge_key, edge_data in edges.items():
+            if isinstance(edge_data, dict) and "weight" in edge_data:
+                edge_data["weight"] = 0.5
+                weight_reset_count += 1
     print(f"  - Reset {weight_reset_count} edge weights to 0.5")
     
     with open(gated_topology, "w") as f:
