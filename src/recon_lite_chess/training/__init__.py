@@ -43,6 +43,17 @@ from .generators import (
     generate_integration_position,
     estimate_theoretical_moves,
 )
+from .krk_curriculum import (
+    KRKStage,
+    KRKStagePosition,
+    KRKCurriculumManager,
+    KRKStageStats,
+    KRK_STAGES,
+    krk_reward,
+    box_min_side,
+    did_box_grow,
+    generate_krk_curriculum_position,
+)
 
 __all__ = [
     "CurriculumPhase",
@@ -63,5 +74,15 @@ __all__ = [
     "generate_wilderness_from_opening",
     "generate_integration_position",
     "estimate_theoretical_moves",
+    # KRK Curriculum
+    "KRKStage",
+    "KRKStagePosition",
+    "KRKCurriculumManager",
+    "KRKStageStats",
+    "KRK_STAGES",
+    "krk_reward",
+    "box_min_side",
+    "did_box_grow",
+    "generate_krk_curriculum_position",
 ]
 
