@@ -87,6 +87,18 @@ try:
 except ImportError:
     HAS_PLASTICITY = False
 
+try:
+    from recon_lite.learning.m5_structure import StructureLearner, compute_branching_metrics
+    HAS_M5 = True
+except ImportError:
+    HAS_M5 = False
+
+try:
+    from recon_lite_chess.features.krk_features import extract_krk_features
+    HAS_KRK_FEATURES = True
+except ImportError:
+    HAS_KRK_FEATURES = False
+
 
 # ============================================================================
 # Configuration
@@ -256,6 +268,7 @@ def play_krk_game_recon(
     graph: Graph,
     config: KRKCurriculumConfig,
     stage: KRKStage,
+    stem_manager: Optional["StemCellManager"] = None,
 ) -> Tuple[str, int, bool, List[str]]:
     """
     Play a single KRK game using the ReCoN engine.
@@ -266,6 +279,7 @@ def play_krk_game_recon(
         graph: ReCoN graph
         config: Training configuration
         stage: Current curriculum stage
+        stem_manager: Optional stem cell manager for M5 learning
     
     Returns:
         (result, move_count, box_escaped, active_nodes_log)
@@ -274,6 +288,7 @@ def play_krk_game_recon(
     box_escaped = False
     initial_box_min = box_min_side(board)
     active_nodes_log = []
+    game_tick = 0
     
     # Sentinel for KRK positions
     def krk_sentinel(env: Dict[str, Any]) -> bool:
@@ -362,6 +377,24 @@ def play_krk_game_recon(
         
         board.push(move)
         move_count += 1
+        game_tick += 1
+        
+        # Feed observation to stem cells (M5 learning)
+        if stem_manager:
+            # Calculate interim reward based on position quality
+            current_box = box_min_side(board)
+            if board.is_checkmate():
+                interim_reward = 1.0
+            elif board.is_check():
+                interim_reward = 0.6
+            elif current_box < initial_box_min:
+                interim_reward = 0.4  # Good - box is shrinking
+            else:
+                interim_reward = 0.1
+            
+            # Feed to all exploring stem cells
+            for cell in stem_manager.cells.values():
+                cell.observe(board, interim_reward, tick=game_tick)
         
         # Check for box escape
         current_box_min = box_min_side(board)
@@ -478,8 +511,14 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
         # Initialize stem cells for M5
         if config.enable_m5 and HAS_STEM_CELL:
             stem_config = StemCellConfig(min_samples=30, max_samples=500)
-            stem_manager = StemCellManager(stem_config, max_trial_slots=config.max_trial_slots)
-            print(f"  M5 enabled: max_trial_slots={config.max_trial_slots}")
+            stem_manager = StemCellManager(max_cells=config.max_trial_slots, config=stem_config, max_trial_slots=config.max_trial_slots)
+            
+            # Seed initial stem cells to start observing
+            initial_cells = 10
+            for _ in range(initial_cells):
+                stem_manager.spawn_cell()
+            
+            print(f"  M5 enabled: max_trial_slots={config.max_trial_slots}, seeded {len(stem_manager.cells)} cells")
     else:
         print(f"\nUsing SIMPLE heuristic mode for fast validation")
     
@@ -540,6 +579,7 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                         graph=graph,
                         config=config,
                         stage=stage,
+                        stem_manager=stem_manager if config.enable_m5 else None,
                     )
                     # Count active nodes for M5 analysis
                     for nid in active_log:
@@ -611,6 +651,51 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
             if config.mode == "recon" and active_node_counts:
                 top_nodes = sorted(active_node_counts.items(), key=lambda x: -x[1])[:5]
                 print(f"    Top nodes: {', '.join(f'{n}({c})' for n, c in top_nodes)}")
+            
+            # M5 Structural Learning Phase
+            if config.mode == "recon" and config.enable_m5 and stem_manager and HAS_M5:
+                try:
+                    from recon_lite.learning.m5_structure import (
+                        StructureLearner,
+                        compute_branching_metrics,
+                    )
+                    
+                    # Create structural learner
+                    struct_learner = StructureLearner(registry=registry)
+                    
+                    # Apply structural phase
+                    struct_result = struct_learner.apply_structural_phase(
+                        stem_manager=stem_manager,
+                        episodes=[],  # TODO: Pass actual episodes for POR discovery
+                        max_promotions=3,
+                        parent_candidates=["krk_detect", "krk_execute", "krk_rook_leg", "krk_king_leg"],
+                        current_win_rate=win_rate,
+                    )
+                    
+                    # Compute branching metrics
+                    metrics = compute_branching_metrics(graph)
+                    
+                    promoted = struct_result.get("trial_promotions", 0)
+                    hoisted = struct_result.get("hoisted_count", 0)
+                    depth = metrics.get("max_depth", 1)
+                    
+                    if promoted > 0 or hoisted > 0 or depth > 1:
+                        print(f"    M5: +{promoted} TRIAL, +{hoisted} HOISTED, depth={depth}")
+                    
+                    # Spawn new sensors if win rate is low (Stall Recovery)
+                    if win_rate < 0.3 and len(stem_manager.cells) < config.max_trial_slots and HAS_KRK_FEATURES:
+                        # Spawn new stem cells
+                        spawned = 0
+                        for _ in range(3):  # Spawn up to 3 new sensors
+                            new_cell = stem_manager.spawn_cell()
+                            if new_cell:
+                                spawned += 1
+                        
+                        if spawned > 0:
+                            print(f"    M5 Spawn: +{spawned} new stem cells (stall recovery)")
+                    
+                except Exception as e:
+                    print(f"    M5 Error: {e}")
             
             # Check if stage advanced during cycle
             if curriculum.current_stage_id > stage.stage_id:
