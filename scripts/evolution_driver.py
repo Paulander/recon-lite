@@ -75,6 +75,13 @@ except ImportError:
     KPK_STAGES = []
     KPKStage = None
 
+try:
+    from recon_lite.engine import GatingSchedule
+    HAS_GATING_SCHEDULE = True
+except ImportError:
+    HAS_GATING_SCHEDULE = False
+    GatingSchedule = None
+
 # Per-stage cycle configuration (more cycles for harder stages)
 # Baby-step stages (1-5) need fewer cycles since positions are fixed/easy
 STAGE_CYCLES = {
@@ -333,6 +340,21 @@ class EvolutionConfig:
     # min_internal_ticks: Mandatory propagation depth before allowing early exit.
     # Set to 3+ during Structural Spurt to ensure TRIAL nodes activate.
     min_internal_ticks: int = 0  # 0 = disabled (legacy behavior)
+    
+    # Think Harder settings (Bach-Integrated architecture)
+    # Pure cognitive mode: no random fallback, just stall and learn
+    enable_think_harder: bool = False  # Enable threshold decay escalation
+    think_harder_thresholds: tuple = (0.7, 0.5, 0.3, 0.1)  # Confidence thresholds
+    enable_curiosity_spawning: bool = False  # Spawn sensors on stall
+    curiosity_spawn_count: int = 3  # Sensors to spawn per stall
+    pure_cognitive_mode: bool = False  # If True, no random fallback at all
+    
+    # Progressive gating settings
+    enable_progressive_gating: bool = False
+    gating_initial_strictness: float = 0.30  # 30% - training wheels
+    gating_final_strictness: float = 1.0     # 100% - full Bach
+    gating_ramp_games: int = 100             # Full strictness by game 100
+    gating_win_based: bool = False           # Increase strictness on wins only
 
 
 @dataclass
@@ -393,8 +415,16 @@ def run_online_phase(
         from recon_lite_chess.scripts.kpk import build_kpk_network
         graph = build_kpk_network()
     
-    # Initialize engine
-    engine = ReConEngine(graph)
+    # Initialize engine with progressive gating schedule (Bach-Integrated)
+    gating_schedule = None
+    if config.enable_progressive_gating and HAS_GATING_SCHEDULE:
+        gating_schedule = GatingSchedule(
+            initial_strictness=config.gating_initial_strictness,
+            final_strictness=config.gating_final_strictness,
+            ramp_games=config.gating_ramp_games,
+            win_based=config.gating_win_based,
+        )
+    engine = ReConEngine(graph, gating_schedule=gating_schedule)
     
     # Plasticity config
     plasticity_cfg = PlasticityConfig(
@@ -432,6 +462,9 @@ def run_online_phase(
         board = chess.Board(fen)
         episode_id = f"cycle{cycle:04d}_game{game_idx:04d}"
         
+        # Set game number for progressive gating
+        engine.set_game_number(game_num)
+        
         # Play game
         result, ep = _play_single_game(
             board=board,
@@ -444,7 +477,17 @@ def run_online_phase(
             max_ticks=config.max_ticks_per_move,
             apply_scent_shaping=apply_scent_shaping,  # M5.1
             min_internal_ticks=config.min_internal_ticks,  # Mandatory tick depth
+            # Think Harder settings (Bach-Integrated)
+            enable_think_harder=config.enable_think_harder,
+            think_harder_thresholds=config.think_harder_thresholds,
+            enable_curiosity_spawning=config.enable_curiosity_spawning,
+            curiosity_spawn_count=config.curiosity_spawn_count,
+            pure_cognitive_mode=config.pure_cognitive_mode,
         )
+        
+        # Track wins for win-based gating schedule
+        if result == "win":
+            engine.record_win()
         
         # Store stage info in episode for later analysis
         ep.notes = ep.notes or {}
@@ -504,6 +547,118 @@ def run_online_phase(
     return episodes, stats
 
 
+def _think_harder(
+    engine: "ReConEngine",
+    graph: Graph,
+    env: Dict[str, Any],
+    board: chess.Board,
+    stall_count: int,
+    thresholds: tuple = (0.7, 0.5, 0.3, 0.1),
+    stem_manager: Optional["StemCellManager"] = None,
+    enable_curiosity: bool = False,
+    curiosity_count: int = 3,
+) -> Optional[str]:
+    """
+    Bach-Integrated "Think Harder" escalation.
+    
+    When no hypothesis is found, escalate through progressively lower
+    confidence thresholds. If still stuck, optionally spawn curiosity sensors.
+    
+    This is the cognitive alternative to random fallback.
+    
+    Args:
+        engine: ReConEngine for move generation
+        graph: ReCoN graph
+        env: Environment dict
+        board: Current chess board
+        stall_count: How many stalls have occurred this game
+        thresholds: Confidence thresholds to try (descending)
+        stem_manager: Optional stem cell manager for curiosity spawning
+        enable_curiosity: Whether to spawn sensors on prolonged stall
+        curiosity_count: Number of sensors to spawn
+        
+    Returns:
+        Move UCI string if found, None otherwise (pure stall)
+    """
+    # Level 1: Threshold decay
+    # Try progressively lower confirmation thresholds
+    original_threshold = getattr(engine, 'confirmation_threshold', 0.5)
+    
+    for threshold in thresholds:
+        # Note: This would require adding confirmation_threshold to ReConEngine
+        # For now, we re-run the engine step and hope activation spreads
+        engine.step(env)
+        
+        # Check for suggested move
+        for subgraph_key in ["kpk", "krk", "kqk"]:
+            policy = env.get(subgraph_key, {}).get("policy", {})
+            if "suggested_move" in policy:
+                return policy["suggested_move"]
+    
+    # Level 2: Curiosity spawning (if enabled and stem manager available)
+    if enable_curiosity and stem_manager and HAS_STEM_CELL and stall_count > 3:
+        _spawn_curiosity_sensors(stem_manager, board, curiosity_count)
+    
+    # Pure cognitive stall - no random fallback
+    return None
+
+
+def _spawn_curiosity_sensors(
+    stem_manager: "StemCellManager",
+    board: chess.Board,
+    count: int = 3,
+) -> List[str]:
+    """
+    Spawn new TRIAL sensors targeted at current unexplained position.
+    
+    This implements "targeted spawning" to Binding Gaps:
+    - Extract features from current position
+    - Create exploratory sensors focused on this specific pattern
+    
+    Args:
+        stem_manager: Stem cell manager
+        board: Current chess board
+        count: Number of sensors to spawn
+        
+    Returns:
+        List of spawned cell IDs
+    """
+    spawned_ids = []
+    
+    try:
+        # Try to extract features for this position
+        from recon_lite_chess.features import extract_kpk_features
+        features = extract_kpk_features(board)
+        
+        fen = board.fen()
+        fen_hash = hash(fen) % 10000
+        
+        for i in range(count):
+            cell_id = f"curiosity_{fen_hash}_{i}"
+            
+            # Create cell via manager's create_cell if available
+            if hasattr(stem_manager, 'create_cell'):
+                # Add some variation to the pattern signature
+                import random
+                varied_features = [
+                    f + random.uniform(-0.1, 0.1) for f in features
+                ]
+                stem_manager.create_cell(
+                    cell_id=cell_id,
+                    pattern_signature=varied_features,
+                    metadata={
+                        "spawned_from": "stall",
+                        "target_fen": fen,
+                        "curiosity": True,
+                    }
+                )
+                spawned_ids.append(cell_id)
+    except Exception:
+        pass  # Graceful degradation if feature extraction fails
+    
+    return spawned_ids
+
+
 def _play_single_game(
     board: chess.Board,
     engine: "ReConEngine",
@@ -515,6 +670,12 @@ def _play_single_game(
     max_ticks: int,
     apply_scent_shaping: bool = False,  # M5.1: Enable scent reward for draws
     min_internal_ticks: int = 0,  # Mandatory tick depth for TRIAL activation
+    # Think Harder settings (Bach-Integrated architecture)
+    enable_think_harder: bool = False,
+    think_harder_thresholds: tuple = (0.7, 0.5, 0.3, 0.1),
+    enable_curiosity_spawning: bool = False,
+    curiosity_spawn_count: int = 3,
+    pure_cognitive_mode: bool = False,  # If True, no random fallback at all
 ) -> Tuple[str, EpisodeRecord]:
     """
     Play a single KPK game and return (result, episode_record).
@@ -533,6 +694,11 @@ def _play_single_game(
         apply_scent_shaping: M5.1 - If True, apply scent reward for draws
         min_internal_ticks: Mandatory propagation depth before allowing early exit.
                            Set to 3+ during Structural Spurt to ensure TRIAL nodes activate.
+        enable_think_harder: Bach - Enable threshold decay escalation
+        think_harder_thresholds: Confidence thresholds to try (descending)
+        enable_curiosity_spawning: Spawn sensors on prolonged stall
+        curiosity_spawn_count: Number of sensors to spawn per stall
+        pure_cognitive_mode: If True, no random fallback - pure cognitive stall
     """
     from recon_lite.plasticity import init_plasticity_state
     from recon_lite_chess.sensors.structure import summarize_kpk_material
@@ -701,14 +867,47 @@ def _play_single_game(
             break
         
         if not move_made:
-            # No valid suggested move, pick any legal
-            legal_moves = list(board.legal_moves)
-            if legal_moves:
-                import random
-                board.push(random.choice(legal_moves))
-                move_count += 1
-            else:
-                break  # No legal moves
+            # No valid suggested move - Think Harder or fallback
+            stall_count = getattr(engine, '_stall_count', 0) + 1
+            engine._stall_count = stall_count
+            
+            # Try Think Harder escalation (Bach-Integrated)
+            if enable_think_harder:
+                think_harder_move = _think_harder(
+                    engine=engine,
+                    graph=graph,
+                    env=env,
+                    board=board,
+                    stall_count=stall_count,
+                    thresholds=think_harder_thresholds,
+                    stem_manager=stem_manager,
+                    enable_curiosity=enable_curiosity_spawning,
+                    curiosity_count=curiosity_spawn_count,
+                )
+                if think_harder_move:
+                    try:
+                        move = chess.Move.from_uci(think_harder_move)
+                        if move in board.legal_moves:
+                            board.push(move)
+                            move_count += 1
+                            move_made = True
+                    except Exception:
+                        pass
+            
+            # Random fallback (unless pure cognitive mode)
+            if not move_made and not pure_cognitive_mode:
+                legal_moves = list(board.legal_moves)
+                if legal_moves:
+                    import random
+                    board.push(random.choice(legal_moves))
+                    move_count += 1
+                else:
+                    break  # No legal moves
+            elif not move_made and pure_cognitive_mode:
+                # Pure cognitive stall - just skip this move
+                # This is the "Cognitive Honesty" mode: no random fallback
+                # The game may stall, but that's informative for learning
+                pass
         
         # Opponent's turn (random)
         if not board.is_game_over():

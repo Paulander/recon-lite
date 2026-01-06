@@ -102,7 +102,9 @@
       "factory": "recon_lite_chess.krk_nodes:create_box_shrink_moves",
       "meta": {
         "layer": "actuator",
-        "piece": "rook"
+        "piece": "rook",
+        "require_child_confirm": true,
+        "binding_space": "krk_rook_binding"
       }
     },
     {
@@ -113,7 +115,9 @@
       "meta": {
         "layer": "actuator",
         "piece": "king",
-        "universal": true
+        "universal": true,
+        "require_child_confirm": true,
+        "binding_space": "krk_king_binding"
       }
     },
     {
@@ -138,6 +142,18 @@
       "group": "sensor",
       "factory": "recon_lite_chess.krk_nodes:create_wait_for_board_change",
       "meta": {}
+    },
+    {
+      "id": "universal_king_logic",
+      "type": "SCRIPT",
+      "group": "manager",
+      "factory": null,
+      "meta": {
+        "seeded": true,
+        "origin": "kpk_transfer",
+        "description": "King approach/opposition patterns from KPK",
+        "binding_space": "krk_king_binding"
+      }
     }
   ],
   "edges": [
@@ -306,6 +322,38 @@
       "dst": "krk_arbiter",
       "type": "POR",
       "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_execute",
+      "dst": "universal_king_logic",
+      "type": "SUB",
+      "weight": 0.8,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "universal_king_logic",
+      "dst": "krk_king_distance",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "universal_king_logic",
+      "dst": "krk_opposition_probe",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_king_leg",
+      "dst": "universal_king_logic",
+      "type": "SUB",
+      "weight": 0.5,
       "consolidate": true,
       "confirmation_count": 0
     }

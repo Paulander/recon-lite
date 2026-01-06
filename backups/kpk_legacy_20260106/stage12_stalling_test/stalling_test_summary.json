@@ -1,0 +1,22 @@
+{
+  "timestamp": "2026-01-06T10:29:07.680733",
+  "config": {
+    "min_internal_ticks": 5,
+    "max_trial_slots": 15,
+    "inertia_prune_cycles": 20,
+    "target_stage": 12,
+    "heuristic_suppression": true
+  },
+  "results": {
+    "final_win_rate": 0.94,
+    "total_games": 1250,
+    "cycles_completed": 25
+  },
+  "metrics": {
+    "max_depth": 1,
+    "total_nodes": 79,
+    "hoisted_clusters": 0,
+    "por_links": 6
+  },
+  "success": false
+}

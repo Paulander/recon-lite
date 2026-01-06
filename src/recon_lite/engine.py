@@ -1,8 +1,52 @@
 # recon_lite/engine.py
+import random
 from dataclasses import dataclass, field
 from typing import Dict, Any, Optional, Callable, Set
 from .graph import Graph, NodeType, NodeState, LinkType
 from .time.microtick import MicrotickConfig, run_microticks
+
+
+@dataclass
+class GatingSchedule:
+    """
+    Progressive gating strictness for training wheels.
+    
+    Part of Bach-Integrated architecture: Strict gating may prevent finding
+    the first winning move needed to bootstrap learning. This schedule allows
+    gradual strictness increase as the agent learns.
+    
+    Two modes supported:
+    - Game-based: Strictness increases linearly over ramp_games
+    - Win-based: Strictness only increases after successful wins
+    """
+    initial_strictness: float = 0.30  # 30% - training wheels
+    final_strictness: float = 1.0     # 100% - full Bach compliance
+    ramp_games: int = 100             # Full strictness by game 100
+    win_based: bool = False           # If True, only increase on wins
+    current_wins: int = 0             # Track wins for win-based mode
+    
+    def get_strictness(self, game_number: int) -> float:
+        """
+        Get current gating strictness based on progress.
+        
+        Args:
+            game_number: Current game number (0-indexed)
+            
+        Returns:
+            Strictness value between initial and final (0-1)
+        """
+        if self.win_based:
+            # Win-based: use wins instead of games
+            progress = min(self.current_wins / self.ramp_games, 1.0)
+        else:
+            # Game-based: linear ramp
+            progress = min(game_number / self.ramp_games, 1.0)
+        
+        return self.initial_strictness + progress * (self.final_strictness - self.initial_strictness)
+    
+    def record_win(self) -> None:
+        """Record a win for win-based mode."""
+        self.current_wins += 1
 
 
 @dataclass
@@ -43,7 +87,7 @@ class ReConEngine:
     """
 
     # Initialize the engine with a graph and set initial tick and log storage
-    def __init__(self, graph: Graph):
+    def __init__(self, graph: Graph, gating_schedule: Optional[GatingSchedule] = None):
         # Validate article compliance proactively
         try:
             graph.validate_article_compliance()
@@ -55,6 +99,10 @@ class ReConEngine:
         self.logs: list[Dict[str, Any]] = []
         self.subgraph_lock: Optional[SubgraphLock] = None
         self._subgraph_nodes_cache: Dict[str, Set[str]] = {}
+        
+        # Progressive gating schedule (Bach-Integrated architecture)
+        self.gating_schedule = gating_schedule
+        self.current_game_number: int = 0  # For gating strictness calculation
 
     # Capture the current state of the network for logging. Should obviously be optional. 
     def snapshot(self, note: str = "") -> Dict[str, Any]:
@@ -155,9 +203,19 @@ class ReConEngine:
         This is the "purist ReCoN" approach: a node shouldn't speak until spoken to.
         For immature training, use min_internal_ticks instead (scaffolding).
         
+        PROGRESSIVE GATING (Bach-Integrated):
+        During training ramp-up, gating is probabilistic based on GatingSchedule.
+        This allows the agent to bootstrap learning before full strictness kicks in.
+        
         Returns:
             True if all gating requirements are satisfied (or none exist)
         """
+        # Progressive gating: probabilistically skip gating check during ramp-up
+        if self.gating_schedule is not None:
+            strictness = self.gating_schedule.get_strictness(self.current_game_number)
+            if random.random() > strictness:
+                return True  # Skip gating check (training wheels)
+        
         for nid in subgraph_nodes:
             node = self.g.nodes.get(nid)
             if not node:
@@ -167,6 +225,15 @@ class ReConEngine:
                 if not self._has_any_child_confirmed(nid):
                     return False
         return True
+    
+    def set_game_number(self, game_num: int) -> None:
+        """Set current game number for progressive gating strictness."""
+        self.current_game_number = game_num
+    
+    def record_win(self) -> None:
+        """Record a win for win-based gating schedule."""
+        if self.gating_schedule:
+            self.gating_schedule.record_win()
 
     def _children_confirmed_sequence_done(self, parent_id: str) -> bool:
         roots = [c for c in self.g.children(parent_id) if not self.g.predecessors(c)]
