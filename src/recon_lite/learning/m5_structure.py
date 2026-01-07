@@ -1766,11 +1766,12 @@ class StructureLearner:
         FAILURE_WIN_RATE_THRESHOLD = 0.10  # 10%
         FAILURE_GAMES_THRESHOLD = 50
         
-        # Track failure state in registry metadata
-        games_at_stage = self.registry.metadata.get("games_at_current_stage", 0)
-        self.registry.metadata["games_at_current_stage"] = games_at_stage + len(episodes)
+        # Track failure state (use instance variable since registry.metadata doesn't exist)
+        if not hasattr(self, '_games_at_current_stage'):
+            self._games_at_current_stage = 0
+        self._games_at_current_stage += len(episodes)
         
-        if current_win_rate < FAILURE_WIN_RATE_THRESHOLD and games_at_stage >= FAILURE_GAMES_THRESHOLD:
+        if current_win_rate < FAILURE_WIN_RATE_THRESHOLD and self._games_at_current_stage >= FAILURE_GAMES_THRESHOLD:
             # FAILURE STATE: Trigger exploration spawning
             for cell in stem_manager.cells.values():
                 if cell.state == StemCellState.TRIAL:
