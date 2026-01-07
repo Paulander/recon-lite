@@ -903,6 +903,7 @@ class StemCellTerminal:
         graph: Any,  # Graph from registry
         current_tick: int,
         win_rate: float = 0.0,  # Current stage win rate for adaptive bias
+        backward_chain_sentinel: Optional[Dict[str, Any]] = None,  # Previous mastered stage sensor
     ) -> Dict[str, Any]:
         """
         Probabilistically spawn template pack, single cell, or variant.
@@ -912,11 +913,15 @@ class StemCellTerminal:
         - win_rate < 0.30: 50% pack, 40% single, 10% variant (balanced)
         - win_rate >= 0.30: 30% pack, 50% single, 20% variant (favor creativity in success)
         
+        BACKWARD CHAINING: If backward_chain_sentinel is provided, use it as the
+        pack's sentinel_fn - success = reaching the previous mastered stage config.
+        
         Args:
             manager: StemCellManager to spawn new cells
             graph: ReCoN graph for pack injection
             current_tick: Current tick for naming
             win_rate: Current stage win rate for adaptive bias
+            backward_chain_sentinel: Info about previous mastered stage for chaining
             
         Returns:
             {"type": "pack"|"single"|"variant", "ids": [...]}

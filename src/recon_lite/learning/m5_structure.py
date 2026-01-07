@@ -1368,6 +1368,8 @@ class StructureLearner:
         max_promotions: int = 2,
         parent_candidates: Optional[List[str]] = None,
         current_win_rate: float = 0.0,  # For Perfect Success bypass
+        mastered_sensors: Optional[Dict[int, Any]] = None,  # BACKWARD CHAINING: stage_id -> sensor info
+        current_stage_id: int = 0,  # Current curriculum stage for chain lookup
     ) -> Dict[str, Any]:
         """
         Run a full structural phase:
@@ -1382,6 +1384,8 @@ class StructureLearner:
             max_promotions: Max nodes to promote this cycle
             parent_candidates: Optional list of eligible parent node IDs
             current_win_rate: Current cycle win rate for Perfect Success bypass
+            mastered_sensors: Dict of mastered stage sensors for backward chaining
+            current_stage_id: Current curriculum stage ID
             
         Returns:
             Stats dict with counts and results
@@ -1835,16 +1839,35 @@ class StructureLearner:
             
             for cell in stem_manager.cells.values():
                 if cell.state == StemCellState.TRIAL:
+                    # BACKWARD CHAINING: Look for previous mastered stage sensor
+                    # This becomes the sentinel for the spawned pack
+                    previous_sentinel = None
+                    if mastered_sensors and current_stage_id > 0:
+                        # Find the highest mastered stage below current
+                        for stage_id in sorted(mastered_sensors.keys(), reverse=True):
+                            if stage_id < current_stage_id:
+                                sensor_info = mastered_sensors[stage_id]
+                                previous_sentinel = {
+                                    "stage_id": stage_id,
+                                    "stage_name": sensor_info.get("stage_name"),
+                                    "pattern_signature": sensor_info.get("pattern_signature"),
+                                    "trust_score": sensor_info.get("trust_score", 0.9),
+                                }
+                                break
+                    
                     # Use lottery for balanced spawning with dynamic win_rate bias
                     result = cell.spawn_with_lottery(
                         manager=stem_manager, 
                         graph=graph,
                         current_tick=current_tick,
                         win_rate=current_win_rate,  # Dynamic bias based on stage performance
+                        backward_chain_sentinel=previous_sentinel,  # For reverse linking
                     )
                     
                     if result.get("type") == "pack":
                         packs_spawned.append(result.get("ids", {}).get("root"))
+                        if previous_sentinel:
+                            print(f"      ↩ Pack chained to {previous_sentinel['stage_name']} sensor")
                     elif result.get("ids"):
                         exploration_spawned.extend(result["ids"])
         

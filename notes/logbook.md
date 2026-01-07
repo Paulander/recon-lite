@@ -1,5 +1,26 @@
 # ReCoN-lite Development Logbook
 
+## 2026-01-07: M5 Evolution Improvements
+
+**Extended Run Analysis** (75K games):
+- Zero pack spawning despite 30K games at 0% win rate
+- XP decay to avg 5.8 (should be 50+)
+- Depth stuck at 3
+
+**Fixes Implemented**:
+1. **Pack spawning threshold**: 50 → 20 games, 10% → 20% win rate
+2. **XP floor**: Min 10 XP to prevent death spiral in `decay_xp()`  
+3. **Dynamic lottery**: 60/30/10 in stalls (<10%), 30/50/20 in success (>30%)
+4. **Plateau detection**: Abort after 2000 games if <5% delta over 10 cycles
+
+**Verified Working**:
+```
+[M5] Failure check: win=8.0%, games=50, trials=12
+[M5] ⚡ FAILURE MODE TRIGGERED: Spawning packs/singles from 12 TRIALs
+```
+
+---
+
 ## 2026-01-07: KRK Evolution Fails to Form Chains
 
 **Run:** `krk_hybrid_chain_test` - 30 cycles, 3000 games
