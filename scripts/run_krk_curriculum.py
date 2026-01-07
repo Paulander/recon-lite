@@ -530,6 +530,10 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
     # Training state
     total_games = 0
     stage_history = []
+    cumulative_stall_games = 0  # Track games at low win rate for pack spawning
+    
+    # Stem cell persistence paths
+    stem_cells_path = config.output_dir / "stem_cells.json"
     
     print(f"\nStarting curriculum with {len(KRK_STAGES)} stages")
     print(f"Games per cycle: {config.games_per_cycle}")
@@ -568,6 +572,7 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
             total_moves = 0
             box_escapes = 0
             total_reward = 0.0
+            cycle_episodes = []  # Collect episodes for M5 structural phase
             
             print(f"\n  Cycle {cycle}/{config.max_cycles_per_stage}")
             
@@ -627,6 +632,18 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                     stalemate=(result == "stalemate"),
                 )
                 total_reward += reward
+                
+                # Collect episode for M5 structural phase
+                episode = {
+                    "result": result,
+                    "move_count": move_count,
+                    "reward": reward,
+                    "box_escaped": box_escaped,
+                    "optimal_moves": optimal_moves,
+                    "affordance_delta": reward - 0.5,  # Use reward as proxy for affordance
+                    "active_nodes": list(active_node_counts.keys()) if config.mode == "recon" else [],
+                }
+                cycle_episodes.append(episode)
                 
                 # Record in curriculum manager
                 advanced = curriculum.record_game(
@@ -698,10 +715,20 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                                     if direct_promotions >= 2:  # Max 2 per cycle
                                         break
                     
-                    # Also run structural phase
+                    # Also run structural phase with collected episodes
+                    # Update cumulative stall counter for failure-mode pack spawning
+                    if win_rate < 0.10:
+                        cumulative_stall_games += config.games_per_cycle
+                    else:
+                        cumulative_stall_games = max(0, cumulative_stall_games - config.games_per_cycle // 2)  # Decay on success
+                    
+                    # Inject cumulative stall count into structure learner
+                    if hasattr(struct_learner, '_games_at_current_stage'):
+                        struct_learner._games_at_current_stage = cumulative_stall_games
+                    
                     struct_result = struct_learner.apply_structural_phase(
                         stem_manager=stem_manager,
-                        episodes=[],  # TODO: Pass actual episodes for POR discovery
+                        episodes=cycle_episodes,  # FIXED: Pass actual episodes for affordance spikes and POR discovery
                         max_promotions=3,
                         parent_candidates=["krk_detect", "krk_execute", "krk_rook_leg", "krk_king_leg"],
                         current_win_rate=win_rate,
@@ -885,6 +912,12 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
         print(f"    Games: {stage_games}")
         print(f"    Cycles: {cycle}")
         print(f"    Final Win Rate: {stage_stats.win_rate:.1%}")
+        
+        # Persist stem cells for next stage (knowledge transfer)
+        if config.enable_m5 and stem_manager:
+            stage_stem_path = config.output_dir / f"stem_cells_stage{start_stage_idx}.json"
+            stem_manager.save_stem_cells(stage_stem_path)
+            print(f"    Stem cells saved: {len(stem_manager.cells)} cells → {stage_stem_path.name}")
     
     # Training complete
     print("\n" + "=" * 70)

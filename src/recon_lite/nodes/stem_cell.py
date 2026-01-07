@@ -492,13 +492,23 @@ class StemCellTerminal:
         
         Called once per cycle for all TRIAL cells.
         
+        XP FLOOR: Prevents decay below 10 to avoid "death spiral" in 0% stages.
+        This gives cells time to accumulate engagement XP and partial signals.
+        
         Returns:
             XP after decay
         """
         if self.state != StemCellState.TRIAL:
             return self.xp
         
+        XP_FLOOR = 10  # Minimum XP to prevent death spiral
+        
         self.xp += self.XP_DECAY
+        
+        # Apply floor to prevent death spiral
+        if self.xp < XP_FLOOR:
+            self.xp = XP_FLOOR
+        
         return self.xp
     
     # =========================================================================
@@ -892,29 +902,42 @@ class StemCellTerminal:
         manager: "StemCellManager",
         graph: Any,  # Graph from registry
         current_tick: int,
+        win_rate: float = 0.0,  # Current stage win rate for adaptive bias
     ) -> Dict[str, Any]:
         """
         Probabilistically spawn template pack, single cell, or variant.
         
-        LOTTERY PROBABILITIES (env var configurable):
-        - M5_PACK_PROB=0.40: Full Goal Delegation Pack (template)
-        - M5_SINGLE_PROB=0.40: Single TERMINAL cell (legacy)
-        - M5_VARIANT_PROB=0.20: Mutated variant (signature shuffle)
+        DYNAMIC LOTTERY BIAS: Adapts probabilities based on win_rate.
+        - win_rate < 0.10: 60% pack, 30% single, 10% variant (favor structure in stalls)
+        - win_rate < 0.30: 50% pack, 40% single, 10% variant (balanced)
+        - win_rate >= 0.30: 30% pack, 50% single, 20% variant (favor creativity in success)
         
         Args:
             manager: StemCellManager to spawn new cells
             graph: ReCoN graph for pack injection
             current_tick: Current tick for naming
+            win_rate: Current stage win rate for adaptive bias
             
         Returns:
             {"type": "pack"|"single"|"variant", "ids": [...]}
         """
         import os
         
-        # Load probabilities from env (defaults: 40/40/20)
-        pack_prob = float(os.environ.get("M5_PACK_PROB", "0.40"))
-        single_prob = float(os.environ.get("M5_SINGLE_PROB", "0.40"))
-        # variant_prob = 1 - pack_prob - single_prob (remainder)
+        # Dynamic lottery bias based on win_rate
+        if win_rate < 0.10:
+            # Heavy stall - favor structure (packs) to bootstrap learning
+            pack_prob = 0.60
+            single_prob = 0.30
+            # variant_prob = 0.10
+        elif win_rate < 0.30:
+            # Mid-range - balanced exploration
+            pack_prob = float(os.environ.get("M5_PACK_PROB", "0.50"))
+            single_prob = float(os.environ.get("M5_SINGLE_PROB", "0.40"))
+        else:
+            # Success mode - favor creativity (singles/variants)
+            pack_prob = 0.30
+            single_prob = 0.50
+            # variant_prob = 0.20
         
         roll = random.random()
         
@@ -1429,6 +1452,77 @@ class StemCellManager:
             "by_state": states,
             "next_id": self._next_id,
         }
+    
+    def save_stem_cells(self, path: Path) -> None:
+        """
+        Save stem cell states to JSON for persistence between stages.
+        
+        This enables knowledge transfer across curriculum stages - cells don't
+        reset when advancing to harder stages, allowing accumulated learning
+        to compound.
+        
+        Args:
+            path: Path to save stem cells JSON
+        """
+        data = {
+            "next_id": self._next_id,
+            "max_cells": self.max_cells,
+            "max_trial_slots": self.max_trial_slots,
+            "cells": {
+                cell_id: cell.to_dict() for cell_id, cell in self.cells.items()
+            },
+            "win_coactivation": {
+                f"{k[0]}|{k[1]}": v for k, v in self.win_coactivation.items()
+            },
+            "win_active_counts": self.win_active_counts,
+        }
+        
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(data, indent=2))
+    
+    def load_stem_cells(self, path: Path) -> bool:
+        """
+        Load stem cell states from JSON.
+        
+        Args:
+            path: Path to stem cells JSON
+            
+        Returns:
+            True if loaded successfully, False if file doesn't exist or failed
+        """
+        path = Path(path)
+        if not path.exists():
+            return False
+        
+        try:
+            data = json.loads(path.read_text())
+            
+            self._next_id = data.get("next_id", 0)
+            self.max_cells = data.get("max_cells", self.max_cells)
+            self.max_trial_slots = data.get("max_trial_slots", self.max_trial_slots)
+            
+            # Load cells
+            self.cells = {}
+            for cell_id, cell_data in data.get("cells", {}).items():
+                try:
+                    cell = StemCellTerminal.from_dict(cell_data, self.default_config)
+                    self.cells[cell_id] = cell
+                except Exception:
+                    pass  # Skip malformed cells
+            
+            # Load coactivation tracking
+            self.win_coactivation = {}
+            for k, v in data.get("win_coactivation", {}).items():
+                parts = k.split("|")
+                if len(parts) == 2:
+                    self.win_coactivation[(parts[0], parts[1])] = v
+            
+            self.win_active_counts = data.get("win_active_counts", {})
+            
+            return True
+        except Exception:
+            return False
     
     # =========================================================================
     # WIN-COACTIVATION TRACKING (M5 Recursive Branching - AND-Gate Discovery)

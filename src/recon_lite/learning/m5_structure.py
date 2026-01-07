@@ -1802,22 +1802,28 @@ class StructureLearner:
         # =====================================================================
         # Step 8b: FAILURE-DRIVEN SPAWNING - Exploration during failure states
         # =====================================================================
-        # HYBRID FIX: When win_rate < 10% for 50+ games, spawn from TRIAL nodes
+        # HYBRID FIX: When win_rate < 20% for 20+ games, spawn from TRIAL nodes
         # to break the "no wins → no XP → no growth" deadlock.
         exploration_spawned: List[str] = []
         
-        FAILURE_WIN_RATE_THRESHOLD = 0.10  # 10%
-        FAILURE_GAMES_THRESHOLD = 50
+        FAILURE_WIN_RATE_THRESHOLD = 0.20  # Raised from 0.10 to 0.20 for earlier intervention
+        FAILURE_GAMES_THRESHOLD = 20  # Lowered from 50 to 20 for faster response
         
         # Track failure state (use instance variable since registry.metadata doesn't exist)
         if not hasattr(self, '_games_at_current_stage'):
             self._games_at_current_stage = 0
         self._games_at_current_stage += len(episodes)
         
+        # Debug logging for pack spawning
+        if current_win_rate < FAILURE_WIN_RATE_THRESHOLD:
+            trial_count = len([c for c in stem_manager.cells.values() if c.state == StemCellState.TRIAL])
+            print(f"    [M5] Failure check: win={current_win_rate:.1%}, games={self._games_at_current_stage}, trials={trial_count}")
+        
         if current_win_rate < FAILURE_WIN_RATE_THRESHOLD and self._games_at_current_stage >= FAILURE_GAMES_THRESHOLD:
             # FAILURE STATE: Trigger exploration spawning with LOTTERY
-            # Uses probabilistic balance: 40% pack, 40% single, 20% variant
+            # Uses adaptive balance based on win_rate
             packs_spawned = []
+            print(f"    [M5] ⚡ FAILURE MODE TRIGGERED: Spawning packs/singles from {len([c for c in stem_manager.cells.values() if c.state == StemCellState.TRIAL])} TRIALs")
             
             # Get graph for pack injection
             graph = None
@@ -1829,11 +1835,12 @@ class StructureLearner:
             
             for cell in stem_manager.cells.values():
                 if cell.state == StemCellState.TRIAL:
-                    # Use lottery for balanced spawning
+                    # Use lottery for balanced spawning with dynamic win_rate bias
                     result = cell.spawn_with_lottery(
                         manager=stem_manager, 
                         graph=graph,
                         current_tick=current_tick,
+                        win_rate=current_win_rate,  # Dynamic bias based on stage performance
                     )
                     
                     if result.get("type") == "pack":

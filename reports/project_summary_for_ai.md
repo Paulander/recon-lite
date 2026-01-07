@@ -525,3 +525,15 @@ When suggesting changes:
 - Test with `--quick` flag first
 - Check `snapshots/evolution/` for latest topology state
 - Align with XP thresholds (50 initial, 100 solidify, 0 demote)
+
+---
+
+## Additional Notes
+
+For detailed training logs and experimental results, see:
+- **KRK Curriculum Training**: `notes/krk_curriculum_training.md` - Staged curriculum results (Stage 0-10)
+- **KRK Draw Fixes**: `notes/logbook.md` - Draw scent sampling, M5 hybrid growth fixes
+- **Goal Delegation Packs**: `nodes/pack_template.py` - POR-based hierarchical structures
+
+Latest significant run: `snapshots/evolution/krk_curriculum/curriculum_summary.json`
+
