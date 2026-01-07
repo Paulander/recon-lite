@@ -373,7 +373,7 @@ def run_structural_phase(
     learner = StructureLearner(
         registry=registry,
         cooldown_ticks=0,
-        min_spike_reward=0.2,
+        min_spike_reward=0.05,  # LOWERED: KRK rewards are small (0.1-0.3)
         signature_dir=config.signature_dir,
     )
     

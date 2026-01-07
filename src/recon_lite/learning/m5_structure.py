@@ -1399,6 +1399,29 @@ class StructureLearner:
         # Step 2: Find high-impact stem cells
         high_impact = self.find_high_impact_stem_cells(stem_manager, spikes)
         
+        # =====================================================================
+        # Step 2b: EXTREME FAILURE BYPASS - Direct CANDIDATE promotion
+        # When win_rate < 5% for 1000+ games and high_impact is empty,
+        # directly select active CANDIDATE cells for promotion. This breaks
+        # the "no spikes → no high_impact → no promotions" deadlock.
+        # =====================================================================
+        games_total = self._games_at_current_stage if hasattr(self, '_games_at_current_stage') else 0
+        extreme_failure_mode = (
+            current_win_rate < 0.05 and 
+            games_total >= 1000 and 
+            len(high_impact) == 0
+        )
+        
+        if extreme_failure_mode:
+            # Select CANDIDATE cells with enough samples for forced promotion
+            for cell in stem_manager.cells.values():
+                if (cell.state == StemCellState.CANDIDATE and 
+                    len(cell.samples) >= 30):
+                    high_impact.append(cell)
+                    cell.metadata["force_promoted"] = True
+                    if len(high_impact) >= max_promotions * 2:  # Double the quota
+                        break
+        
         # Step 3: Promote CANDIDATE cells to TRIAL tier
         trial_promotions: List[str] = []
         trial_errors: List[str] = []
@@ -1434,8 +1457,24 @@ class StructureLearner:
             # PERFECT SUCCESS BYPASS: 100% win rate is ultimate consistency
             perfect_success = (current_win_rate >= 1.0 and sample_count >= 50)
             
+            # =====================================================================
+            # M5.1 EXTREME FAILURE BYPASS: Force promotion in cold-start scenarios
+            # When win_rate < 5% for 1000+ games, the consistency check is too strict
+            # and prevents ANY structure from forming. Force promote to TRIAL to
+            # allow failure-driven exploration and engagement XP to kick in.
+            # =====================================================================
+            games_total = self._games_at_current_stage if hasattr(self, '_games_at_current_stage') else 0
+            extreme_failure_bypass = (
+                current_win_rate < 0.05 and 
+                games_total >= 1000 and 
+                sample_count >= 30  # Lower bar for extreme failure
+            )
+            
+            if extreme_failure_bypass:
+                cell.metadata["promotion_reason"] = "extreme_failure_bypass"
+            
             # Either bypass allows promotion without consistency check
-            bypass_enabled = success_bypass or perfect_success
+            bypass_enabled = success_bypass or perfect_success or extreme_failure_bypass
             
             # Check if ready for trial - EXPANSION: lowered to 0.40
             consistency, _ = cell.analyze_pattern()
