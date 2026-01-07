@@ -1756,6 +1756,34 @@ class StructureLearner:
                 new_ids = cell.spawn_neighbors(stem_manager, target_leg=target_leg, spawn_count=2)
                 spawned_neighbors.extend(new_ids)
         
+        # =====================================================================
+        # Step 8b: FAILURE-DRIVEN SPAWNING - Exploration during failure states
+        # =====================================================================
+        # HYBRID FIX: When win_rate < 10% for 50+ games, spawn from TRIAL nodes
+        # to break the "no wins → no XP → no growth" deadlock.
+        exploration_spawned: List[str] = []
+        
+        FAILURE_WIN_RATE_THRESHOLD = 0.10  # 10%
+        FAILURE_GAMES_THRESHOLD = 50
+        
+        # Track failure state in registry metadata
+        games_at_stage = self.registry.metadata.get("games_at_current_stage", 0)
+        self.registry.metadata["games_at_current_stage"] = games_at_stage + len(episodes)
+        
+        if current_win_rate < FAILURE_WIN_RATE_THRESHOLD and games_at_stage >= FAILURE_GAMES_THRESHOLD:
+            # FAILURE STATE: Trigger exploration spawning
+            for cell in stem_manager.cells.values():
+                if cell.state == StemCellState.TRIAL:
+                    # spawn_exploration_children checks activation_count >= 30
+                    from random import choice
+                    target_leg = choice(["kpk_pawn_leg", "kpk_king_leg"])
+                    new_ids = cell.spawn_exploration_children(
+                        stem_manager, 
+                        spawn_count=2, 
+                        target_leg=target_leg
+                    )
+                    exploration_spawned.extend(new_ids)
+        
         # Step 9: POR CHAIN DISCOVERY - Sequential Gating
         # Discover temporal patterns like Opposition -> Protect -> Promote
         discovered_por_chains: List[Tuple[str, str, float]] = []

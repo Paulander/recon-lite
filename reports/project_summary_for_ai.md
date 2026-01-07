@@ -288,6 +288,35 @@ uv run python scripts/evolution_driver.py \
 
 ---
 
+## M5.1.1: Hybrid Growth-During-Failure
+
+Addresses the "no wins → no XP → no growth" deadlock at 0% win rate stages.
+
+### Engagement XP (Gradual Growth)
+Nodes accumulate XP from participation, not just wins:
+```
++0.5 XP per activation (node participates)
++0.2 XP per consistent pattern match
++0.1 XP per depth level > 2 (hierarchical reasoning)
+Cap: +2 XP max per game
+```
+
+### Failure-Driven Spawning
+When `win_rate < 10%` for 50+ games:
+- Spawn from TRIAL nodes (not just MATURE)
+- Children start at 30 XP (not 50)
+- Children have 1.5x decay rate
+- Requires `activation_count >= 30`
+
+### Key Methods
+| Method | File | Purpose |
+|--------|------|---------|
+| `accumulate_engagement_xp()` | `stem_cell.py` | Award XP for participation |
+| `spawn_exploration_children()` | `stem_cell.py` | Spawn during failure |
+| Step 8b in `apply_structural_phase()` | `m5_structure.py` | Trigger exploration spawning |
+
+---
+
 ## M5.1: Structural Hyper-Sweeping
 
 M5.1 extends M5 with systematic hyperparameter exploration and stall recovery mechanisms.

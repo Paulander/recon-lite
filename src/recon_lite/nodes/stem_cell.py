@@ -501,6 +501,73 @@ class StemCellTerminal:
         self.xp += self.XP_DECAY
         return self.xp
     
+    # =========================================================================
+    # M5.1 ENGAGEMENT XP: Gradual growth during failure states
+    # =========================================================================
+    
+    # Engagement XP rewards (capped per game)
+    ENGAGEMENT_XP_ACTIVATION = 0.5  # Node participates in game
+    ENGAGEMENT_XP_CONSISTENCY = 0.2  # Pattern matches reliably
+    ENGAGEMENT_XP_DEPTH_BONUS = 0.1  # Activation propagates > 2 levels
+    ENGAGEMENT_XP_MAX_PER_GAME = 2.0  # Cap to prevent inflation
+    
+    def accumulate_engagement_xp(
+        self,
+        was_active: bool = False,
+        pattern_matched: bool = False,
+        propagation_depth: int = 0,
+        stage_idx: Optional[int] = None,
+    ) -> float:
+        """
+        Award XP for engagement, not just wins.
+        
+        HYBRID FIX: Allows gradual XP accumulation during failure states,
+        breaking the "no wins → no XP → no growth" deadlock.
+        
+        Args:
+            was_active: Node activated this game
+            pattern_matched: Pattern signature matched reliably
+            propagation_depth: How deep activation propagated
+            stage_idx: Current stage (for stage-specific filtering)
+            
+        Returns:
+            XP change this game
+        """
+        if self.state != StemCellState.TRIAL:
+            return 0.0
+        
+        # Stage-specific filtering: only accumulate XP in relevant stages
+        relevant_stages = self.metadata.get("relevant_stages")
+        if relevant_stages is not None and stage_idx is not None:
+            if stage_idx not in relevant_stages:
+                return 0.0
+        
+        xp_gain = 0.0
+        
+        # +0.5 for activation (node participates)
+        if was_active:
+            xp_gain += self.ENGAGEMENT_XP_ACTIVATION
+            self.metadata["engagement_activations"] = self.metadata.get("engagement_activations", 0) + 1
+        
+        # +0.2 for consistent pattern matching
+        if pattern_matched:
+            xp_gain += self.ENGAGEMENT_XP_CONSISTENCY
+            self.metadata["engagement_consistency_hits"] = self.metadata.get("engagement_consistency_hits", 0) + 1
+        
+        # +0.1 * levels for deep propagation (hierarchical reasoning)
+        if propagation_depth > 2:
+            depth_bonus = self.ENGAGEMENT_XP_DEPTH_BONUS * (propagation_depth - 2)
+            xp_gain += min(depth_bonus, 0.5)  # Cap depth bonus at 0.5
+        
+        # Cap at +2 XP/game to prevent inflation
+        xp_gain = min(xp_gain, self.ENGAGEMENT_XP_MAX_PER_GAME)
+        
+        # Apply XP gain
+        self.xp += int(xp_gain)  # Convert to int for consistency with XP system
+        self.metadata["total_engagement_xp"] = self.metadata.get("total_engagement_xp", 0.0) + xp_gain
+        
+        return xp_gain
+    
     def check_solidification(self) -> Tuple[bool, str]:
         """
         Check if cell should be solidified (MATURE) or demoted (EXPLORING).
@@ -747,6 +814,77 @@ class StemCellTerminal:
             spawned_ids.append(new_cell.cell_id)
         
         self.metadata["spawned_neighbors"] = spawned_ids
+        return spawned_ids
+    
+    # =========================================================================
+    # M5.1 FAILURE-DRIVEN SPAWNING: Spawn during failure states
+    # =========================================================================
+    
+    # Exploration spawn parameters (penalized children)
+    EXPLORATION_CHILD_START_XP = 30  # Lower than normal (50)
+    EXPLORATION_DECAY_MULTIPLIER = 1.5  # Faster decay
+    
+    def spawn_exploration_children(
+        self,
+        manager: "StemCellManager",
+        spawn_count: int = 2,
+        target_leg: Optional[str] = None,
+    ) -> List[str]:
+        """
+        Spawn children during failure states (exploration mode).
+        
+        HYBRID FIX: Unlike spawn_neighbors (requires MATURE), this spawns from
+        TRIAL nodes when win_rate < 10%. Children have penalties:
+        - Start at 30 XP (not 50)
+        - 1.5x decay rate
+        
+        Args:
+            manager: StemCellManager to spawn new cells
+            spawn_count: Number of children to spawn
+            target_leg: Specific leg to target
+            
+        Returns:
+            List of spawned cell IDs
+        """
+        # Can spawn from TRIAL nodes during failure (not just MATURE)
+        if self.state != StemCellState.TRIAL:
+            return []
+        
+        # Require minimum activation count to ensure node is "active but failing"
+        activation_count = self.metadata.get("engagement_activations", 0)
+        if activation_count < 30:
+            return []
+        
+        spawned_ids = []
+        
+        for i in range(spawn_count):
+            new_cell = manager.spawn_cell()
+            if new_cell is None:
+                break
+            
+            # Vertical parenting: link to this TRIAL node
+            new_cell.metadata["local_root_id"] = self.trial_node_id
+            new_cell.metadata["parent_cell_id"] = self.cell_id
+            new_cell.metadata["parent_node_id"] = self.trial_node_id
+            
+            # EXPLORATION PENALTIES
+            new_cell.xp = self.EXPLORATION_CHILD_START_XP  # 30 XP instead of 50
+            new_cell.metadata["spawn_reason"] = "failure_exploration"
+            new_cell.metadata["decay_multiplier"] = self.EXPLORATION_DECAY_MULTIPLIER  # 1.5x
+            new_cell.metadata["speculative"] = True  # Track as speculation
+            
+            # Leg targeting
+            if target_leg:
+                new_cell.metadata["target_leg"] = target_leg
+            
+            # Inherit pattern context
+            if self.pattern_signature:
+                new_cell.metadata["inherit_context"] = self.pattern_signature.copy()
+                new_cell.pattern_centroid = self.pattern_signature.copy()
+            
+            spawned_ids.append(new_cell.cell_id)
+        
+        self.metadata["exploration_children"] = self.metadata.get("exploration_children", []) + spawned_ids
         return spawned_ids
     
     # =========================================================================
