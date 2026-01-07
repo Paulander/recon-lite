@@ -887,6 +887,127 @@ class StemCellTerminal:
         self.metadata["exploration_children"] = self.metadata.get("exploration_children", []) + spawned_ids
         return spawned_ids
     
+    def spawn_with_lottery(
+        self,
+        manager: "StemCellManager",
+        graph: Any,  # Graph from registry
+        current_tick: int,
+    ) -> Dict[str, Any]:
+        """
+        Probabilistically spawn template pack, single cell, or variant.
+        
+        LOTTERY PROBABILITIES (env var configurable):
+        - M5_PACK_PROB=0.40: Full Goal Delegation Pack (template)
+        - M5_SINGLE_PROB=0.40: Single TERMINAL cell (legacy)
+        - M5_VARIANT_PROB=0.20: Mutated variant (signature shuffle)
+        
+        Args:
+            manager: StemCellManager to spawn new cells
+            graph: ReCoN graph for pack injection
+            current_tick: Current tick for naming
+            
+        Returns:
+            {"type": "pack"|"single"|"variant", "ids": [...]}
+        """
+        import os
+        
+        # Load probabilities from env (defaults: 40/40/20)
+        pack_prob = float(os.environ.get("M5_PACK_PROB", "0.40"))
+        single_prob = float(os.environ.get("M5_SINGLE_PROB", "0.40"))
+        # variant_prob = 1 - pack_prob - single_prob (remainder)
+        
+        roll = random.random()
+        
+        if roll < pack_prob and graph is not None:
+            # Spawn full Goal Delegation Pack
+            try:
+                from recon_lite.nodes.pack_template import spawn_goal_delegation_pack
+                
+                # Make condition sensor using parent's pattern
+                condition_fn = self._make_pattern_sensor_fn()
+                sentinel_fn = lambda env: env.get("reward", 0) > 0.3
+                actuator_fn = self._make_exploration_actuator_fn()
+                
+                depth = self.metadata.get("depth", 0) + 1
+                
+                pack_ids = spawn_goal_delegation_pack(
+                    goal_name=f"explore_{self.cell_id}_{current_tick}",
+                    parent_id=self.trial_node_id or "kpk_execute",
+                    graph=graph,
+                    condition_sensor_fn=condition_fn,
+                    sentinel_fn=sentinel_fn,
+                    actuator_fn=actuator_fn,
+                    depth=depth,
+                    is_trial=True,
+                    parent_signature=self.pattern_signature,
+                    attach_stem_cells=1,  # Create 1 slot for future children
+                    mutate_edges=True,
+                )
+                
+                if pack_ids:
+                    self.metadata["spawned_pack_root"] = pack_ids.get("root")
+                    self.metadata["spawned_pack"] = True
+                    return {"type": "pack", "ids": pack_ids}
+                    
+            except ImportError:
+                pass  # Fall through to single
+        
+        if roll < pack_prob + single_prob:
+            # Spawn single TERMINAL (legacy behavior)
+            new_cells = self.spawn_exploration_children(manager, spawn_count=1)
+            return {"type": "single", "ids": new_cells}
+        
+        else:
+            # Spawn variant (mutated pattern signature)
+            new_cells = self.spawn_exploration_children(manager, spawn_count=1)
+            for cell_id in new_cells:
+                if cell_id in manager.cells:
+                    cell = manager.cells[cell_id]
+                    # Apply heavy mutation (50%)
+                    if cell.pattern_centroid:
+                        mutated = []
+                        for v in cell.pattern_centroid:
+                            if random.random() < 0.5:
+                                mutated.append(v + random.gauss(0, 0.2))
+                            else:
+                                mutated.append(v)
+                        cell.pattern_centroid = mutated
+                    cell.metadata["spawn_type"] = "variant"
+            return {"type": "variant", "ids": new_cells}
+    
+    def _make_pattern_sensor_fn(self) -> Callable[[Dict[str, Any]], bool]:
+        """Create condition sensor function based on pattern signature."""
+        signature = self.pattern_signature or []
+        threshold = 0.6  # Similarity threshold for activation
+        
+        def sensor_fn(env: Dict[str, Any]) -> bool:
+            # Check if current features match pattern signature
+            features = env.get("features", [])
+            if not features or not signature:
+                return True  # Default active if no pattern
+            
+            # Simple dot product similarity
+            if len(features) != len(signature):
+                return True
+            
+            similarity = sum(f * s for f, s in zip(features, signature))
+            norm = (sum(f**2 for f in features) * sum(s**2 for s in signature)) ** 0.5
+            if norm > 0:
+                similarity /= norm
+            
+            return similarity > threshold
+        
+        return sensor_fn
+    
+    def _make_exploration_actuator_fn(self) -> Callable[[Dict[str, Any]], Optional[str]]:
+        """Create exploration actuator (placeholder for domain-specific logic)."""
+        def actuator_fn(env: Dict[str, Any]) -> Optional[str]:
+            # Return suggested move from environment if available
+            return env.get("suggested_move")
+        
+        return actuator_fn
+
+    
     # =========================================================================
     # M5 Survival Bond - Hierarchical Dependency
     # =========================================================================

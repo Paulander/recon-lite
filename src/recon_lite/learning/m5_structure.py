@@ -1414,9 +1414,13 @@ class StructureLearner:
         
         if extreme_failure_mode:
             # Select CANDIDATE cells with enough samples for forced promotion
+            # M5_MIN_SAMPLES env var allows tuning (default: 15, lowered from 30)
+            import os
+            min_samples_for_promotion = int(os.environ.get("M5_MIN_SAMPLES", "15"))
+            
             for cell in stem_manager.cells.values():
                 if (cell.state == StemCellState.CANDIDATE and 
-                    len(cell.samples) >= 30):
+                    len(cell.samples) >= min_samples_for_promotion):
                     high_impact.append(cell)
                     cell.metadata["force_promoted"] = True
                     if len(high_impact) >= max_promotions * 2:  # Double the quota
@@ -1811,18 +1815,31 @@ class StructureLearner:
         self._games_at_current_stage += len(episodes)
         
         if current_win_rate < FAILURE_WIN_RATE_THRESHOLD and self._games_at_current_stage >= FAILURE_GAMES_THRESHOLD:
-            # FAILURE STATE: Trigger exploration spawning
+            # FAILURE STATE: Trigger exploration spawning with LOTTERY
+            # Uses probabilistic balance: 40% pack, 40% single, 20% variant
+            packs_spawned = []
+            
+            # Get graph for pack injection
+            graph = None
+            try:
+                from recon_lite_chess.graph.builder import build_graph_from_topology
+                graph = build_graph_from_topology(self.registry.topology_path, self.registry)
+            except Exception:
+                pass
+            
             for cell in stem_manager.cells.values():
                 if cell.state == StemCellState.TRIAL:
-                    # spawn_exploration_children checks activation_count >= 30
-                    from random import choice
-                    target_leg = choice(["kpk_pawn_leg", "kpk_king_leg"])
-                    new_ids = cell.spawn_exploration_children(
-                        stem_manager, 
-                        spawn_count=2, 
-                        target_leg=target_leg
+                    # Use lottery for balanced spawning
+                    result = cell.spawn_with_lottery(
+                        manager=stem_manager, 
+                        graph=graph,
+                        current_tick=current_tick,
                     )
-                    exploration_spawned.extend(new_ids)
+                    
+                    if result.get("type") == "pack":
+                        packs_spawned.append(result.get("ids", {}).get("root"))
+                    elif result.get("ids"):
+                        exploration_spawned.extend(result["ids"])
         
         # Step 9: POR CHAIN DISCOVERY - Sequential Gating
         # Discover temporal patterns like Opposition -> Protect -> Promote

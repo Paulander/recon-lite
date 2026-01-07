@@ -319,6 +319,198 @@
       "group": "sensor",
       "factory": "recon_lite_chess.krk_nodes:create_rook_lost_detector",
       "meta": {}
+    },
+    {
+      "id": "TRIAL_stem_0000_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0000",
+        "tier": "trial",
+        "consistency": 0.6186147514113237,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.34920634920634913,
+          0.5595238095238095,
+          0.21031746031746043,
+          0.8293650793650793,
+          0.0
+        ],
+        "subgraph": "krk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0001_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0001",
+        "tier": "trial",
+        "consistency": 0.6186147514113237,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.34920634920634913,
+          0.5595238095238095,
+          0.21031746031746043,
+          0.8293650793650793,
+          0.0
+        ],
+        "subgraph": "krk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0002_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0002",
+        "tier": "trial",
+        "consistency": 0.5463790714505636,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.3968253968253967,
+          0.5793650793650796,
+          0.3280423280423282,
+          0.8280423280423276,
+          0.0
+        ],
+        "subgraph": "krk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0003_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0003",
+        "tier": "trial",
+        "consistency": 0.5463790714505636,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.3968253968253967,
+          0.5793650793650796,
+          0.3280423280423282,
+          0.8280423280423276,
+          0.0
+        ],
+        "subgraph": "krk"
+      }
     }
   ],
   "edges": [
@@ -753,6 +945,133 @@
       "weight": 1.0,
       "consolidate": true,
       "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "TRIAL_stem_0000_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "TRIAL_stem_0001_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "TRIAL_stem_0002_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "TRIAL_stem_0003_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    }
+  ],
+  "last_modified": "2026-01-07T16:15:36.502889",
+  "evolution_history": [
+    {
+      "tick": 0,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0000_0",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-07T16:15:36.231683"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_detect->TRIAL_stem_0000_0:SUB",
+      "details": {
+        "src": "krk_detect",
+        "dst": "TRIAL_stem_0000_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-07T16:15:36.231705"
+    },
+    {
+      "tick": 0,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0001_0",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-07T16:15:36.232445"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_detect->TRIAL_stem_0001_0:SUB",
+      "details": {
+        "src": "krk_detect",
+        "dst": "TRIAL_stem_0001_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-07T16:15:36.232452"
+    },
+    {
+      "tick": 0,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0002_0",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-07T16:15:36.259491"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_detect->TRIAL_stem_0002_0:SUB",
+      "details": {
+        "src": "krk_detect",
+        "dst": "TRIAL_stem_0002_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-07T16:15:36.259508"
+    },
+    {
+      "tick": 0,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0003_0",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-07T16:15:36.260234"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_detect->TRIAL_stem_0003_0:SUB",
+      "details": {
+        "src": "krk_detect",
+        "dst": "TRIAL_stem_0003_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-07T16:15:36.260240"
     }
   ]
 }

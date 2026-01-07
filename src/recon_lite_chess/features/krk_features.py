@@ -285,3 +285,53 @@ def extract_move_features(board: chess.Board, move: chess.Move) -> Dict[str, Any
         "base": base_features,
     }
 
+
+def get_draw_scent(board: chess.Board) -> float:
+    """
+    Compute draw scent (micro-reward) for KRK draws with partial progress.
+    
+    Even in draws, we want to reward partial Box Method progress to enable
+    sample collection for cells that would otherwise starve. This aligns
+    with M5.1's scent-based shaping.
+    
+    Returns:
+        Scent value 0.0 to 0.2 (capped to avoid over-rewarding draws)
+    """
+    import os
+    if not os.environ.get("M5_ENABLE_DRAW_SAMPLING"):
+        return 0.0
+    
+    features = extract_krk_features(board)
+    scent = 0.0
+    
+    # Rook cut established = significant progress (+0.08)
+    if features.cut_established:
+        scent += 0.08
+    
+    # Enemy king at edge = near win (+0.06)
+    if features.enemy_king_edge_distance == 0:
+        scent += 0.06
+    elif features.enemy_king_edge_distance == 1:
+        scent += 0.03
+    
+    # Small box area = confinement achieved (+0.05 scaled)
+    # box_area ranges from 1 (tiny) to 64 (full board)
+    if features.box_area <= 16:
+        scent += 0.05
+    elif features.box_area <= 25:
+        scent += 0.03
+    
+    # Opposition achieved (+0.04)
+    if features.opposition_status:
+        scent += 0.04
+    
+    # Rook safe bonus (+0.02) - indicates controlled position
+    if features.rook_safe:
+        scent += 0.02
+    
+    # King coordination - our king near rook (+0.02 scaled)
+    if features.king_rook_distance <= 2:
+        scent += 0.02
+    
+    # Cap total scent to avoid over-rewarding draws
+    return min(scent, 0.2)

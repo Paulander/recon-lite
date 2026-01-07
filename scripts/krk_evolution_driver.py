@@ -313,6 +313,17 @@ def play_single_krk_game(
                             new_features = extract_krk_features(board)
                             box_progress = (64 - new_features.box_area) / 64.0
                             tick_reward = 0.1 + box_progress * 0.3
+                            
+                            # DRAW SCENT BOOST: Add partial progress rewards
+                            # This enables sample collection in draws where Box Method
+                            # progress occurred (rook cuts, king edged, etc.)
+                            # Enabled via M5_ENABLE_DRAW_SAMPLING=1
+                            try:
+                                from recon_lite_chess.features.krk_features import get_draw_scent
+                                draw_scent = get_draw_scent(board)
+                                tick_reward += draw_scent  # Additive boost
+                            except ImportError:
+                                pass
                     
                     if stem_manager and HAS_STEM_CELL:
                         stem_manager.tick(board, tick_reward, tick_count)
