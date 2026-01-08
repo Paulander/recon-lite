@@ -947,37 +947,101 @@ class StemCellTerminal:
         roll = random.random()
         
         if roll < pack_prob and graph is not None:
-            # Spawn full Goal Delegation Pack
+            # Spawn template pack - randomly select type!
             try:
-                from recon_lite.nodes.pack_template import spawn_goal_delegation_pack
+                import os
+                from recon_lite.nodes.pack_template import (
+                    spawn_goal_delegation_pack,
+                    spawn_and_gate_pack,
+                    spawn_sequence_pack,
+                    spawn_phase_triad_pack,
+                )
                 
-                # Make condition sensor using parent's pattern
+                # Choose pack type based on situation
+                pack_roll = random.random()
+                pack_type = os.environ.get("M5_PACK_TYPE", "auto")
+                
+                # Make condition/action functions
                 condition_fn = self._make_pattern_sensor_fn()
                 sentinel_fn = lambda env: env.get("reward", 0) > 0.3
                 actuator_fn = self._make_exploration_actuator_fn()
-                
                 depth = self.metadata.get("depth", 0) + 1
+                parent_id = self.trial_node_id or "krk_execute"
                 
-                pack_ids = spawn_goal_delegation_pack(
-                    goal_name=f"explore_{self.cell_id}_{current_tick}",
-                    parent_id=self.trial_node_id or "kpk_execute",
-                    graph=graph,
-                    condition_sensor_fn=condition_fn,
-                    sentinel_fn=sentinel_fn,
-                    actuator_fn=actuator_fn,
-                    depth=depth,
-                    is_trial=True,
-                    parent_signature=self.pattern_signature,
-                    attach_stem_cells=1,  # Create 1 slot for future children
-                    mutate_edges=True,
-                )
+                pack_ids = {}
+                
+                if pack_type == "and" or (pack_type == "auto" and pack_roll < 0.35):
+                    # AND-GATE: 35% chance - for co-conditions
+                    # Uses 2 conditions from pattern components
+                    conditions = [condition_fn, lambda env: env.get("can_progress", True)]
+                    pack_ids = spawn_and_gate_pack(
+                        gate_name=f"and_{self.cell_id}_{current_tick}",
+                        parent_id=parent_id,
+                        graph=graph,
+                        conditions=conditions,
+                        then_action=actuator_fn,
+                        is_trial=True,
+                    )
+                    if pack_ids:
+                        self.metadata["pack_type"] = "and_gate"
+                        
+                elif pack_type == "sequence" or (pack_type == "auto" and pack_roll < 0.60):
+                    # SEQUENCE: 25% chance - for multi-step tactics
+                    steps = [
+                        {"sensor": condition_fn, "actuator": None},
+                        {"sensor": None, "actuator": actuator_fn},
+                    ]
+                    pack_ids = spawn_sequence_pack(
+                        seq_name=f"seq_{self.cell_id}_{current_tick}",
+                        parent_id=parent_id,
+                        graph=graph,
+                        steps=steps,
+                        final_sentinel=sentinel_fn,
+                        is_trial=True,
+                    )
+                    if pack_ids:
+                        self.metadata["pack_type"] = "sequence"
+                        
+                elif pack_type == "triad" or (pack_type == "auto" and pack_roll < 0.75):
+                    # PHASE TRIAD: 15% chance - check→move→wait
+                    wait_fn = lambda env: env.get("game_over", False) or env.get("made_progress", False)
+                    pack_ids = spawn_phase_triad_pack(
+                        triad_name=f"triad_{self.cell_id}_{current_tick}",
+                        parent_id=parent_id,
+                        graph=graph,
+                        check_fn=condition_fn,
+                        move_fn=actuator_fn,
+                        wait_fn=wait_fn,
+                        is_trial=True,
+                    )
+                    if pack_ids:
+                        self.metadata["pack_type"] = "phase_triad"
+                        
+                else:
+                    # GOAL DELEGATION: 25% chance - original full pack
+                    pack_ids = spawn_goal_delegation_pack(
+                        goal_name=f"explore_{self.cell_id}_{current_tick}",
+                        parent_id=parent_id,
+                        graph=graph,
+                        condition_sensor_fn=condition_fn,
+                        sentinel_fn=sentinel_fn,
+                        actuator_fn=actuator_fn,
+                        depth=depth,
+                        is_trial=True,
+                        parent_signature=self.pattern_signature,
+                        attach_stem_cells=1,
+                        mutate_edges=True,
+                    )
+                    if pack_ids:
+                        self.metadata["pack_type"] = "goal_delegation"
                 
                 if pack_ids:
-                    self.metadata["spawned_pack_root"] = pack_ids.get("root")
+                    self.metadata["spawned_pack_root"] = pack_ids.get("root") or pack_ids.get("gate")
                     self.metadata["spawned_pack"] = True
-                    return {"type": "pack", "ids": pack_ids}
+                    return {"type": "pack", "pack_type": self.metadata.get("pack_type"), "ids": pack_ids}
                     
-            except ImportError:
+            except ImportError as e:
+                print(f"[M5] Pack import error: {e}")
                 pass  # Fall through to single
         
         if roll < pack_prob + single_prob:
