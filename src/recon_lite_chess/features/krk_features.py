@@ -20,6 +20,9 @@ class KRKFeatures:
     opposition_status: int  # 1 if we have opposition, 0 otherwise
     enemy_king_edge_distance: int  # Distance from enemy king to nearest edge
     
+    # Tempo/turn feature - CRUCIAL for opposition and zugzwang!
+    side_to_move: int  # 1 if White to move, 0 if Black to move
+    
     # KRK-specific features
     box_area: int  # Confinement box area (smaller = better)
     box_min_side: int  # Minimum side of confinement box
@@ -37,6 +40,7 @@ class KRKFeatures:
             "king_distance": self.king_distance,
             "opposition_status": self.opposition_status,
             "enemy_king_edge_distance": self.enemy_king_edge_distance,
+            "side_to_move": self.side_to_move,
             "box_area": self.box_area,
             "box_min_side": self.box_min_side,
             "rook_fence_distance": self.rook_fence_distance,
@@ -53,6 +57,7 @@ class KRKFeatures:
             self.king_distance,
             self.opposition_status,
             self.enemy_king_edge_distance,
+            self.side_to_move,  # ADDED: crucial for zugzwang
             self.box_area,
             self.box_min_side,
             self.rook_fence_distance,
@@ -70,6 +75,7 @@ class KRKFeatures:
             "king_distance",
             "opposition_status", 
             "enemy_king_edge_distance",
+            "side_to_move",  # ADDED: tempo indicator
             "box_area",
             "box_min_side",
             "rook_fence_distance",
@@ -115,6 +121,7 @@ def extract_krk_features(board: chess.Board) -> KRKFeatures:
             king_distance=8,
             opposition_status=0,
             enemy_king_edge_distance=4,
+            side_to_move=1 if board.turn == chess.WHITE else 0,
             box_area=64,
             box_min_side=8,
             rook_fence_distance=8,
@@ -129,6 +136,9 @@ def extract_krk_features(board: chess.Board) -> KRKFeatures:
     king_distance = chebyshev(our_king, enemy_king)
     opposition_status = 1 if has_opposition(board) else 0
     enemy_king_edge_distance = dist_to_edge(enemy_king)
+    
+    # Tempo feature (CRUCIAL for zugzwang/opposition)
+    side_to_move = 1 if board.turn == chess.WHITE else 0
     
     # KRK-specific features
     current_box_area = box_area(board)
@@ -146,6 +156,7 @@ def extract_krk_features(board: chess.Board) -> KRKFeatures:
         king_distance=king_distance,
         opposition_status=opposition_status,
         enemy_king_edge_distance=enemy_king_edge_distance,
+        side_to_move=side_to_move,  # ADDED: tempo indicator
         box_area=current_box_area,
         box_min_side=current_box_min_side,
         rook_fence_distance=fence_distance,

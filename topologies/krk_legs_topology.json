@@ -99,7 +99,7 @@
       "id": "krk_rook_leg",
       "type": "SCRIPT",
       "group": "actuator",
-      "factory": "recon_lite_chess.krk_nodes:create_box_shrink_moves",
+      "factory": null,
       "meta": {
         "layer": "actuator",
         "piece": "rook",
@@ -111,7 +111,7 @@
       "id": "krk_king_leg",
       "type": "SCRIPT",
       "group": "actuator",
-      "factory": "recon_lite_chess.krk_nodes:create_king_drive_moves",
+      "factory": null,
       "meta": {
         "layer": "actuator",
         "piece": "king",
@@ -124,7 +124,7 @@
       "id": "krk_arbiter",
       "type": "SCRIPT",
       "group": "actuator",
-      "factory": "recon_lite_chess.krk_nodes:create_phase0_choose_moves",
+      "factory": null,
       "meta": {
         "layer": "actuator"
       }
@@ -1934,7 +1934,7 @@
       "confirmation_count": 0
     }
   ],
-  "last_modified": "2026-01-07T16:11:35.593821",
+  "last_modified": "2026-01-08T11:58:57.535464",
   "evolution_history": [
     {
       "tick": 0,

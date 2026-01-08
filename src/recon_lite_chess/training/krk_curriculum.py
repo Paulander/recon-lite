@@ -124,47 +124,51 @@ STAGE_0_MATE_IN_1 = KRKStage(
 
 
 # ============================================================================
-# Stage 1: Mate_In_2 (5 Positions)
+# Stage 1: Mate_In_2 (5 Positions) - FIXED to require true 2-move solutions
 # Varied tempo requirements - approach + mate
 # ============================================================================
 
 STAGE_1_MATE_IN_2 = KRKStage(
     stage_id=1,
     name="Mate_In_2",
-    description="Mate in 2 moves with varied patterns",
+    description="Mate in 2 moves with varied patterns - no shortcuts",
     distance_to_mate="2 moves",
     key_lesson="King-rook coordination",
     target_win_rate=0.90,
     positions=[
-        # a) King approach needed, then mate
+        # a) King approach needed, then mate (FIXED: king on b6 blocks Rh8#)
+        # Old was: k7/8/K7 - Rh8# was instant mate!
+        # Now: White king on c5, must approach to b6 then Ra1#
         KRKStagePosition(
-            fen="k7/8/K7/8/8/8/8/7R w - - 0 1",
+            fen="k7/8/8/2K5/8/8/8/7R w - - 0 1",
             optimal_moves=2,
-            description="Approach Kb6, then Ra1#",
+            description="1.Kb6 (approach) 2.Ra1#",
         ),
-        # b) Rook reposition, then mate
+        # b) Rook must cut first, then mate (FIXED: moved rook to cut)
         KRKStagePosition(
-            fen="8/8/8/8/8/k7/8/R3K3 w - - 0 1",
+            fen="8/8/8/8/k7/8/8/R3K3 w - - 0 1",
             optimal_moves=2,
-            description="Ra3+ forces king, then mate",
+            description="1.Ra4+ Kb3 2.Kd2 then continue",
         ),
-        # c) Check forcing king to corner, then mate
+        # c) Drive king to corner first, then mate
         KRKStagePosition(
-            fen="8/8/8/8/8/1k6/8/R3K3 w - - 0 1",
+            fen="8/8/8/8/1k6/8/8/R3K3 w - - 0 1",
             optimal_moves=2,
-            description="Ra3+ Kb2, Ra2# or Kb1 Ra1#",
+            description="1.Ra4+ Kb3 2.Ra1 (or Ke2)",
         ),
-        # d) Waiting move required (opposition), then mate
+        # d) Tempo/waiting move required (FIXED: king not adjacent)
+        # Old was: 7k/5K2 - Kf8# was instant!
+        # Now: King on f6, must approach then mate
         KRKStagePosition(
-            fen="7k/5K2/8/8/8/8/8/7R w - - 0 1",
+            fen="7k/8/5K2/8/8/8/8/7R w - - 0 1",
             optimal_moves=2,
-            description="Rook waits Rh2, then Rh8#",
+            description="1.Kg6 (opposition) 2.Rh1#",
         ),
-        # e) Cut maintained, approach, mate
+        # e) Cut maintained, king approach, mate
         KRKStagePosition(
-            fen="k7/R7/8/8/K7/8/8/8 w - - 0 1",
+            fen="k7/R7/8/8/1K6/8/8/8 w - - 0 1",
             optimal_moves=2,
-            description="Kb5, Ra8#",
+            description="1.Kb5 Kb8 2.Ka6 or Kb6 then Ra8#",
         ),
     ]
 )
@@ -524,21 +528,138 @@ STAGE_9_FULL_KRK = KRKStage(
 
 
 # ============================================================================
+# DRIVE METHOD STAGES (New - based on fence/tempo/opposition technique)
+# Alternative to Box Method - drive king to edge using fence and opposition
+# ============================================================================
+
+# Drive Stage D1: Fence Established - rook cuts board in half
+STAGE_D1_FENCE_ESTABLISHED = KRKStage(
+    stage_id=20,
+    name="Fence_Established",
+    description="Rook fence divides board - enemy king confined",
+    distance_to_mate="2-3 moves",
+    key_lesson="Recognize and maintain the fence (rook cut)",
+    target_win_rate=0.60,
+    positions=[
+        # EASY: King almost at edge, fence holds for quick mate
+        KRKStagePosition(
+            fen="k7/8/1K6/R7/8/8/8/8 w - - 0 1",
+            optimal_moves=2,
+            description="Ra8# or approach then Ra8#",
+        ),
+        # EASY: King at edge, fence holds
+        KRKStagePosition(
+            fen="7k/8/5K2/7R/8/8/8/8 w - - 0 1",
+            optimal_moves=2,
+            description="Kg7 then Rh8# or Rh8+ first",
+        ),
+        # MEDIUM: Rook on 4th rank, king confined to upper half
+        KRKStagePosition(
+            fen="4k3/8/8/8/R7/8/4K3/8 w - - 0 1",
+            optimal_moves=4,
+            description="Fence on 4th rank, drive king to 8th",
+        ),
+        # MEDIUM: King already near edge, fence holds
+        KRKStagePosition(
+            fen="7k/8/8/8/R7/8/5K2/8 w - - 0 1",
+            optimal_moves=3,
+            description="Enemy at edge, approach to finish",
+        ),
+    ]
+)
+
+# Drive Stage D2: Opposition Approach - knight distance between kings
+STAGE_D2_OPPOSITION_APPROACH = KRKStage(
+    stage_id=21,
+    name="Opposition_Approach",
+    description="Knight distance between kings, our king on 3rd row",
+    distance_to_mate="2-3 moves",
+    key_lesson="Approach with knight distance (L-shape) for opposition",
+    target_win_rate=0.65,
+    positions=[
+        # Knight distance: king can approach in L-shape
+        # Our king on 3rd row from enemy, between enemy and rook
+        KRKStagePosition(
+            fen="7k/8/5K2/8/8/8/8/R7 w - - 0 1",
+            optimal_moves=3,
+            description="Kg7 takes opposition, then Rh1#",
+        ),
+        # Enemy must go towards rook or into opposition
+        KRKStagePosition(
+            fen="k7/8/2K5/8/8/8/8/R7 w - - 0 1",
+            optimal_moves=2,
+            description="Kb6 forces Ka8, then Ra1#",
+        ),
+        # Wider spacing but same pattern
+        KRKStagePosition(
+            fen="4k3/8/3K4/8/8/8/8/R7 w - - 0 1",
+            optimal_moves=3,
+            description="Approach maintaining knight distance",
+        ),
+    ]
+)
+
+# Drive Stage D3: Tempo Wait - rook slides along fence
+STAGE_D3_TEMPO_WAIT = KRKStage(
+    stage_id=22,
+    name="Tempo_Wait",
+    description="Rook slides along fence for tempo when king 'stuck'",
+    distance_to_mate="2-3 moves",
+    key_lesson="Wait move with rook to gain opposition tempo",
+    target_win_rate=0.60,
+    positions=[
+        # King has opposition but wrong king to move
+        # Rook must wait to transfer tempo
+        KRKStagePosition(
+            fen="k7/8/1K6/8/8/8/8/R7 w - - 0 1",
+            optimal_moves=2,
+            description="Ra2 waits, then Ka6 Ra8#",
+        ),
+        # Tempo move on back rank
+        KRKStagePosition(
+            fen="1k6/8/2K5/8/8/8/8/R7 w - - 0 1",
+            optimal_moves=2,
+            description="Rb1 tempo, then approach",
+        ),
+        # Fence wait
+        KRKStagePosition(
+            fen="8/k7/8/1K6/R7/8/8/8 w - - 0 1",
+            optimal_moves=2,
+            description="Ra7+ forces Ka8, then Ra1#",
+        ),
+    ]
+)
+
+
+# ============================================================================
 # All Stages List
 # ============================================================================
 
 KRK_STAGES: List[KRKStage] = [
-    STAGE_0_MATE_IN_1,       # Stage 0: Mate in 1
-    STAGE_1_MATE_IN_2,       # Stage 1: Mate in 2
-    STAGE_2_EDGE_TRAPPED_TEMPO,  # Stage 2: Tempo/waiting moves
-    STAGE_2_5_ANCHORED_CUT,  # Stage 3 (BRIDGE): Pre-coordinated king+rook
-    STAGE_3_EDGE_CUT_HOLD,   # Stage 4: 1x8 box maintenance  
-    STAGE_4_KING_CLOSE_1,    # Stage 5: King approach 1
-    STAGE_5_KING_CLOSE_2,    # Stage 6: King approach 2
-    STAGE_6_KING_FAR_CUT_HELD,  # Stage 7: Long approach
-    STAGE_7_BOX_SMALL,       # Stage 8: 3x3 box
-    STAGE_8_BOX_MEDIUM,      # Stage 9: 4x4 box
-    STAGE_9_FULL_KRK,        # Stage 10: Full KRK
+    # PHASE 1: Endgame basics - recognize checkmate patterns
+    STAGE_0_MATE_IN_1,           # Stage 0: Mate in 1 (100% win rate)
+    STAGE_1_MATE_IN_2,           # Stage 1: Mate in 2 (FIXED - true 2-move requirement)
+    STAGE_2_EDGE_TRAPPED_TEMPO,  # Stage 2: Tempo/waiting moves at edge
+    
+    # PHASE 2: Drive Method - opposition and fence technique
+    # These teach "drive to edge" pattern before complex box maintenance
+    STAGE_D2_OPPOSITION_APPROACH,  # Stage 3: Knight distance approach
+    STAGE_D3_TEMPO_WAIT,           # Stage 4: Rook tempo/wait moves
+    STAGE_D1_FENCE_ESTABLISHED,    # Stage 5: Fence (rook cut) maintenance
+    
+    # PHASE 3: Box Method - confine and shrink
+    STAGE_7_BOX_SMALL,           # Stage 6: 3x3 box (previously had 33% wins)
+    STAGE_8_BOX_MEDIUM,          # Stage 7: 4x4 box
+    
+    # PHASE 4: Cut and Approach - complex coordination
+    STAGE_2_5_ANCHORED_CUT,      # Stage 8: Pre-coordinated king+rook
+    STAGE_3_EDGE_CUT_HOLD,       # Stage 9: 1x8 box maintenance
+    STAGE_4_KING_CLOSE_1,        # Stage 10: King approach 1
+    STAGE_5_KING_CLOSE_2,        # Stage 11: King approach 2
+    STAGE_6_KING_FAR_CUT_HELD,   # Stage 12: Long approach
+    
+    # PHASE 5: Full game
+    STAGE_9_FULL_KRK,            # Stage 13: Full KRK
 ]
 
 

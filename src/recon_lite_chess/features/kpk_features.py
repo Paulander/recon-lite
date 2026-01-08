@@ -97,6 +97,9 @@ def extract_kpk_features(board: chess.Board) -> List[float]:
     # === Edge pawn flag (a/h file = potentially drawn) ===
     is_edge_pawn = float(pawn_file in (0, 7))
     
+    # === Tempo feature (CRUCIAL for opposition and zugzwang) ===
+    side_to_move = 1.0 if board.turn == chess.WHITE else 0.0
+    
     return [
         pawn_progress,      # How far advanced (0-1)
         wk_rank_delta,      # WK rank offset from pawn
@@ -108,6 +111,7 @@ def extract_kpk_features(board: chess.Board) -> List[float]:
         wk_pawn_dist,       # WK distance to pawn (for escort)
         bk_pawn_dist,       # BK distance to pawn (for Square Rule)
         is_edge_pawn,       # Rook pawn flag (draw risk)
+        side_to_move,       # ADDED: whose turn (crucial for zugzwang!)
     ]
 
 
@@ -160,7 +164,7 @@ def create_feature_extractor(nid: str) -> Node:
     return Node(nid=nid, ntype=NodeType.TERMINAL, predicate=_predicate)
 
 
-# Feature names for debugging/visualization (10 elements)
+# Feature names for debugging/visualization (11 elements now)
 FEATURE_NAMES = [
     "pawn_progress",
     "wk_rank_delta",
@@ -172,6 +176,7 @@ FEATURE_NAMES = [
     "wk_pawn_dist",
     "bk_pawn_dist",
     "is_edge_pawn",
+    "side_to_move",  # ADDED: tempo indicator
 ]
 
 # Legacy feature names (6 elements)

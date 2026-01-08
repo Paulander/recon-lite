@@ -348,32 +348,44 @@ def play_krk_game_recon(
         if suggested_move and suggested_move in legal_ucis:
             move = chess.Move.from_uci(suggested_move)
         else:
-            # Fallback to simple heuristic if engine didn't suggest
+            # ================================================================
+            # HEURISTIC FALLBACK (controlled by M5_HEURISTIC_PROB env var)
+            # Set M5_HEURISTIC_PROB=0.0 for pure ReCoN mode
+            # Set M5_HEURISTIC_PROB=0.5 for 50% heuristic bootstrap
+            # ================================================================
+            heuristic_prob = float(os.environ.get("M5_HEURISTIC_PROB", "1.0"))
+            use_heuristic = random.random() < heuristic_prob
+            
             legal = list(board.legal_moves)
             if not legal:
                 break
             
-            # Use simple box-shrinking heuristic as fallback
-            best_move = None
-            best_score = -1000
-            for m in legal[:20]:  # Limit for speed
-                score = 0
-                board.push(m)
-                if board.is_checkmate():
-                    score = 1000
-                elif board.is_check():
-                    score = 50
-                elif board.is_stalemate():
-                    score = -500
-                else:
-                    new_box = box_min_side(board)
-                    if new_box < initial_box_min:
-                        score = 20
-                board.pop()
-                if score > best_score:
-                    best_score = score
-                    best_move = m
-            move = best_move if best_move else random.choice(legal)
+            if use_heuristic:
+                # Use simple box-shrinking heuristic as fallback
+                best_move = None
+                best_score = -1000
+                for m in legal[:20]:  # Limit for speed
+                    score = 0
+                    board.push(m)
+                    if board.is_checkmate():
+                        score = 1000
+                    elif board.is_check():
+                        score = 50
+                    elif board.is_stalemate():
+                        score = -500
+                    else:
+                        new_box = box_min_side(board)
+                        if new_box < initial_box_min:
+                            score = 20
+                    board.pop()
+                    if score > best_score:
+                        best_score = score
+                        best_move = m
+                move = best_move if best_move else random.choice(legal)
+            else:
+                # PURE MODE: Random move when engine doesn't suggest
+                # This forces M5 to learn instead of relying on heuristics
+                move = random.choice(legal)
         
         board.push(move)
         move_count += 1
