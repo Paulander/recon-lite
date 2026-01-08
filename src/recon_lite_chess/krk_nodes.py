@@ -19,6 +19,18 @@ from .predicates import box_area, move_features
 from .predicates import has_stable_cut
 
 
+def _set_suggested_move(env: Dict[str, Any], mv: str) -> None:
+    """
+    Set move in standard ReCoN interface paths.
+    
+    Engine expects: env["<root>"]["policy"]["suggested_move"]
+    This ensures KRK actuators work with the standard game loop.
+    """
+    env["chosen_move"] = mv  # Legacy path
+    # Standard interface (matches KPK/KQK pattern)
+    env.setdefault("krk_root", {}).setdefault("policy", {})["suggested_move"] = mv
+
+
 # ===== TERMINAL NODES (Leaf Operations) =====
 
 @dataclass
@@ -299,7 +311,7 @@ class Phase0ChooseMoves(Node):
             env["last_reason"] = reason
             return True, True
         if mv:
-            env["chosen_move"] = mv
+            _set_suggested_move(env, mv)
             node.meta["suggested_moves"] = [mv]
             node.meta["phase"] = "phase0"
             try:
@@ -327,7 +339,7 @@ class KingDriveMoves(Node):
             return False, []
         mv = choose_move_phase1(board, env)
         if mv:
-            env["chosen_move"] = mv
+            _set_suggested_move(env, mv)
             node.meta["suggested_moves"] = [mv]
             node.meta["phase"] = "phase1"
             try:
@@ -355,7 +367,7 @@ class BoxShrinkMoves(Node):
             return False, []
         mv = choose_move_phase2(board, env)
         if mv:
-            env["chosen_move"] = mv
+            _set_suggested_move(env, mv)
             node.meta["suggested_moves"] = [mv]
             node.meta["phase"] = "phase2"
             try:
@@ -382,7 +394,7 @@ class OppositionMoves(Node):
             return False, []
         mv = choose_move_phase3(board, env)
         if mv:
-            env["chosen_move"] = mv
+            _set_suggested_move(env, mv)
             node.meta["suggested_moves"] = [mv]
             node.meta["phase"] = "phase3"
             try:
@@ -409,7 +421,7 @@ class MateMoves(Node):
             return False, []
         mv = choose_move_phase4(board, env)
         if mv:
-            env["chosen_move"] = mv
+            _set_suggested_move(env, mv)
             node.meta["suggested_moves"] = [mv]
             node.meta["phase"] = "phase4"
             try:
@@ -437,7 +449,7 @@ class ConfinementMoves(Node):
             return False, []
         mv = choose_confinement_move(board, env)
         if mv:
-            env["chosen_move"] = mv
+            _set_suggested_move(env, mv)
             node.meta["suggested_moves"] = [mv]
             node.meta["phase"] = "phase1"
             try:
@@ -465,7 +477,7 @@ class BarrierPlacementMoves(Node):
             return False, []
         mv = choose_barrier_move(board, env)
         if mv:
-            env["chosen_move"] = mv
+            _set_suggested_move(env, mv)
             node.meta["suggested_moves"] = [mv]
             node.meta["phase"] = "phase1"
             try:
