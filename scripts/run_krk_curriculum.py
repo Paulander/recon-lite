@@ -78,6 +78,20 @@ try:
     HAS_ENGINE = True
 except ImportError:
     HAS_ENGINE = False
+
+# ========== PLASTICITY IMPORTS (M3/M4 weight adaptation) ==========
+try:
+    from recon_lite.plasticity.fast import (
+        init_plasticity_state,
+        update_eligibility,
+        apply_fast_update,
+        reset_episode,
+        PlasticityConfig,
+    )
+    HAS_PLASTICITY = True
+except ImportError:
+    HAS_PLASTICITY = False
+    PlasticityConfig = None
     ReConEngine = None
     GatingSchedule = None
 
@@ -290,6 +304,20 @@ def play_krk_game_recon(
     active_nodes_log = []
     game_tick = 0
     
+    # ========== PLASTICITY INITIALIZATION (M3: per-game weight adaptation) ==========
+    plasticity_state = None
+    plasticity_config = None
+    if HAS_PLASTICITY:
+        plasticity_config = PlasticityConfig(
+            eta_tick=0.1,  # Learning rate for fast updates
+            lambda_decay=0.7,  # Eligibility trace decay
+            w_min=0.1,
+            w_max=3.0,
+            enabled=True,
+        )
+        plasticity_state = init_plasticity_state(graph)
+        # print(f"[PLASTICITY] Initialized {len(plasticity_state)} edge states")
+    
     # Sentinel for KRK positions
     def krk_sentinel(env: Dict[str, Any]) -> bool:
         b = env.get("board")
@@ -408,6 +436,48 @@ def play_krk_game_recon(
             for cell in stem_manager.cells.values():
                 cell.observe(board, interim_reward, tick=game_tick)
         
+        # ========== PLASTICITY UPDATE (M3: per-tick edge weight adaptation) ==========
+        if HAS_PLASTICITY and plasticity_state and plasticity_config:
+            # Get fired edges from active nodes
+            fired_edges = []
+            for nid, node in graph.nodes.items():
+                if node.state in (NodeState.ACTIVE, NodeState.TRUE, NodeState.CONFIRMED):
+                    # Find outgoing edges that fired
+                    for edge_key, edge in graph.edges.items():
+                        if edge.src == nid:
+                            fired_edges.append({
+                                "src": edge.src,
+                                "dst": edge.dst,
+                                "ltype": edge.ltype.name,
+                            })
+            
+            # Update eligibility traces
+            update_eligibility(
+                plasticity_state,
+                fired_edges,
+                plasticity_config.lambda_decay,
+            )
+            
+            # Apply fast weight updates based on reward
+            # Use checkmate as strong signal, check as medium
+            if board.is_checkmate():
+                reward_signal = 1.0
+            elif board.is_check():
+                reward_signal = 0.3
+            elif box_min_side(board) < initial_box_min:
+                reward_signal = 0.1  # Small reward for progress
+            else:
+                reward_signal = 0.0
+            
+            if reward_signal > 0:
+                deltas = apply_fast_update(
+                    plasticity_state,
+                    graph,
+                    reward_signal,
+                    plasticity_config.eta_tick,
+                    plasticity_config,
+                )
+        
         # Check for box escape
         current_box_min = box_min_side(board)
         if current_box_min > initial_box_min:
@@ -439,6 +509,28 @@ def play_krk_game_recon(
         result = "loss"
     else:
         result = "draw"
+    
+    # ========== PLASTICITY FINAL UPDATE & RESET (M3: end-of-game signal) ==========
+    if HAS_PLASTICITY and plasticity_state and plasticity_config:
+        # Apply final reward signal based on game outcome
+        if result == "win":
+            final_reward = 1.0  # Strong positive for wins
+        elif result == "stalemate":
+            final_reward = -0.5  # Penalty for stalemates (missed win)
+        else:
+            final_reward = 0.0  # No update for losses/draws
+        
+        if final_reward != 0:
+            apply_fast_update(
+                plasticity_state,
+                graph,
+                final_reward,
+                plasticity_config.eta_tick * 2.0,  # Double learning rate for final outcome
+                plasticity_config,
+            )
+        
+        # DO NOT reset weights - let them persist across games for learning
+        # reset_episode(plasticity_state, graph)  # This would undo the learning!
     
     # Unlock
     try:
