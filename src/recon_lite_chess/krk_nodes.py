@@ -600,6 +600,145 @@ class RandomLegalMoves(Node):
         return bool(ucis), ucis
 
 
+# ===== LEGS ARCHITECTURE (KPK-style placeholders for stem cell growth) =====
+
+def create_krk_rook_leg(nid: str) -> Node:
+    """
+    Rook Leg: Proposes rook moves only.
+    
+    Simple placeholder - just finds any legal rook move and proposes it.
+    Activation is basic (0.5 if legal move exists, 0.0 otherwise).
+    The network learns when to prefer rook moves via edge weights and stem cells.
+    
+    Stores proposal in env["krk"]["legs"]["rook"]
+    """
+    def _predicate(node: Node, env: Dict[str, Any]):
+        board = env.get("board")
+        if not board:
+            node.meta["activation"] = 0.0
+            return False, False
+        
+        # Find any legal rook move
+        our_color = board.turn
+        proposal = None
+        
+        for move in board.legal_moves:
+            piece = board.piece_at(move.from_square)
+            if piece and piece.piece_type == chess.ROOK and piece.color == our_color:
+                proposal = move.uci()
+                break
+        
+        # Simple activation: 0.5 if we have a proposal, 0.0 otherwise
+        activation = 0.5 if proposal else 0.0
+        
+        # Store in env for arbiter
+        leg_data = {
+            "activation": activation,
+            "proposal": proposal,
+            "reason": "rook_move",
+        }
+        env.setdefault("krk", {}).setdefault("legs", {})["rook"] = leg_data
+        node.meta["activation"] = activation
+        node.meta["proposal"] = proposal
+        
+        return proposal is not None, proposal is not None
+    
+    return Node(nid=nid, ntype=NodeType.SCRIPT, predicate=_predicate)
+
+
+def create_krk_king_leg(nid: str) -> Node:
+    """
+    King Leg: Proposes king moves only.
+    
+    Simple placeholder - just finds any legal king move and proposes it.
+    Activation is basic (0.5 if legal move exists, 0.0 otherwise).
+    The network learns when to prefer king moves via edge weights and stem cells.
+    
+    Stores proposal in env["krk"]["legs"]["king"]
+    """
+    def _predicate(node: Node, env: Dict[str, Any]):
+        board = env.get("board")
+        if not board:
+            node.meta["activation"] = 0.0
+            return False, False
+        
+        # Find any legal king move
+        our_color = board.turn
+        proposal = None
+        
+        for move in board.legal_moves:
+            piece = board.piece_at(move.from_square)
+            if piece and piece.piece_type == chess.KING and piece.color == our_color:
+                proposal = move.uci()
+                break
+        
+        # Simple activation: 0.5 if we have a proposal, 0.0 otherwise
+        activation = 0.5 if proposal else 0.0
+        
+        # Store in env for arbiter
+        leg_data = {
+            "activation": activation,
+            "proposal": proposal,
+            "reason": "king_move",
+        }
+        env.setdefault("krk", {}).setdefault("legs", {})["king"] = leg_data
+        node.meta["activation"] = activation
+        node.meta["proposal"] = proposal
+        
+        return proposal is not None, proposal is not None
+    
+    return Node(nid=nid, ntype=NodeType.SCRIPT, predicate=_predicate)
+
+
+def create_krk_arbiter(nid: str) -> Node:
+    """
+    Arbiter: Selects between Rook and King leg proposals based on activation.
+    
+    Decision Rule:
+    - Highest activation wins
+    - Tie-breaker: prefer rook (more aggressive)
+    
+    Writes to env["krk_root"]["policy"]["suggested_move"] (using _set_suggested_move)
+    """
+    def _predicate(node: Node, env: Dict[str, Any]):
+        legs = env.get("krk", {}).get("legs", {})
+        rook_leg = legs.get("rook", {})
+        king_leg = legs.get("king", {})
+        
+        rook_act = rook_leg.get("activation", 0.0)
+        king_act = king_leg.get("activation", 0.0)
+        
+        # Decision with tie-breaker for rook
+        if rook_act >= king_act and rook_leg.get("proposal"):
+            winner = "rook"
+            proposal = rook_leg.get("proposal")
+            reason = rook_leg.get("reason", "rook_move")
+        elif king_leg.get("proposal"):
+            winner = "king"
+            proposal = king_leg.get("proposal")
+            reason = king_leg.get("reason", "king_move")
+        else:
+            # Fallback to any legal move
+            board = env.get("board")
+            legal = list(board.legal_moves) if board else []
+            proposal = legal[0].uci() if legal else None
+            winner = "fallback"
+            reason = "no_proposal"
+        
+        # Store final decision (using helper to write to correct location)
+        if proposal:
+            _set_suggested_move(env, proposal)
+        
+        node.meta["winner"] = winner
+        node.meta["rook_activation"] = rook_act
+        node.meta["king_activation"] = king_act
+        node.meta["reason"] = reason
+        
+        return proposal is not None, proposal is not None
+    
+    return Node(nid=nid, ntype=NodeType.SCRIPT, predicate=_predicate)
+
+
 # ===== FACTORY FUNCTIONS =====
 
 def create_king_edge_detector(nid: str) -> KingAtEdgeDetector: return KingAtEdgeDetector(nid)
@@ -624,6 +763,9 @@ def create_opposition_moves(nid: str) -> OppositionMoves: return OppositionMoves
 def create_mate_moves(nid: str) -> MateMoves: return MateMoves(nid)
 def create_random_legal_moves(nid: str) -> RandomLegalMoves: return RandomLegalMoves(nid)
 def create_no_progress_watch(nid: str) -> NoProgressWatch: return NoProgressWatch(nid)
+
+# Legs architecture factories (already defined above, just for export)
+# These are defined in the LEGS ARCHITECTURE section above
 
 # New confinement-aware nodes
 def create_confinement_evaluator(nid: str, target_size: int = 2) -> ConfinementEvaluator:

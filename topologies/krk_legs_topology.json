@@ -99,7 +99,7 @@
       "id": "krk_rook_leg",
       "type": "SCRIPT",
       "group": "actuator",
-      "factory": null,
+      "factory": "recon_lite_chess.krk_nodes:create_krk_rook_leg",
       "meta": {
         "layer": "actuator",
         "piece": "rook",
@@ -111,7 +111,7 @@
       "id": "krk_king_leg",
       "type": "SCRIPT",
       "group": "actuator",
-      "factory": null,
+      "factory": "recon_lite_chess.krk_nodes:create_krk_king_leg",
       "meta": {
         "layer": "actuator",
         "piece": "king",
@@ -124,7 +124,7 @@
       "id": "krk_arbiter",
       "type": "SCRIPT",
       "group": "actuator",
-      "factory": null,
+      "factory": "recon_lite_chess.krk_nodes:create_krk_arbiter",
       "meta": {
         "layer": "actuator"
       }

@@ -379,7 +379,8 @@ def play_krk_game_recon(
                 active_nodes_log.extend(active)
             
             # Track edge activations for consolidation (M4)
-            for e in graph.edges:
+            edge_list = graph.edges.values() if isinstance(graph.edges, dict) else graph.edges
+            for e in edge_list:
                 src_node = graph.nodes.get(e.src)
                 dst_node = graph.nodes.get(e.dst)
                 if src_node and dst_node:
@@ -469,7 +470,8 @@ def play_krk_game_recon(
             for nid, node in graph.nodes.items():
                 if node.state in (NodeState.ACTIVE, NodeState.TRUE, NodeState.CONFIRMED):
                     # Find outgoing edges that fired
-                    for edge_key, edge in graph.edges.items():
+                    edge_iter = graph.edges.values() if isinstance(graph.edges, dict) else graph.edges
+                    for edge in edge_iter:
                         if edge.src == nid:
                             fired_edges.append({
                                 "src": edge.src,
@@ -643,9 +645,11 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
             # Initialize consolidation engine with graph edges
             if consolidation_engine:
                 # Get all KRK edges for consolidation
+                # Handle both list and dict formats for graph.edges
+                edge_list = graph.edges.values() if isinstance(graph.edges, dict) else graph.edges
                 krk_edges = [
                     f"{e.src}->{e.dst}:{e.ltype.name}"
-                    for e in graph.edges
+                    for e in edge_list
                     if e.ltype in (LinkType.POR, LinkType.SUB) and ("krk" in e.src.lower() or "krk" in e.dst.lower())
                 ]
                 consolidation_engine.init_from_graph(graph, edge_whitelist=krk_edges)
@@ -690,6 +694,17 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
     
     # Stem cell persistence paths
     stem_cells_path = config.output_dir / "stem_cells.json"
+    
+    # Load consolidation state if resuming (for transfer learning across stages)
+    if consolidation_engine:
+        consolidation_state_path = config.output_dir / "final_consolidation.json"
+        if consolidation_state_path.exists():
+            try:
+                consolidation_engine.load_state(consolidation_state_path)
+                consolidation_engine.apply_w_base_to_graph(graph)
+                print(f"  Loaded consolidation state from previous run (transfer learning enabled)")
+            except Exception as e:
+                print(f"  Could not load consolidation state: {e}")
     
     # BACKWARD CHAINING: Store mastered stage sensors for reverse linking
     # When a stage hits 90%+, export its condition sensor for next stage's sentinel
@@ -794,7 +809,6 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                         if consolidation_engine.should_apply():
                             deltas = consolidation_engine.apply_to_graph(graph)
                             print(f"    [CONSOLIDATION] Applied {len(deltas)} weight updates")
-                else:
                 else:
                     result, move_count, box_escaped = play_krk_game_simple(
                         board=board,
@@ -1029,9 +1043,10 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                             king_id = max(king_sensors, key=lambda x: active_node_counts[x])
                             
                             # Check if POR link already exists
+                            edge_list_por = graph.edges.values() if isinstance(graph.edges, dict) else graph.edges
                             existing_por = any(
                                 e.src == cut_id and e.dst == king_id 
-                                for e in graph.edges
+                                for e in edge_list_por
                             )
                             
                             if not existing_por and cut_id in graph.nodes and king_id in graph.nodes:
@@ -1098,6 +1113,14 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
             snapshot_path = config.output_dir / f"stage{start_stage_idx}" / f"cycle_{cycle:04d}.json"
             snapshot_path.parent.mkdir(parents=True, exist_ok=True)
             
+            # Get consolidation weights for animation (like KPK does)
+            w_base = {}
+            if consolidation_engine:
+                try:
+                    w_base = consolidation_engine.get_all_w_base()
+                except Exception:
+                    pass
+            
             snapshot_data = {
                 "stage_id": start_stage_idx,
                 "stage_name": stage.name,
@@ -1109,6 +1132,9 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                 "escape_rate": escape_rate,
                 "total_games": total_games,
                 "timestamp": datetime.now().isoformat(),
+                # Consolidation weights for animation (like KPK epoch training)
+                "w_base": w_base,
+                "consolidation_applied": consolidation_engine.should_apply() if consolidation_engine else False,
             }
             snapshot_path.write_text(json.dumps(snapshot_data, indent=2))
             
@@ -1201,6 +1227,27 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
     print("\n" + "=" * 70)
     print("TRAINING COMPLETE")
     print("=" * 70)
+    
+    # Save final consolidation state (for transfer learning to next run)
+    if consolidation_engine:
+        final_consolidation_path = config.output_dir / "final_consolidation.json"
+        try:
+            consolidation_engine.save_state(final_consolidation_path)
+            print(f"\nFinal consolidation state saved to: {final_consolidation_path}")
+            
+            # Also save final weights snapshot (for animation)
+            final_weights = consolidation_engine.get_all_w_base()
+            final_weights_path = config.output_dir / "final_weights.json"
+            final_weights_data = {
+                "timestamp": datetime.now().isoformat(),
+                "total_games": total_games,
+                "stages_completed": len(stage_history),
+                "w_base": final_weights,
+            }
+            final_weights_path.write_text(json.dumps(final_weights_data, indent=2))
+            print(f"Final weights snapshot saved to: {final_weights_path}")
+        except Exception as e:
+            print(f"Warning: Could not save consolidation state: {e}")
     
     # Final summary
     summary = {

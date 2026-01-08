@@ -9,7 +9,7 @@
     "w_max": 3.0
   },
   "w_base": {
-    "GameRoot->kpk_root:SUB": 1.0,
+    "endgame_gate->kpk_root:SUB": 1.0,
     "kpk_root->kpk_detect:SUB": 1.0,
     "kpk_root->kpk_execute:SUB": 1.0,
     "kpk_root->kpk_finish:SUB": 1.0,
@@ -25,7 +25,7 @@
     "kpk_wait->kpk_wait_for_change:SUB": 1.0
   },
   "w_init": {
-    "GameRoot->kpk_root:SUB": 1.0,
+    "endgame_gate->kpk_root:SUB": 1.0,
     "kpk_root->kpk_detect:SUB": 1.0,
     "kpk_root->kpk_execute:SUB": 1.0,
     "kpk_root->kpk_finish:SUB": 1.0,
@@ -41,9 +41,9 @@
     "kpk_wait->kpk_wait_for_change:SUB": 1.0
   },
   "consolidation_meta": {
-    "total_episodes": 2000,
+    "total_episodes": 90,
     "episodes_since_apply": 0,
-    "last_apply_time": "2025-12-16T16:36:01.970596",
+    "last_apply_time": "2026-01-08T16:42:03.320411",
     "edges_tracked": 14
   }
 }

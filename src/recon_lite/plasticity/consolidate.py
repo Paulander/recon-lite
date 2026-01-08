@@ -107,7 +107,9 @@ class ConsolidationEngine:
         """
         whitelist_set = set(edge_whitelist) if edge_whitelist else None
 
-        for e in graph.edges:
+        # Handle both list and dict formats for graph.edges
+        edge_iter = graph.edges.values() if isinstance(graph.edges, dict) else graph.edges
+        for e in edge_iter:
             # Only track POR and SUB edges by default
             if e.ltype not in (LinkType.POR, LinkType.SUB):
                 continue

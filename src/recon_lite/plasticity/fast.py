@@ -97,7 +97,9 @@ def init_plasticity_state(
     else:
         whitelist_set = None
 
-    for e in graph.edges:
+    # Handle both list and dict formats for graph.edges
+    edge_iter = graph.edges.values() if isinstance(graph.edges, dict) else graph.edges
+    for e in edge_iter:
         # Only track POR and SUB edges by default
         if e.ltype not in (LinkType.POR, LinkType.SUB):
             continue
@@ -195,7 +197,9 @@ def apply_fast_update(
         delta_w = eta_eff * r_clipped * es.eligibility
 
         # Find the edge in the graph and update
-        for e in graph.edges:
+        # Handle both list and dict formats for graph.edges
+        edge_iter = graph.edges.values() if isinstance(graph.edges, dict) else graph.edges
+        for e in edge_iter:
             if e.src == es.src and e.dst == es.dst and e.ltype == es.ltype:
                 # Get current weight
                 try:
@@ -239,7 +243,9 @@ def reset_episode(
     """
     for key, es in state.items():
         # Restore initial weight
-        for e in graph.edges:
+        # Handle both list and dict formats for graph.edges
+        edge_iter = graph.edges.values() if isinstance(graph.edges, dict) else graph.edges
+        for e in edge_iter:
             if e.src == es.src and e.dst == es.dst and e.ltype == es.ltype:
                 e.w = es.w_init
                 break

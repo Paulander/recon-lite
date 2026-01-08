@@ -217,7 +217,7 @@ def create_krk_legs_topology(output_path: Path) -> dict:
             {"id": "krk_king_leg", "type": "SCRIPT", "group": "actuator",
              "factory": "recon_lite_chess.krk_nodes:create_king_drive_moves",
              "meta": {"layer": "actuator", "piece": "king", "universal": True}},
-            {"id": "krk_arbiter", "type": "SCRIPT", "group": "actuator",
+            {"id": "krk_arbiter", "type": "TERMINAL", "group": "actuator",
              "factory": "recon_lite_chess.krk_nodes:create_phase0_choose_moves",
              "meta": {"layer": "actuator"}},
             
