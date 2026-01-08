@@ -2,7 +2,7 @@
   "version": "1.0",
   "network": "kpk",
   "created": "2026-01-02T14:11:00Z",
-  "last_modified": "2026-01-08T19:31:39.362506",
+  "last_modified": "2026-01-08T21:59:07.950813",
   "nodes": [
     {
       "id": "kpk_root",
@@ -272,6 +272,774 @@
         ],
         "subgraph": "kpk"
       }
+    },
+    {
+      "id": "TRIAL_stem_0004_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0004",
+        "tier": "trial",
+        "consistency": 0.6528455081450425,
+        "promoted_tick": 1,
+        "pattern_signature": [
+          0.05084745762711865,
+          0.0,
+          0.0,
+          0.0,
+          0.9491525423728814,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.04358353510895883,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.5343018563357543,
+          0.7723970944309926,
+          0.4818401937046007,
+          0.30669895076674736,
+          0.007263922518159804
+        ],
+        "subgraph": "kpk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0005_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0005",
+        "tier": "trial",
+        "consistency": 0.6498719553029634,
+        "promoted_tick": 1,
+        "pattern_signature": [
+          0.05357142857142857,
+          0.0,
+          0.0,
+          0.0,
+          0.9464285714285714,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.045918367346938764,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.5365646258503398,
+          0.7712585034013602,
+          0.4872448979591838,
+          0.3061224489795919,
+          0.007653061224489794
+        ],
+        "subgraph": "kpk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0011_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0011",
+        "tier": "trial",
+        "consistency": 0.6224925339374645,
+        "promoted_tick": 1,
+        "pattern_signature": [
+          0.0707070707070707,
+          0.0,
+          0.0,
+          0.0,
+          0.9292929292929293,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.06060606060606061,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.5346320346320346,
+          0.778499278499279,
+          0.4783549783549781,
+          0.2943722943722945,
+          0.010101010101010098
+        ],
+        "subgraph": "kpk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0012_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0012",
+        "tier": "trial",
+        "consistency": 0.6144847481721016,
+        "promoted_tick": 1,
+        "pattern_signature": [
+          0.0782122905027933,
+          0.0,
+          0.0,
+          0.0,
+          0.9217877094972067,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0670391061452514,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.5339185953711092,
+          0.7813248204309654,
+          0.49880287310454874,
+          0.29369513168395867,
+          0.011173184357541896
+        ],
+        "subgraph": "kpk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0014_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0014",
+        "tier": "trial",
+        "consistency": 0.6598957118292081,
+        "promoted_tick": 1,
+        "pattern_signature": [
+          0.045,
+          0.0,
+          0.0,
+          0.0,
+          0.955,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.03857142857142856,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.5607142857142858,
+          0.7764285714285717,
+          0.4392857142857145,
+          0.3057142857142858,
+          0.006428571428571427
+        ],
+        "subgraph": "kpk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0015_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0015",
+        "tier": "trial",
+        "consistency": 0.6390043932122913,
+        "promoted_tick": 1,
+        "pattern_signature": [
+          0.06598984771573604,
+          0.0,
+          0.0,
+          0.0,
+          0.934010152284264,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.05656272661348803,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.5598259608411894,
+          0.7781000725163169,
+          0.436548223350254,
+          0.29804205946337936,
+          0.009427121102248004
+        ],
+        "subgraph": "kpk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0016_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0016",
+        "tier": "trial",
+        "consistency": 0.6825886240381493,
+        "promoted_tick": 1,
+        "pattern_signature": [
+          0.035,
+          0.0,
+          0.0,
+          0.0,
+          0.965,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.029999999999999995,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.5164285714285713,
+          0.7964285714285718,
+          0.5057142857142854,
+          0.28714285714285726,
+          0.004999999999999999
+        ],
+        "subgraph": "kpk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0017_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0017",
+        "tier": "trial",
+        "consistency": 0.6685645104728313,
+        "promoted_tick": 1,
+        "pattern_signature": [
+          0.05389221556886228,
+          0.0,
+          0.0,
+          0.0,
+          0.9461077844311377,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.04619332763045337,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.517536355859709,
+          0.800684345594525,
+          0.5106928999144565,
+          0.26689478186484183,
+          0.007698887938408895
+        ],
+        "subgraph": "kpk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0018_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0018",
+        "tier": "trial",
+        "consistency": 0.6785753296940715,
+        "promoted_tick": 1,
+        "pattern_signature": [
+          0.04,
+          0.0,
+          0.0,
+          0.0,
+          0.96,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.03428571428571428,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.47857142857142854,
+          0.815714285714286,
+          0.5657142857142857,
+          0.2835714285714286,
+          0.0057142857142857125
+        ],
+        "subgraph": "kpk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0019_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0019",
+        "tier": "trial",
+        "consistency": 0.6714230522691909,
+        "promoted_tick": 1,
+        "pattern_signature": [
+          0.05421686746987952,
+          0.0,
+          0.0,
+          0.0,
+          0.9457831325301205,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.046471600688468145,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.48278829604130813,
+          0.8141135972461273,
+          0.5438898450946642,
+          0.2857142857142857,
+          0.007745266781411357
+        ],
+        "subgraph": "kpk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0020_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0020",
+        "tier": "trial",
+        "consistency": 0.6520253081955836,
+        "promoted_tick": 1,
+        "pattern_signature": [
+          0.06735751295336788,
+          0.0,
+          0.0,
+          0.0,
+          0.9326424870466321,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.05773501110288675,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.5107327905255369,
+          0.792005921539601,
+          0.5114729829755734,
+          0.27313101406365664,
+          0.009622501850481122
+        ],
+        "subgraph": "kpk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0021_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0021",
+        "tier": "trial",
+        "consistency": 0.649730463671834,
+        "promoted_tick": 1,
+        "pattern_signature": [
+          0.0718954248366013,
+          0.0,
+          0.0,
+          0.0,
+          0.9281045751633987,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.06162464985994397,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.5256769374416436,
+          0.7861811391223147,
+          0.4976657329598508,
+          0.26610644257703076,
+          0.010270774976657326
+        ],
+        "subgraph": "kpk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0022_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0022",
+        "tier": "trial",
+        "consistency": 0.6508808391297236,
+        "promoted_tick": 1,
+        "pattern_signature": [
+          0.052083333333333336,
+          0.0,
+          0.0,
+          0.0,
+          0.9479166666666666,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.04464285714285713,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.4947916666666665,
+          0.7648809523809527,
+          0.5446428571428571,
+          0.3043154761904763,
+          0.007440476190476188
+        ],
+        "subgraph": "kpk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0023_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0023",
+        "tier": "trial",
+        "consistency": 0.6625899708164167,
+        "promoted_tick": 1,
+        "pattern_signature": [
+          0.027777777777777776,
+          0.0,
+          0.0,
+          0.0,
+          0.9722222222222222,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.023809523809523808,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.5039682539682542,
+          0.7718253968253966,
+          0.5138888888888891,
+          0.3273809523809523,
+          0.003968253968253968
+        ],
+        "subgraph": "kpk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0024_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0024",
+        "tier": "trial",
+        "consistency": 0.6489867841145209,
+        "promoted_tick": 1,
+        "pattern_signature": [
+          0.06329113924050633,
+          0.0,
+          0.0,
+          0.0,
+          0.9367088607594937,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.05424954792043398,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.5397830018083183,
+          0.8056057866184447,
+          0.4665461121157322,
+          0.27305605786618437,
+          0.00904159132007233
+        ],
+        "subgraph": "kpk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0025_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0025",
+        "tier": "trial",
+        "consistency": 0.6539310416977366,
+        "promoted_tick": 1,
+        "pattern_signature": [
+          0.06779661016949153,
+          0.0,
+          0.0,
+          0.0,
+          0.9322033898305084,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.05811138014527844,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.5677966101694917,
+          0.8111380145278451,
+          0.42978208232445514,
+          0.2445520581113801,
+          0.009685230024213072
+        ],
+        "subgraph": "kpk"
+      }
     }
   ],
   "edges": [
@@ -410,6 +1178,134 @@
       "weight": 0.5,
       "consolidate": true,
       "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0004_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0005_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0011_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0012_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0014_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0015_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0016_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0017_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0018_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0019_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0020_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0021_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0022_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0023_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0024_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0025_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
     }
   ],
   "stem_cells": [],
@@ -506,6 +1402,374 @@
         "weight": 0.5
       },
       "timestamp": "2026-01-08T19:23:18.433829"
+    },
+    {
+      "tick": 1,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0004_1",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-08T21:59:06.168910"
+    },
+    {
+      "tick": 1,
+      "event_type": "edge_added",
+      "target_id": "kpk_detect->TRIAL_stem_0004_1:SUB",
+      "details": {
+        "src": "kpk_detect",
+        "dst": "TRIAL_stem_0004_1",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-08T21:59:06.168938"
+    },
+    {
+      "tick": 1,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0005_1",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-08T21:59:06.170175"
+    },
+    {
+      "tick": 1,
+      "event_type": "edge_added",
+      "target_id": "kpk_detect->TRIAL_stem_0005_1:SUB",
+      "details": {
+        "src": "kpk_detect",
+        "dst": "TRIAL_stem_0005_1",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-08T21:59:06.170188"
+    },
+    {
+      "tick": 1,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0011_1",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-08T21:59:06.413551"
+    },
+    {
+      "tick": 1,
+      "event_type": "edge_added",
+      "target_id": "kpk_detect->TRIAL_stem_0011_1:SUB",
+      "details": {
+        "src": "kpk_detect",
+        "dst": "TRIAL_stem_0011_1",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-08T21:59:06.413573"
+    },
+    {
+      "tick": 1,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0012_1",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-08T21:59:06.414597"
+    },
+    {
+      "tick": 1,
+      "event_type": "edge_added",
+      "target_id": "kpk_detect->TRIAL_stem_0012_1:SUB",
+      "details": {
+        "src": "kpk_detect",
+        "dst": "TRIAL_stem_0012_1",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-08T21:59:06.414606"
+    },
+    {
+      "tick": 1,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0014_1",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-08T21:59:06.627283"
+    },
+    {
+      "tick": 1,
+      "event_type": "edge_added",
+      "target_id": "kpk_detect->TRIAL_stem_0014_1:SUB",
+      "details": {
+        "src": "kpk_detect",
+        "dst": "TRIAL_stem_0014_1",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-08T21:59:06.627305"
+    },
+    {
+      "tick": 1,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0015_1",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-08T21:59:06.628357"
+    },
+    {
+      "tick": 1,
+      "event_type": "edge_added",
+      "target_id": "kpk_detect->TRIAL_stem_0015_1:SUB",
+      "details": {
+        "src": "kpk_detect",
+        "dst": "TRIAL_stem_0015_1",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-08T21:59:06.628366"
+    },
+    {
+      "tick": 1,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0016_1",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-08T21:59:06.852891"
+    },
+    {
+      "tick": 1,
+      "event_type": "edge_added",
+      "target_id": "kpk_detect->TRIAL_stem_0016_1:SUB",
+      "details": {
+        "src": "kpk_detect",
+        "dst": "TRIAL_stem_0016_1",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-08T21:59:06.852912"
+    },
+    {
+      "tick": 1,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0017_1",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-08T21:59:06.853962"
+    },
+    {
+      "tick": 1,
+      "event_type": "edge_added",
+      "target_id": "kpk_detect->TRIAL_stem_0017_1:SUB",
+      "details": {
+        "src": "kpk_detect",
+        "dst": "TRIAL_stem_0017_1",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-08T21:59:06.853987"
+    },
+    {
+      "tick": 1,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0018_1",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-08T21:59:07.089093"
+    },
+    {
+      "tick": 1,
+      "event_type": "edge_added",
+      "target_id": "kpk_detect->TRIAL_stem_0018_1:SUB",
+      "details": {
+        "src": "kpk_detect",
+        "dst": "TRIAL_stem_0018_1",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-08T21:59:07.089113"
+    },
+    {
+      "tick": 1,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0019_1",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-08T21:59:07.090267"
+    },
+    {
+      "tick": 1,
+      "event_type": "edge_added",
+      "target_id": "kpk_detect->TRIAL_stem_0019_1:SUB",
+      "details": {
+        "src": "kpk_detect",
+        "dst": "TRIAL_stem_0019_1",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-08T21:59:07.090276"
+    },
+    {
+      "tick": 1,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0020_1",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-08T21:59:07.340485"
+    },
+    {
+      "tick": 1,
+      "event_type": "edge_added",
+      "target_id": "kpk_detect->TRIAL_stem_0020_1:SUB",
+      "details": {
+        "src": "kpk_detect",
+        "dst": "TRIAL_stem_0020_1",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-08T21:59:07.340505"
+    },
+    {
+      "tick": 1,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0021_1",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-08T21:59:07.341714"
+    },
+    {
+      "tick": 1,
+      "event_type": "edge_added",
+      "target_id": "kpk_detect->TRIAL_stem_0021_1:SUB",
+      "details": {
+        "src": "kpk_detect",
+        "dst": "TRIAL_stem_0021_1",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-08T21:59:07.341723"
+    },
+    {
+      "tick": 1,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0022_1",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-08T21:59:07.603999"
+    },
+    {
+      "tick": 1,
+      "event_type": "edge_added",
+      "target_id": "kpk_detect->TRIAL_stem_0022_1:SUB",
+      "details": {
+        "src": "kpk_detect",
+        "dst": "TRIAL_stem_0022_1",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-08T21:59:07.604021"
+    },
+    {
+      "tick": 1,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0023_1",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-08T21:59:07.605809"
+    },
+    {
+      "tick": 1,
+      "event_type": "edge_added",
+      "target_id": "kpk_detect->TRIAL_stem_0023_1:SUB",
+      "details": {
+        "src": "kpk_detect",
+        "dst": "TRIAL_stem_0023_1",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-08T21:59:07.605826"
+    },
+    {
+      "tick": 1,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0024_1",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-08T21:59:07.947405"
+    },
+    {
+      "tick": 1,
+      "event_type": "edge_added",
+      "target_id": "kpk_detect->TRIAL_stem_0024_1:SUB",
+      "details": {
+        "src": "kpk_detect",
+        "dst": "TRIAL_stem_0024_1",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-08T21:59:07.947428"
+    },
+    {
+      "tick": 1,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0025_1",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-08T21:59:07.949313"
+    },
+    {
+      "tick": 1,
+      "event_type": "edge_added",
+      "target_id": "kpk_detect->TRIAL_stem_0025_1:SUB",
+      "details": {
+        "src": "kpk_detect",
+        "dst": "TRIAL_stem_0025_1",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-08T21:59:07.949327"
     }
   ]
 }
