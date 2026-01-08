@@ -33,7 +33,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import chess
 
-from recon_lite.graph import Graph, Node, NodeType, NodeState
+from recon_lite.graph import Graph, Node, NodeType, NodeState, LinkType
 from recon_lite.trace_db import EpisodeRecord, TickRecord, TraceDB, EpisodeSummary
 from recon_lite.models.registry import TopologyRegistry
 from recon_lite.learning.m5_structure import (
@@ -91,6 +91,18 @@ try:
     HAS_PLASTICITY = True
 except ImportError:
     HAS_PLASTICITY = False
+
+# ========== CONSOLIDATION IMPORTS (M4: cross-game weight persistence) ==========
+try:
+    from recon_lite.plasticity.consolidate import (
+        ConsolidationEngine,
+        ConsolidationConfig,
+    )
+    HAS_CONSOLIDATION = True
+except ImportError:
+    HAS_CONSOLIDATION = False
+    ConsolidationEngine = None
+    ConsolidationConfig = None
     PlasticityConfig = None
     ReConEngine = None
     GatingSchedule = None
@@ -304,6 +316,9 @@ def play_krk_game_recon(
     active_nodes_log = []
     game_tick = 0
     
+    # ========== TRACK EDGE ACTIVATIONS FOR CONSOLIDATION ==========
+    edge_activations: Dict[str, float] = {}  # Track which edges fired during game
+    
     # ========== PLASTICITY INITIALIZATION (M3: per-game weight adaptation) ==========
     plasticity_state = None
     plasticity_config = None
@@ -362,6 +377,17 @@ def play_krk_game_recon(
             ]
             if active:
                 active_nodes_log.extend(active)
+            
+            # Track edge activations for consolidation (M4)
+            for e in graph.edges:
+                src_node = graph.nodes.get(e.src)
+                dst_node = graph.nodes.get(e.dst)
+                if src_node and dst_node:
+                    src_ok = src_node.state in (NodeState.TRUE, NodeState.CONFIRMED)
+                    dst_ok = dst_node.state in (NodeState.REQUESTED, NodeState.TRUE, NodeState.CONFIRMED)
+                    if src_ok and dst_ok:
+                        edge_key = f"{e.src}->{e.dst}:{e.ltype.name}"
+                        edge_activations[edge_key] = edge_activations.get(edge_key, 0.0) + 1.0
             
             # Check for suggested move after min ticks
             if ticks_this_move >= config.min_internal_ticks:
@@ -510,6 +536,9 @@ def play_krk_game_recon(
     else:
         result = "draw"
     
+    # Compute outcome score for consolidation
+    outcome_score = 1.0 if result == "win" else (-0.5 if result == "stalemate" else 0.0)
+    
     # ========== PLASTICITY FINAL UPDATE & RESET (M3: end-of-game signal) ==========
     if HAS_PLASTICITY and plasticity_state and plasticity_config:
         # Apply final reward signal based on game outcome
@@ -538,7 +567,8 @@ def play_krk_game_recon(
     except:
         pass
     
-    return result, move_count, box_escaped, active_nodes_log
+    # Return edge activations for consolidation
+    return result, move_count, box_escaped, active_nodes_log, edge_activations
 
 
 # ============================================================================
@@ -578,6 +608,17 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
     engine = None
     graph = None
     stem_manager = None
+    consolidation_engine = None
+    
+    # ========== INITIALIZE CONSOLIDATION ENGINE (M4: cross-game weight persistence) ==========
+    if HAS_CONSOLIDATION and config.mode == "recon":
+        consolidation_config = ConsolidationConfig(
+            eta_consolidate=config.consolidate_eta,
+            min_episodes=10,  # Apply after 10 games
+            enabled=True,
+        )
+        consolidation_engine = ConsolidationEngine(consolidation_config)
+        print(f"  Consolidation enabled: eta={config.consolidate_eta}, min_episodes=10")
     
     if config.mode == "recon":
         print(f"\nUsing RECON ENGINE mode with M5={config.enable_m5}")
@@ -598,6 +639,17 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
         
         if HAS_ENGINE:
             engine = ReConEngine(graph)
+            
+            # Initialize consolidation engine with graph edges
+            if consolidation_engine:
+                # Get all KRK edges for consolidation
+                krk_edges = [
+                    f"{e.src}->{e.dst}:{e.ltype.name}"
+                    for e in graph.edges
+                    if e.ltype in (LinkType.POR, LinkType.SUB) and ("krk" in e.src.lower() or "krk" in e.dst.lower())
+                ]
+                consolidation_engine.init_from_graph(graph, edge_whitelist=krk_edges)
+                print(f"  Consolidation tracking {len(krk_edges)} KRK edges")
             
             # Setup gating
             if config.enable_gating and GatingSchedule:
@@ -699,7 +751,7 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                 
                 # Play game based on mode
                 if config.mode == "recon" and engine and graph:
-                    result, move_count, box_escaped, active_log = play_krk_game_recon(
+                    result, move_count, box_escaped, active_log, edge_activations = play_krk_game_recon(
                         board=board,
                         engine=engine,
                         graph=graph,
@@ -710,6 +762,39 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                     # Count active nodes for M5 analysis
                     for nid in active_log:
                         active_node_counts[nid] = active_node_counts.get(nid, 0) + 1
+                    
+                    # ========== CONSOLIDATION: Accumulate episode (M4) ==========
+                    if consolidation_engine:
+                        # Compute outcome score
+                        outcome_score = 1.0 if result == "win" else (-0.5 if result == "stalemate" else 0.0)
+                        
+                        # Compute reward (same as used in plasticity)
+                        optimal_moves = stage.get_optimal_moves(board)
+                        reward = krk_reward(
+                            won=(result == "win"),
+                            move_count=move_count,
+                            optimal_moves=optimal_moves,
+                            box_grew=box_escaped,
+                            stalemate=(result == "stalemate"),
+                        )
+                        
+                        # Create episode summary
+                        episode_summary = EpisodeSummary(
+                            edge_delta_sums={k: v * outcome_score for k, v in edge_activations.items()},
+                            outcome_score=outcome_score,
+                            avg_reward_tick=reward,
+                            total_reward_tick=reward,
+                            reward_tick_count=1,
+                        )
+                        
+                        # Accumulate for consolidation
+                        consolidation_engine.accumulate_episode(episode_summary)
+                        
+                        # Apply consolidation if threshold reached
+                        if consolidation_engine.should_apply():
+                            deltas = consolidation_engine.apply_to_graph(graph)
+                            print(f"    [CONSOLIDATION] Applied {len(deltas)} weight updates")
+                else:
                 else:
                     result, move_count, box_escaped = play_krk_game_simple(
                         board=board,

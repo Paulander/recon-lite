@@ -505,8 +505,9 @@ def play_training_game(
         #     print(f"    Tick {state.tick}: {lock_info}, kpk={kpk_policy}, kqk={kqk_policy}")
         
         # Check for endgame policy suggestions (KRK/KPK/KQK) before other logic
+        # NOTE: KRK writes to "krk_root", not "krk" (for consistency with root node naming)
         suggested_move_uci = None
-        for key in ("kqk", "krk", "kpk"):
+        for key in ("kqk", "krk_root", "krk", "kpk"):  # Check krk_root first, then legacy krk
             pol = env.get(key, {}).get("policy") if isinstance(env.get(key), dict) else None
             if pol and pol.get("suggested_move"):
                 suggested_move_uci = pol["suggested_move"]
