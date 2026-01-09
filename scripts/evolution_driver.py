@@ -968,6 +968,36 @@ def _play_single_game(
     
     ep.result = {"win": "1-0", "loss": "0-1", "draw": "1/2-1/2"}.get(result, "1/2-1/2")
     
+    # M3 PLASTICITY: Apply weight updates based on game outcome
+    # This enables the arbiter to LEARN which move sources lead to wins
+    reward = 1.0 if result == "win" else (-0.5 if result == "loss" else 0.1)
+    
+    # Update arbiter's learned_weights based on selected source
+    arbiter_node = graph.nodes.get("kpk_arbiter")
+    if arbiter_node:
+        learned_weights = arbiter_node.meta.setdefault("learned_weights", {})
+        selected_source = arbiter_node.meta.get("selected_source", "")
+        
+        if selected_source and abs(reward) > 0.1:  # Only update on meaningful results
+            # Apply M3 fast weight update (Hebbian-like)
+            current = learned_weights.get(selected_source, 1.0)
+            delta = 0.05 * reward  # Small learning rate
+            learned_weights[selected_source] = max(0.1, min(2.0, current + delta))
+            
+            # Also track move-specific learning if available
+            last_selected = env.get("last_selected_move", {})
+            if last_selected and result == "win":
+                move_key = f"{selected_source}:{last_selected.get('move', '')}"
+                learned_weights[move_key] = learned_weights.get(move_key, 1.0) + 0.02
+                
+                # Boost promotion learning
+                if last_selected.get("is_promotion"):
+                    learned_weights["promotion_bonus"] = learned_weights.get("promotion_bonus", 1.0) + 0.03
+            
+            ep.notes = ep.notes or {}
+            ep.notes["plasticity_delta"] = delta
+            ep.notes["learned_source"] = selected_source
+    
     # M5.1: Apply scent reward for draws showing King→Pawn approach
     if apply_scent_shaping and result == "draw" and stem_manager and HAS_STEM_CELL:
         scent = compute_scent_reward(start_board, board, our_color, result)
@@ -1413,6 +1443,18 @@ def run_evolution_training(config: EvolutionConfig) -> List[CycleResult]:
                     print(f"  🌿 Branching: spec_ANDs={spec_ands}  branch_factor={branch_factor}  POR_edges={por_count} ({por_ratio:.1%})")
         except Exception:
             pass  # Silent fail on hierarchy computation
+    
+    # M4 CONSOLIDATION: At stage-end, log and persist learned weights
+    try:
+        arbiter_spec = registry._nodes.get("kpk_arbiter") if registry else None
+        if arbiter_spec and hasattr(arbiter_spec, "meta") and arbiter_spec.meta:
+            learned_weights = arbiter_spec.meta.get("learned_weights", {})
+            if learned_weights:
+                print(f"\n  📊 M4 Consolidation: {len(learned_weights)} learned weight adjustments")
+                for k, v in sorted(learned_weights.items())[:5]:  # Show top 5
+                    print(f"    {k}: {v:.3f}")
+    except Exception:
+        pass  # Silent fail on M4 logging
     
     # Final report
     print(f"\n{'='*60}")
