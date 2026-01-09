@@ -1397,6 +1397,15 @@ class StructureLearner:
             if ticks:
                 current_tick = getattr(ticks[-1], 'tick_id', 0)
         
+        # CRITICAL: Initialize graph ONCE at the start and reuse throughout
+        # This ensures spawned packs/structures are preserved across steps
+        graph = None
+        try:
+            from recon_lite_chess.graph.builder import build_graph_from_topology
+            graph = build_graph_from_topology(self.registry.path, self.registry)
+        except Exception:
+            pass  # Will try again later if needed
+        
         # Step 1: Find spikes
         spikes = self.scan_for_affordance_spikes(episodes)
         
@@ -1586,7 +1595,8 @@ class StructureLearner:
         if len(trial_cells) >= 2:  # Need at least 2 to hoist
             try:
                 from recon_lite_chess.graph.builder import build_graph_from_topology
-                graph = build_graph_from_topology(self.registry.topology_path, self.registry)
+                if graph is None:
+                    graph = build_graph_from_topology(self.registry.topology_path, self.registry)
                 hoisted_clusters = stem_manager.auto_hoist(
                     graph,
                     parent_node_id="kpk_execute",  # Managers connect to execute for move influence
@@ -1649,7 +1659,8 @@ class StructureLearner:
                 
                 # Trigger speculative hoist
                 from recon_lite_chess.graph.builder import build_graph_from_topology
-                graph = build_graph_from_topology(self.registry.topology_path, self.registry)
+                if graph is None:
+                    graph = build_graph_from_topology(self.registry.topology_path, self.registry)
                 
                 cluster_id = stem_manager.hoist_cluster(
                     [cell_a_id, cell_b_id],
@@ -1725,7 +1736,8 @@ class StructureLearner:
                     if cell_a and cell_b:
                         try:
                             from recon_lite_chess.graph.builder import build_graph_from_topology
-                            graph = build_graph_from_topology(self.registry.topology_path, self.registry)
+                            if graph is None:
+                                graph = build_graph_from_topology(self.registry.topology_path, self.registry)
                             
                             cluster_id = stem_manager.hoist_cluster(
                                 [cell_a_id, cell_b_id],
@@ -1888,7 +1900,9 @@ class StructureLearner:
         discovered_por_chains: List[Tuple[str, str, float]] = []
         try:
             from recon_lite_chess.graph.builder import build_graph_from_topology
-            graph = build_graph_from_topology(self.registry.topology_path, self.registry)
+            # Only rebuild graph if we don't already have one with spawned packs
+            if 'graph' not in locals() or graph is None:
+                graph = build_graph_from_topology(self.registry.topology_path, self.registry)
             
             discovered_por_chains = discover_por_chains(
                 graph=graph,
@@ -1915,7 +1929,8 @@ class StructureLearner:
             
             if is_krk_domain and episodes:
                 from recon_lite_chess.graph.builder import build_graph_from_topology
-                graph = build_graph_from_topology(self.registry.topology_path, self.registry)
+                if graph is None:
+                    graph = build_graph_from_topology(self.registry.topology_path, self.registry)
                 
                 krk_box_method_results = discover_krk_box_method_por(
                     graph=graph,
@@ -1979,6 +1994,9 @@ class StructureLearner:
             "promotion_errors": trial_errors,
             "pruning_results": [r.edge_key for r in pruning_results if r.pruned],
             "current_tick": current_tick,
+            # CRITICAL: Return the final graph with all spawned packs
+            # This allows the snapshot to capture dynamically created topology
+            "graph": graph if 'graph' in dir() else None,
         }
 
 

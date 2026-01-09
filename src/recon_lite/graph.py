@@ -323,6 +323,46 @@ class Graph:
                 return e
         return None
 
+    def to_snapshot(self) -> Dict[str, Any]:
+        """
+        Export the full graph state to a snapshot dictionary.
+        
+        This captures ALL nodes and edges (including dynamically spawned packs)
+        for persistence across training cycles.
+        
+        Returns:
+            Dict with "nodes" and "edges" keys, suitable for JSON serialization.
+        """
+        snapshot = {"nodes": {}, "edges": {}}
+        
+        # Export all nodes
+        for nid, node in self.nodes.items():
+            node_entry = {
+                "id": nid,
+                "type": node.ntype.name,  # "SCRIPT" or "TERMINAL"
+                "meta": node.meta.copy() if node.meta else {},
+            }
+            # Include factory if present in meta
+            if "factory" in node.meta:
+                node_entry["factory"] = node.meta["factory"]
+            snapshot["nodes"][nid] = node_entry
+        
+        # Export all edges
+        for edge in self.edges:
+            edge_key = f"{edge.src}->{edge.dst}:{edge.ltype.name}"
+            edge_entry = {
+                "src": edge.src,
+                "dst": edge.dst,
+                "type": edge.ltype.name,  # "SUB", "SUR", "POR", "RET"
+                "weight": edge.w if isinstance(edge.w, (int, float)) else 1.0,
+            }
+            # Include meta if present
+            if edge.meta:
+                edge_entry.update(edge.meta)
+            snapshot["edges"][edge_key] = edge_entry
+        
+        return snapshot
+
     # =========================================================================
     # CONTINUOUS ACTIVATION PROPAGATION (Section 3.1)
     # =========================================================================

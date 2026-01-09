@@ -362,6 +362,9 @@ class EvolutionConfig:
     heuristic_prob_ramp_stage: int = 3    # Stage at which heuristic reaches 0.0
     heuristic_usage_log: bool = True      # Log heuristic usage %
     
+    # Performance: skip snapshots for pure metric testing
+    skip_snapshots: bool = False          # --no-snapshots flag
+    
     def get_heuristic_prob(self) -> float:
         """Get heuristic probability for current stage."""
         if self.current_stage_idx >= self.heuristic_prob_ramp_stage:
@@ -391,7 +394,7 @@ def run_online_phase(
     stem_manager: Optional["StemCellManager"],
     cycle: int,
     apply_scent_shaping: bool = False,  # M5.1: Stall recovery scent reward
-) -> Tuple[List[EpisodeRecord], Dict[str, Any]]:
+) -> Tuple[List[EpisodeRecord], Dict[str, Any], "Graph"]:
     """
     Online Phase (ThinkPad/Teacher):
     - Play N KPK games
@@ -560,7 +563,7 @@ def run_online_phase(
         "sensor_reuse_ratio": sensor_reuse_ratio,
     }
     
-    return episodes, stats
+    return episodes, stats, graph
 
 
 def _think_harder(
@@ -1067,6 +1070,7 @@ def run_structural_phase(
 def save_cycle_snapshot(
     config: EvolutionConfig,
     registry: TopologyRegistry,
+    graph: "Graph",  # NEW: Use graph as source of truth for snapshot
     old_snapshot: Dict[str, Any],
     cycle: int,
     stem_manager: Any = None,  # Optional: include TRIAL cells
@@ -1077,11 +1081,14 @@ def save_cycle_snapshot(
     If stem_manager is provided, TRIAL cells are included in the snapshot
     as visualization-only nodes (group="trial").
     
+    CRITICAL: Uses graph.to_snapshot() to capture ALL nodes including
+    dynamically spawned packs (AND/OR gates, etc.)
+    
     Returns:
         (topology_json_path, evolution_png_path)
     """
-    # Get new snapshot from registry
-    new_snapshot = registry.get_snapshot()
+    # Get new snapshot from GRAPH (not registry!) - this captures spawned packs
+    new_snapshot = graph.to_snapshot()
     
     # Add/update TRIAL cells in snapshot for visualization
     # NOTE: TRIAL nodes are now added via promote_to_trial() which includes
@@ -1234,7 +1241,7 @@ def run_evolution_training(config: EvolutionConfig) -> List[CycleResult]:
         
         # Online Phase - with scent shaping during stall recovery
         print(f"  Online Phase: Playing {config.games_per_cycle} games...")
-        episodes, online_stats = run_online_phase(
+        episodes, online_stats, graph = run_online_phase(  # Now returns graph!
             config=config,
             registry=registry,
             stem_manager=stem_manager,
@@ -1398,15 +1405,21 @@ def run_evolution_training(config: EvolutionConfig) -> List[CycleResult]:
         for err in struct_stats.get('trial_errors', [])[:2]:
             print(f"    ⚠ {err}")
         
-        # Snapshot
-        print("  Saving snapshot...")
-        json_path, png_path = save_cycle_snapshot(
-            config=config,
-            registry=registry,
-            old_snapshot=old_snapshot,
-            cycle=cycle,
-            stem_manager=stem_manager,  # Include TRIAL cells for visualization
-        )
+        # Snapshot (skip if --no-snapshots for faster metric runs)
+        json_path, png_path = None, None
+        if not config.skip_snapshots:
+            print("  Saving snapshot...")
+            # Use structural phase graph if available (contains spawned packs)
+            # Fallback to online phase graph if structural phase didn't build one
+            snapshot_graph = struct_stats.get('graph') or graph
+            json_path, png_path = save_cycle_snapshot(
+                config=config,
+                registry=registry,
+                graph=snapshot_graph,  # Prefer structural phase graph with packs
+                old_snapshot=old_snapshot,
+                cycle=cycle,
+                stem_manager=stem_manager,  # Include TRIAL cells for visualization
+            )
         
         cycle_duration = time.time() - cycle_start
         
@@ -1577,6 +1590,11 @@ def main():
         help="Mandatory internal tick depth before allowing move suggestion (0=disabled). "
              "Set to 3+ during Structural Spurt to ensure TRIAL nodes activate."
     )
+    parser.add_argument(
+        "--no-snapshots",
+        action="store_true",
+        help="Skip saving topology snapshots (faster for pure metric testing)"
+    )
     
     args = parser.parse_args()
     
@@ -1621,6 +1639,7 @@ def main():
             stage_promotion_threshold=args.win_threshold,
             stem_cells_load_path=prev_stem_cells_path,  # Inherit stem cells
             min_internal_ticks=args.min_tick_depth,  # Mandatory tick depth for TRIAL activation
+            skip_snapshots=args.no_snapshots,  # --no-snapshots for faster metric runs
         )
         
         # Ensure directories exist
