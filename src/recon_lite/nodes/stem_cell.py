@@ -967,9 +967,30 @@ class StemCellTerminal:
                 sentinel_fn = lambda env: env.get("reward", 0) > 0.3
                 actuator_fn = self._make_exploration_actuator_fn()
                 depth = self.metadata.get("depth", 0) + 1
-                # Packs need SCRIPT parent nodes (TERMINAL nodes can't have SUB children)
-                # Use kpk_execute or kpk_detect as parent, NOT the TRIAL node itself
-                parent_id = "kpk_execute" if "kpk_execute" in graph.nodes else "kpk_detect"
+                
+                # VERTICAL GROWTH: Try to spawn from TRIAL nodes for deeper hierarchies
+                # 50% chance to use a TRIAL node as parent (if available)
+                # This creates depth 3+ structures instead of everything at depth 2
+                parent_id = None
+                trial_parent_candidates = []
+                
+                # Find TRIAL/SOLID nodes that can be parents (SCRIPT type only)
+                for nid, node in graph.nodes.items():
+                    if nid.startswith("TRIAL_") or nid.startswith("SOLID_"):
+                        # Only SCRIPT nodes can have SUB children
+                        if node.ntype.name == "SCRIPT":
+                            trial_parent_candidates.append(nid)
+                    # Also include promoted pack gates as candidates
+                    elif "_gate" in nid and node.ntype.name == "SCRIPT":
+                        trial_parent_candidates.append(nid)
+                
+                # 50% chance to use TRIAL parent if available
+                if trial_parent_candidates and random.random() < 0.5:
+                    parent_id = random.choice(trial_parent_candidates)
+                    print(f"      🌲 VERTICAL GROWTH: Spawning under {parent_id}")
+                else:
+                    # Fallback to backbone nodes
+                    parent_id = "kpk_execute" if "kpk_execute" in graph.nodes else "kpk_detect"
                 
                 pack_ids = {}
                 

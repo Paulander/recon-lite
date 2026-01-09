@@ -3498,6 +3498,654 @@
         "birth_game": 0,
         "prune_after_games": 50
       }
+    },
+    {
+      "id": "cluster_0004",
+      "type": "SCRIPT",
+      "group": "hoisted",
+      "factory": null,
+      "meta": {
+        "cluster_members": [
+          "stem_0000",
+          "stem_0001"
+        ],
+        "pattern_signature": [
+          0.038029429310001986,
+          0.48429111155299265,
+          0.1545535891827401,
+          0.29379598329687806,
+          0.02932988665738715,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.032596653694287415,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.500610743402551,
+          0.7669161719171655,
+          0.47765815413459084,
+          0.2820995369712807,
+          0.006767889100360764,
+          0.4038008124307589,
+          0.5419140414169246,
+          0.6686788057835976,
+          0.08396301451580832,
+          0.0,
+          0.9674033463057126,
+          0.9885592137033776,
+          0.034649035593557365
+        ],
+        "origin": "hoisted",
+        "aggregation": "and",
+        "speculative": true,
+        "birth_game": 0,
+        "prune_after_games": 50
+      }
+    },
+    {
+      "id": "cluster_0019",
+      "type": "SCRIPT",
+      "group": "hoisted",
+      "factory": null,
+      "meta": {
+        "cluster_members": [
+          "stem_0000",
+          "stem_0001",
+          "stem_0002",
+          "stem_0003",
+          "stem_0005",
+          "stem_0006",
+          "stem_0007",
+          "stem_0008"
+        ],
+        "pattern_signature": [
+          0.04323350348835604,
+          0.3979462842200661,
+          0.10778435600535599,
+          0.19882214062992584,
+          0.252213715656296,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.03705728870430518,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.48446576135395497,
+          0.7787832976150271,
+          0.49808091650989766,
+          0.3073164332071228,
+          0.008873279005871341,
+          0.44298981475873067,
+          0.5272928003570013,
+          0.6698152312027972,
+          0.0863401077009085,
+          0.0,
+          0.9629427112956948,
+          0.9862668758159424,
+          0.03390386911441214
+        ],
+        "origin": "hoisted",
+        "aggregation": "and",
+        "speculative": true,
+        "birth_game": 0,
+        "prune_after_games": 50
+      }
+    },
+    {
+      "id": "cluster_0022",
+      "type": "SCRIPT",
+      "group": "hoisted",
+      "factory": null,
+      "meta": {
+        "cluster_members": [
+          "stem_0000",
+          "stem_0001",
+          "stem_0002",
+          "stem_0003",
+          "stem_0005",
+          "stem_0006",
+          "stem_0007",
+          "stem_0008",
+          "stem_0009",
+          "stem_0010"
+        ],
+        "pattern_signature": [
+          0.03458680279068484,
+          0.39035702737605293,
+          0.10122748480428478,
+          0.21455771250394068,
+          0.2592709725250368,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.029645830963444142,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.48592975194030685,
+          0.7795266380920218,
+          0.49332187606506095,
+          0.31306743227998396,
+          0.007098623204697073,
+          0.44332042323555604,
+          0.522834240285601,
+          0.6689950421050948,
+          0.09157208616072679,
+          0.0,
+          0.9703541690365558,
+          0.9890135006527541,
+          0.034123095291529716
+        ],
+        "origin": "hoisted",
+        "aggregation": "and",
+        "speculative": true,
+        "birth_game": 0,
+        "prune_after_games": 50
+      }
+    },
+    {
+      "id": "cluster_0025",
+      "type": "SCRIPT",
+      "group": "hoisted",
+      "factory": null,
+      "meta": {
+        "cluster_members": [
+          "stem_0000",
+          "stem_0001",
+          "stem_0002",
+          "stem_0003",
+          "stem_0005",
+          "stem_0006",
+          "stem_0007",
+          "stem_0008",
+          "stem_0009",
+          "stem_0010",
+          "stem_0011",
+          "stem_0013"
+        ],
+        "pattern_signature": [
+          0.02882233565890403,
+          0.3811308561467108,
+          0.09477290400357065,
+          0.2308814270866172,
+          0.26439247710419733,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.02470485913620345,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.4885724123312081,
+          0.7800817222195421,
+          0.4915777538637412,
+          0.31606809832855803,
+          0.005915519337247561,
+          0.4429455907915349,
+          0.5205166288094294,
+          0.668507773182817,
+          0.09547673846727234,
+          0.0,
+          0.9752951408637965,
+          0.990844583877295,
+          0.03468591274294143
+        ],
+        "origin": "hoisted",
+        "aggregation": "and",
+        "speculative": true,
+        "birth_game": 0,
+        "prune_after_games": 50
+      }
+    },
+    {
+      "id": "cluster_0028",
+      "type": "SCRIPT",
+      "group": "hoisted",
+      "factory": null,
+      "meta": {
+        "cluster_members": [
+          "stem_0000",
+          "stem_0001",
+          "stem_0002",
+          "stem_0003",
+          "stem_0005",
+          "stem_0006",
+          "stem_0007",
+          "stem_0008",
+          "stem_0009",
+          "stem_0010",
+          "stem_0011",
+          "stem_0013",
+          "stem_0014",
+          "stem_0015"
+        ],
+        "pattern_signature": [
+          0.024704859136203454,
+          0.3613264481257521,
+          0.086948203431632,
+          0.2546840803599576,
+          0.2723364089464549,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.021175593545317246,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.49357227179409674,
+          0.7798659659840974,
+          0.4920156257607578,
+          0.31673183938366206,
+          0.005070445146212195,
+          0.4428819349641727,
+          0.5188101716325721,
+          0.667292377013843,
+          0.09576577582909056,
+          0.0,
+          0.9788244064546827,
+          0.9921525004662529,
+          0.03544506806537837
+        ],
+        "origin": "hoisted",
+        "aggregation": "and",
+        "speculative": true,
+        "birth_game": 0,
+        "prune_after_games": 50
+      }
+    },
+    {
+      "id": "TRIAL_stem_0018_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0018",
+        "tier": "trial",
+        "consistency": 0.3739078841491098,
+        "promoted_tick": 1,
+        "pattern_signature": [
+          0.0,
+          0.295,
+          0.02,
+          0.335,
+          0.35,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.4849999999999999,
+          0.7671428571428578,
+          0.49000000000000005,
+          0.3257142857142859,
+          0.0,
+          0.4850000000000004,
+          0.49999999999999994,
+          0.6692857142857146,
+          0.07,
+          0.0,
+          1.0,
+          1.0,
+          0.035
+        ],
+        "subgraph": "kpk"
+      }
+    },
+    {
+      "id": "cluster_0031",
+      "type": "SCRIPT",
+      "group": "hoisted",
+      "factory": null,
+      "meta": {
+        "cluster_members": [
+          "stem_0000",
+          "stem_0001",
+          "stem_0002",
+          "stem_0003",
+          "stem_0005",
+          "stem_0006",
+          "stem_0007",
+          "stem_0008",
+          "stem_0009",
+          "stem_0010",
+          "stem_0011",
+          "stem_0013",
+          "stem_0014",
+          "stem_0015",
+          "stem_0017",
+          "stem_0018"
+        ],
+        "pattern_signature": [
+          0.02161675174417802,
+          0.35334814211003307,
+          0.078579678002678,
+          0.2644110703149629,
+          0.282044357828148,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.01852864435215259,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.49276859496269176,
+          0.7782309345217996,
+          0.4918976011120917,
+          0.31794393088927575,
+          0.004436639502935671,
+          0.4481020502365083,
+          0.516324971607072,
+          0.667541544172827,
+          0.09285755385045424,
+          0.0,
+          0.9814713556478474,
+          0.9931334379079713,
+          0.03538943455720608
+        ],
+        "origin": "hoisted",
+        "aggregation": "and",
+        "speculative": true,
+        "birth_game": 0,
+        "prune_after_games": 50
+      }
+    },
+    {
+      "id": "cluster_0006",
+      "type": "SCRIPT",
+      "group": "hoisted",
+      "factory": null,
+      "meta": {
+        "cluster_members": [
+          "stem_0000",
+          "stem_0001"
+        ],
+        "pattern_signature": [
+          0.07555615843733043,
+          0.450488334237656,
+          0.11591155724362452,
+          0.21866521975040693,
+          0.13937873033098208,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0647624215177118,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.5322649407022713,
+          0.7972056429734127,
+          0.5279241919231066,
+          0.31098364467870687,
+          0.010793736919618633,
+          0.449093093558639,
+          0.5334082629253547,
+          0.6991996744438413,
+          0.12106619641888225,
+          0.0,
+          0.9352375784822882,
+          0.9750600728625688,
+          0.05208898534997287
+        ],
+        "origin": "hoisted",
+        "aggregation": "and",
+        "speculative": true,
+        "birth_game": 0,
+        "prune_after_games": 50
+      }
+    },
+    {
+      "id": "cluster_0013",
+      "type": "SCRIPT",
+      "group": "hoisted",
+      "factory": null,
+      "meta": {
+        "cluster_members": [
+          "stem_0000",
+          "stem_0001",
+          "stem_0002",
+          "stem_0003"
+        ],
+        "pattern_signature": [
+          0.06981088080749218,
+          0.3371027102670117,
+          0.15005008318968976,
+          0.29946330370568586,
+          0.14357302203012043,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.059837897834993284,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.503207234910044,
+          0.7889042043885118,
+          0.5294339391289569,
+          0.29840387857064854,
+          0.010544997286585076,
+          0.4448475635919643,
+          0.5243897157867394,
+          0.6784371380465363,
+          0.08455769940106135,
+          0.0,
+          0.9401621021650067,
+          0.9789498217199915,
+          0.04206089346939991
+        ],
+        "origin": "hoisted",
+        "aggregation": "and",
+        "speculative": true,
+        "birth_game": 0,
+        "prune_after_games": 50
+      }
+    },
+    {
+      "id": "cluster_0009",
+      "type": "SCRIPT",
+      "group": "hoisted",
+      "factory": null,
+      "meta": {
+        "cluster_members": [
+          "stem_0000",
+          "stem_0001"
+        ],
+        "pattern_signature": [
+          0.051551870748299325,
+          0.28348214285714285,
+          0.34024234693877553,
+          0.020620748299319726,
+          0.3041028911564626,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.04418731778425656,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.5147594752186587,
+          0.7997145286686096,
+          0.5787931243926141,
+          0.29159074344023306,
+          0.007364552964042759,
+          0.4735027939747329,
+          0.5257987123420796,
+          0.6752763605442176,
+          0.09789540816326531,
+          0.0,
+          0.9558126822157436,
+          0.9882167152575315,
+          0.06186224489795918
+        ],
+        "origin": "hoisted",
+        "aggregation": "and",
+        "speculative": true,
+        "birth_game": 0,
+        "prune_after_games": 50
+      }
     }
   ],
   "edges": [
@@ -4068,6 +4716,86 @@
       "weight": 0.5,
       "consolidate": true,
       "confirmation_count": 0
+    },
+    {
+      "src": "kpk_execute",
+      "dst": "cluster_0004",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_execute",
+      "dst": "cluster_0019",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_execute",
+      "dst": "cluster_0022",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_execute",
+      "dst": "cluster_0025",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_execute",
+      "dst": "cluster_0028",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0018_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_execute",
+      "dst": "cluster_0031",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_execute",
+      "dst": "cluster_0006",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_execute",
+      "dst": "cluster_0013",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_execute",
+      "dst": "cluster_0009",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
     }
   ],
   "stem_cell_targets": [
@@ -4082,7 +4810,7 @@
       "initial_slots": 5
     }
   ],
-  "last_modified": "2026-01-09T23:10:00.915537",
+  "last_modified": "2026-01-09T23:31:45.729325",
   "evolution_history": [
     {
       "tick": 50,
@@ -5463,6 +6191,236 @@
         "weight": 0.5
       },
       "timestamp": "2026-01-09T23:10:00.912075"
+    },
+    {
+      "tick": 1,
+      "event_type": "node_added",
+      "target_id": "cluster_0004",
+      "details": {
+        "type": "SCRIPT",
+        "group": "hoisted",
+        "factory": null
+      },
+      "timestamp": "2026-01-09T23:27:39.197195"
+    },
+    {
+      "tick": 1,
+      "event_type": "edge_added",
+      "target_id": "kpk_execute->cluster_0004:SUB",
+      "details": {
+        "src": "kpk_execute",
+        "dst": "cluster_0004",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-09T23:27:39.197237"
+    },
+    {
+      "tick": 1,
+      "event_type": "node_added",
+      "target_id": "cluster_0019",
+      "details": {
+        "type": "SCRIPT",
+        "group": "hoisted",
+        "factory": null
+      },
+      "timestamp": "2026-01-09T23:27:41.244195"
+    },
+    {
+      "tick": 1,
+      "event_type": "edge_added",
+      "target_id": "kpk_execute->cluster_0019:SUB",
+      "details": {
+        "src": "kpk_execute",
+        "dst": "cluster_0019",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-09T23:27:41.244222"
+    },
+    {
+      "tick": 1,
+      "event_type": "node_added",
+      "target_id": "cluster_0022",
+      "details": {
+        "type": "SCRIPT",
+        "group": "hoisted",
+        "factory": null
+      },
+      "timestamp": "2026-01-09T23:27:42.032711"
+    },
+    {
+      "tick": 1,
+      "event_type": "edge_added",
+      "target_id": "kpk_execute->cluster_0022:SUB",
+      "details": {
+        "src": "kpk_execute",
+        "dst": "cluster_0022",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-09T23:27:42.032734"
+    },
+    {
+      "tick": 2,
+      "event_type": "node_added",
+      "target_id": "cluster_0025",
+      "details": {
+        "type": "SCRIPT",
+        "group": "hoisted",
+        "factory": null
+      },
+      "timestamp": "2026-01-09T23:27:42.676017"
+    },
+    {
+      "tick": 2,
+      "event_type": "edge_added",
+      "target_id": "kpk_execute->cluster_0025:SUB",
+      "details": {
+        "src": "kpk_execute",
+        "dst": "cluster_0025",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-09T23:27:42.676049"
+    },
+    {
+      "tick": 1,
+      "event_type": "node_added",
+      "target_id": "cluster_0028",
+      "details": {
+        "type": "SCRIPT",
+        "group": "hoisted",
+        "factory": null
+      },
+      "timestamp": "2026-01-09T23:27:43.334217"
+    },
+    {
+      "tick": 1,
+      "event_type": "edge_added",
+      "target_id": "kpk_execute->cluster_0028:SUB",
+      "details": {
+        "src": "kpk_execute",
+        "dst": "cluster_0028",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-09T23:27:43.334239"
+    },
+    {
+      "tick": 1,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0018_1",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-09T23:27:44.174330"
+    },
+    {
+      "tick": 1,
+      "event_type": "edge_added",
+      "target_id": "kpk_detect->TRIAL_stem_0018_1:SUB",
+      "details": {
+        "src": "kpk_detect",
+        "dst": "TRIAL_stem_0018_1",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-09T23:27:44.174356"
+    },
+    {
+      "tick": 1,
+      "event_type": "node_added",
+      "target_id": "cluster_0031",
+      "details": {
+        "type": "SCRIPT",
+        "group": "hoisted",
+        "factory": null
+      },
+      "timestamp": "2026-01-09T23:27:44.178623"
+    },
+    {
+      "tick": 1,
+      "event_type": "edge_added",
+      "target_id": "kpk_execute->cluster_0031:SUB",
+      "details": {
+        "src": "kpk_execute",
+        "dst": "cluster_0031",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-09T23:27:44.178637"
+    },
+    {
+      "tick": 2,
+      "event_type": "node_added",
+      "target_id": "cluster_0006",
+      "details": {
+        "type": "SCRIPT",
+        "group": "hoisted",
+        "factory": null
+      },
+      "timestamp": "2026-01-09T23:30:15.286878"
+    },
+    {
+      "tick": 2,
+      "event_type": "edge_added",
+      "target_id": "kpk_execute->cluster_0006:SUB",
+      "details": {
+        "src": "kpk_execute",
+        "dst": "cluster_0006",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-09T23:30:15.286895"
+    },
+    {
+      "tick": 1,
+      "event_type": "node_added",
+      "target_id": "cluster_0013",
+      "details": {
+        "type": "SCRIPT",
+        "group": "hoisted",
+        "factory": null
+      },
+      "timestamp": "2026-01-09T23:30:16.030010"
+    },
+    {
+      "tick": 1,
+      "event_type": "edge_added",
+      "target_id": "kpk_execute->cluster_0013:SUB",
+      "details": {
+        "src": "kpk_execute",
+        "dst": "cluster_0013",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-09T23:30:16.030033"
+    },
+    {
+      "tick": 1,
+      "event_type": "node_added",
+      "target_id": "cluster_0009",
+      "details": {
+        "type": "SCRIPT",
+        "group": "hoisted",
+        "factory": null
+      },
+      "timestamp": "2026-01-09T23:31:44.356546"
+    },
+    {
+      "tick": 1,
+      "event_type": "edge_added",
+      "target_id": "kpk_execute->cluster_0009:SUB",
+      "details": {
+        "src": "kpk_execute",
+        "dst": "cluster_0009",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-09T23:31:44.356568"
     }
   ]
 }

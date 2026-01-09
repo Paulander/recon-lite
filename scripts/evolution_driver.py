@@ -1090,6 +1090,14 @@ def save_cycle_snapshot(
     # Get new snapshot from GRAPH (not registry!) - this captures spawned packs
     new_snapshot = graph.to_snapshot()
     
+    # DEBUG: Check for pack nodes in graph
+    pack_nodes_in_graph = [n for n in graph.nodes if 'and_' in n.lower() or 'or_' in n.lower() or '_gate' in n]
+    if pack_nodes_in_graph:
+        print(f"    📦 Pack nodes in graph at save: {len(pack_nodes_in_graph)}")
+    pack_nodes_in_snapshot = [n for n in new_snapshot.get('nodes', {}) if 'and_' in n.lower() or 'or_' in n.lower() or '_gate' in n]
+    if pack_nodes_in_snapshot:
+        print(f"    📦 Pack nodes in snapshot: {len(pack_nodes_in_snapshot)}")
+    
     # Add/update TRIAL cells in snapshot for visualization
     # NOTE: TRIAL nodes are now added via promote_to_trial() which includes
     # critical metadata like 'subgraph'. This code updates XP stats and adds

@@ -1851,15 +1851,16 @@ class StructureLearner:
             packs_spawned = []
             print(f"    [M5] ⚡ FAILURE MODE TRIGGERED: Spawning packs/singles from {len([c for c in stem_manager.cells.values() if c.state == StemCellState.TRIAL])} TRIALs")
             
-            # Get graph for pack injection
-            graph = None
-            try:
-                from recon_lite_chess.graph.builder import build_graph_from_topology
-                graph = build_graph_from_topology(self.registry.path, self.registry)
-                print(f"      Graph loaded: {len(graph.nodes)} nodes")
-            except Exception as e:
-                print(f"      ⚠ Graph load failed: {e}")
-                pass
+            # Get graph for pack injection - reuse existing if available
+            if graph is None:
+                try:
+                    from recon_lite_chess.graph.builder import build_graph_from_topology
+                    graph = build_graph_from_topology(self.registry.path, self.registry)
+                    print(f"      Graph loaded: {len(graph.nodes)} nodes")
+                except Exception as e:
+                    print(f"      ⚠ Graph load failed: {e}")
+            else:
+                print(f"      Graph reused: {len(graph.nodes)} nodes (preserving earlier changes)")
             
             for cell in stem_manager.cells.values():
                 if cell.state == StemCellState.TRIAL:
@@ -1996,7 +1997,7 @@ class StructureLearner:
             "current_tick": current_tick,
             # CRITICAL: Return the final graph with all spawned packs
             # This allows the snapshot to capture dynamically created topology
-            "graph": graph if 'graph' in dir() else None,
+            "graph": graph,  # Graph is initialized at function start, always exists
         }
 
 
