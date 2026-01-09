@@ -967,11 +967,16 @@ class StemCellTerminal:
                 sentinel_fn = lambda env: env.get("reward", 0) > 0.3
                 actuator_fn = self._make_exploration_actuator_fn()
                 depth = self.metadata.get("depth", 0) + 1
-                parent_id = self.trial_node_id or "krk_execute"
+                # Packs need SCRIPT parent nodes (TERMINAL nodes can't have SUB children)
+                # Use kpk_execute or kpk_detect as parent, NOT the TRIAL node itself
+                parent_id = "kpk_execute" if "kpk_execute" in graph.nodes else "kpk_detect"
                 
                 pack_ids = {}
                 
-                if pack_type == "and" or (pack_type == "auto" and pack_roll < 0.35):
+                # FORCED: Only AND-gate for now (other pack types have POR→TERMINAL bugs)
+                pack_type = "and"
+                
+                if pack_type == "and":
                     # AND-GATE: 35% chance - for co-conditions
                     # Uses 2 conditions from pattern components
                     conditions = [condition_fn, lambda env: env.get("can_progress", True)]
@@ -985,6 +990,7 @@ class StemCellTerminal:
                     )
                     if pack_ids:
                         self.metadata["pack_type"] = "and_gate"
+                        print(f"      🔗 AND-gate spawned: {pack_ids.get('gate')}")
                         
                 elif pack_type == "sequence" or (pack_type == "auto" and pack_roll < 0.60):
                     # SEQUENCE: 25% chance - for multi-step tactics
@@ -1002,6 +1008,7 @@ class StemCellTerminal:
                     )
                     if pack_ids:
                         self.metadata["pack_type"] = "sequence"
+                        print(f"      🔗 Sequence spawned: {pack_ids.get('root')}")
                         
                 elif pack_type == "triad" or (pack_type == "auto" and pack_roll < 0.75):
                     # PHASE TRIAD: 15% chance - check→move→wait
@@ -1017,6 +1024,7 @@ class StemCellTerminal:
                     )
                     if pack_ids:
                         self.metadata["pack_type"] = "phase_triad"
+                        print(f"      🔗 Triad spawned: {pack_ids.get('root')}")
                         
                 else:
                     # GOAL DELEGATION: 25% chance - original full pack
@@ -1035,6 +1043,24 @@ class StemCellTerminal:
                     )
                     if pack_ids:
                         self.metadata["pack_type"] = "goal_delegation"
+                        print(f"      🔗 Goal pack spawned: {pack_ids.get('root')}")
+                
+                # FORCED TEST: Also spawn OR-gate for comparison
+                if pack_ids and graph is not None:
+                    try:
+                        from recon_lite.nodes.pack_template import spawn_or_gate_pack
+                        or_pack = spawn_or_gate_pack(
+                            gate_name=f"or_{self.cell_id}_{current_tick}",
+                            parent_id=parent_id,
+                            graph=graph,
+                            conditions=[condition_fn, lambda env: env.get("alternative", False)],
+                            then_action=actuator_fn,
+                            is_trial=True,
+                        )
+                        if or_pack:
+                            print(f"      🔗 OR-gate also spawned: {or_pack.get('gate')}")
+                    except Exception as e:
+                        print(f"      ⚠ OR-gate spawn failed: {e}")
                 
                 if pack_ids:
                     self.metadata["spawned_pack_root"] = pack_ids.get("root") or pack_ids.get("gate")

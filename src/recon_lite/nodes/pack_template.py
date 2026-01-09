@@ -87,20 +87,28 @@ def spawn_goal_delegation_pack(
     graph.add_node(root_node)
     created_ids["root"] = root_id
     
-    # =========================================================================
     # Create 4-phase children: detect → execute → finish → wait
+    # NOTE: All phases must be SCRIPT nodes for POR edges to work!
+    # Sensors are added as TERMINAL children under each SCRIPT phase.
     # =========================================================================
     detect_id = f"{prefix}_detect"
     execute_id = f"{prefix}_execute"
     finish_id = f"{prefix}_finish"
     wait_id = f"{prefix}_wait"
     
-    # detect (TERMINAL sensor - condition check)
-    detect = Node(nid=detect_id, ntype=NodeType.TERMINAL, predicate=condition_sensor_fn)
-    detect.meta["role"] = "condition_sensor"
+    # detect (SCRIPT with TERMINAL sensor child)
+    detect = Node(nid=detect_id, ntype=NodeType.SCRIPT)
+    detect.meta["role"] = "detect_phase"
     detect.meta["pack_phase"] = "detect"
     graph.add_node(detect)
     created_ids["detect"] = detect_id
+    
+    # Add condition sensor as TERMINAL child of detect
+    detect_sensor_id = f"{prefix}_detect_sensor"
+    detect_sensor = Node(nid=detect_sensor_id, ntype=NodeType.TERMINAL, predicate=condition_sensor_fn)
+    detect_sensor.meta["role"] = "condition_sensor"
+    graph.add_node(detect_sensor)
+    graph.add_edge(detect_id, detect_sensor_id, LinkType.SUB)
     
     # execute (SCRIPT - can have children for recursion)
     execute = Node(nid=execute_id, ntype=NodeType.SCRIPT)
@@ -110,34 +118,49 @@ def spawn_goal_delegation_pack(
     graph.add_node(execute)
     created_ids["execute"] = execute_id
     
-    # finish (TERMINAL sensor - success detector/sentinel)
-    finish = Node(nid=finish_id, ntype=NodeType.TERMINAL, predicate=sentinel_fn)
-    finish.meta["role"] = "success_sentinel"
+    # finish (SCRIPT with TERMINAL sentinel child)
+    finish = Node(nid=finish_id, ntype=NodeType.SCRIPT)
+    finish.meta["role"] = "finish_phase"
     finish.meta["pack_phase"] = "finish"
     graph.add_node(finish)
     created_ids["finish"] = finish_id
     
-    # wait (TERMINAL sensor - wait for SUR confirmation)
-    wait = Node(nid=wait_id, ntype=NodeType.TERMINAL, predicate=lambda env: True)
-    wait.meta["role"] = "wait_for_confirmation"
+    # Add sentinel sensor as TERMINAL child of finish
+    finish_sensor_id = f"{prefix}_finish_sensor"
+    finish_sensor = Node(nid=finish_sensor_id, ntype=NodeType.TERMINAL, predicate=sentinel_fn)
+    finish_sensor.meta["role"] = "success_sentinel"
+    graph.add_node(finish_sensor)
+    graph.add_edge(finish_id, finish_sensor_id, LinkType.SUB)
+    
+    # wait (SCRIPT with TERMINAL wait child)
+    wait = Node(nid=wait_id, ntype=NodeType.SCRIPT)
+    wait.meta["role"] = "wait_phase"
     wait.meta["pack_phase"] = "wait"
     graph.add_node(wait)
     created_ids["wait"] = wait_id
+    
+    # Add wait sensor as TERMINAL child
+    wait_sensor_id = f"{prefix}_wait_sensor"
+    wait_sensor = Node(nid=wait_sensor_id, ntype=NodeType.TERMINAL, predicate=lambda env: True)
+    wait_sensor.meta["role"] = "wait_for_confirmation"
+    graph.add_node(wait_sensor)
+    graph.add_edge(wait_id, wait_sensor_id, LinkType.SUB)
     
     # =========================================================================
     # Wire SUB links: root → children (top-down requests)
     # =========================================================================
     base_weight = 1.0
     if mutate_edges:
-        base_weight = random.uniform(0.85, 1.15)  # Weight variation
+        base_weight = random.uniform(0.85, 1.15)  # Weight variation (stored in meta, not add_edge)
     
-    graph.add_edge(root_id, detect_id, LinkType.SUB, weight=base_weight)
-    graph.add_edge(root_id, execute_id, LinkType.SUB, weight=base_weight)
-    graph.add_edge(root_id, finish_id, LinkType.SUB, weight=base_weight)
-    graph.add_edge(root_id, wait_id, LinkType.SUB, weight=base_weight)
+    graph.add_edge(root_id, detect_id, LinkType.SUB)
+    graph.add_edge(root_id, execute_id, LinkType.SUB)
+    graph.add_edge(root_id, finish_id, LinkType.SUB)
+    graph.add_edge(root_id, wait_id, LinkType.SUB)
     
     # =========================================================================
     # Wire POR sequence: detect → execute → finish → wait (temporal ordering)
+    # All are SCRIPT nodes now, so POR edges are valid!
     # =========================================================================
     graph.add_edge(detect_id, execute_id, LinkType.POR)
     graph.add_edge(execute_id, finish_id, LinkType.POR)
@@ -357,7 +380,7 @@ def spawn_and_gate_pack(
     actuator_node.meta["role"] = "gate_actuator"
     actuator_node.meta["actuator_weight"] = 0.3 if is_trial else 1.0
     graph.add_node(actuator_node)
-    graph.add_edge(gate_id, actuator_id, LinkType.POR)  # After gate confirms
+    graph.add_edge(gate_id, actuator_id, LinkType.SUB)  # Changed: TERMINAL can only be targeted by SUB
     created_ids["actuator"] = actuator_id
     
     return created_ids
@@ -427,7 +450,7 @@ def spawn_or_gate_pack(
     actuator_node.meta["role"] = "gate_actuator"
     actuator_node.meta["actuator_weight"] = 0.3 if is_trial else 1.0
     graph.add_node(actuator_node)
-    graph.add_edge(gate_id, actuator_id, LinkType.POR)
+    graph.add_edge(gate_id, actuator_id, LinkType.SUB)  # Changed: TERMINAL can only be targeted by SUB
     created_ids["actuator"] = actuator_id
     
     return created_ids
