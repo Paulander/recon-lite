@@ -51,51 +51,45 @@ def create_promote_strategy(nid: str) -> Node:
 
 def create_push_strategy(nid: str) -> Node:
     """
-    Push Strategy: Outputs pawn push move if legal.
+    PURE Push Strategy: Outputs ALL pawn moves with NEUTRAL weight.
     
-    Finds the best pawn push (prioritizing advancement and promotions).
-    Promotions are included and get highest priority!
+    No heuristics - doesn't know "promotions best" or "higher rank better".
+    The arbiter LEARNS which pawn moves lead to wins via M3/M4 plasticity.
     """
     def _predicate(node: Node, env: Dict[str, Any]) -> Tuple[bool, bool]:
         board = env.get("board")
         if not board:
             return False, False
         
-        # Determine attacker color
         color = board.turn
         
-        # Find pawn push moves (prioritize promotions!)
-        best_push = None
-        best_rank = -1
-        best_is_promo = False
-        
+        # Output ALL pawn moves with NEUTRAL weight (no preference)
+        pawn_moves = []
         for move in board.legal_moves:
             piece = board.piece_at(move.from_square)
             if piece and piece.piece_type == chess.PAWN and piece.color == color:
-                # It's a pawn move
-                target_rank = chess.square_rank(move.to_square)
-                if color == chess.BLACK:
-                    target_rank = 7 - target_rank  # Normalize for black
-                
-                # Promotions get HIGHEST priority (rank 8 = best)
-                is_promo = move.promotion is not None
-                effective_rank = 8 if is_promo else target_rank
-                
-                if effective_rank > best_rank or (is_promo and not best_is_promo):
-                    best_rank = effective_rank
-                    best_push = move
-                    best_is_promo = is_promo
+                pawn_moves.append({
+                    "move": move.uci(),
+                    "source": nid,
+                    "weight": 0.5,  # NEUTRAL - learned via plasticity
+                    "is_promotion": move.promotion is not None,
+                })
         
-        if best_push:
-            node.meta["suggested_move"] = best_push.uci()
+        if pawn_moves:
+            # Add all to candidate_moves for arbiter selection
+            env.setdefault("candidate_moves", []).extend(pawn_moves)
+            
+            # Also output first move as strategy output for backward compat
+            node.meta["suggested_move"] = pawn_moves[0]["move"]
             node.meta["strategy"] = "push"
-            # Promotions get 1.0 confidence, others scale by rank
-            node.meta["confidence"] = 1.0 if best_is_promo else 0.5 + (best_rank / 14)
+            node.meta["confidence"] = 0.5  # Neutral
+            node.meta["move_count"] = len(pawn_moves)
             
             env.setdefault("strategy_outputs", {})[nid] = {
-                "move": best_push.uci(),
-                "confidence": node.meta["confidence"],
+                "move": pawn_moves[0]["move"],
+                "confidence": 0.5,
                 "strategy": "push",
+                "all_moves": pawn_moves,  # Arbiter can pick any
             }
             return True, True
         
@@ -106,9 +100,10 @@ def create_push_strategy(nid: str) -> Node:
 
 def create_king_support_strategy(nid: str) -> Node:
     """
-    King Support Strategy: Move king toward pawn to support promotion.
+    PURE King Strategy: Outputs ALL king moves with NEUTRAL weight.
     
-    Evaluates king moves for pawn support and path clearing.
+    No heuristics - doesn't know "support pawn" or "stay close to file".
+    The arbiter LEARNS which king moves lead to wins via M3/M4 plasticity.
     """
     def _predicate(node: Node, env: Dict[str, Any]) -> Tuple[bool, bool]:
         board = env.get("board")
@@ -116,62 +111,33 @@ def create_king_support_strategy(nid: str) -> Node:
             return False, False
         
         color = board.turn
-        king_sq = board.king(color)
-        if king_sq is None:
-            return False, False
         
-        # Find pawn to support
-        pawns = list(board.pieces(chess.PAWN, color))
-        if not pawns:
-            return False, False
-        pawn_sq = pawns[0]
-        pawn_file = chess.square_file(pawn_sq)
-        pawn_rank = chess.square_rank(pawn_sq)
-        
-        # Find best king move (toward supporting pawn)
-        best_move = None
-        best_score = -100
-        
+        # Output ALL king moves with NEUTRAL weight (no preference)
+        king_moves = []
         for move in board.legal_moves:
             piece = board.piece_at(move.from_square)
-            if not piece or piece.piece_type != chess.KING or piece.color != color:
-                continue
-            
-            new_sq = move.to_square
-            new_file = chess.square_file(new_sq)
-            new_rank = chess.square_rank(new_sq)
-            
-            score = 0.0
-            
-            # Bonus for being close to pawn file
-            file_dist = abs(new_file - pawn_file)
-            score -= file_dist * 0.2
-            
-            # Bonus for being ahead of/beside pawn (support position)
-            if color == chess.WHITE:
-                if new_rank >= pawn_rank:
-                    score += 0.3
-            else:
-                if new_rank <= pawn_rank:
-                    score += 0.3
-            
-            # Bonus for optimal support distance (1-2 squares)
-            if file_dist <= 1:
-                score += 0.2
-            
-            if score > best_score:
-                best_score = score
-                best_move = move
+            if piece and piece.piece_type == chess.KING and piece.color == color:
+                king_moves.append({
+                    "move": move.uci(),
+                    "source": nid,
+                    "weight": 0.5,  # NEUTRAL - learned via plasticity
+                })
         
-        if best_move:
-            node.meta["suggested_move"] = best_move.uci()
+        if king_moves:
+            # Add all to candidate_moves for arbiter selection
+            env.setdefault("candidate_moves", []).extend(king_moves)
+            
+            # Also output first move as strategy output for backward compat
+            node.meta["suggested_move"] = king_moves[0]["move"]
             node.meta["strategy"] = "king_support"
-            node.meta["confidence"] = 0.5 + best_score
+            node.meta["confidence"] = 0.5  # Neutral
+            node.meta["move_count"] = len(king_moves)
             
             env.setdefault("strategy_outputs", {})[nid] = {
-                "move": best_move.uci(),
-                "confidence": node.meta["confidence"],
+                "move": king_moves[0]["move"],
+                "confidence": 0.5,
                 "strategy": "king_support",
+                "all_moves": king_moves,  # Arbiter can pick any
             }
             return True, True
         
@@ -182,92 +148,101 @@ def create_king_support_strategy(nid: str) -> Node:
 
 def create_generic_arbiter(nid: str) -> Node:
     """
-    Generic Arbiter: Picks move via BANDIT/SOFTMAX selection.
+    PURE Arbiter: Selects move via LEARNED softmax selection.
     
-    PHASE 4: Instead of hard max, uses softmax over learned weights.
-    This enables exploration and gradual convergence to best strategy.
+    Reads candidate_moves from strategies, applies learned_weights from
+    node.meta (updated via M3/M4 plasticity), samples via softmax.
     
-    strategy_ids should be provided in node.meta["strategy_ids"] during
-    topology loading or construction.
+    No heuristics - all preference is learned from game outcomes.
     """
     import math
     import random as rnd
     
-    def _softmax_sample(scores: Dict[str, float], temperature: float = 1.0) -> Optional[str]:
-        """Sample from scores using softmax probability distribution."""
-        if not scores:
+    def _softmax_sample(moves: List[dict], temperature: float = 1.0) -> Optional[dict]:
+        """Sample from moves using softmax probability distribution over weights."""
+        if not moves:
             return None
         
-        # Compute softmax probabilities
-        max_score = max(scores.values())
-        exp_scores = {k: math.exp((v - max_score) / temperature) for k, v in scores.items()}
-        total = sum(exp_scores.values())
+        weights = [m.get("weight", 0.5) for m in moves]
+        max_w = max(weights)
+        exp_weights = [math.exp((w - max_w) / temperature) for w in weights]
+        total = sum(exp_weights)
         
         if total == 0:
-            return rnd.choice(list(scores.keys()))
+            return rnd.choice(moves)
         
-        probs = {k: v / total for k, v in exp_scores.items()}
+        probs = [w / total for w in exp_weights]
         
         # Sample according to probabilities
         r = rnd.random()
         cumulative = 0.0
-        for k, p in probs.items():
+        for i, p in enumerate(probs):
             cumulative += p
             if r <= cumulative:
-                return k
+                return moves[i]
         
-        return list(scores.keys())[-1]  # Fallback
+        return moves[-1]  # Fallback
     
     def _predicate(node: Node, env: Dict[str, Any]) -> Tuple[bool, bool]:
+        # Get candidate moves from pure strategies
+        candidate_moves = env.get("candidate_moves", [])
+        
+        # Also check strategy_outputs for backward compat
         strategy_outputs = env.get("strategy_outputs", {})
-        
-        # PHASE 4: Also check legs proposals
-        legs_proposals = env.get("legs", {})
-        
-        # Get strategy_ids from node meta (set during topology load)
-        strategy_ids = node.meta.get("strategy_ids", [])
-        
-        # Collect all scores and moves
-        candidate_scores: Dict[str, float] = {}
-        candidate_moves: Dict[str, str] = {}
-        
-        # Check strategy_outputs (from strategy actuators)
-        for sid in strategy_ids:
-            output = strategy_outputs.get(sid)
-            if output and output.get("move"):
-                score = output.get("confidence", 0.5)
-                candidate_scores[sid] = score
-                candidate_moves[sid] = output["move"]
-        
-        # Also check legs proposals (PHASE 4: legs write to env["legs"])
-        for leg_id, leg_data in legs_proposals.items():
-            if isinstance(leg_data, dict) and leg_data.get("move"):
-                # Get leg weight from edge
-                weight = leg_data.get("weight", 0.5)
-                candidate_scores[leg_id] = weight
-                candidate_moves[leg_id] = leg_data["move"]
+        for sid, output in strategy_outputs.items():
+            if output.get("all_moves"):
+                # Pure strategy - already in candidate_moves
+                continue
+            elif output.get("move"):
+                # Legacy strategy - add as candidate
+                candidate_moves.append({
+                    "move": output["move"],
+                    "source": sid,
+                    "weight": output.get("confidence", 0.5),
+                })
         
         if not candidate_moves:
             return False, False
         
-        # BANDIT SELECTION: Softmax sample instead of hard max
-        temperature = node.meta.get("temperature", 1.0)
-        selected_id = _softmax_sample(candidate_scores, temperature)
+        # Apply LEARNED weight multipliers from node.meta
+        # These weights are updated by M3/M4 plasticity based on game outcomes
+        learned_weights = node.meta.get("learned_weights", {})
+        for m in candidate_moves:
+            source = m.get("source", "")
+            # Apply learned multiplier if available
+            if source in learned_weights:
+                m["weight"] *= learned_weights[source]
+            # Also check for move-specific weights
+            move_key = f"{source}:{m['move']}"
+            if move_key in learned_weights:
+                m["weight"] *= learned_weights[move_key]
+            # Boost promotions slightly to help early learning
+            if m.get("is_promotion"):
+                m["weight"] *= learned_weights.get("promotion_bonus", 1.0)
         
-        if selected_id and selected_id in candidate_moves:
-            best_move = candidate_moves[selected_id]
+        # SOFTMAX selection - temperature controls exploration
+        temperature = node.meta.get("temperature", 1.0)
+        selected = _softmax_sample(candidate_moves, temperature)
+        
+        if selected:
+            best_move = selected["move"]
             
             # Store for move execution
             env.setdefault("kpk", {}).setdefault("policy", {})["suggested_move"] = best_move
             node.meta["suggested_move"] = best_move
-            node.meta["winning_strategy"] = selected_id
-            node.meta["selection_method"] = "softmax"
+            node.meta["selected_source"] = selected.get("source", "unknown")
+            node.meta["selection_method"] = "learned_softmax"
             node.meta["candidate_count"] = len(candidate_moves)
+            
+            # Store selection for plasticity update
+            env["last_selected_move"] = selected
+            
             return True, True
         
         return False, False
     
     return Node(nid=nid, ntype=NodeType.TERMINAL, predicate=_predicate)
+
 
 
 # Factory functions for topology loading
