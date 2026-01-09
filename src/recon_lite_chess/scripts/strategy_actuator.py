@@ -221,7 +221,8 @@ def create_generic_arbiter(nid: str) -> Node:
                 m["weight"] *= learned_weights.get("promotion_bonus", 1.0)
         
         # SOFTMAX selection - temperature controls exploration
-        temperature = node.meta.get("temperature", 1.0)
+        # OPTIMIZATION: Lower temperature (0.3 vs 1.0) = exploit learned weights more
+        temperature = node.meta.get("temperature", 0.3)
         selected = _softmax_sample(candidate_moves, temperature)
         
         if selected:

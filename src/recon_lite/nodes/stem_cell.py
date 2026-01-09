@@ -87,7 +87,7 @@ class StemCellConfig:
     min_samples: int = 50  # Minimum samples before specialization attempt
     max_samples: int = 500  # Maximum samples to collect
     reward_threshold: float = 0.3  # Only store samples with |reward| > this
-    specialization_threshold: float = 0.7  # Min pattern consistency for specialization
+    specialization_threshold: float = 0.50  # Lowered from 0.70 for easier specialization
     exploration_budget: int = 100  # Ticks allowed in exploring state
     decay_rate: float = 0.99  # How fast samples decay in importance
 
@@ -334,7 +334,7 @@ class StemCellTerminal:
         registry: Any,  # TopologyRegistry
         parent_id: str = "kpk_detect",
         current_tick: int = 0,
-        min_consistency: float = 0.50,  # Balanced threshold (was 0.35, then 0.65)
+        min_consistency: float = 0.30,  # Lowered from 0.50 for easier TRIAL promotion
         wire_to_legs: bool = True,  # NEW: Also wire as child of legs for gating
         leg_node_ids: Optional[List[str]] = None,  # NEW: Which legs to wire to
     ) -> bool:
@@ -939,10 +939,11 @@ class StemCellTerminal:
             pack_prob = float(os.environ.get("M5_PACK_PROB", "0.50"))
             single_prob = float(os.environ.get("M5_SINGLE_PROB", "0.40"))
         else:
-            # Success mode - favor creativity (singles/variants)
-            pack_prob = 0.30
-            single_prob = 0.50
-            # variant_prob = 0.20
+            # Success mode - still spawn packs for structure building
+            # Increased from 0.30 to enable deeper topology growth
+            pack_prob = 0.50
+            single_prob = 0.40
+            # variant_prob = 0.10
         
         roll = random.random()
         

@@ -976,23 +976,29 @@ def _play_single_game(
     arbiter_node = graph.nodes.get("kpk_arbiter")
     if arbiter_node:
         learned_weights = arbiter_node.meta.setdefault("learned_weights", {})
+        
+        # OPTIMIZATION: Bootstrap promotion bonus for faster learning
+        if "promotion_bonus" not in learned_weights:
+            learned_weights["promotion_bonus"] = 1.3  # Initial boost
+        
         selected_source = arbiter_node.meta.get("selected_source", "")
         
         if selected_source and abs(reward) > 0.1:  # Only update on meaningful results
             # Apply M3 fast weight update (Hebbian-like)
+            # OPTIMIZATION: Increased learning rate 0.05 → 0.15
             current = learned_weights.get(selected_source, 1.0)
-            delta = 0.05 * reward  # Small learning rate
-            learned_weights[selected_source] = max(0.1, min(2.0, current + delta))
+            delta = 0.15 * reward  # Higher learning rate for faster convergence
+            learned_weights[selected_source] = max(0.1, min(3.0, current + delta))
             
             # Also track move-specific learning if available
             last_selected = env.get("last_selected_move", {})
             if last_selected and result == "win":
                 move_key = f"{selected_source}:{last_selected.get('move', '')}"
-                learned_weights[move_key] = learned_weights.get(move_key, 1.0) + 0.02
+                learned_weights[move_key] = learned_weights.get(move_key, 1.0) + 0.05
                 
-                # Boost promotion learning
+                # OPTIMIZATION: Stronger promotion boost (+0.08 vs +0.03)
                 if last_selected.get("is_promotion"):
-                    learned_weights["promotion_bonus"] = learned_weights.get("promotion_bonus", 1.0) + 0.03
+                    learned_weights["promotion_bonus"] = learned_weights.get("promotion_bonus", 1.3) + 0.08
             
             ep.notes = ep.notes or {}
             ep.notes["plasticity_delta"] = delta
