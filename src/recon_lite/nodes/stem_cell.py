@@ -1287,6 +1287,8 @@ class StemCellManager:
         - Piece counts and positions
         - Pawn rank for each pawn
         - King distances
+        - ENHANCED: Relative distances for opposition detection
+        - Turn indicator
         """
         if not HAS_CHESS or not hasattr(board, 'piece_map'):
             return []
@@ -1312,26 +1314,82 @@ class StemCellManager:
             features.extend(pawn_ranks[:8])
         
         # King positions (4 features: file, rank for each king)
+        wk_file, wk_rank, bk_file, bk_rank = 0.5, 0.5, 0.5, 0.5  # Defaults
         for color in [chess.WHITE, chess.BLACK]:
             king_sqs = list(board.pieces(chess.KING, color))
             if king_sqs:
                 sq = king_sqs[0]
-                features.append(float(chess.square_file(sq)) / 7.0)
-                features.append(float(chess.square_rank(sq)) / 7.0)
+                f = float(chess.square_file(sq)) / 7.0
+                r = float(chess.square_rank(sq)) / 7.0
+                features.append(f)
+                features.append(r)
+                if color == chess.WHITE:
+                    wk_file, wk_rank = f, r
+                else:
+                    bk_file, bk_rank = f, r
             else:
                 features.extend([0.0, 0.0])
         
         # King distance to pawn (1 feature)
         white_pawns = list(board.pieces(chess.PAWN, chess.WHITE))
         white_king = list(board.pieces(chess.KING, chess.WHITE))
+        pawn_file, pawn_rank = 0.5, 0.5
         if white_pawns and white_king:
             pawn_sq = white_pawns[0]
             king_sq = white_king[0]
+            pawn_file = float(chess.square_file(pawn_sq)) / 7.0
+            pawn_rank = float(chess.square_rank(pawn_sq)) / 7.0
             dist = max(abs(chess.square_file(pawn_sq) - chess.square_file(king_sq)),
                       abs(chess.square_rank(pawn_sq) - chess.square_rank(king_sq)))
             features.append(float(dist) / 7.0)
         else:
             features.append(0.0)
+        
+        # ============ NEW FEATURES FOR OPPOSITION DETECTION ============
+        
+        # King-to-king file distance (1 feature) - 0 = same file = possible opposition
+        king_file_dist = abs(wk_file - bk_file)
+        features.append(king_file_dist)
+        
+        # King-to-king rank distance (1 feature)
+        king_rank_dist = abs(wk_rank - bk_rank)
+        features.append(king_rank_dist)
+        
+        # King-to-king Chebyshev distance (1 feature) - overall king proximity
+        king_chebyshev_dist = max(king_file_dist, king_rank_dist)
+        features.append(king_chebyshev_dist)
+        
+        # Same file indicator (1 feature) - 1.0 if kings on same file
+        same_file = 1.0 if abs(wk_file - bk_file) < 0.01 else 0.0
+        features.append(same_file)
+        
+        # Turn indicator (1 feature) - 1.0 = white to move, 0.0 = black to move
+        turn = 1.0 if board.turn == chess.WHITE else 0.0
+        features.append(turn)
+        
+        # Pawn-to-promotion distance (1 feature) - how close is pawn to 8th rank
+        if white_pawns:
+            promo_dist = 1.0 - pawn_rank  # Lower = closer to promotion
+        else:
+            promo_dist = 1.0
+        features.append(promo_dist)
+        
+        # Enemy king to pawn distance (1 feature) - defender approach
+        black_king = list(board.pieces(chess.KING, chess.BLACK))
+        if white_pawns and black_king:
+            pawn_sq = white_pawns[0]
+            bk_sq = black_king[0]
+            enemy_dist = max(abs(chess.square_file(pawn_sq) - chess.square_file(bk_sq)),
+                           abs(chess.square_rank(pawn_sq) - chess.square_rank(bk_sq)))
+            features.append(float(enemy_dist) / 7.0)
+        else:
+            features.append(1.0)
+        
+        # Opposition indicator (1 feature) - 1.0 if perfect opposition
+        # Opposition = same file AND odd rank distance (1, 3, 5)
+        rank_dist_squares = int(abs(wk_rank * 7 - bk_rank * 7) + 0.5)
+        has_opposition = same_file > 0.5 and rank_dist_squares % 2 == 1
+        features.append(1.0 if has_opposition else 0.0)
         
         return features
     

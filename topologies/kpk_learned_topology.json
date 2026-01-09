@@ -1,0 +1,214 @@
+{
+  "version": "2.0",
+  "network": "kpk_learned",
+  "description": "Pure ReCoN move selection - strategies learned via stem cells, not hard-coded",
+  "created": "2026-01-09T13:15:00Z",
+  "nodes": [
+    {
+      "id": "kpk_root",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {
+        "description": "Root of KPK endgame subgraph"
+      }
+    },
+    {
+      "id": "kpk_detect",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {
+        "description": "Detection phase"
+      }
+    },
+    {
+      "id": "kpk_execute",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {
+        "description": "Execution phase - strategy competition"
+      }
+    },
+    {
+      "id": "kpk_finish",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {
+        "description": "Completion sentinel"
+      }
+    },
+    {
+      "id": "kpk_material_check",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.scripts.kpk:create_kpk_material_detector",
+      "meta": {}
+    },
+    {
+      "id": "kpk_promotion_achieved",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.scripts.kpk:create_kpk_promotion_probe",
+      "meta": {}
+    },
+    {
+      "id": "kpk_wait_for_change",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess:create_wait_for_board_change",
+      "meta": {}
+    },
+    {
+      "id": "push_leg",
+      "type": "SCRIPT",
+      "group": "strategy_leg",
+      "factory": null,
+      "meta": {
+        "learned_weight": 0.5,
+        "require_child_confirm": true
+      }
+    },
+    {
+      "id": "king_support_leg",
+      "type": "SCRIPT",
+      "group": "strategy_leg",
+      "factory": null,
+      "meta": {
+        "learned_weight": 0.5,
+        "require_child_confirm": true
+      }
+    },
+    {
+      "id": "push_strategy",
+      "type": "TERMINAL",
+      "group": "actuator",
+      "factory": "recon_lite_chess.scripts.strategy_actuator:create_push_strategy",
+      "meta": {}
+    },
+    {
+      "id": "king_support_strategy",
+      "type": "TERMINAL",
+      "group": "actuator",
+      "factory": "recon_lite_chess.scripts.strategy_actuator:create_king_support_strategy",
+      "meta": {}
+    },
+    {
+      "id": "kpk_arbiter",
+      "type": "TERMINAL",
+      "group": "arbiter",
+      "factory": "recon_lite_chess.scripts.strategy_actuator:create_generic_arbiter",
+      "meta": {
+        "strategy_ids": [
+          "push_strategy",
+          "king_support_strategy"
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "src": "kpk_root",
+      "dst": "kpk_detect",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "kpk_execute",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_execute",
+      "dst": "kpk_finish",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "kpk_material_check",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_execute",
+      "dst": "push_leg",
+      "type": "SUB",
+      "weight": 0.7,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_execute",
+      "dst": "king_support_leg",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_execute",
+      "dst": "kpk_arbiter",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "push_leg",
+      "dst": "push_strategy",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "king_support_leg",
+      "dst": "king_support_strategy",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_finish",
+      "dst": "kpk_promotion_achieved",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_finish",
+      "dst": "kpk_wait_for_change",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    }
+  ],
+  "stem_cell_targets": [
+    {
+      "leg_id": "push_leg",
+      "description": "Stem cells learn when pawn push/promotion is good",
+      "initial_slots": 5
+    },
+    {
+      "leg_id": "king_support_leg",
+      "description": "Stem cells learn when king support is needed",
+      "initial_slots": 5
+    }
+  ],
+  "last_modified": "2026-01-09T13:22:12.128000"
+}

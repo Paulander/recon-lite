@@ -355,6 +355,20 @@ class EvolutionConfig:
     gating_final_strictness: float = 1.0     # 100% - full Bach
     gating_ramp_games: int = 100             # Full strictness by game 100
     gating_win_based: bool = False           # Increase strictness on wins only
+    
+    # PHASE 1: Heuristic probability ramp (remove heuristics over stages)
+    # Stage 0-2: 0.5 → 0.1, Stage 3+: 0.0
+    heuristic_prob_initial: float = 0.5   # Stage 0 heuristic probability
+    heuristic_prob_ramp_stage: int = 3    # Stage at which heuristic reaches 0.0
+    heuristic_usage_log: bool = True      # Log heuristic usage %
+    
+    def get_heuristic_prob(self) -> float:
+        """Get heuristic probability for current stage."""
+        if self.current_stage_idx >= self.heuristic_prob_ramp_stage:
+            return 0.0
+        # Linear ramp from initial to 0 over ramp stages
+        progress = self.current_stage_idx / self.heuristic_prob_ramp_stage
+        return self.heuristic_prob_initial * (1.0 - progress)
 
 
 @dataclass
@@ -483,6 +497,8 @@ def run_online_phase(
             enable_curiosity_spawning=config.enable_curiosity_spawning,
             curiosity_spawn_count=config.curiosity_spawn_count,
             pure_cognitive_mode=config.pure_cognitive_mode,
+            # PHASE 1: Heuristic probability ramp
+            heuristic_prob=config.get_heuristic_prob(),
         )
         
         # Track wins for win-based gating schedule
@@ -676,6 +692,8 @@ def _play_single_game(
     enable_curiosity_spawning: bool = False,
     curiosity_spawn_count: int = 3,
     pure_cognitive_mode: bool = False,  # If True, no random fallback at all
+    # PHASE 1: Heuristic probability (0.0 = no heuristics, 1.0 = always use)
+    heuristic_prob: float = 0.5,
 ) -> Tuple[str, EpisodeRecord]:
     """
     Play a single KPK game and return (result, episode_record).
@@ -894,13 +912,20 @@ def _play_single_game(
                     except Exception:
                         pass
             
-            # Random fallback (unless pure cognitive mode)
-            if not move_made and not pure_cognitive_mode:
+            # Random fallback with probability control (PHASE 1: Heuristic Ramp)
+            # heuristic_prob = 0.0 means no random fallback (pure cognitive)
+            # heuristic_prob = 1.0 means always use random fallback when stuck
+            import random as rnd
+            use_heuristic = rnd.random() < heuristic_prob and not pure_cognitive_mode
+            
+            if not move_made and use_heuristic:
                 legal_moves = list(board.legal_moves)
                 if legal_moves:
-                    import random
-                    board.push(random.choice(legal_moves))
+                    board.push(rnd.choice(legal_moves))
                     move_count += 1
+                    # Track heuristic usage in episode
+                    ep.notes = ep.notes or {}
+                    ep.notes["heuristic_uses"] = ep.notes.get("heuristic_uses", 0) + 1
                 else:
                     break  # No legal moves
             elif not move_made and pure_cognitive_mode:
@@ -908,6 +933,11 @@ def _play_single_game(
                 # This is the "Cognitive Honesty" mode: no random fallback
                 # The game may stall, but that's informative for learning
                 pass
+            elif not move_made and not use_heuristic:
+                # PHASE 1: Heuristic suppressed by probability
+                # Track as a "cognitive stall" for later analysis
+                ep.notes = ep.notes or {}
+                ep.notes["cognitive_stalls"] = ep.notes.get("cognitive_stalls", 0) + 1
         
         # Opponent's turn (random)
         if not board.is_game_over():
