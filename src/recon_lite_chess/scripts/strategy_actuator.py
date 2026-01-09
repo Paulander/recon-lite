@@ -53,7 +53,8 @@ def create_push_strategy(nid: str) -> Node:
     """
     Push Strategy: Outputs pawn push move if legal.
     
-    Finds the best pawn push (prioritizing advancement).
+    Finds the best pawn push (prioritizing advancement and promotions).
+    Promotions are included and get highest priority!
     """
     def _predicate(node: Node, env: Dict[str, Any]) -> Tuple[bool, bool]:
         board = env.get("board")
@@ -63,9 +64,10 @@ def create_push_strategy(nid: str) -> Node:
         # Determine attacker color
         color = board.turn
         
-        # Find pawn push moves (non-capture)
+        # Find pawn push moves (prioritize promotions!)
         best_push = None
         best_rank = -1
+        best_is_promo = False
         
         for move in board.legal_moves:
             piece = board.piece_at(move.from_square)
@@ -75,18 +77,20 @@ def create_push_strategy(nid: str) -> Node:
                 if color == chess.BLACK:
                     target_rank = 7 - target_rank  # Normalize for black
                 
-                # Skip promotions (handled by promote_strategy)
-                if move.promotion:
-                    continue
+                # Promotions get HIGHEST priority (rank 8 = best)
+                is_promo = move.promotion is not None
+                effective_rank = 8 if is_promo else target_rank
                 
-                if target_rank > best_rank:
-                    best_rank = target_rank
+                if effective_rank > best_rank or (is_promo and not best_is_promo):
+                    best_rank = effective_rank
                     best_push = move
+                    best_is_promo = is_promo
         
         if best_push:
             node.meta["suggested_move"] = best_push.uci()
             node.meta["strategy"] = "push"
-            node.meta["confidence"] = 0.7 + (best_rank / 10)  # Higher rank = more confident
+            # Promotions get 1.0 confidence, others scale by rank
+            node.meta["confidence"] = 1.0 if best_is_promo else 0.5 + (best_rank / 14)
             
             env.setdefault("strategy_outputs", {})[nid] = {
                 "move": best_push.uci(),
