@@ -1,6 +1,6 @@
 # Hector: A Cognitive Architecture for Structural Deliberation via Request-Confirmation Networks
 
-**Authors**: [To be added]
+**Authors**: Oskar Paulander
 
 ---
 
@@ -94,11 +94,11 @@ The state transitions follow message passing rules (Table 1 from Bach & Herger):
 
 ### 2.4 The Inhibit-Confirm Mechanism
 
-The **inhibit_confirm** signal via RET links is what enables POR-chains to function as sequences rather than parallel alternatives:
+The **inhibit_confirm** signal via RET links is what enables POR-chains to function as sequences rather than parallel alternatives. Structurally, RET links allow a parent SCRIPT to remain in the **WAITING** state rather than transitioning immediately to TRUE/CONFIRMED upon the first sub-element's success.
 
-> "Each unit sends an 'inhibit confirm' signal via RET to its predecessors. The last unit in a sequence will not receive an 'inhibit confirm' signal, and can turn into the state 'confirmed'."
+> "Each unit sends an 'inhibit confirm' signal via RET to its predecessors. The last unit in a sequence will not receive an 'inhibit confirm' signal, and can turn into the state 'confirmed'." (Bach & Herger, 2015)
 
-This means in a sequence `A → B → C` (POR ordering), only node C can confirm the parent—ensuring the entire sequence completes before the composite goal is achieved.
+In a sequence `A → B → C` (POR ordering), only node C can confirm the parent. This mechanism is crucial for deliberation: it prevents Hector from "exiting early" during scenarios like **Zugzwang**, where multiple intermediate steps must be held in tension. It forces the system to maintain the parent node's active state until the entire POR sequence confirms, ensuring that the strategic deliberation persists through the necessary temporal horizon.
 
 ### 2.5 Top-Down/Bottom-Up Integration
 
@@ -194,7 +194,9 @@ TRIAL nodes earn or lose Experience Points based on their contribution to wins:
 | Solidification threshold | 100 XP |
 | Demotion threshold | 0 XP |
 
-This creates evolutionary pressure: sensors that correlate with wins survive; sensors that don't are pruned.
+#### Inertia Pruning
+
+To ensure structural efficiency, we implement **Inertia Pruning** as a Bayesian filter for Causal Significance. Inertia Pruning functions as a metabolic constraint, where nodes that fail to provide a consistent Information Gain over the win-probability ($P(Win|Sensor) - P(Win)$) are evaporated from the topology. This ensures that the resulting graph is not just a collection of correlations, but a sparse set of causal affordances. This prevents the "topology bloat" that often plagues additive learning systems.
 
 #### Pack Templates: AND/OR Gates
 
@@ -240,7 +242,9 @@ Our visualization system renders:
 - **Edge weights** as line thickness
 - **State machine states** as node borders
 
-This is not merely a "GUI for chess"—it is a **window into the agent's mental model**, showing how abstract goals (e.g., "establish opposition") bind to physical board coordinates in real time.
+This real-time visualization represents the agent's instantiated **focus of attention** within a broader **working memory architecture**. 
+
+Unlike PPO, where state is transient and latent, Hector’s "Mental Model" is a persistent topological structure. Here, we can observe the literal **binding** of abstract concepts (like "Opposition") to physical board coordinates, maintained as an active state in the network's cognitive registers. When a specific node "lights up," we are observing selective attention—a "spotlight" that selects which sub-goals or sensors are currently task-relevant. Top-down REQUEST signals represent attentional control, while the persistent structure of the ReCoN graph functions as working memory, keeping information available for manipulation over time.
 
 ### 4.2 Topology Timelapse
 
