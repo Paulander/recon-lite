@@ -1056,7 +1056,6 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                                 
                                 if cut_node.ntype == NodeType.SCRIPT and king_node.ntype == NodeType.SCRIPT:
                                     try:
-                                        from recon_lite.graph import LinkType
                                         graph.add_edge(cut_id, king_id, LinkType.POR)
                                         print(f"    🔗 POR CHAIN: {cut_id} → {king_id}")
                                     except Exception as e:

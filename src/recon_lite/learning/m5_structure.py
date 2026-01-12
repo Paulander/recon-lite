@@ -1594,14 +1594,14 @@ class StructureLearner:
         # Step 5: Check for normal solidification (XP >= 100) or demotion (XP <= 0)
         solidified: List[str] = []
         demoted: List[str] = []
-        
+        for cell in list(stem_manager.cells.values()):
             if cell.state == StemCellState.TRIAL:
-                # Sync current TRIAL state back to registry for snapshots (OFF BY DEFAULT)
-                import os
-                if cell.trial_node_id and os.environ.get("RECON_SAVE_XP_METADATA", "0") == "1":
+                if cell.trial_node_id:
+                    # Sync current TRIAL state back to registry for snapshots/arbitration
                     self.registry.update_node_meta(cell.trial_node_id, {
                         "xp": cell.xp,
                         "consistency": cell.trial_consistency,
+                        "maturity": cell.xp / 100.0,  # CRITICAL for XP-weighted selection
                         "xp_successes": cell.xp_successes,
                         "xp_failures": cell.xp_failures,
                         "total_engagement_xp": cell.metadata.get("total_engagement_xp", 0),

@@ -299,6 +299,8 @@ class ReConEngine:
                         node.state = NodeState.TRUE
                     else:
                         try:
+                            # Inject graph reference to allow predicates to see children/topology
+                            env["__graph__"] = self.g
                             done, success = node.predicate(node, env)
                             if done:
                                 node.state = NodeState.TRUE if success else NodeState.FAILED
@@ -577,6 +579,8 @@ class ReConEngine:
                         node.state = NodeState.TRUE
                     else:
                         try:
+                            # Inject graph reference to allow predicates to see children/topology
+                            env["__graph__"] = self.g
                             done, success = node.predicate(node, env)
                             if done:
                                 node.state = NodeState.TRUE if success else NodeState.FAILED

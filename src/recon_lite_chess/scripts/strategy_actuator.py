@@ -41,7 +41,7 @@ def create_promote_strategy(nid: str) -> Node:
                     "move": move.uci(),
                     "confidence": 1.0,
                     "strategy": "promote",
-                    "maturity": 1.0, # Backbone
+                    "maturity": node.meta.get("maturity", 1.0),
                 }
                 return True, True
         
@@ -73,7 +73,7 @@ def create_push_strategy(nid: str) -> Node:
                     "move": move.uci(),
                     "source": nid,
                     "weight": 0.5,  # NEUTRAL - learned via plasticity
-                    "maturity": 1.0, # Backbone
+                    "maturity": node.meta.get("maturity", 1.0),
                     "is_promotion": move.promotion is not None,
                 })
         
@@ -123,7 +123,7 @@ def create_king_support_strategy(nid: str) -> Node:
                     "move": move.uci(),
                     "source": nid,
                     "weight": 0.5,  # NEUTRAL - learned via plasticity
-                    "maturity": 1.0, # Backbone
+                    "maturity": node.meta.get("maturity", 1.0),
                 })
         
         if king_moves:
@@ -208,13 +208,25 @@ def create_generic_arbiter(nid: str) -> Node:
             return False, False
         
         # Apply LEARNED weight multipliers and MATURITY weighting
+        import os
+        use_maturity = os.environ.get("RECON_USE_MATURITY_WEIGHTING", "1") == "1"
+        
         learned_weights = node.meta.get("learned_weights", {})
         for m in candidate_moves:
             source = m.get("source", "")
-            # Apply maturity multiplier if provided by the source strategy
-            # Default to 1.0 (mature backbone) if not present
+            
+            # Apply maturity weighting (Power-law Scaling)
+            # We use a power of 4 to give mature backbone (1.0) a massive
+            # advantage over structural noise (e.g., 0.5^4 = 0.0625)
             maturity = m.get("maturity", 1.0)
-            m["weight"] *= maturity
+            original_weight = float(m.get("weight", 0.5))
+            m_weight_with_maturity = original_weight * (maturity ** 4)
+            
+            # Check for maturity-boosted weights (consistency-based)
+            if use_maturity:
+                m["weight"] = m_weight_with_maturity
+            else:
+                m["weight"] = original_weight
 
             # Apply learned multiplier if available (M3/M4 plasticity)
             if source in learned_weights:
