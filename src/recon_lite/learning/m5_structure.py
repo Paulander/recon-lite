@@ -1595,18 +1595,26 @@ class StructureLearner:
         solidified: List[str] = []
         demoted: List[str] = []
         
-        for cell in list(stem_manager.cells.values()):
-            if cell.state != StemCellState.TRIAL:
-                continue
-            
-            should_change, new_state = cell.check_solidification()
-            if should_change:
-                if new_state == "mature":
-                    if cell.solidify_to_mature(self.registry, current_tick):
-                        solidified.append(cell.cell_id)
-                elif new_state == "demoted":
-                    if cell.demote_to_exploring(self.registry):
-                        demoted.append(cell.cell_id)
+            if cell.state == StemCellState.TRIAL:
+                # Sync current TRIAL state back to registry for snapshots (OFF BY DEFAULT)
+                import os
+                if cell.trial_node_id and os.environ.get("RECON_SAVE_XP_METADATA", "0") == "1":
+                    self.registry.update_node_meta(cell.trial_node_id, {
+                        "xp": cell.xp,
+                        "consistency": cell.trial_consistency,
+                        "xp_successes": cell.xp_successes,
+                        "xp_failures": cell.xp_failures,
+                        "total_engagement_xp": cell.metadata.get("total_engagement_xp", 0),
+                    })
+                
+                should_change, new_state = cell.check_solidification()
+                if should_change:
+                    if new_state == "mature":
+                        if cell.solidify_to_mature(self.registry, current_tick):
+                            solidified.append(cell.cell_id)
+                    elif new_state == "demoted":
+                        if cell.demote_to_exploring(self.registry):
+                            demoted.append(cell.cell_id)
         
         # Step 6: Collection confirmation stats for pruning
         pruning_results: List[PruningResult] = []

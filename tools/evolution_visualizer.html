@@ -673,6 +673,29 @@
                 }
             });
 
+            // Ported: Find implicit edges (cluster_members, strategy_ids, pack_members)
+            Object.entries(nodes).forEach(([nid, n]) => {
+                if (n.meta) {
+                    const childLists = [
+                        n.meta.cluster_members,
+                        n.meta.strategy_ids,
+                        n.meta.pack_members
+                    ];
+
+                    childLists.forEach(list => {
+                        if (list && Array.isArray(list)) {
+                            list.forEach(cid => {
+                                if (!children[nid]) children[nid] = [];
+                                if (!children[nid].includes(cid)) {
+                                    children[nid].push(cid);
+                                    parent[cid] = nid;
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+
             // Find root nodes (no parent)
             const nodeIds = Object.keys(nodes);
             const roots = nodeIds.filter(id => !parent[id]);
@@ -713,16 +736,30 @@
             sortedLevels.forEach(lvl => {
                 const nodesAtLevel = nodesByLevel[lvl];
                 const count = nodesAtLevel.length;
-                const spacing = 4;  // X spacing between nodes
-                const startX = -(count - 1) * spacing / 2;
 
-                nodesAtLevel.forEach((id, i) => {
-                    pos[id] = {
-                        x: startX + i * spacing,
-                        y: lvl * 3,  // Y increases with level
-                        z: 0
-                    };
-                });
+                if (count > 6) {
+                    // Spread in a ring/circle for many nodes
+                    const radius = Math.max(8, count * 0.8);
+                    nodesAtLevel.forEach((id, i) => {
+                        const angle = (i / count) * Math.PI * 2;
+                        pos[id] = {
+                            x: Math.cos(angle) * radius,
+                            y: lvl * 4,
+                            z: Math.sin(angle) * radius
+                        };
+                    });
+                } else {
+                    // Spread in a line for few nodes
+                    const spacing = 4;
+                    const startX = -(count - 1) * spacing / 2;
+                    nodesAtLevel.forEach((id, i) => {
+                        pos[id] = {
+                            x: startX + i * spacing,
+                            y: lvl * 4,
+                            z: 0
+                        };
+                    });
+                }
             });
 
             // Refine: center children under their parents

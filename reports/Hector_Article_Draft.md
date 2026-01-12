@@ -165,6 +165,7 @@ The transition occurs naturally through activation dynamics:
 To address the **Prodigy Problem** at its root, Hector must go beyond mere parameter tuning and engage in **Structural Maturation**. While M3/M4 plasticity optimizes the *importance* of existing concepts, the M5 evolution system allows the agent to *discover* new ones. 
 
 The maturation phase replaces hand-designed sensor nodes with self-discovering **stem cells**, enabling the ReCoN graph to autonomously grow its own topology. This process represents the agent "showing its work"—externalizing its learned correlations into persistent, inspectable symbolic structures.
+<!-- NOTE: M5 is currently in an exploratory phase. Results are promising but balancing recursive growth with XP survival remains an active area of investigation. -->
 
 #### The Stem Cell Lifecycle
 
@@ -353,6 +354,7 @@ The transition occurs via activation dynamics, demonstrating autonomous strategi
 1. **Information Gain in High-Draw Environments**: While M5 successfully discovers patterns in high-reward endgames (KPK), credit assignment in complex endgames like KRK remains challenging. Overcoming "sample starvation" in draw-heavy environments currently requires reward shaping (Draw Scent) for structural discovery to converge.
 2. **Knowledge Persistence vs. Pruning**: While the network can grow hierarchical structures (depth 3-5+), the current "metabolic pruning" mechanism is still maturing. There is a tension between preserving learned affordances and removing redundant nodes that correlate but do not provide unique Information Gain.
 3. **Tactical Precision vs. Strategic Orchestration**: Hector excels at hierarchical deliberation but does not yet natively incorporate deep look-ahead search. For complex middle-game combinations, a hybrid approach combining ReCoN with traditional search may be necessary.
+<!-- TODO: Mention that M5 results are characterized as an exploratory frontier with promising early results in depth discovery. -->
 
 ### Future Work
 

@@ -41,6 +41,7 @@ def create_promote_strategy(nid: str) -> Node:
                     "move": move.uci(),
                     "confidence": 1.0,
                     "strategy": "promote",
+                    "maturity": 1.0, # Backbone
                 }
                 return True, True
         
@@ -72,6 +73,7 @@ def create_push_strategy(nid: str) -> Node:
                     "move": move.uci(),
                     "source": nid,
                     "weight": 0.5,  # NEUTRAL - learned via plasticity
+                    "maturity": 1.0, # Backbone
                     "is_promotion": move.promotion is not None,
                 })
         
@@ -121,6 +123,7 @@ def create_king_support_strategy(nid: str) -> Node:
                     "move": move.uci(),
                     "source": nid,
                     "weight": 0.5,  # NEUTRAL - learned via plasticity
+                    "maturity": 1.0, # Backbone
                 })
         
         if king_moves:
@@ -204,18 +207,24 @@ def create_generic_arbiter(nid: str) -> Node:
         if not candidate_moves:
             return False, False
         
-        # Apply LEARNED weight multipliers from node.meta
-        # These weights are updated by M3/M4 plasticity based on game outcomes
+        # Apply LEARNED weight multipliers and MATURITY weighting
         learned_weights = node.meta.get("learned_weights", {})
         for m in candidate_moves:
             source = m.get("source", "")
-            # Apply learned multiplier if available
+            # Apply maturity multiplier if provided by the source strategy
+            # Default to 1.0 (mature backbone) if not present
+            maturity = m.get("maturity", 1.0)
+            m["weight"] *= maturity
+
+            # Apply learned multiplier if available (M3/M4 plasticity)
             if source in learned_weights:
                 m["weight"] *= learned_weights[source]
+            
             # Also check for move-specific weights
             move_key = f"{source}:{m['move']}"
             if move_key in learned_weights:
                 m["weight"] *= learned_weights[move_key]
+            
             # Boost promotions slightly to help early learning
             if m.get("is_promotion"):
                 m["weight"] *= learned_weights.get("promotion_bonus", 1.0)
