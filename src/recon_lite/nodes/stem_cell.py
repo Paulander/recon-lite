@@ -984,26 +984,21 @@ class StemCellTerminal:
                     elif "_gate" in nid and node.ntype.name == "SCRIPT":
                         trial_parent_candidates.append(nid)
                 
-                # 50% chance to use TRIAL parent if available
-                if trial_parent_candidates and random.random() < 0.5:
-                    parent_id = random.choice(trial_parent_candidates)
-                    print(f"      🌲 VERTICAL GROWTH: Spawning under {parent_id}")
-                else:
-                    # Fallback to backbone nodes
-                    parent_id = "kpk_execute" if "kpk_execute" in graph.nodes else "kpk_detect"
+                # DUAL-DEPTH SPAWNING: Spawn at BOTH backbone AND deeper level
+                # This ensures we always have level 1 sensors while also building hierarchies
+                backbone_parent = "kpk_execute" if "kpk_execute" in graph.nodes else "kpk_detect"
                 
                 pack_ids = {}
                 
                 # FORCED: Only AND-gate for now (other pack types have POR→TERMINAL bugs)
                 pack_type = "and"
                 
+                # 1. ALWAYS spawn one pack at backbone (level 1 sensor)
                 if pack_type == "and":
-                    # AND-GATE: 35% chance - for co-conditions
-                    # Uses 2 conditions from pattern components
                     conditions = [condition_fn, lambda env: env.get("can_progress", True)]
                     pack_ids = spawn_and_gate_pack(
                         gate_name=f"and_{self.cell_id}_{current_tick}",
-                        parent_id=parent_id,
+                        parent_id=backbone_parent,
                         graph=graph,
                         conditions=conditions,
                         then_action=actuator_fn,
@@ -1011,7 +1006,21 @@ class StemCellTerminal:
                     )
                     if pack_ids:
                         self.metadata["pack_type"] = "and_gate"
-                        print(f"      🔗 AND-gate spawned: {pack_ids.get('gate')}")
+                        print(f"      🔗 AND-gate spawned (L1): {pack_ids.get('gate')}")
+                
+                # 2. ADDITIONALLY spawn one deeper pack if vertical candidates exist
+                if trial_parent_candidates:
+                    deep_parent = random.choice(trial_parent_candidates)
+                    deep_pack_ids = spawn_and_gate_pack(
+                        gate_name=f"and_{self.cell_id}_{current_tick}_deep",
+                        parent_id=deep_parent,
+                        graph=graph,
+                        conditions=[condition_fn, lambda env: env.get("can_progress", True)],
+                        then_action=actuator_fn,
+                        is_trial=True,
+                    )
+                    if deep_pack_ids:
+                        print(f"      🌲 AND-gate spawned (deep under {deep_parent}): {deep_pack_ids.get('gate')}")
                         
                 elif pack_type == "sequence" or (pack_type == "auto" and pack_roll < 0.60):
                     # SEQUENCE: 25% chance - for multi-step tactics

@@ -1476,22 +1476,38 @@ class StructureLearner:
             
             # =====================================================================
             # M5.1 EXTREME FAILURE BYPASS: Force promotion in cold-start scenarios
-            # When win_rate < 5% for 1000+ games, the consistency check is too strict
+            # When win_rate < 5% for 200+ games, the consistency check is too strict
             # and prevents ANY structure from forming. Force promote to TRIAL to
             # allow failure-driven exploration and engagement XP to kick in.
             # =====================================================================
             games_total = self._games_at_current_stage if hasattr(self, '_games_at_current_stage') else 0
             extreme_failure_bypass = (
                 current_win_rate < 0.05 and 
-                games_total >= 1000 and 
+                games_total >= 200 and  # Lowered from 1000 - faster intervention
                 sample_count >= 30  # Lower bar for extreme failure
             )
             
             if extreme_failure_bypass:
                 cell.metadata["promotion_reason"] = "extreme_failure_bypass"
             
+            # =====================================================================
+            # M5.2 SURVIVOR BYPASS: Auto-promote CANDIDATEs that survived 2+ cycles
+            # If a CANDIDATE has survived through 2 or more structural phases,
+            # it's stable enough to be trialed. This prevents deadlock where all
+            # cells get pruned during easy stages leaving none for hard stages.
+            # =====================================================================
+            cycles_survived = cell.metadata.get("cycles_survived", 0)
+            survivor_bypass = (
+                cell.state == StemCellState.CANDIDATE and
+                cycles_survived >= 2 and
+                sample_count >= 15  # Minimal data requirement
+            )
+            
+            if survivor_bypass:
+                cell.metadata["promotion_reason"] = f"survivor_bypass_{cycles_survived}_cycles"
+            
             # Either bypass allows promotion without consistency check
-            bypass_enabled = success_bypass or perfect_success or extreme_failure_bypass
+            bypass_enabled = success_bypass or perfect_success or extreme_failure_bypass or survivor_bypass
             
             # Check if ready for trial - EXPANSION: lowered to 0.40
             consistency, _ = cell.analyze_pattern()
@@ -1552,6 +1568,13 @@ class StructureLearner:
             if cell.state == StemCellState.TRIAL:
                 new_xp = cell.decay_xp()
                 xp_decays.append((cell.cell_id, new_xp))
+        
+        # Step 4a: Increment cycles_survived for CANDIDATE cells
+        # This enables SURVIVOR BYPASS: auto-promote after 2+ cycles
+        for cell in stem_manager.cells.values():
+            if cell.state == StemCellState.CANDIDATE:
+                cycles_survived = cell.metadata.get("cycles_survived", 0) + 1
+                cell.metadata["cycles_survived"] = cycles_survived
         
         # Step 4b: MATURITY BOOST - Fast-track high-quality cells
         # If a TRIAL node has consistency > 0.70 and survived 500+ ticks, promote immediately
