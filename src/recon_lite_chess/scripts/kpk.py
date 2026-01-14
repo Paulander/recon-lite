@@ -44,8 +44,10 @@ def create_kpk_material_detector(nid: str) -> Node:
         summary = struct_sensors.summarize_kpk_material(board)
         node.meta["summary"] = summary
         env.setdefault("kpk", {})["material"] = summary
-        ok = bool(summary.get("is_kpk"))
-        return ok, ok
+        is_kpk = bool(summary.get("is_kpk"))
+        # Always complete - this is an observer, not a gate
+        node.activation.value = 1.0 if is_kpk else 0.0
+        return True, True  # Non-blocking sensor
 
     return Node(nid=nid, ntype=NodeType.TERMINAL, predicate=_predicate)
 
@@ -67,8 +69,9 @@ def create_kpk_push_window(nid: str) -> Node:
         node.meta["can_push"] = can_push
         node.meta["is_kpk"] = is_kpk
         env.setdefault("kpk", {}).setdefault("tactics", {})["can_push"] = can_push
-        # Always complete the sensor check - the move selector handles both push and king moves
-        return is_kpk, is_kpk  # Only block if not a KPK position at all
+        # Always complete - this is an observer, not a gate
+        node.activation.value = 1.0 if can_push else 0.0
+        return True, True  # Non-blocking sensor
 
     return Node(nid=nid, ntype=NodeType.TERMINAL, predicate=_predicate)
 
@@ -79,10 +82,12 @@ def create_kpk_opposition_probe(nid: str) -> Node:
         board = env.get("board")
         summary = struct_sensors.summarize_kpk_material(board)
         color = summary.get("attacker_color")
-        ok = bool(summary.get("is_kpk")) and tactic_sensors.has_opposition_alignment(board, attacker_color=color)
-        node.meta["has_opposition"] = ok
-        env.setdefault("kpk", {}).setdefault("tactics", {})["has_opposition"] = ok
-        return ok, ok
+        has_opposition = bool(summary.get("is_kpk")) and tactic_sensors.has_opposition_alignment(board, attacker_color=color)
+        node.meta["has_opposition"] = has_opposition
+        env.setdefault("kpk", {}).setdefault("tactics", {})["has_opposition"] = has_opposition
+        # Always complete - this is an observer, not a gate
+        node.activation.value = 1.0 if has_opposition else 0.0
+        return True, True  # Non-blocking sensor
 
     return Node(nid=nid, ntype=NodeType.TERMINAL, predicate=_predicate)
 
@@ -94,8 +99,10 @@ def create_kpk_promotion_probe(nid: str) -> Node:
         distance = struct_sensors.pawn_distance_to_promotion(board)
         node.meta["distance"] = distance
         env.setdefault("kpk", {}).setdefault("structure", {})["promotion_distance"] = distance
-        ok = distance <= 1
-        return ok, ok
+        close_to_promotion = distance <= 1
+        # Always complete - this is an observer, not a gate
+        node.activation.value = 1.0 if close_to_promotion else 0.0
+        return True, True  # Non-blocking sensor
 
     return Node(nid=nid, ntype=NodeType.TERMINAL, predicate=_predicate)
 

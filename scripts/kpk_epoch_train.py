@@ -95,13 +95,27 @@ def play_kpk_game(
         # Reset graph state
         for node in graph.nodes.values():
             node.state = NodeState.INACTIVE
-        graph.nodes["GameRoot"].state = NodeState.REQUESTED
         
-        # Run engine
+        # Request kpk_root directly (bypass gating layer for isolated testing)
+        if "kpk_root" in graph.nodes:
+            graph.nodes["kpk_root"].state = NodeState.REQUESTED
+        else:
+            graph.nodes["GameRoot"].state = NodeState.REQUESTED
+        
+        # Run engine with multiple ticks for signal propagation
         env = {"board": board}
-        engine.step(env)
+        suggested = None
+        MAX_TICKS = 10
         
-        # Track which edges fired
+        for tick in range(MAX_TICKS):
+            engine.step(env)
+            
+            # Check for suggested move after each tick
+            suggested = env.get("kpk", {}).get("policy", {}).get("suggested_move")
+            if suggested:
+                break
+        
+        # Track which edges fired (after all ticks complete)
         for e in graph.edges:
             src_node = graph.nodes.get(e.src)
             dst_node = graph.nodes.get(e.dst)

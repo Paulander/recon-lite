@@ -757,7 +757,11 @@ def choose_move_phase4(board: chess.Board, env: Optional[Dict[str, Any]] = None)
     """Phase 4: finish once the defender is forced into the mating corner."""
     mate = _find_mate_in_one(board)
     if mate:
+        print(f"DEBUG: PHASE4 found mate: {mate}")
         return mate
+    
+    print(f"DEBUG: PHASE4 no mate in 1 found. Moves: {board.legal_moves.count()}")
+
 
     forced = _find_forced_mate_move(board, max_depth=24, forbid_opposition=False)
     if forced:

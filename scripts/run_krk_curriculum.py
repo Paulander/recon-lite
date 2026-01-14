@@ -344,9 +344,9 @@ def play_krk_game_recon(
         king_count = sum(1 for p in pieces if p.piece_type == chess.KING)
         return has_rook and king_count == 2 and len(pieces) == 3
     
-    # Lock the subgraph
+    # Lock the subgraph with enough room for deep POR propagation
     try:
-        engine.lock_subgraph("krk_root", krk_sentinel)
+        engine.lock_subgraph("krk_root", krk_sentinel, max_internal_ticks=30, min_internal_ticks=10)
     except ValueError:
         # Subgraph might already be locked or not exist
         pass
@@ -357,6 +357,9 @@ def play_krk_game_recon(
         
         # Build environment
         env = {"board": board}
+        
+        # Reset engine states before each decision
+        engine.reset_states()
         
         # Run engine ticks
         suggested_move = None

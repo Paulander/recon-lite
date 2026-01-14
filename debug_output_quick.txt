@@ -1,0 +1,643 @@
+DEBUG: KRK_NODES MODULE LOADED
+======================================================================
+KRK CURRICULUM TRAINING
+======================================================================
+  Consolidation enabled: eta=0.01, min_episodes=10
+
+Using RECON ENGINE mode with M5=False
+DEBUG: create_krk_execute CALLED for krk_execute
+  Graph loaded: 39 nodes
+  Consolidation tracking 89 KRK edges
+  Gating enabled: 0.3 → 1.0
+  Loaded consolidation state from previous run (transfer learning enabled)
+
+Starting curriculum with 14 stages
+Games per cycle: 5
+Win rate threshold: 0.75
+
+
+============================================================
+STAGE 0: Mate_In_1
+Description: Back-rank mate in 1 move
+Key Lesson: Basic rook mating pattern
+Target Win Rate: 0.95
+============================================================
+
+  Cycle 1/3
+    Win Rate: 0.0% (0W/2L/1S/2D)
+    Avg Moves: 28.6
+    Avg Reward: -0.100
+    Box Escapes: 20.0%
+    Duration: 1.1s
+    Top nodes: krk_root(1430), krk_detect(1430), krk_king_distance(1430), krk_opposition_probe(1430), krk_box_area(1430)
+
+  Cycle 2/3
+    [CONSOLIDATION] Applied 0 weight updates
+    Win Rate: 0.0% (0W/4L/0S/1D)
+    Avg Moves: 22.0
+    Avg Reward: 0.000
+    Box Escapes: 0.0%
+    Duration: 1.0s
+    Top nodes: krk_root(1100), krk_detect(1100), krk_king_distance(1100), krk_opposition_probe(1100), krk_box_area(1100)
+
+  Cycle 3/3
+    Win Rate: 20.0% (1W/4L/0S/0D)
+    Avg Moves: 23.2
+    Avg Reward: 0.184
+    Box Escapes: 0.0%
+    Duration: 1.0s
+    Top nodes: krk_root(1160), krk_detect(1160), krk_king_distance(1160), krk_opposition_probe(1160), krk_box_area(1160)
+
+  Max cycles reached. Force advancing...
+
+  Stage 0 Complete:
+    Games: 15
+    Cycles: 3
+    Final Win Rate: 6.7%
+
+============================================================
+STAGE 1: Mate_In_2
+Description: Mate in 2 moves with varied patterns - no shortcuts
+Key Lesson: King-rook coordination
+Target Win Rate: 0.9
+============================================================
+
+  Cycle 1/3
+    [CONSOLIDATION] Applied 0 weight updates
+    Win Rate: 0.0% (0W/5L/0S/0D)
+    Avg Moves: 12.2
+    Avg Reward: 0.000
+    Box Escapes: 20.0%
+    Duration: 0.5s
+    Top nodes: krk_root(610), krk_detect(610), krk_king_distance(610), krk_opposition_probe(610), krk_box_area(610)
+
+  Cycle 2/3
+    Win Rate: 0.0% (0W/5L/0S/0D)
+    Avg Moves: 12.2
+    Avg Reward: 0.000
+    Box Escapes: 0.0%
+    Duration: 0.4s
+    Top nodes: krk_root(610), krk_detect(610), krk_king_distance(610), krk_opposition_probe(610), krk_box_area(610)
+
+  Cycle 3/3
+    [CONSOLIDATION] Applied 0 weight updates
+    Win Rate: 0.0% (0W/3L/2S/0D)
+    Avg Moves: 7.8
+    Avg Reward: -0.200
+    Box Escapes: 20.0%
+    Duration: 0.4s
+    Top nodes: krk_root(390), krk_detect(390), krk_king_distance(390), krk_opposition_probe(390), krk_box_area(390)
+
+  Max cycles reached. Force advancing...
+
+  Stage 1 Complete:
+    Games: 15
+    Cycles: 3
+    Final Win Rate: 0.0%
+
+============================================================
+STAGE 2: Edge_Trapped_Tempo
+Description: Opposition timing at edge
+Key Lesson: Waiting moves / tempo
+Target Win Rate: 0.85
+============================================================
+
+  Cycle 1/3
+    Win Rate: 0.0% (0W/4L/0S/1D)
+    Avg Moves: 34.0
+    Avg Reward: 0.000
+    Box Escapes: 20.0%
+    Duration: 1.4s
+    Top nodes: krk_root(1700), krk_detect(1700), krk_king_distance(1700), krk_opposition_probe(1700), krk_box_area(1700)
+
+  Cycle 2/3
+    [CONSOLIDATION] Applied 0 weight updates
+    Win Rate: 0.0% (0W/5L/0S/0D)
+    Avg Moves: 13.8
+    Avg Reward: 0.000
+    Box Escapes: 0.0%
+    Duration: 0.6s
+    Top nodes: krk_root(690), krk_detect(690), krk_king_distance(690), krk_opposition_probe(690), krk_box_area(690)
+
+  Cycle 3/3
+    Win Rate: 20.0% (1W/2L/1S/1D)
+    Avg Moves: 20.4
+    Avg Reward: 0.100
+    Box Escapes: 40.0%
+    Duration: 3.9s
+    Top nodes: krk_root(1020), krk_detect(1020), krk_king_distance(1020), krk_opposition_probe(1020), krk_box_area(1020)
+
+  Max cycles reached. Force advancing...
+
+  Stage 2 Complete:
+    Games: 15
+    Cycles: 3
+    Final Win Rate: 6.7%
+
+============================================================
+STAGE 3: Opposition_Approach
+Description: Knight distance between kings, our king on 3rd row
+Key Lesson: Approach with knight distance (L-shape) for opposition
+Target Win Rate: 0.65
+============================================================
+
+  Cycle 1/3
+    [CONSOLIDATION] Applied 0 weight updates
+    Win Rate: 20.0% (1W/3L/0S/1D)
+    Avg Moves: 19.6
+    Avg Reward: 0.096
+    Box Escapes: 0.0%
+    Duration: 1.3s
+    Top nodes: krk_root(980), krk_detect(980), krk_king_distance(980), krk_opposition_probe(980), krk_box_area(980)
+
+  Cycle 2/3
+    Win Rate: 0.0% (0W/5L/0S/0D)
+    Avg Moves: 20.0
+    Avg Reward: 0.000
+    Box Escapes: 0.0%
+    Duration: 1.5s
+    Top nodes: krk_root(1000), krk_detect(1000), krk_king_distance(1000), krk_opposition_probe(1000), krk_box_area(1000)
+
+  Cycle 3/3
+    [CONSOLIDATION] Applied 0 weight updates
+    Win Rate: 0.0% (0W/5L/0S/0D)
+    Avg Moves: 18.4
+    Avg Reward: 0.000
+    Box Escapes: 0.0%
+    Duration: 0.9s
+    Top nodes: krk_root(920), krk_detect(920), krk_king_distance(920), krk_opposition_probe(920), krk_box_area(920)
+
+  Max cycles reached. Force advancing...
+
+  Stage 3 Complete:
+    Games: 15
+    Cycles: 3
+    Final Win Rate: 6.7%
+
+============================================================
+STAGE 4: Tempo_Wait
+Description: Rook slides along fence for tempo when king 'stuck'
+Key Lesson: Wait move with rook to gain opposition tempo
+Target Win Rate: 0.6
+============================================================
+
+  Cycle 1/3
+    Win Rate: 0.0% (0W/5L/0S/0D)
+    Avg Moves: 18.6
+    Avg Reward: 0.000
+    Box Escapes: 0.0%
+    Duration: 0.7s
+    Top nodes: krk_root(930), krk_detect(930), krk_king_distance(930), krk_opposition_probe(930), krk_box_area(930)
+
+  Cycle 2/3
+    [CONSOLIDATION] Applied 0 weight updates
+    Win Rate: 0.0% (0W/4L/0S/1D)
+    Avg Moves: 25.2
+    Avg Reward: 0.000
+    Box Escapes: 20.0%
+    Duration: 1.0s
+    Top nodes: krk_root(1260), krk_detect(1260), krk_king_distance(1260), krk_opposition_probe(1260), krk_box_area(1260)
+
+  Cycle 3/3
+    Win Rate: 0.0% (0W/5L/0S/0D)
+    Avg Moves: 13.4
+    Avg Reward: 0.000
+    Box Escapes: 20.0%
+    Duration: 0.5s
+    Top nodes: krk_root(670), krk_detect(670), krk_king_distance(670), krk_opposition_probe(670), krk_box_area(670)
+
+  Max cycles reached. Force advancing...
+
+  Stage 4 Complete:
+    Games: 15
+    Cycles: 3
+    Final Win Rate: 0.0%
+
+============================================================
+STAGE 5: Fence_Established
+Description: Rook fence divides board - enemy king confined
+Key Lesson: Recognize and maintain the fence (rook cut)
+Target Win Rate: 0.6
+============================================================
+
+  Cycle 1/3
+    [CONSOLIDATION] Applied 0 weight updates
+    Win Rate: 0.0% (0W/2L/1S/2D)
+    Avg Moves: 32.4
+    Avg Reward: -0.100
+    Box Escapes: 100.0%
+    Duration: 1.1s
+    Top nodes: krk_root(1620), krk_detect(1620), krk_king_distance(1620), krk_opposition_probe(1620), krk_box_area(1620)
+
+  Cycle 2/3
+    Win Rate: 0.0% (0W/4L/0S/1D)
+    Avg Moves: 27.0
+    Avg Reward: 0.000
+    Box Escapes: 80.0%
+    Duration: 1.5s
+    Top nodes: krk_root(1350), krk_detect(1350), krk_king_distance(1350), krk_opposition_probe(1350), krk_box_area(1350)
+
+  Cycle 3/3
+    [CONSOLIDATION] Applied 0 weight updates
+    Win Rate: 0.0% (0W/5L/0S/0D)
+    Avg Moves: 17.8
+    Avg Reward: 0.000
+    Box Escapes: 100.0%
+    Duration: 0.8s
+    Top nodes: krk_root(890), krk_detect(890), krk_king_distance(890), krk_opposition_probe(890), krk_box_area(890)
+
+  Max cycles reached. Force advancing...
+
+  Stage 5 Complete:
+    Games: 15
+    Cycles: 3
+    Final Win Rate: 0.0%
+
+============================================================
+STAGE 6: Box_Small
+Description: 3x3 confinement box shrinking
+Key Lesson: Systematic box reduction
+Target Win Rate: 0.6
+============================================================
+
+  Cycle 1/3
+    Win Rate: 0.0% (0W/4L/0S/1D)
+    Avg Moves: 11.6
+    Avg Reward: 0.000
+    Box Escapes: 40.0%
+    Duration: 0.4s
+    Top nodes: krk_root(580), krk_detect(580), krk_king_distance(580), krk_opposition_probe(580), krk_box_area(580)
+
+  Cycle 2/3
+    [CONSOLIDATION] Applied 0 weight updates
+    Win Rate: 0.0% (0W/5L/0S/0D)
+    Avg Moves: 5.8
+    Avg Reward: 0.000
+    Box Escapes: 60.0%
+    Duration: 0.2s
+    Top nodes: krk_root(290), krk_detect(290), krk_king_distance(290), krk_opposition_probe(290), krk_box_area(290)
+
+  Cycle 3/3
+    Win Rate: 0.0% (0W/5L/0S/0D)
+    Avg Moves: 12.8
+    Avg Reward: 0.000
+    Box Escapes: 60.0%
+    Duration: 0.5s
+    Top nodes: krk_root(640), krk_detect(640), krk_king_distance(640), krk_opposition_probe(640), krk_box_area(640)
+
+  Max cycles reached. Force advancing...
+
+  Stage 6 Complete:
+    Games: 15
+    Cycles: 3
+    Final Win Rate: 0.0%
+
+============================================================
+STAGE 7: Box_Medium
+Description: 4x4 box requiring opposition
+Key Lesson: Opposition + systematic shrinking
+Target Win Rate: 0.55
+============================================================
+
+  Cycle 1/3
+    [CONSOLIDATION] Applied 0 weight updates
+    Win Rate: 0.0% (0W/4L/0S/1D)
+    Avg Moves: 22.4
+    Avg Reward: 0.000
+    Box Escapes: 40.0%
+    Duration: 0.7s
+    Top nodes: krk_root(1120), krk_detect(1120), krk_king_distance(1120), krk_opposition_probe(1120), krk_box_area(1120)
+
+  Cycle 2/3
+    Win Rate: 0.0% (0W/4L/0S/1D)
+    Avg Moves: 22.8
+    Avg Reward: 0.000
+    Box Escapes: 80.0%
+    Duration: 0.7s
+    Top nodes: krk_root(1140), krk_detect(1140), krk_king_distance(1140), krk_opposition_probe(1140), krk_box_area(1140)
+
+  Cycle 3/3
+    [CONSOLIDATION] Applied 0 weight updates
+    Win Rate: 0.0% (0W/5L/0S/0D)
+    Avg Moves: 18.2
+    Avg Reward: 0.000
+    Box Escapes: 60.0%
+    Duration: 0.9s
+    Top nodes: krk_root(910), krk_detect(910), krk_king_distance(910), krk_opposition_probe(910), krk_box_area(910)
+
+  Max cycles reached. Force advancing...
+
+  Stage 7 Complete:
+    Games: 15
+    Cycles: 3
+    Final Win Rate: 0.0%
+
+============================================================
+STAGE 8: Anchored_Cut
+Description: King already anchored next to rook - maintain cut
+Key Lesson: Hold the cut with pre-positioned king (coordination already done)
+Target Win Rate: 0.75
+============================================================
+
+  Cycle 1/3
+    Win Rate: 0.0% (0W/4L/1S/0D)
+    Avg Moves: 8.0
+    Avg Reward: -0.100
+    Box Escapes: 40.0%
+    Duration: 0.4s
+    Top nodes: krk_root(400), krk_detect(400), krk_king_distance(400), krk_opposition_probe(400), krk_box_area(400)
+
+  Cycle 2/3
+    [CONSOLIDATION] Applied 0 weight updates
+    Win Rate: 20.0% (1W/3L/0S/1D)
+    Avg Moves: 17.6
+    Avg Reward: 0.200
+    Box Escapes: 60.0%
+    Duration: 0.6s
+    Top nodes: krk_root(880), krk_detect(880), krk_king_distance(880), krk_opposition_probe(880), krk_box_area(880)
+
+  Cycle 3/3
+    Win Rate: 0.0% (0W/4L/1S/0D)
+    Avg Moves: 2.8
+    Avg Reward: -0.100
+    Box Escapes: 40.0%
+    Duration: 0.1s
+    Top nodes: krk_root(140), krk_detect(140), krk_king_distance(140), krk_opposition_probe(140), krk_box_area(140)
+
+  Max cycles reached. Force advancing...
+
+  Stage 8 Complete:
+    Games: 15
+    Cycles: 3
+    Final Win Rate: 6.7%
+
+============================================================
+STAGE 9: Edge_Cut_Hold
+Description: Maintain cut while approaching (1x8 box)
+Key Lesson: Don't let king escape! Smallest side must not grow.
+Target Win Rate: 0.8
+============================================================
+
+  Cycle 1/3
+    [CONSOLIDATION] Applied 0 weight updates
+    Win Rate: 0.0% (0W/5L/0S/0D)
+    Avg Moves: 10.2
+    Avg Reward: 0.000
+    Box Escapes: 40.0%
+    Duration: 0.3s
+    Top nodes: krk_root(510), krk_detect(510), krk_king_distance(510), krk_opposition_probe(510), krk_box_area(510)
+
+  Cycle 2/3
+    Win Rate: 0.0% (0W/4L/0S/1D)
+    Avg Moves: 12.4
+    Avg Reward: 0.000
+    Box Escapes: 40.0%
+    Duration: 0.4s
+    Top nodes: krk_root(620), krk_detect(620), krk_king_distance(620), krk_opposition_probe(620), krk_box_area(620)
+
+  Cycle 3/3
+    [CONSOLIDATION] Applied 0 weight updates
+    Win Rate: 0.0% (0W/5L/0S/0D)
+    Avg Moves: 15.8
+    Avg Reward: 0.000
+    Box Escapes: 60.0%
+    Duration: 0.4s
+    Top nodes: krk_root(790), krk_detect(790), krk_king_distance(790), krk_opposition_probe(790), krk_box_area(790)
+
+  Max cycles reached. Force advancing...
+
+  Stage 9 Complete:
+    Games: 15
+    Cycles: 3
+    Final Win Rate: 0.0%
+
+============================================================
+STAGE 10: King_Close_1
+Description: King 1 square from ideal position
+Key Lesson: Approach while maintaining cut
+Target Win Rate: 0.75
+============================================================
+
+  Cycle 1/3
+    Win Rate: 0.0% (0W/5L/0S/0D)
+    Avg Moves: 2.0
+    Avg Reward: 0.000
+    Box Escapes: 20.0%
+    Duration: 0.1s
+    Top nodes: krk_root(100), krk_detect(100), krk_king_distance(100), krk_opposition_probe(100), krk_box_area(100)
+
+  Cycle 2/3
+    [CONSOLIDATION] Applied 0 weight updates
+    Win Rate: 20.0% (1W/4L/0S/0D)
+    Avg Moves: 11.2
+    Avg Reward: 0.100
+    Box Escapes: 80.0%
+    Duration: 0.3s
+    Top nodes: krk_root(560), krk_detect(560), krk_king_distance(560), krk_opposition_probe(560), krk_box_area(560)
+
+  Cycle 3/3
+    Win Rate: 0.0% (0W/4L/0S/1D)
+    Avg Moves: 17.8
+    Avg Reward: 0.000
+    Box Escapes: 60.0%
+    Duration: 0.5s
+    Top nodes: krk_root(890), krk_detect(890), krk_king_distance(890), krk_opposition_probe(890), krk_box_area(890)
+
+  Max cycles reached. Force advancing...
+
+  Stage 10 Complete:
+    Games: 15
+    Cycles: 3
+    Final Win Rate: 6.7%
+
+============================================================
+STAGE 11: King_Close_2
+Description: King 2 squares from ideal position
+Key Lesson: Multi-step approach planning
+Target Win Rate: 0.7
+============================================================
+
+  Cycle 1/3
+    [CONSOLIDATION] Applied 0 weight updates
+    Win Rate: 0.0% (0W/5L/0S/0D)
+    Avg Moves: 9.8
+    Avg Reward: 0.000
+    Box Escapes: 40.0%
+    Duration: 0.3s
+    Top nodes: krk_root(490), krk_detect(490), krk_king_distance(490), krk_opposition_probe(490), krk_box_area(490)
+
+  Cycle 2/3
+    Win Rate: 0.0% (0W/5L/0S/0D)
+    Avg Moves: 5.6
+    Avg Reward: 0.000
+    Box Escapes: 60.0%
+    Duration: 0.2s
+    Top nodes: krk_root(280), krk_detect(280), krk_king_distance(280), krk_opposition_probe(280), krk_box_area(280)
+
+  Cycle 3/3
+    [CONSOLIDATION] Applied 0 weight updates
+    Win Rate: 0.0% (0W/4L/0S/1D)
+    Avg Moves: 15.2
+    Avg Reward: 0.000
+    Box Escapes: 60.0%
+    Duration: 0.4s
+    Top nodes: krk_root(760), krk_detect(760), krk_king_distance(760), krk_opposition_probe(760), krk_box_area(760)
+
+  Max cycles reached. Force advancing...
+
+  Stage 11 Complete:
+    Games: 15
+    Cycles: 3
+    Final Win Rate: 0.0%
+
+============================================================
+STAGE 12: King_Far_Cut_Held
+Description: King far away, rook maintains cut
+Key Lesson: Long march while rook holds
+Target Win Rate: 0.65
+============================================================
+
+  Cycle 1/3
+    Win Rate: 0.0% (0W/4L/1S/0D)
+    Avg Moves: 10.4
+    Avg Reward: -0.100
+    Box Escapes: 80.0%
+    Duration: 0.3s
+    Top nodes: krk_root(520), krk_detect(520), krk_king_distance(520), krk_opposition_probe(520), krk_box_area(520)
+
+  Cycle 2/3
+    [CONSOLIDATION] Applied 0 weight updates
+    Win Rate: 0.0% (0W/5L/0S/0D)
+    Avg Moves: 12.6
+    Avg Reward: 0.000
+    Box Escapes: 80.0%
+    Duration: 0.4s
+    Top nodes: krk_root(630), krk_detect(630), krk_king_distance(630), krk_opposition_probe(630), krk_box_area(630)
+
+  Cycle 3/3
+    Win Rate: 0.0% (0W/5L/0S/0D)
+    Avg Moves: 3.0
+    Avg Reward: 0.000
+    Box Escapes: 40.0%
+    Duration: 0.1s
+    Top nodes: krk_root(150), krk_detect(150), krk_king_distance(150), krk_opposition_probe(150), krk_box_area(150)
+
+  Max cycles reached. Force advancing...
+
+  Stage 12 Complete:
+    Games: 15
+    Cycles: 3
+    Final Win Rate: 0.0%
+
+============================================================
+STAGE 13: Full_KRK
+Description: Random winning KRK positions
+Key Lesson: Complete Box Method
+Target Win Rate: 0.5
+============================================================
+
+  Cycle 1/3
+    [CONSOLIDATION] Applied 0 weight updates
+    Win Rate: 0.0% (0W/5L/0S/0D)
+    Avg Moves: 35.0
+    Avg Reward: 0.000
+    Box Escapes: 0.0%
+    Duration: 1.6s
+    Top nodes: krk_root(1750), krk_detect(1750), krk_king_distance(1750), krk_opposition_probe(1750), krk_box_area(1750)
+
+  Cycle 2/3
+    Win Rate: 0.0% (0W/4L/0S/1D)
+    Avg Moves: 21.0
+    Avg Reward: 0.000
+    Box Escapes: 0.0%
+    Duration: 0.8s
+    Top nodes: krk_root(1050), krk_detect(1050), krk_king_distance(1050), krk_opposition_probe(1050), krk_box_area(1050)
+
+  Cycle 3/3
+    [CONSOLIDATION] Applied 0 weight updates
+    Win Rate: 0.0% (0W/4L/0S/1D)
+    Avg Moves: 22.6
+    Avg Reward: 0.000
+    Box Escapes: 0.0%
+    Duration: 0.7s
+    Top nodes: krk_root(1130), krk_detect(1130), krk_king_distance(1130), krk_opposition_probe(1130), krk_box_area(1130)
+
+  Max cycles reached. Force advancing...
+  (At final stage - training complete)
+
+  Stage 13 Complete:
+    Games: 15
+    Cycles: 3
+    Final Win Rate: 0.0%
+
+  All stages processed. Ending training.
+
+======================================================================
+TRAINING COMPLETE
+======================================================================
+
+Final consolidation state saved to: snapshots/evolution/krk_curriculum/final_consolidation.json
+Final weights snapshot saved to: snapshots/evolution/krk_curriculum/final_weights.json
+
+Summary saved to: snapshots/evolution/krk_curriculum/curriculum_summary.json
+
+Stage Results:
+------------------------------------------------------------
+  Stage 0: Mate_In_1
+    Win Rate: 6.7%
+    Avg Moves: 5.0
+    Games: 15
+  Stage 1: Mate_In_2
+    Win Rate: 0.0%
+    Avg Moves: 0.0
+    Games: 15
+  Stage 2: Edge_Trapped_Tempo
+    Win Rate: 6.7%
+    Avg Moves: 1.0
+    Games: 15
+  Stage 3: Opposition_Approach
+    Win Rate: 6.7%
+    Avg Moves: 29.0
+    Games: 15
+  Stage 4: Tempo_Wait
+    Win Rate: 0.0%
+    Avg Moves: 0.0
+    Games: 15
+  Stage 5: Fence_Established
+    Win Rate: 0.0%
+    Avg Moves: 0.0
+    Games: 15
+  Stage 6: Box_Small
+    Win Rate: 0.0%
+    Avg Moves: 0.0
+    Games: 15
+  Stage 7: Box_Medium
+    Win Rate: 0.0%
+    Avg Moves: 0.0
+    Games: 15
+  Stage 8: Anchored_Cut
+    Win Rate: 6.7%
+    Avg Moves: 1.0
+    Games: 15
+  Stage 9: Edge_Cut_Hold
+    Win Rate: 0.0%
+    Avg Moves: 0.0
+    Games: 15
+  Stage 10: King_Close_1
+    Win Rate: 6.7%
+    Avg Moves: 3.0
+    Games: 15
+  Stage 11: King_Close_2
+    Win Rate: 0.0%
+    Avg Moves: 0.0
+    Games: 15
+  Stage 12: King_Far_Cut_Held
+    Win Rate: 0.0%
+    Avg Moves: 0.0
+    Games: 15
+  Stage 13: Full_KRK
+    Win Rate: 0.0%
+    Avg Moves: 0.0
+    Games: 15
+
+SUCCESS: Completed 14 stages!

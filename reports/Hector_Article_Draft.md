@@ -20,7 +20,7 @@ Our findings demonstrate that the architecture functions as a distributed orches
 
 Modern deep reinforcement learning has produced agents capable of superhuman performance in games ranging from Go to StarCraft. Yet these "prodigies" exhibit a fundamental limitation: their competence is often a form of superficial "brute-force" matching rather than structural decomposition. Because a neural network can often achieve high reward by simply memorizing complex sensory-motor mappings, it is never "forced" to develop the deeper reasoning chains required for genuine deliberation.
 
-This is akin to a gifted math student who can solve equations intuitively but refuses to "show their work." When asked to simplify an expression, they might say, "I can see immediately that $x = 3/4$," bypassing the formal steps. While successful in the short term, this lack of structural scaffolding prevents them from tackling problems that exceed their intuitive horizon—and it leaves their "reasoning" entirely opaque to others. 
+This is akin to a gifted math student who can solve equations intuitively but refuses to "show their work." When asked to simplify an expression, they might say, "I can see immediately that $x = 42$," bypassing the formal steps. While successful in the short term, this lack of structural scaffolding prevents them from tackling problems that exceed their intuitive horizon—and it leaves their "reasoning" entirely opaque to others. 
 
 We call this the **Prodigy Problem**: high-performance competence that lacks the internal structure necessary for inspection, modification, or maturation into complex planning. This aligns with recent calls for a "Third Wave" of Artificial Intelligence (Garcez & Lamb, 2020) that prioritizes the synthesis of neural learning with symbolic reasoning structures.
 
@@ -28,8 +28,8 @@ We call this the **Prodigy Problem**: high-performance competence that lacks the
 
 We utilize chess as a **drosophila-model** (McCarthy, 1990)—a deterministic environment for quantifying long-range temporal credit assignment and subgoal inference. Our contribution is not "yet another chess engine" but rather a demonstration that:
 
-1. Hierarchical subgoals can **emerge** from self-organizing symbolic structures
-2. Strategic phase transitions can occur **autonomously** without hardcoded orchestration
+1. Strategic phase transitions can occur **autonomously** without hardcoded orchestration
+2. Hierarchical subgoals can **emerge** from self-organizing symbolic structures
 3. Learned structures remain **interpretable** throughout training
 
 ### Thesis
@@ -57,6 +57,8 @@ ReCoN networks consist of two fundamental node types:
 | **TERMINAL** | "Performs measurement, has activation representing value" | Sensors (read environment) or Actuators (execute actions) |
 
 A SCRIPT node represents a **hypothesis**—a claim about the world that must be validated by its children. For example, "opposition is established" is a hypothesis validated by checking king positions. TERMINAL nodes perform the actual measurements or actions.
+
+> **Note**: These definitions are deliberately abstract. A SCRIPT node could range from a simple logical check to a full Multilayer Perceptron (MLP). Similarly, a TERMINAL node could be a Python function or a physical sensor (e.g., a thermometer) interacting with the real world.
 
 ### 2.2 Edge Types
 
@@ -169,7 +171,7 @@ The maturation phase replaces hand-designed sensor nodes with self-discovering *
 
 #### The Stem Cell Lifecycle
 
-Inspired by biological neural development, we implemented a Darwinian selection process for sensor nodes:
+Inspired by evolution (and mirroring biological neural development), we implemented a XP driven selection process for sensor nodes:
 
 ```
 EXPLORING → CANDIDATE → TRIAL → MATURE

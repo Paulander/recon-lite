@@ -10,19 +10,19 @@
   },
   "w_base": {
     "endgame_gate->kpk_root:SUB": 1.0,
-    "kpk_root->kpk_detect:SUB": 1.0,
-    "kpk_root->kpk_execute:SUB": 1.0,
-    "kpk_root->kpk_finish:SUB": 1.0,
-    "kpk_root->kpk_wait:SUB": 1.0,
-    "kpk_detect->kpk_execute:POR": 1.0,
-    "kpk_execute->kpk_finish:POR": 1.0,
-    "kpk_finish->kpk_wait:POR": 1.0,
-    "kpk_detect->kpk_material_check:SUB": 1.0,
-    "kpk_detect->kpk_push_window:SUB": 1.0,
-    "kpk_execute->kpk_move_selector:SUB": 1.0,
-    "kpk_execute->kpk_opposition_probe:SUB": 1.0,
-    "kpk_finish->kpk_promotion_probe:SUB": 1.0,
-    "kpk_wait->kpk_wait_for_change:SUB": 1.0
+    "kpk_root->kpk_detect:SUB": 1.180659,
+    "kpk_root->kpk_execute:SUB": 1.180659,
+    "kpk_root->kpk_finish:SUB": 1.180659,
+    "kpk_root->kpk_wait:SUB": 1.180659,
+    "kpk_detect->kpk_execute:POR": 1.200935,
+    "kpk_execute->kpk_finish:POR": 1.200935,
+    "kpk_finish->kpk_wait:POR": 1.200935,
+    "kpk_detect->kpk_material_check:SUB": 1.200935,
+    "kpk_detect->kpk_push_window:SUB": 1.200935,
+    "kpk_execute->kpk_move_selector:SUB": 1.200935,
+    "kpk_execute->kpk_opposition_probe:SUB": 1.200935,
+    "kpk_finish->kpk_promotion_probe:SUB": 1.200935,
+    "kpk_wait->kpk_wait_for_change:SUB": 1.180659
   },
   "w_init": {
     "endgame_gate->kpk_root:SUB": 1.0,
@@ -41,9 +41,9 @@
     "kpk_wait->kpk_wait_for_change:SUB": 1.0
   },
   "consolidation_meta": {
-    "total_episodes": 90,
+    "total_episodes": 40,
     "episodes_since_apply": 0,
-    "last_apply_time": "2026-01-08T16:42:03.320411",
+    "last_apply_time": "2026-01-14T12:56:33.049472",
     "edges_tracked": 14
   }
 }

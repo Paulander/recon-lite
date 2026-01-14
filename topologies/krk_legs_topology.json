@@ -22,7 +22,7 @@
       "id": "krk_execute",
       "type": "SCRIPT",
       "group": "backbone",
-      "factory": null,
+      "factory": "recon_lite_chess.krk_nodes:create_krk_execute",
       "meta": {}
     },
     {
@@ -103,7 +103,7 @@
       "meta": {
         "layer": "actuator",
         "piece": "rook",
-        "require_child_confirm": true,
+        "require_child_confirm": false,
         "binding_space": "krk_rook_binding"
       }
     },
@@ -116,7 +116,7 @@
         "layer": "actuator",
         "piece": "king",
         "universal": true,
-        "require_child_confirm": true,
+        "require_child_confirm": false,
         "binding_space": "krk_king_binding"
       }
     },
@@ -1334,14 +1334,6 @@
       "confirmation_count": 0
     },
     {
-      "src": "krk_detect",
-      "dst": "krk_execute",
-      "type": "POR",
-      "weight": 1.0,
-      "consolidate": true,
-      "confirmation_count": 0
-    },
-    {
       "src": "krk_execute",
       "dst": "krk_finish",
       "type": "POR",
@@ -1358,8 +1350,8 @@
       "confirmation_count": 0
     },
     {
-      "src": "krk_rook_leg",
-      "dst": "krk_king_leg",
+      "src": "krk_detect",
+      "dst": "krk_execute",
       "type": "POR",
       "weight": 1.0,
       "consolidate": true,

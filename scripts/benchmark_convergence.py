@@ -41,12 +41,18 @@ def run_convergence_test(name, use_maturity):
         # We'll run it and stream the output to detect convergence
         process = subprocess.Popen(cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
         
+        reached_stage_0 = False
         reached_stage_1 = False
         mastered_stage_1 = False
         
         for line in process.stdout:
-            # sys.stdout.write(line) # Debug output
+            sys.stdout.write(f"RAW: {line}")
+            sys.stdout.flush()
             
+            if "STAGE 0:" in line:
+                reached_stage_0 = True
+                print("  📍 Reached Stage 0 (Mate_In_1)", flush=True)
+
             if "STAGE 1:" in line:
                 reached_stage_1 = True
                 print("  📍 Reached Stage 1 (Mate_In_2)", flush=True)
@@ -59,20 +65,24 @@ def run_convergence_test(name, use_maturity):
                     total_games += GAMES_PER_CYCLE
                     
                     if reached_stage_1:
-                        print(f"    📊 Games: {total_games:4} | Win Rate: {rate:5.1f}%", flush=True)
+                        print(f"    📊 Stage 1 | Games: {total_games:4} | Win Rate: {rate:5.1f}%", flush=True)
                         if rate >= TARGET_WIN_RATE:
                             print(f"    ⭐ Target {TARGET_WIN_RATE}% Reached!", flush=True)
                             mastered_stage_1 = True
-                            process.terminate()
-                            break
+                    elif reached_stage_0:
+                        print(f"    📊 Stage 0 | Games: {total_games:4} | Win Rate: {rate:5.1f}%", flush=True)
                 except ValueError:
                     pass
+            
+            if "STAGE ADVANCED to" in line and reached_stage_0 and "Mate_In_2" in line:
+                 print("  ✅ Stage 0 Complete (Advancing)", flush=True)
                     
-            if "Stage 1 Complete" in line:
-                print("  ✅ Stage 1 Complete (Advancing)", flush=True)
-                mastered_stage_1 = True
-                process.terminate()
-                break
+            if ("Stage 1 Complete" in line or "STAGE ADVANCED to" in line) and reached_stage_1:
+                # We need to see if we reached the target win rate
+                if mastered_stage_1:
+                    print("  ✅ Stage 1 Complete (Advancing)", flush=True)
+                    process.terminate()
+                    break
 
         process.wait()
         duration = time.time() - start_time
@@ -93,7 +103,8 @@ if __name__ == "__main__":
     print("="*60)
     
     # 1. Run Legacy
-    legacy_games, legacy_time = run_convergence_test("legacy", "0")
+    # legacy_games, legacy_time = run_convergence_test("legacy", "0")
+    legacy_games, legacy_time = None, None
     
     # 2. Run XP-Weighted
     xp_games, xp_time = run_convergence_test("xp_weighted", "1")

@@ -104,6 +104,28 @@ class ReConEngine:
         self.gating_schedule = gating_schedule
         self.current_game_number: int = 0  # For gating strictness calculation
 
+    def reset_states(self):
+        """Reset all node states to INACTIVE and clear tick counter.
+        
+        This is crucial between moves in a single game to ensure
+        the network doesn't rely on stale confirmations from previous positions.
+        """
+        for node in self.g.nodes.values():
+            node.state = NodeState.INACTIVE
+            node.tick_entered = -1
+            # Clear suggested moves from meta to avoid stale decisions
+            if "suggested_move" in node.meta:
+                del node.meta["suggested_move"]
+            if "suggested_moves" in node.meta:
+                del node.meta["suggested_moves"]
+        
+        self.tick = 0
+        if self.subgraph_lock:
+            # Re-request the root if a lock exists
+            root_node = self.g.nodes.get(self.subgraph_lock.subgraph_root)
+            if root_node:
+                root_node.state = NodeState.REQUESTED
+
     # Capture the current state of the network for logging. Should obviously be optional. 
     def snapshot(self, note: str = "") -> Dict[str, Any]:
         snap = {
@@ -279,23 +301,59 @@ class ReConEngine:
             k = int(self.g.nodes[parent_id].meta.get("confirm_k", len(roots)))
             return satisfied_count >= k
 
+        # Debug instrumentation for krk_detect blocking
+        if parent_id == "krk_detect" and satisfied_count != len(roots):
+            unconfirmed = []
+            for r in roots:
+                # trace chain
+                cur = r
+                while True:
+                    succ = self.g.successors(cur)
+                    if not succ: break
+                    cur = succ[0]
+                
+                # Check root or last node status
+                final_node = self.g.nodes[cur]
+                if final_node.state != NodeState.CONFIRMED:
+                    unconfirmed.append(f"{cur}({final_node.state.name})")
+            
+            # Print only occasionally to avoid spam
+            if self.tick % 50 == 0:
+                print(f"DEBUG: krk_detect WAITING on: {unconfirmed}")
+
         # Fallback to legacy behavior (AND)
         return satisfied_count == len(roots)
 
-    def _update_terminals(self, env: Dict[str, Any], now_requested: Dict[str, bool]):
-        """Handle state transitions for terminal nodes.
+    def _update_predicates(self, env: Dict[str, Any], now_requested: Dict[str, bool]):
+        """Handle state transitions and predicate execution for nodes.
         
         Fan-in terminals (sensors with multiple parents):
         - When confirmed, the confirmation is broadcast to ALL parents
         - Each parent independently evaluates if its children are done
+        
+        Script nodes without predicates:
+        - Cannot transition to TRUE until ALL children have been REQUESTED
+        - This ensures POR sequences have a chance to run to completion
         """
         for nid, node in self.g.nodes.items():
-            if node.ntype == NodeType.TERMINAL:
+            if node.ntype in (NodeType.TERMINAL, NodeType.SCRIPT):
                 if node.state == NodeState.REQUESTED:
                     node.state = NodeState.WAITING
                     node.tick_entered = self.tick
                 elif node.state == NodeState.WAITING:
                     if node.predicate is None:
+                        # SCRIPT nodes without predicates: wait until ALL children have started
+                        if node.ntype == NodeType.SCRIPT:
+                            children = self.g.children(nid)
+                            all_children_started = all(
+                                self.g.nodes[c].state != NodeState.INACTIVE
+                                for c in children
+                            ) if children else True
+                            
+                            if not all_children_started:
+                                # Stay in WAITING - children haven't all started yet
+                                continue
+                        
                         node.state = NodeState.TRUE
                     else:
                         try:
@@ -327,9 +385,26 @@ class ReConEngine:
                         self._request_child_if_ready(child_id, now_requested)
 
     def _confirm_script_completions(self):
-        """Confirm script nodes when all children sequences are done."""
+        """Confirm script nodes when all children sequences are done.
+        
+        CRITICAL: A script cannot confirm until ALL its children have at least
+        been REQUESTED. This prevents premature confirmation before POR-gated
+        children (like kpk_execute waiting for kpk_detect) have had a chance
+        to start their sequences.
+        """
         for nid, node in self.g.nodes.items():
             if node.ntype == NodeType.SCRIPT and node.state in (NodeState.REQUESTED, NodeState.WAITING, NodeState.TRUE):
+                # Check if all children have at least been REQUESTED
+                children = self.g.children(nid)
+                all_children_started = all(
+                    self.g.nodes[c].state != NodeState.INACTIVE
+                    for c in children
+                )
+                
+                if not all_children_started:
+                    # Keep waiting - not all children have been requested yet
+                    continue
+                
                 if self._children_confirmed_sequence_done(nid):
                     node.state = NodeState.TRUE
 
@@ -390,7 +465,8 @@ class ReConEngine:
         # === NORMAL FULL GRAPH STEP ===
         now_requested: Dict[str, bool] = {}
 
-        self._update_terminals(env, now_requested)
+        # Update terminal and script predicates
+        self._update_predicates(env, now_requested)
         self._process_script_requests(now_requested)
         self._confirm_script_completions()
 
@@ -524,8 +600,8 @@ class ReConEngine:
         min_ticks = self.subgraph_lock.min_internal_ticks
         
         for internal_tick in range(self.subgraph_lock.max_internal_ticks):
-            # Update only subgraph terminals
-            self._update_terminals_subset(env, now_requested, subgraph_nodes)
+            # Update only subgraph node predicates
+            self._update_predicates_subset(env, now_requested, subgraph_nodes)
             
             # Process only subgraph script requests
             self._process_script_requests_subset(now_requested, subgraph_nodes)
@@ -560,7 +636,7 @@ class ReConEngine:
         
         return now_requested
     
-    def _update_terminals_subset(
+    def _update_predicates_subset(
         self, 
         env: Dict[str, Any], 
         now_requested: Dict[str, bool],
@@ -570,7 +646,7 @@ class ReConEngine:
         for nid, node in self.g.nodes.items():
             if nid not in allowed_nodes:
                 continue
-            if node.ntype == NodeType.TERMINAL:
+            if node.ntype in (NodeType.TERMINAL, NodeType.SCRIPT):
                 if node.state == NodeState.REQUESTED:
                     node.state = NodeState.WAITING
                     node.tick_entered = self.tick

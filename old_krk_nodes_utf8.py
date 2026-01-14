@@ -1,4 +1,4 @@
-# src/recon_lite_chess/krk_nodes.py
+﻿# src/recon_lite_chess/krk_nodes.py
 """
 KRK (King+Rook vs King) chess-specific node implementations for ReCoN networks.
 
@@ -29,8 +29,6 @@ def _set_suggested_move(env: Dict[str, Any], mv: str) -> None:
     env["chosen_move"] = mv  # Legacy path
     # Standard interface (matches KPK/KQK pattern)
     env.setdefault("krk_root", {}).setdefault("policy", {})["suggested_move"] = mv
-    # Engine's stripped version (engine.py: _step_subgraph checks env[subgraph_root.replace("_root", "")])
-    env.setdefault("krk", {}).setdefault("policy", {})["suggested_move"] = mv
 
 
 # ===== TERMINAL NODES (Leaf Operations) =====
@@ -81,10 +79,8 @@ class KingAtEdgeDetector(Node):
         f, r = chess.square_file(enemy_king), chess.square_rank(enemy_king)
         at_edge = f in (0, 7) or r in (0, 7)
         if at_edge:
-            node.activation.value = 1.0
-        else:
-            node.activation.value = 0.0
-        return True, True
+            return True, True
+        return False, False
 
 
 @dataclass
@@ -119,8 +115,9 @@ class BoxShrinkEvaluator(Node):
         kd = chess.square_distance(our_king, enemy_king)
         rd = chess.square_distance(our_rook, enemy_king)
         can_shrink = kd >= 2 and rd <= 3
-        node.activation.value = 1.0 if can_shrink else 0.0
-        return True, True
+        if can_shrink:
+            return True, True
+        return False, False
 
 
 @dataclass
@@ -138,8 +135,7 @@ class ConfinementEvaluator(Node):
 
         current_min_side = box_min_side(board)
         confined = current_min_side <= self.target_size
-        node.activation.value = 1.0 if confined else 0.0
-        return True, True
+        return confined, confined
 
 
 @dataclass
@@ -157,8 +153,7 @@ class BarrierReadyEvaluator(Node):
         # Rook is on or adjacent to target fence line
         distance = rook_distance_to_target_fence(board)
         ready = distance <= 1  # On fence (0) or one away (1)
-        node.activation.value = 1.0 if ready else 0.0
-        return True, True
+        return ready, ready
 
 
 @dataclass
@@ -176,8 +171,9 @@ class OppositionEvaluator(Node):
         same_rank = chess.square_rank(ok) == chess.square_rank(ek)
         enemy_at_edge = (chess.square_file(ek) in (0, 7)) or (chess.square_rank(ek) in (0, 7))
         cond = enemy_at_edge and (same_file or same_rank)
-        node.activation.value = 1.0 if cond else 0.0
-        return True, True
+        if cond:
+            return True, True
+        return False, False
 
 
 @dataclass
@@ -194,10 +190,8 @@ class MateDeliverEvaluator(Node):
             is_mate = board.is_checkmate()
             board.pop()
             if is_mate:
-                node.activation.value = 1.0
                 return True, True
-        node.activation.value = 0.0
-        return True, True
+        return False, False
 
 
 @dataclass
@@ -210,10 +204,8 @@ class StalemateDetector(Node):
         if board is None:
             return False, False
         if board.is_stalemate():
-            node.activation.value = 1.0
-        else:
-            node.activation.value = 0.0
-        return True, True
+            return True, True
+        return False, False
 
 
 @dataclass
@@ -230,8 +222,7 @@ class CutEstablishedDetector(Node):
         if board is None:
             return False, False
         ok = has_stable_cut(board)
-        node.activation.value = 1.0 if ok else 0.0
-        return True, True
+        return (True, True) if ok else (False, False)
 
 
 @dataclass
@@ -255,8 +246,7 @@ class RookLostDetector(Node):
             except Exception:
                 pass
         # Always resolve (done=True) to avoid blocking parent confirmation
-        node.activation.value = 1.0 if lost else 0.0
-        return True, True
+        return True, bool(lost)
 
 
 # ===== SCRIPT NODES =====
@@ -327,7 +317,7 @@ class Phase0ChooseMoves(Node):
             try:
                 mobj = chess.Move.from_uci(mv)
                 feats = move_features(board, mobj)
-                reason = f"P0 rendezvous: box {feats['box_area_before']}→{feats['box_area_after']}, +{feats['king_progress']} king, rook_safe={feats['rook_safe_after']}, safe_check={feats['gives_safe_check']}"
+                reason = f"P0 rendezvous: box {feats['box_area_before']}ÔåÆ{feats['box_area_after']}, +{feats['king_progress']} king, rook_safe={feats['rook_safe_after']}, safe_check={feats['gives_safe_check']}"
                 node.meta["reason"] = reason
                 env["last_reason"] = reason
             except Exception:
@@ -355,7 +345,7 @@ class KingDriveMoves(Node):
             try:
                 mobj = chess.Move.from_uci(mv)
                 feats = move_features(board, mobj)
-                reason = f"P1 drive: box {feats['box_area_before']}→{feats['box_area_after']}, +{feats['king_progress']} king, rook_safe={feats['rook_safe_after']}"
+                reason = f"P1 drive: box {feats['box_area_before']}ÔåÆ{feats['box_area_after']}, +{feats['king_progress']} king, rook_safe={feats['rook_safe_after']}"
                 node.meta["reason"] = reason
                 env["last_reason"] = reason
             except Exception:
@@ -383,7 +373,7 @@ class BoxShrinkMoves(Node):
             try:
                 mobj = chess.Move.from_uci(mv)
                 feats = move_features(board, mobj)
-                reason = f"P2 shrink: box {feats['box_area_before']}→{feats['box_area_after']}, +{feats['king_progress']} king, rook_safe={feats['rook_safe_after']}"
+                reason = f"P2 shrink: box {feats['box_area_before']}ÔåÆ{feats['box_area_after']}, +{feats['king_progress']} king, rook_safe={feats['rook_safe_after']}"
                 node.meta["reason"] = reason
                 env["last_reason"] = reason
             except Exception:
@@ -410,7 +400,7 @@ class OppositionMoves(Node):
             try:
                 mobj = chess.Move.from_uci(mv)
                 feats = move_features(board, mobj)
-                reason = f"P3 opposition: box {feats['box_area_before']}→{feats['box_area_after']}, +{feats['king_progress']} king, rook_safe={feats['rook_safe_after']}"
+                reason = f"P3 opposition: box {feats['box_area_before']}ÔåÆ{feats['box_area_after']}, +{feats['king_progress']} king, rook_safe={feats['rook_safe_after']}"
                 node.meta["reason"] = reason
                 env["last_reason"] = reason
             except Exception:
@@ -437,7 +427,7 @@ class MateMoves(Node):
             try:
                 mobj = chess.Move.from_uci(mv)
                 feats = move_features(board, mobj)
-                reason = f"P4 mate: box {feats['box_area_before']}→{feats['box_area_after']}, +{feats['king_progress']} king, rook_safe={feats['rook_safe_after']}"
+                reason = f"P4 mate: box {feats['box_area_before']}ÔåÆ{feats['box_area_after']}, +{feats['king_progress']} king, rook_safe={feats['rook_safe_after']}"
                 node.meta["reason"] = reason
                 env["last_reason"] = reason
             except Exception:
@@ -465,7 +455,7 @@ class ConfinementMoves(Node):
             try:
                 mobj = chess.Move.from_uci(mv)
                 feats = move_features(board, mobj)
-                reason = f"Confinement: min_side {feats.get('min_side_before', '?')}→{feats.get('min_side_after', '?')}, barrier creation"
+                reason = f"Confinement: min_side {feats.get('min_side_before', '?')}ÔåÆ{feats.get('min_side_after', '?')}, barrier creation"
                 node.meta["reason"] = reason
                 env["last_reason"] = reason
             except Exception:
@@ -495,7 +485,7 @@ class BarrierPlacementMoves(Node):
                 from .predicates import rook_distance_to_target_fence_after
                 fence_dist_before = rook_distance_to_target_fence(board)
                 fence_dist_after = rook_distance_to_target_fence_after(board, mobj)
-                reason = f"Barrier: fence_dist {fence_dist_before}→{fence_dist_after}"
+                reason = f"Barrier: fence_dist {fence_dist_before}ÔåÆ{fence_dist_after}"
                 node.meta["reason"] = reason
                 env["last_reason"] = reason
             except Exception:
@@ -613,9 +603,9 @@ class RandomLegalMoves(Node):
 # ===== LEGS ARCHITECTURE (KPK-style placeholders for stem cell growth) =====
 
 def create_krk_rook_leg(nid: str) -> Node:
-    import os
-    use_maturity_env = os.environ.get("RECON_USE_MATURITY_WEIGHTING", "1") == "1"
     """
+    Rook Leg: Proposes rook moves only.
+    
     Simple placeholder - just finds any legal rook move and proposes it.
     Activation is basic (0.5 if legal move exists, 0.0 otherwise).
     The network learns when to prefer rook moves via edge weights and stem cells.
@@ -623,65 +613,23 @@ def create_krk_rook_leg(nid: str) -> Node:
     Stores proposal in env["krk"]["legs"]["rook"]
     """
     def _predicate(node: Node, env: Dict[str, Any]):
-        from .actuators import choose_move_phase0, choose_move_phase1, choose_move_phase2, choose_move_phase3, choose_move_phase4
         board = env.get("board")
         if not board:
             node.meta["activation"] = 0.0
             return False, False
         
-        # Try smart tactical phases in order (Mate -> Opposition -> Shrink -> Drive -> Rendezvous)
+        # Find any legal rook move
+        our_color = board.turn
         proposal = None
-        is_tactical = False
-        for phase_fn in [choose_move_phase4, choose_move_phase3, choose_move_phase2, choose_move_phase1, choose_move_phase0]:
-            mv = phase_fn(board, env)
-            if mv:
-                # Verify it's a rook move
-                mobj = chess.Move.from_uci(mv)
-                piece = board.piece_at(mobj.from_square)
-                if piece and piece.piece_type == chess.ROOK:
-                    proposal = mv
-                    is_tactical = True
-                    break
         
-        # Fallback to any legal rook move if no tactical preference
-        if not proposal:
-            our_color = board.turn
-            for move in board.legal_moves:
-                piece = board.piece_at(move.from_square)
-                if piece and piece.piece_type == chess.ROOK and piece.color == our_color:
-                    proposal = move.uci()
-                    break
+        for move in board.legal_moves:
+            piece = board.piece_at(move.from_square)
+            if piece and piece.piece_type == chess.ROOK and piece.color == our_color:
+                proposal = move.uci()
+                break
         
-        # Maturity Calculation
-        max_maturity = 1.0
-        graph = env.get("__graph__")
-        if use_maturity_env and graph:
-            children = graph.children(nid)
-            conf_mat_list = [
-                graph.nodes[cid].meta.get("maturity", 1.0) 
-                for cid in children 
-                if graph.nodes[cid].state == NodeState.CONFIRMED
-            ]
-            
-            # If we require child confirmation, we are purely driven by children.
-            # If not, we have "Backbone Maturity" (1.0) as a base.
-            require_confirm = node.meta.get("require_child_confirm", False)
-            
-            if children:
-                if conf_mat_list:
-                    max_maturity = max(conf_mat_list)
-                    if not require_confirm:
-                        max_maturity = max(max_maturity, 1.0) # Backbone keeps its influence
-                elif require_confirm:
-                    # Muted until children confirm
-                    max_maturity = 0.0
-                else:
-                    # Backbone persists despite noisy children
-                    max_maturity = 1.0
-
-        # Activation: Tactical moves are much more confident than random fallbacks
-        base_act = 0.8 if is_tactical else 0.2
-        activation = base_act * (max_maturity ** 4) if proposal else 0.0
+        # Simple activation: 0.5 if we have a proposal, 0.0 otherwise
+        activation = 0.5 if proposal else 0.0
         
         # Store in env for arbiter
         leg_data = {
@@ -693,18 +641,15 @@ def create_krk_rook_leg(nid: str) -> Node:
         node.meta["activation"] = activation
         node.meta["proposal"] = proposal
         
-        # DEBUG: Trace maturity calculation
-        print(f"DEBUG: ROOK_LEG | Mat={max_maturity:.4f} | Act={activation:.4f} | ReqConf={require_confirm} | Child={bool(children)}")
-
-        return True, True
+        return proposal is not None, proposal is not None
     
     return Node(nid=nid, ntype=NodeType.SCRIPT, predicate=_predicate)
 
 
 def create_krk_king_leg(nid: str) -> Node:
-    import os
-    use_maturity_env = os.environ.get("RECON_USE_MATURITY_WEIGHTING", "1") == "1"
     """
+    King Leg: Proposes king moves only.
+    
     Simple placeholder - just finds any legal king move and proposes it.
     Activation is basic (0.5 if legal move exists, 0.0 otherwise).
     The network learns when to prefer king moves via edge weights and stem cells.
@@ -712,66 +657,24 @@ def create_krk_king_leg(nid: str) -> Node:
     Stores proposal in env["krk"]["legs"]["king"]
     """
     def _predicate(node: Node, env: Dict[str, Any]):
-        from .actuators import choose_move_phase0, choose_move_phase1, choose_move_phase2, choose_move_phase3, choose_move_phase4
         board = env.get("board")
         if not board:
             node.meta["activation"] = 0.0
             return False, False
         
-        # Try smart tactical phases in order (Mate -> Opposition -> Shrink -> Drive -> Rendezvous)
+        # Find any legal king move
+        our_color = board.turn
         proposal = None
-        is_tactical = False
-        for phase_fn in [choose_move_phase4, choose_move_phase3, choose_move_phase2, choose_move_phase1, choose_move_phase0]:
-            mv = phase_fn(board, env)
-            if mv:
-                # Verify it's a king move
-                mobj = chess.Move.from_uci(mv)
-                piece = board.piece_at(mobj.from_square)
-                if piece and piece.piece_type == chess.KING:
-                    proposal = mv
-                    is_tactical = True
-                    break
-
-        # Fallback to any legal king move
-        if not proposal:
-            our_color = board.turn
-            for move in board.legal_moves:
-                piece = board.piece_at(move.from_square)
-                if piece and piece.piece_type == chess.KING and piece.color == our_color:
-                    proposal = move.uci()
-                    break
         
-        # Maturity-weighted activation:
-        # Scale by (max_child_maturity ^ 4) to suppress trial noise.
-        max_maturity = 1.0
-        graph = env.get("__graph__")
-        if use_maturity_env and graph:
-            children = graph.children(nid)
-            conf_mat_list = [
-                graph.nodes[cid].meta.get("maturity", 1.0) 
-                for cid in children 
-                if graph.nodes[cid].state == NodeState.CONFIRMED
-            ]
-            
-            require_confirm = node.meta.get("require_child_confirm", False)
-            
-            if children:
-                if conf_mat_list:
-                    max_maturity = max(conf_mat_list)
-                    if not require_confirm:
-                        max_maturity = max(max_maturity, 1.0)
-                elif require_confirm:
-                    max_maturity = 0.0
-                else:
-                    max_maturity = 1.0
-
-        # Activation: Tactical moves are much more confident than random fallbacks
-        base_act = 0.8 if is_tactical else 0.2
-        activation = base_act * (max_maturity ** 4) if proposal else 0.0
+        for move in board.legal_moves:
+            piece = board.piece_at(move.from_square)
+            if piece and piece.piece_type == chess.KING and piece.color == our_color:
+                proposal = move.uci()
+                break
         
-        # DEBUG: Trace maturity calculation
-        # print(f"DEBUG: KING_LEG | Mat={max_maturity:.4f} | Act={activation:.4f} | Prop={proposal}")
-
+        # Simple activation: 0.5 if we have a proposal, 0.0 otherwise
+        activation = 0.5 if proposal else 0.0
+        
         # Store in env for arbiter
         leg_data = {
             "activation": activation,
@@ -782,7 +685,7 @@ def create_krk_king_leg(nid: str) -> Node:
         node.meta["activation"] = activation
         node.meta["proposal"] = proposal
         
-        return True, True
+        return proposal is not None, proposal is not None
     
     return Node(nid=nid, ntype=NodeType.SCRIPT, predicate=_predicate)
 
@@ -794,13 +697,9 @@ def create_krk_arbiter(nid: str) -> Node:
     Decision Rule:
     - Highest activation wins
     - Tie-breaker: prefer rook (more aggressive)
-    - MATURITY: Scales activation by (XP/100)^4 if enabled to ignore structural noise.
     
     Writes to env["krk_root"]["policy"]["suggested_move"] (using _set_suggested_move)
     """
-    import os
-    use_maturity = os.environ.get("RECON_USE_MATURITY_WEIGHTING", "1") == "1"
-    
     def _predicate(node: Node, env: Dict[str, Any]):
         legs = env.get("krk", {}).get("legs", {})
         rook_leg = legs.get("rook", {})
@@ -809,17 +708,6 @@ def create_krk_arbiter(nid: str) -> Node:
         rook_act = rook_leg.get("activation", 0.0)
         king_act = king_leg.get("activation", 0.0)
         
-        # XP-Based Maturity Weighting (Power-law Scaling)
-        # We use a power of 4 to give mature backbone (1.0) a massive
-        # advantage over structural noise (e.g., 0.5^4 = 0.0625)
-        if use_maturity:
-            # Backbone legs (rook/king) are treated as MATURE (1.0 maturity)
-            # unless trial nodes are specifically involved.
-            # In KRK, the legs are static backbone, so they keep 1.0.
-            # However, if trial nodes are wired to the legs, they influence 
-            # leg activation via require_child_confirm.
-            pass
-            
         # Decision with tie-breaker for rook
         if rook_act >= king_act and rook_leg.get("proposal"):
             winner = "rook"
@@ -837,18 +725,16 @@ def create_krk_arbiter(nid: str) -> Node:
             winner = "fallback"
             reason = "no_proposal"
         
-        # DEBUG: Trace Arbiter Decision
-        print(f"DEBUG: ARBITER | R_Act={rook_act:.2f} | K_Act={king_act:.2f} | Winner={winner} | Prop={proposal}")
-
         # Store final decision (using helper to write to correct location)
         if proposal:
             _set_suggested_move(env, proposal)
         
         node.meta["winner"] = winner
         node.meta["rook_activation"] = rook_act
+        node.meta["king_activation"] = king_act
         node.meta["reason"] = reason
         
-        return True, True
+        return proposal is not None, proposal is not None
     
     return Node(nid=nid, ntype=NodeType.SCRIPT, predicate=_predicate)
 
@@ -925,38 +811,3 @@ def wire_default_krk(g, root_id: str, ids: Dict[str, str]) -> None:
     g.add_edge(ids["phase1"], ids["phase2"], LinkType.POR)
     g.add_edge(ids["phase2"], ids["phase3"], LinkType.POR)
     g.add_edge(ids["phase3"], ids["phase4"], LinkType.POR)
-
-
-
-print("DEBUG: KRK_NODES MODULE LOADED")
-
-def create_krk_execute(nid: str) -> Node:
-    print(f"DEBUG: create_krk_execute CALLED for {nid}")
-    """
-    Execution Node:
-    - Acts as a synchronization barrier.
-    - Keeps itself (and thus SUB children) ACTIVE until all children are CONFIRMED.
-    - Ensures Arbiter/Legs have time to run.
-    """
-    def _predicate(node: Node, env: Dict[str, Any]):
-        graph = env.get("__graph__")
-        if not graph:
-            return True, True
-            
-        children = graph.children(nid)
-        # Check if all children are CONFIRMED
-        all_confirmed = True
-        for cid in children:
-            if graph.nodes[cid].state != NodeState.CONFIRMED:
-                all_confirmed = False
-                break
-        
-        if all_confirmed:
-            print("DEBUG: KRK_EXECUTE finished (all children confirmed)")
-            return True, True
-        
-        # Still waiting for children
-        # print("DEBUG: KRK_EXECUTE waiting...")
-        return False, False
-
-    return Node(nid=nid, ntype=NodeType.SCRIPT, predicate=_predicate)
