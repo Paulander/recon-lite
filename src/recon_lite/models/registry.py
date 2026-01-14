@@ -265,6 +265,31 @@ class TopologyRegistry:
         """Get all node IDs."""
         return list(self._nodes.keys())
     
+    def update_node_meta(self, node_id: str, meta_updates: Dict[str, Any], tick: int = 0):
+        """
+        Update metadata for an existing node.
+        
+        Used by M5 to sync TRIAL cell state (XP, consistency, maturity) back to
+        the registry for snapshots and arbitration.
+        
+        Args:
+            node_id: Node ID to update
+            meta_updates: Dict of metadata fields to update
+            tick: Current tick for evolution logging
+        """
+        if node_id not in self._nodes:
+            return  # Silently ignore missing nodes
+        
+        node = self._nodes[node_id]
+        node.meta.update(meta_updates)
+        
+        # Don't log every meta update - too noisy
+        # self._log_evolution(tick, "node_meta_updated", node_id, meta_updates)
+    
+    def list_nodes(self) -> List[str]:
+        """Get all node IDs (alias for compatibility)."""
+        return list(self._nodes.keys())
+    
     # -------------------------------------------------------------------------
     # Edge operations
     # -------------------------------------------------------------------------

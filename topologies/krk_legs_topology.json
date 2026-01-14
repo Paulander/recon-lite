@@ -163,7 +163,7 @@
       "meta": {
         "cell_id": "stem_0000",
         "tier": "trial",
-        "consistency": 0.5312073216572075,
+        "consistency": 0.36554735287453777,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -200,7 +200,12 @@
           0.7182539682539684,
           0.0
         ],
-        "subgraph": "krk"
+        "subgraph": "krk",
+        "xp": 323.5500000000077,
+        "maturity": 3.235500000000077,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "total_engagement_xp": 0
       }
     },
     {
@@ -211,7 +216,7 @@
       "meta": {
         "cell_id": "stem_0001",
         "tier": "trial",
-        "consistency": 0.5312073216572075,
+        "consistency": 0.36554735287453777,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -248,7 +253,12 @@
           0.7182539682539684,
           0.0
         ],
-        "subgraph": "krk"
+        "subgraph": "krk",
+        "xp": 323.5500000000077,
+        "maturity": 3.235500000000077,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "total_engagement_xp": 0
       }
     },
     {
@@ -259,7 +269,7 @@
       "meta": {
         "cell_id": "stem_0002",
         "tier": "trial",
-        "consistency": 0.5653399800171108,
+        "consistency": 0.5562239680868502,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -296,7 +306,12 @@
           0.7526132404181186,
           0.0
         ],
-        "subgraph": "krk"
+        "subgraph": "krk",
+        "xp": 318.65000000000725,
+        "maturity": 3.1865000000000725,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "total_engagement_xp": 0
       }
     },
     {
@@ -307,7 +322,7 @@
       "meta": {
         "cell_id": "stem_0003",
         "tier": "trial",
-        "consistency": 0.5653399800171108,
+        "consistency": 0.5562239680868502,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -344,7 +359,12 @@
           0.7526132404181186,
           0.0
         ],
-        "subgraph": "krk"
+        "subgraph": "krk",
+        "xp": 318.65000000000725,
+        "maturity": 3.1865000000000725,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "total_engagement_xp": 0
       }
     },
     {
@@ -355,7 +375,7 @@
       "meta": {
         "cell_id": "stem_0004",
         "tier": "trial",
-        "consistency": 0.5208098751667098,
+        "consistency": 0.5383997705229087,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -392,7 +412,12 @@
           0.7202380952380952,
           0.0
         ],
-        "subgraph": "krk"
+        "subgraph": "krk",
+        "xp": 314.7000000000069,
+        "maturity": 3.147000000000069,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "total_engagement_xp": 0
       }
     },
     {
@@ -403,7 +428,7 @@
       "meta": {
         "cell_id": "stem_0005",
         "tier": "trial",
-        "consistency": 0.5208098751667098,
+        "consistency": 0.5383997705229087,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -440,7 +465,12 @@
           0.7202380952380952,
           0.0
         ],
-        "subgraph": "krk"
+        "subgraph": "krk",
+        "xp": 314.7000000000069,
+        "maturity": 3.147000000000069,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "total_engagement_xp": 0
       }
     },
     {
@@ -451,7 +481,7 @@
       "meta": {
         "cell_id": "stem_0006",
         "tier": "trial",
-        "consistency": 0.5003622177399372,
+        "consistency": 0.5229633015513098,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -488,7 +518,12 @@
           0.7336561743341402,
           0.0
         ],
-        "subgraph": "krk"
+        "subgraph": "krk",
+        "xp": 310.50000000000654,
+        "maturity": 3.1050000000000653,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "total_engagement_xp": 0
       }
     },
     {
@@ -499,7 +534,7 @@
       "meta": {
         "cell_id": "stem_0007",
         "tier": "trial",
-        "consistency": 0.5003622177399372,
+        "consistency": 0.5229633015513098,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -536,7 +571,12 @@
           0.7336561743341402,
           0.0
         ],
-        "subgraph": "krk"
+        "subgraph": "krk",
+        "xp": 310.50000000000654,
+        "maturity": 3.1050000000000653,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "total_engagement_xp": 0
       }
     },
     {
@@ -547,7 +587,7 @@
       "meta": {
         "cell_id": "stem_0019",
         "tier": "trial",
-        "consistency": 0.5062878704731505,
+        "consistency": 0.5230662017211185,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -584,7 +624,12 @@
           0.7266483516483511,
           0.0
         ],
-        "subgraph": "krk"
+        "subgraph": "krk",
+        "xp": 291.75000000000585,
+        "maturity": 2.9175000000000586,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "total_engagement_xp": 0
       }
     },
     {
@@ -643,7 +688,7 @@
       "meta": {
         "cell_id": "stem_0008",
         "tier": "trial",
-        "consistency": 0.572910721210433,
+        "consistency": 0.5075426915463701,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -680,7 +725,12 @@
           0.7948051948051945,
           0.0
         ],
-        "subgraph": "krk"
+        "subgraph": "krk",
+        "xp": 305.2000000000063,
+        "maturity": 3.052000000000063,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "total_engagement_xp": 0
       }
     },
     {
@@ -691,7 +741,7 @@
       "meta": {
         "cell_id": "stem_0009",
         "tier": "trial",
-        "consistency": 0.572910721210433,
+        "consistency": 0.5075426915463701,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -728,7 +778,12 @@
           0.7948051948051945,
           0.0
         ],
-        "subgraph": "krk"
+        "subgraph": "krk",
+        "xp": 305.2000000000063,
+        "maturity": 3.052000000000063,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "total_engagement_xp": 0
       }
     },
     {
@@ -787,7 +842,7 @@
       "meta": {
         "cell_id": "stem_0017",
         "tier": "trial",
-        "consistency": 0.5593390014968946,
+        "consistency": 0.5330060789856996,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -824,7 +879,12 @@
           0.6413994169096213,
           0.0
         ],
-        "subgraph": "krk"
+        "subgraph": "krk",
+        "xp": 296.40000000000606,
+        "maturity": 2.964000000000061,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "total_engagement_xp": 0
       }
     },
     {
@@ -835,7 +895,7 @@
       "meta": {
         "cell_id": "stem_0018",
         "tier": "trial",
-        "consistency": 0.5457331304313169,
+        "consistency": 0.5230662017211185,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -872,7 +932,12 @@
           0.6487119437939111,
           0.0
         ],
-        "subgraph": "krk"
+        "subgraph": "krk",
+        "xp": 291.75000000000585,
+        "maturity": 2.9175000000000586,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "total_engagement_xp": 0
       }
     },
     {
@@ -931,7 +996,7 @@
       "meta": {
         "cell_id": "stem_0013",
         "tier": "trial",
-        "consistency": 0.5276690131227273,
+        "consistency": 0.5450520705262414,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -968,7 +1033,12 @@
           0.6666666666666664,
           0.0
         ],
-        "subgraph": "krk"
+        "subgraph": "krk",
+        "xp": 300.90000000000623,
+        "maturity": 3.0090000000000625,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "total_engagement_xp": 0
       }
     },
     {
@@ -979,7 +1049,7 @@
       "meta": {
         "cell_id": "stem_0014",
         "tier": "trial",
-        "consistency": 0.5276690131227273,
+        "consistency": 0.5450520705262414,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -1016,7 +1086,12 @@
           0.6666666666666664,
           0.0
         ],
-        "subgraph": "krk"
+        "subgraph": "krk",
+        "xp": 300.90000000000623,
+        "maturity": 3.0090000000000625,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "total_engagement_xp": 0
       }
     },
     {
@@ -1027,7 +1102,7 @@
       "meta": {
         "cell_id": "stem_0015",
         "tier": "trial",
-        "consistency": 0.5243669431620801,
+        "consistency": 0.5229352462349555,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -1064,7 +1139,12 @@
           0.6779448621553879,
           0.0
         ],
-        "subgraph": "krk"
+        "subgraph": "krk",
+        "xp": 296.40000000000606,
+        "maturity": 2.964000000000061,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "total_engagement_xp": 0
       }
     },
     {
@@ -1209,6 +1289,250 @@
           0.0
         ],
         "subgraph": "krk"
+      }
+    },
+    {
+      "id": "TRIAL_stem_0022_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0022",
+        "tier": "trial",
+        "consistency": 0.5375272830316788,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.4571428571428578,
+          0.35571428571428376,
+          0.6751428571428556,
+          0.9405714285714277,
+          0.0,
+          0.4139999999999995,
+          0.5848571428571439,
+          0.6757142857142862,
+          0.098,
+          0.0,
+          1.0,
+          1.0,
+          0.046
+        ],
+        "subgraph": "krk",
+        "xp": 286.1000000000056,
+        "maturity": 2.8610000000000557,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "total_engagement_xp": 0
+      }
+    },
+    {
+      "id": "TRIAL_stem_0023_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0023",
+        "tier": "trial",
+        "consistency": 0.5375272830316788,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.4571428571428578,
+          0.35571428571428376,
+          0.6751428571428556,
+          0.9405714285714277,
+          0.0,
+          0.4139999999999995,
+          0.5848571428571439,
+          0.6757142857142862,
+          0.098,
+          0.0,
+          1.0,
+          1.0,
+          0.046
+        ],
+        "subgraph": "krk",
+        "xp": 286.1000000000056,
+        "maturity": 2.8610000000000557,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "total_engagement_xp": 0
+      }
+    },
+    {
+      "id": "TRIAL_stem_0024_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0024",
+        "tier": "trial",
+        "consistency": 0.5258575984340532,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.4611428571428576,
+          0.38628571428571357,
+          0.6519999999999997,
+          0.9334285714285708,
+          0.0,
+          0.404,
+          0.5471428571428577,
+          0.6465714285714285,
+          0.104,
+          0.0,
+          1.0,
+          1.0,
+          0.048
+        ],
+        "subgraph": "krk",
+        "xp": 280.95000000000545,
+        "maturity": 2.8095000000000545,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "total_engagement_xp": 0
+      }
+    },
+    {
+      "id": "TRIAL_stem_0026_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0026",
+        "tier": "trial",
+        "consistency": 0.5539405900177632,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.4605714285714284,
+          0.30571428571428494,
+          0.6705714285714275,
+          0.904571428571427,
+          0.0,
+          0.39914285714285763,
+          0.5988571428571432,
+          0.6619999999999999,
+          0.088,
+          0.0,
+          1.0,
+          1.0,
+          0.032
+        ],
+        "subgraph": "krk",
+        "xp": 280.95000000000545,
+        "maturity": 2.8095000000000545,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "total_engagement_xp": 0
       }
     }
   ],
@@ -1924,9 +2248,105 @@
       "weight": 0.5,
       "consolidate": true,
       "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "TRIAL_stem_0022_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_rook_leg",
+      "dst": "TRIAL_stem_0022_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_king_leg",
+      "dst": "TRIAL_stem_0022_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "TRIAL_stem_0023_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_rook_leg",
+      "dst": "TRIAL_stem_0023_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_king_leg",
+      "dst": "TRIAL_stem_0023_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "TRIAL_stem_0024_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_rook_leg",
+      "dst": "TRIAL_stem_0024_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_king_leg",
+      "dst": "TRIAL_stem_0024_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_detect",
+      "dst": "TRIAL_stem_0026_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_rook_leg",
+      "dst": "TRIAL_stem_0026_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_king_leg",
+      "dst": "TRIAL_stem_0026_0",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
     }
   ],
-  "last_modified": "2026-01-09T23:13:06.425143",
+  "last_modified": "2026-01-14T23:45:02.941416",
   "evolution_history": [
     {
       "tick": 0,
@@ -2961,6 +3381,194 @@
         "weight": 0.5
       },
       "timestamp": "2026-01-06T21:38:10.248757"
+    },
+    {
+      "tick": 0,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0022_0",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-14T22:26:16.177102"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_detect->TRIAL_stem_0022_0:SUB",
+      "details": {
+        "src": "krk_detect",
+        "dst": "TRIAL_stem_0022_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-14T22:26:16.177134"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_rook_leg->TRIAL_stem_0022_0:SUB",
+      "details": {
+        "src": "krk_rook_leg",
+        "dst": "TRIAL_stem_0022_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-14T22:26:16.177143"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_king_leg->TRIAL_stem_0022_0:SUB",
+      "details": {
+        "src": "krk_king_leg",
+        "dst": "TRIAL_stem_0022_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-14T22:26:16.177150"
+    },
+    {
+      "tick": 0,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0023_0",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-14T22:26:16.181793"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_detect->TRIAL_stem_0023_0:SUB",
+      "details": {
+        "src": "krk_detect",
+        "dst": "TRIAL_stem_0023_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-14T22:26:16.181819"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_rook_leg->TRIAL_stem_0023_0:SUB",
+      "details": {
+        "src": "krk_rook_leg",
+        "dst": "TRIAL_stem_0023_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-14T22:26:16.181825"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_king_leg->TRIAL_stem_0023_0:SUB",
+      "details": {
+        "src": "krk_king_leg",
+        "dst": "TRIAL_stem_0023_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-14T22:26:16.181830"
+    },
+    {
+      "tick": 0,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0024_0",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-14T22:28:18.699639"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_detect->TRIAL_stem_0024_0:SUB",
+      "details": {
+        "src": "krk_detect",
+        "dst": "TRIAL_stem_0024_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-14T22:28:18.699680"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_rook_leg->TRIAL_stem_0024_0:SUB",
+      "details": {
+        "src": "krk_rook_leg",
+        "dst": "TRIAL_stem_0024_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-14T22:28:18.699691"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_king_leg->TRIAL_stem_0024_0:SUB",
+      "details": {
+        "src": "krk_king_leg",
+        "dst": "TRIAL_stem_0024_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-14T22:28:18.699697"
+    },
+    {
+      "tick": 0,
+      "event_type": "node_added",
+      "target_id": "TRIAL_stem_0026_0",
+      "details": {
+        "type": "TERMINAL",
+        "group": "trial",
+        "factory": null
+      },
+      "timestamp": "2026-01-14T22:28:18.705894"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_detect->TRIAL_stem_0026_0:SUB",
+      "details": {
+        "src": "krk_detect",
+        "dst": "TRIAL_stem_0026_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-14T22:28:18.705922"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_rook_leg->TRIAL_stem_0026_0:SUB",
+      "details": {
+        "src": "krk_rook_leg",
+        "dst": "TRIAL_stem_0026_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-14T22:28:18.705929"
+    },
+    {
+      "tick": 0,
+      "event_type": "edge_added",
+      "target_id": "krk_king_leg->TRIAL_stem_0026_0:SUB",
+      "details": {
+        "src": "krk_king_leg",
+        "dst": "TRIAL_stem_0026_0",
+        "type": "SUB",
+        "weight": 0.5
+      },
+      "timestamp": "2026-01-14T22:28:18.705934"
     }
   ]
 }

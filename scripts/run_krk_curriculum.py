@@ -97,6 +97,7 @@ try:
     from recon_lite.plasticity.consolidate import (
         ConsolidationEngine,
         ConsolidationConfig,
+        EdgeConsolidationState,
     )
     HAS_CONSOLIDATION = True
 except ImportError:
@@ -660,16 +661,28 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
             
             # Initialize consolidation engine with graph edges
             if consolidation_engine:
-                # Get all KRK edges for consolidation
+                # Get all KRK edges AND stem cell edges for consolidation
                 # Handle both list and dict formats for graph.edges
                 edge_list = graph.edges.values() if isinstance(graph.edges, dict) else graph.edges
-                krk_edges = [
-                    f"{e.src}->{e.dst}:{e.ltype.name}"
-                    for e in edge_list
-                    if e.ltype in (LinkType.POR, LinkType.SUB) and ("krk" in e.src.lower() or "krk" in e.dst.lower())
-                ]
-                consolidation_engine.init_from_graph(graph, edge_whitelist=krk_edges)
-                print(f"  Consolidation tracking {len(krk_edges)} KRK edges")
+                
+                # Include: KRK edges, stem cell edges (stem_, TRIAL_, SC_, pack_, MANAGER_)
+                trackable_edges = []
+                for e in edge_list:
+                    if e.ltype not in (LinkType.POR, LinkType.SUB):
+                        continue
+                    edge_key = f"{e.src}->{e.dst}:{e.ltype.name}"
+                    src_lower = e.src.lower()
+                    dst_lower = e.dst.lower()
+                    # Track KRK edges
+                    if "krk" in src_lower or "krk" in dst_lower:
+                        trackable_edges.append(edge_key)
+                    # Track stem cell edges (M5 spawned)
+                    elif any(prefix in src_lower or prefix in dst_lower 
+                             for prefix in ["stem_", "trial_", "sc_", "pack_", "manager_", "and_", "or_"]):
+                        trackable_edges.append(edge_key)
+                
+                consolidation_engine.init_from_graph(graph, edge_whitelist=trackable_edges)
+                print(f"  Consolidation tracking {len(trackable_edges)} KRK edges")
             
             # Setup gating
             if config.enable_gating and GatingSchedule:
@@ -1097,6 +1110,28 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                     total_samples = sum(len(c.samples) for c in stem_manager.cells.values())
                     if len(stem_manager.cells) > 0:
                         print(f"    Cells: {exploring}E/{candidate}C/{trial}T, total_samples={total_samples}")
+                    
+                    # REFRESH CONSOLIDATION: Re-init to pick up newly spawned M5 edges
+                    if consolidation_engine and (promoted > 0 or hoisted > 0):
+                        edge_list_refresh = graph.edges.values() if isinstance(graph.edges, dict) else graph.edges
+                        new_edges = []
+                        for e in edge_list_refresh:
+                            if e.ltype not in (LinkType.POR, LinkType.SUB):
+                                continue
+                            edge_key = f"{e.src}->{e.dst}:{e.ltype.name}"
+                            if edge_key not in consolidation_engine.edge_states:
+                                src_lower = e.src.lower()
+                                dst_lower = e.dst.lower()
+                                if any(prefix in src_lower or prefix in dst_lower 
+                                       for prefix in ["stem_", "trial_", "sc_", "pack_", "manager_", "and_", "or_", "krk"]):
+                                    new_edges.append(edge_key)
+                                    consolidation_engine.edge_states[edge_key] = EdgeConsolidationState(
+                                        edge_key=edge_key,
+                                        w_base=1.0,
+                                        w_init=1.0,
+                                    )
+                        if new_edges:
+                            print(f"      Graph reused: {len(graph.nodes)} nodes (preserving earlier changes)")
                     
                     # Spawn new sensors if win rate is low (Stall Recovery)
                     if win_rate < 0.3 and len(stem_manager.cells) < config.max_trial_slots and HAS_KRK_FEATURES:
