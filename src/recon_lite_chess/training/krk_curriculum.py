@@ -107,11 +107,11 @@ STAGE_0_MATE_IN_1 = KRKStage(
             optimal_moves=1,
             description="King h4 side, Rh1# mate",
         ),
-        # d) King at h6 (edge), rook mates Rh8# (Start R at a8)
+        # d) King at h8 (corner), rook mates Rh1#
         KRKStagePosition(
-            fen="R7/8/6Kk/8/8/8/8/8 w - - 0 1",
+            fen="7k/8/6K1/8/8/8/8/R7 w - - 0 1",
             optimal_moves=1,
-            description="King h6 edge, Rh8# mate",
+            description="King h8 corner, Rh1# mate",
         ),
         # e) King at e8 (back rank), rook mates Re1# or Ra8#
         KRKStagePosition(

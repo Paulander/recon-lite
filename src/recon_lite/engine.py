@@ -652,6 +652,18 @@ class ReConEngine:
                     node.tick_entered = self.tick
                 elif node.state == NodeState.WAITING:
                     if node.predicate is None:
+                        # SCRIPT nodes without predicates: wait until ALL children have started
+                        if node.ntype == NodeType.SCRIPT:
+                            children = [c for c in self.g.children(nid) if c in allowed_nodes]
+                            all_children_started = all(
+                                self.g.nodes[c].state != NodeState.INACTIVE
+                                for c in children
+                            ) if children else True
+                            
+                            if not all_children_started:
+                                # Stay in WAITING - children haven't all started yet
+                                continue
+                        
                         node.state = NodeState.TRUE
                     else:
                         try:
@@ -686,11 +698,26 @@ class ReConEngine:
                             self._request_child_if_ready(child_id, now_requested)
     
     def _confirm_script_completions_subset(self, allowed_nodes: Set[str]) -> None:
-        """Confirm script nodes when children done, but only those in allowed_nodes."""
+        """Confirm script nodes when children done, but only those in allowed_nodes.
+        
+        CRITICAL: A script cannot confirm until ALL its children (within allowed_nodes)
+        have at least been REQUESTED. This prevents premature confirmation before
+        POR-gated children have had a chance to start.
+        """
         for nid, node in self.g.nodes.items():
             if nid not in allowed_nodes:
                 continue
             if node.ntype == NodeType.SCRIPT and node.state in (NodeState.REQUESTED, NodeState.WAITING, NodeState.TRUE):
+                # Check if all children (within subgraph) have at least been REQUESTED
+                children = [c for c in self.g.children(nid) if c in allowed_nodes]
+                all_children_started = all(
+                    self.g.nodes[c].state != NodeState.INACTIVE
+                    for c in children
+                ) if children else True
+                
+                if not all_children_started:
+                    continue
+                
                 if self._children_confirmed_sequence_done(nid):
                     node.state = NodeState.TRUE
 
