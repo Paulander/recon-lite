@@ -26,11 +26,13 @@ def _set_suggested_move(env: Dict[str, Any], mv: str) -> None:
     Engine expects: env["<root>"]["policy"]["suggested_move"]
     This ensures KRK actuators work with the standard game loop.
     """
+    print(f"DEBUG: _set_suggested_move called with mv={mv}")
     env["chosen_move"] = mv  # Legacy path
     # Standard interface (matches KPK/KQK pattern)
     env.setdefault("krk_root", {}).setdefault("policy", {})["suggested_move"] = mv
     # Engine's stripped version (engine.py: _step_subgraph checks env[subgraph_root.replace("_root", "")])
     env.setdefault("krk", {}).setdefault("policy", {})["suggested_move"] = mv
+    print(f"DEBUG: env['krk_root']['policy'] = {env['krk_root']['policy']}")
 
 
 # ===== TERMINAL NODES (Leaf Operations) =====
@@ -635,7 +637,22 @@ def create_krk_rook_leg(nid: str) -> Node:
         for phase_fn in [choose_move_phase4, choose_move_phase3, choose_move_phase2, choose_move_phase1, choose_move_phase0]:
             mv = phase_fn(board, env)
             if mv:
-                # Verify it's a rook move
+                # CRITICAL: If this is a checkmate move, set it immediately regardless of piece type
+                try:
+                    mobj = chess.Move.from_uci(mv)
+                    if mobj in board.legal_moves:
+                        test_board = board.copy()
+                        test_board.push(mobj)
+                        if test_board.is_checkmate():
+                            # Checkmate takes priority - set and return immediately
+                            _set_suggested_move(env, mv)
+                            node.meta["suggested_moves"] = [mv]
+                            node.meta["activation"] = 1.0  # Max activation for mate
+                            return True, True
+                except:
+                    pass
+                
+                # Otherwise, only accept rook moves for this leg
                 mobj = chess.Move.from_uci(mv)
                 piece = board.piece_at(mobj.from_square)
                 if piece and piece.piece_type == chess.ROOK:
@@ -724,7 +741,22 @@ def create_krk_king_leg(nid: str) -> Node:
         for phase_fn in [choose_move_phase4, choose_move_phase3, choose_move_phase2, choose_move_phase1, choose_move_phase0]:
             mv = phase_fn(board, env)
             if mv:
-                # Verify it's a king move
+                # CRITICAL: If this is a checkmate move, set it immediately regardless of piece type
+                try:
+                    mobj = chess.Move.from_uci(mv)
+                    if mobj in board.legal_moves:
+                        test_board = board.copy()
+                        test_board.push(mobj)
+                        if test_board.is_checkmate():
+                            # Checkmate takes priority - set and return immediately
+                            _set_suggested_move(env, mv)
+                            node.meta["suggested_moves"] = [mv]
+                            node.meta["activation"] = 1.0  # Max activation for mate
+                            return True, True
+                except:
+                    pass
+                
+                # Otherwise, only accept king moves for this leg
                 mobj = chess.Move.from_uci(mv)
                 piece = board.piece_at(mobj.from_square)
                 if piece and piece.piece_type == chess.KING:
