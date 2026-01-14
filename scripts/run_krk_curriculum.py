@@ -400,10 +400,8 @@ def play_krk_game_recon(
             found_move = policy.get("suggested_move")
             if found_move:
                 suggested_move = found_move  # Capture the move
-                print(f"DEBUG: suggested_move={suggested_move} captured at tick {ticks_this_move}")
                 # For Stage 0 (mate-in-1), break immediately when we find it
                 if ticks_this_move >= config.min_internal_ticks:
-                    print(f"DEBUG: Breaking at tick {ticks_this_move} (>= min_internal_ticks={config.min_internal_ticks})")
                     break
                 # Also break if we found a mate (board.is_checkmate() after applying it)
                 try:
@@ -412,10 +410,9 @@ def play_krk_game_recon(
                         test_board = board.copy()
                         test_board.push(test_move)
                         if test_board.is_checkmate():
-                            print(f"DEBUG: Early break - {found_move} is checkmate!")
                             break  # Immediate win - no need to continue ticks
-                except Exception as e:
-                    print(f"DEBUG: Exception in mate check: {e}")
+                except Exception:
+                    pass
         
         # Make move
         legal_ucis = [m.uci() for m in board.legal_moves]
@@ -794,9 +791,6 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                         stage=stage,
                         stem_manager=stem_manager if config.enable_m5 else None,
                     )
-                    # DEBUG: Log each game's result for Stage 0
-                    if stage.stage_id == 0:
-                        print(f"    [S0] Game {game_idx+1}: {result} in {move_count} moves | FEN: {starting_fen[:30]}...")
                     # Count active nodes for M5 analysis
                     for nid in active_log:
                         active_node_counts[nid] = active_node_counts.get(nid, 0) + 1

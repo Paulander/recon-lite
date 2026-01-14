@@ -26,13 +26,11 @@ def _set_suggested_move(env: Dict[str, Any], mv: str) -> None:
     Engine expects: env["<root>"]["policy"]["suggested_move"]
     This ensures KRK actuators work with the standard game loop.
     """
-    print(f"DEBUG: _set_suggested_move called with mv={mv}")
     env["chosen_move"] = mv  # Legacy path
     # Standard interface (matches KPK/KQK pattern)
     env.setdefault("krk_root", {}).setdefault("policy", {})["suggested_move"] = mv
     # Engine's stripped version (engine.py: _step_subgraph checks env[subgraph_root.replace("_root", "")])
     env.setdefault("krk", {}).setdefault("policy", {})["suggested_move"] = mv
-    print(f"DEBUG: env['krk_root']['policy'] = {env['krk_root']['policy']}")
 
 
 # ===== TERMINAL NODES (Leaf Operations) =====
@@ -706,12 +704,9 @@ def create_krk_rook_leg(nid: str) -> Node:
             "proposal": proposal,
             "reason": "rook_move",
         }
-        env.setdefault("krk", {}).setdefault("legs", {})["rook"] = leg_data
+        env.setdefault("krk", {}).setdefault("legs", {})[nid] = leg_data
         node.meta["activation"] = activation
         node.meta["proposal"] = proposal
-        
-        # DEBUG: Trace maturity calculation
-        print(f"DEBUG: ROOK_LEG | Mat={max_maturity:.4f} | Act={activation:.4f} | ReqConf={require_confirm} | Child={bool(children)}")
 
         return True, True
     
