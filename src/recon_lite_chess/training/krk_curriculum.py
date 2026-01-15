@@ -217,6 +217,153 @@ STAGE_2_EDGE_TRAPPED_TEMPO = KRKStage(
 
 
 # ============================================================================
+# Stage 2.1: Edge_Fence_Knight (NEW - Knight Distance Already Achieved)
+# Opponent king on edge (rank 8), rook holding fence (rank 7),
+# our king at knight distance on rank 6 - optimal finishing position
+# ============================================================================
+
+STAGE_2_1_EDGE_FENCE_KNIGHT = KRKStage(
+    stage_id=3,  # Position after stages 0, 1, 2
+    name="Edge_Fence_Knight",
+    description="King at knight distance from trapped enemy - optimal finish",
+    distance_to_mate="1-2 moves",
+    key_lesson="Knight distance = checkmate threat with no escape",
+    target_win_rate=0.95,  # High threshold - these are optimal positions
+    positions=[
+        # a) King d6 (knight distance from e8), Rook e7, enemy e8
+        KRKStagePosition(
+            fen="4k3/4R3/3K4/8/8/8/8/8 w - - 0 1",
+            optimal_moves=2,
+            description="Knight distance: Ke6 then Re8# or immediate threat",
+        ),
+        # b) King f6 (knight distance from e8), Rook e7, enemy e8
+        KRKStagePosition(
+            fen="4k3/4R3/5K2/8/8/8/8/8 w - - 0 1",
+            optimal_moves=2,
+            description="Knight distance right: Ke6 then Re8#",
+        ),
+        # c) King c6 (knight distance from b8), Rook b7, enemy b8
+        KRKStagePosition(
+            fen="1k6/1R6/2K5/8/8/8/8/8 w - - 0 1",
+            optimal_moves=2,
+            description="Knight distance corner: Kb6 then Ra8#",
+        ),
+        # d) King g3 (knight distance from h1), Rook h2, enemy h1 (bottom edge)
+        KRKStagePosition(
+            fen="8/8/8/8/8/6K1/7R/7k w - - 0 1",
+            optimal_moves=2,
+            description="Knight distance bottom: Kf2 then Rh1# or threats",
+        ),
+        # e) King b3 (knight distance from a1), Rook a2, enemy a1
+        KRKStagePosition(
+            fen="8/8/8/8/8/1K6/R7/k7 w - - 0 1",
+            optimal_moves=2,
+            description="Knight distance corner: Ka2 or Kc2 then Ra1#",
+        ),
+    ],
+)
+
+
+# ============================================================================
+# Stage 2.2: Edge_Fence_Approach (NEW - Repositioning Needed)
+# Same setup but our king NOT at knight distance - must reposition
+# Harder because requires finding approach path
+# ============================================================================
+
+STAGE_2_2_EDGE_FENCE_APPROACH = KRKStage(
+    stage_id=4,  # Position after Edge_Fence_Knight
+    name="Edge_Fence_Approach",
+    description="King must reposition to achieve knight distance",
+    distance_to_mate="2-3 moves",
+    key_lesson="Approach diagonally to reach knight distance",
+    target_win_rate=0.90,
+    positions=[
+        # a) King a6 (not knight distance from e8), Rook e7, enemy e8
+        KRKStagePosition(
+            fen="4k3/4R3/K7/8/8/8/8/8 w - - 0 1",
+            optimal_moves=3,
+            description="Approach: Kb6-c6 or diagonal to reach knight distance",
+        ),
+        # b) King h6 (not knight distance from e8), Rook e7, enemy e8
+        KRKStagePosition(
+            fen="4k3/4R3/7K/8/8/8/8/8 w - - 0 1",
+            optimal_moves=3,
+            description="Approach: Kg6-f6 to reach knight distance",
+        ),
+        # c) King a6 (not knight distance from b8), Rook b7, enemy b8
+        KRKStagePosition(
+            fen="1k6/1R6/K7/8/8/8/8/8 w - - 0 1",
+            optimal_moves=3,
+            description="Approach corner: Kb6 directly achieves knight distance",
+        ),
+        # d) King e3 (not knight distance from h1), Rook h2, enemy h1
+        KRKStagePosition(
+            fen="8/8/8/8/8/4K3/7R/7k w - - 0 1",
+            optimal_moves=3,
+            description="Approach: Kf2-g2 to reach knight distance",
+        ),
+        # e) King d3 (not knight distance from a1), Rook a2, enemy a1
+        KRKStagePosition(
+            fen="8/8/8/8/8/3K4/R7/k7 w - - 0 1",
+            optimal_moves=3,
+            description="Approach corner: Kc2-b2 path or Kc3-b3",
+        ),
+    ],
+)
+
+
+# ============================================================================
+# Stage 2.3: Edge_Fence_Deep (NEW - 2-Space Depth Drill)
+# Opponent at edge (rank 8), rook at rank 6 (2 space gap), king supporting
+# Drills tightening loose setups without interfering with box shrink
+# ============================================================================
+
+STAGE_2_3_EDGE_FENCE_DEEP = KRKStage(
+    stage_id=5,  # Position after Edge_Fence_Approach
+    name="Edge_Fence_Deep",
+    description="Rook 2 ranks from edge - tighten loose confinement",
+    distance_to_mate="3-4 moves",
+    key_lesson="Shrink 2-space gap to 1-space by rook advancement",
+    target_win_rate=0.85,
+    positions=[
+        # a) King d5, Rook e6 (2 ranks from e8), enemy e8
+        KRKStagePosition(
+            fen="4k3/8/4R3/3K4/8/8/8/8 w - - 0 1",
+            optimal_moves=3,
+            description="Advance rook: Re7 tightens, then approach",
+            failure_condition="box_grew",
+        ),
+        # b) King c5, Rook b6 (2 ranks from b8), enemy b8
+        KRKStagePosition(
+            fen="1k6/8/1R6/2K5/8/8/8/8 w - - 0 1",
+            optimal_moves=3,
+            description="Advance rook: Rb7 then Kb6 or direct",
+            failure_condition="box_grew",
+        ),
+        # c) King g4, Rook h3 (2 ranks from h1), enemy h1
+        KRKStagePosition(
+            fen="8/8/8/8/6K1/7R/8/7k w - - 0 1",
+            optimal_moves=3,
+            description="Advance rook: Rh2 tightens bottom",
+            failure_condition="box_grew",
+        ),
+        # d) King b4, Rook a3 (2 files from a1), enemy a1
+        KRKStagePosition(
+            fen="8/8/8/8/1K6/R7/8/k7 w - - 0 1",
+            optimal_moves=3,
+            description="Advance rook: Ra2 then Ka2-b2",
+            failure_condition="box_grew",
+        ),
+        # e) Loose setup: King f4, Rook d6, enemy d8
+        KRKStagePosition(
+            fen="3k4/8/3R4/8/5K2/8/8/8 w - - 0 1",
+            optimal_moves=4,
+            description="Tighten: Rd7 cuts, then approach",
+            failure_condition="box_grew",
+        ),
+    ],
+)
+# ============================================================================
 # Stage 2.5 (Bridge): Anchored_Cut (5 Positions)
 # King already adjacent to rook - removes coordination difficulty
 # Focus purely on the "Hold" mechanic
@@ -228,7 +375,7 @@ STAGE_2_5_ANCHORED_CUT = KRKStage(
     description="King already anchored next to rook - maintain cut",
     distance_to_mate="2 moves",
     key_lesson="Hold the cut with pre-positioned king (coordination already done)",
-    target_win_rate=0.75,
+    target_win_rate=0.90,
     positions=[
         # a) King adjacent to rook, enemy at edge
         KRKStagePosition(
@@ -320,7 +467,7 @@ STAGE_4_KING_CLOSE_1 = KRKStage(
     description="King 1 square from ideal position",
     distance_to_mate="3-4 moves",
     key_lesson="Approach while maintaining cut",
-    target_win_rate=0.75,
+    target_win_rate=0.90,
     positions=[
         # a) King needs to move 1 square closer to e8 cut
         KRKStagePosition(
@@ -358,7 +505,7 @@ STAGE_5_KING_CLOSE_2 = KRKStage(
     description="King 2 squares from ideal position",
     distance_to_mate="4-6 moves",
     key_lesson="Multi-step approach planning",
-    target_win_rate=0.70,
+    target_win_rate=0.85,
     positions=[
         # a) King 2 squares back from edge cut
         KRKStagePosition(
@@ -637,29 +784,34 @@ STAGE_D3_TEMPO_WAIT = KRKStage(
 
 KRK_STAGES: List[KRKStage] = [
     # PHASE 1: Endgame basics - recognize checkmate patterns
-    STAGE_0_MATE_IN_1,           # Stage 0: Mate in 1 (100% win rate)
+    STAGE_0_MATE_IN_1,           # Stage 0: Mate in 1 (95% win rate)
     STAGE_1_MATE_IN_2,           # Stage 1: Mate in 2 (FIXED - true 2-move requirement)
     STAGE_2_EDGE_TRAPPED_TEMPO,  # Stage 2: Tempo/waiting moves at edge
     
+    # PHASE 1.5: Edge Fence - optimal finishing patterns (NEW)
+    STAGE_2_1_EDGE_FENCE_KNIGHT,   # Stage 3: Knight distance (optimal finish)
+    STAGE_2_2_EDGE_FENCE_APPROACH, # Stage 4: Approach to knight distance
+    STAGE_2_3_EDGE_FENCE_DEEP,     # Stage 5: 2-space tightening
+    
     # PHASE 2: Drive Method - opposition and fence technique
     # These teach "drive to edge" pattern before complex box maintenance
-    STAGE_D2_OPPOSITION_APPROACH,  # Stage 3: Knight distance approach
-    STAGE_D3_TEMPO_WAIT,           # Stage 4: Rook tempo/wait moves
-    STAGE_D1_FENCE_ESTABLISHED,    # Stage 5: Fence (rook cut) maintenance
+    STAGE_D2_OPPOSITION_APPROACH,  # Stage 6: Knight distance approach
+    STAGE_D3_TEMPO_WAIT,           # Stage 7: Rook tempo/wait moves
+    STAGE_D1_FENCE_ESTABLISHED,    # Stage 8: Fence (rook cut) maintenance
     
     # PHASE 3: Box Method - confine and shrink
-    STAGE_7_BOX_SMALL,           # Stage 6: 3x3 box (previously had 33% wins)
-    STAGE_8_BOX_MEDIUM,          # Stage 7: 4x4 box
+    STAGE_7_BOX_SMALL,           # Stage 9: 3x3 box
+    STAGE_8_BOX_MEDIUM,          # Stage 10: 4x4 box
     
     # PHASE 4: Cut and Approach - complex coordination
-    STAGE_2_5_ANCHORED_CUT,      # Stage 8: Pre-coordinated king+rook
-    STAGE_3_EDGE_CUT_HOLD,       # Stage 9: 1x8 box maintenance
-    STAGE_4_KING_CLOSE_1,        # Stage 10: King approach 1
-    STAGE_5_KING_CLOSE_2,        # Stage 11: King approach 2
-    STAGE_6_KING_FAR_CUT_HELD,   # Stage 12: Long approach
+    STAGE_2_5_ANCHORED_CUT,      # Stage 11: Pre-coordinated king+rook
+    STAGE_3_EDGE_CUT_HOLD,       # Stage 12: 1x8 box maintenance
+    STAGE_4_KING_CLOSE_1,        # Stage 13: King approach 1
+    STAGE_5_KING_CLOSE_2,        # Stage 14: King approach 2
+    STAGE_6_KING_FAR_CUT_HELD,   # Stage 15: Long approach
     
     # PHASE 5: Full game
-    STAGE_9_FULL_KRK,            # Stage 13: Full KRK
+    STAGE_9_FULL_KRK,            # Stage 16: Full KRK
 ]
 
 
