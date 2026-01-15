@@ -1402,12 +1402,15 @@ class StemCellManager:
     def _default_board_features(board) -> List[float]:
         """Default feature extractor for chess boards.
         
-        Creates a simple representation including:
-        - Piece counts and positions
-        - Pawn rank for each pawn
-        - King distances
-        - ENHANCED: Relative distances for opposition detection
-        - Turn indicator
+        Creates a unified representation for KPK and KRK endgames:
+        - Piece counts and positions (12 features)
+        - Pawn ranks (16 features)
+        - King positions (4 features)
+        - King distances and opposition (8 features)
+        - Turn indicator (1 feature)
+        - KRK-specific: Rook position, distances, cuts, box area (11 features)
+        
+        Total: ~52 features (varies based on piece availability)
         """
         if not HAS_CHESS or not hasattr(board, 'piece_map'):
             return []
@@ -1509,6 +1512,99 @@ class StemCellManager:
         rank_dist_squares = int(abs(wk_rank * 7 - bk_rank * 7) + 0.5)
         has_opposition = same_file > 0.5 and rank_dist_squares % 2 == 1
         features.append(1.0 if has_opposition else 0.0)
+        
+        # ============ KRK-SPECIFIC FEATURES (Rook Endgame) ============
+        # These features are critical for learning the "box method" in KRK endgames
+        
+        white_rooks = list(board.pieces(chess.ROOK, chess.WHITE))
+        wk_sq = white_king[0] if white_king else None
+        bk_sq = black_king[0] if black_king else None
+        
+        if white_rooks:
+            rook_sq = white_rooks[0]
+            rook_file = float(chess.square_file(rook_sq)) / 7.0
+            rook_rank = float(chess.square_rank(rook_sq)) / 7.0
+            
+            # Rook position (2 features)
+            features.append(rook_file)
+            features.append(rook_rank)
+            
+            # King-rook distance (1 feature) - how close is our king to our rook
+            if wk_sq:
+                kr_dist = max(abs(chess.square_file(rook_sq) - chess.square_file(wk_sq)),
+                             abs(chess.square_rank(rook_sq) - chess.square_rank(wk_sq)))
+                features.append(float(kr_dist) / 7.0)
+            else:
+                features.append(0.5)
+            
+            # Rook-enemy-king distance (1 feature) - how close is rook to enemy king
+            if bk_sq:
+                re_dist = max(abs(chess.square_file(rook_sq) - chess.square_file(bk_sq)),
+                             abs(chess.square_rank(rook_sq) - chess.square_rank(bk_sq)))
+                features.append(float(re_dist) / 7.0)
+            else:
+                features.append(0.5)
+            
+            # King protects rook (1 feature) - 1.0 if king adjacent to rook
+            if wk_sq:
+                king_adj_rook = (abs(chess.square_file(rook_sq) - chess.square_file(wk_sq)) <= 1 and
+                               abs(chess.square_rank(rook_sq) - chess.square_rank(wk_sq)) <= 1)
+                features.append(1.0 if king_adj_rook else 0.0)
+            else:
+                features.append(0.0)
+            
+            # Adjacent row indicator (1 feature) - 1.0 if king and rook on adjacent rows
+            if wk_sq:
+                adj_rows = abs(chess.square_rank(rook_sq) - chess.square_rank(wk_sq)) == 1
+                features.append(1.0 if adj_rows else 0.0)
+            else:
+                features.append(0.0)
+            
+            # Rook cuts rank (1 feature) - 1.0 if rook is between our king and enemy king (rank)
+            if wk_sq and bk_sq:
+                rook_r = chess.square_rank(rook_sq)
+                wk_r = chess.square_rank(wk_sq)
+                bk_r = chess.square_rank(bk_sq)
+                rook_cuts_rank = (min(wk_r, bk_r) < rook_r < max(wk_r, bk_r))
+                features.append(1.0 if rook_cuts_rank else 0.0)
+            else:
+                features.append(0.0)
+            
+            # Rook cuts file (1 feature) - 1.0 if rook is between our king and enemy king (file)
+            if wk_sq and bk_sq:
+                rook_f = chess.square_file(rook_sq)
+                wk_f = chess.square_file(wk_sq)
+                bk_f = chess.square_file(bk_sq)
+                rook_cuts_file = (min(wk_f, bk_f) < rook_f < max(wk_f, bk_f))
+                features.append(1.0 if rook_cuts_file else 0.0)
+            else:
+                features.append(0.0)
+            
+            # Box area (1 feature) - size of area enemy king is confined to
+            # Smaller box = closer to mate
+            if bk_sq:
+                bk_file = chess.square_file(bk_sq)
+                bk_rank = chess.square_rank(bk_sq)
+                # Box is bounded by edges and rook position
+                box_width = min(bk_file, 7 - bk_file)
+                box_height = min(bk_rank, 7 - bk_rank)
+                box_area = (box_width + 1) * (box_height + 1) / 64.0  # Normalized
+                features.append(box_area)
+            else:
+                features.append(1.0)
+            
+            # Enemy king on edge (1 feature) - 1.0 if enemy king on board edge
+            if bk_sq:
+                bk_file = chess.square_file(bk_sq)
+                bk_rank = chess.square_rank(bk_sq)
+                on_edge = bk_file in (0, 7) or bk_rank in (0, 7)
+                features.append(1.0 if on_edge else 0.0)
+            else:
+                features.append(0.0)
+                
+        else:
+            # No rook - pad with zeros (11 features)
+            features.extend([0.0] * 11)
         
         return features
     

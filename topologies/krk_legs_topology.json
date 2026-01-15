@@ -163,7 +163,7 @@
       "meta": {
         "cell_id": "stem_0000",
         "tier": "trial",
-        "consistency": 0.6712523448884052,
+        "consistency": 0.3938427561072614,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -201,8 +201,8 @@
           0.0
         ],
         "subgraph": "krk",
-        "xp": 29.549999999999795,
-        "maturity": 0.29549999999999793,
+        "xp": 113.09999999999849,
+        "maturity": 1.130999999999985,
         "xp_successes": 0,
         "xp_failures": 0,
         "total_engagement_xp": 0
@@ -216,7 +216,7 @@
       "meta": {
         "cell_id": "stem_0001",
         "tier": "trial",
-        "consistency": 0.6712523448884052,
+        "consistency": 0.3938427561072614,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -254,8 +254,8 @@
           0.0
         ],
         "subgraph": "krk",
-        "xp": 29.549999999999795,
-        "maturity": 0.29549999999999793,
+        "xp": 113.09999999999849,
+        "maturity": 1.130999999999985,
         "xp_successes": 0,
         "xp_failures": 0,
         "total_engagement_xp": 0
@@ -269,7 +269,7 @@
       "meta": {
         "cell_id": "stem_0002",
         "tier": "trial",
-        "consistency": 0.5582048700633607,
+        "consistency": 0.4088512530785645,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -307,8 +307,8 @@
           0.0
         ],
         "subgraph": "krk",
-        "xp": 30.04999999999979,
-        "maturity": 0.30049999999999794,
+        "xp": 107.54999999999862,
+        "maturity": 1.0754999999999861,
         "xp_successes": 0,
         "xp_failures": 0,
         "total_engagement_xp": 0
@@ -322,7 +322,7 @@
       "meta": {
         "cell_id": "stem_0003",
         "tier": "trial",
-        "consistency": 0.5582048700633607,
+        "consistency": 0.4088512530785645,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -360,8 +360,8 @@
           0.0
         ],
         "subgraph": "krk",
-        "xp": 30.04999999999979,
-        "maturity": 0.30049999999999794,
+        "xp": 107.54999999999862,
+        "maturity": 1.0754999999999861,
         "xp_successes": 0,
         "xp_failures": 0,
         "total_engagement_xp": 0
@@ -375,7 +375,7 @@
       "meta": {
         "cell_id": "stem_0004",
         "tier": "trial",
-        "consistency": 0.5936377587465848,
+        "consistency": 0.40871799812361376,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -413,8 +413,8 @@
           0.0
         ],
         "subgraph": "krk",
-        "xp": 30.94999999999978,
-        "maturity": 0.3094999999999978,
+        "xp": 101.14999999999876,
+        "maturity": 1.0114999999999876,
         "xp_successes": 0,
         "xp_failures": 0,
         "total_engagement_xp": 0
@@ -428,7 +428,7 @@
       "meta": {
         "cell_id": "stem_0005",
         "tier": "trial",
-        "consistency": 0.5936377587465848,
+        "consistency": 0.40871799812361376,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -466,8 +466,8 @@
           0.0
         ],
         "subgraph": "krk",
-        "xp": 30.94999999999978,
-        "maturity": 0.3094999999999978,
+        "xp": 101.14999999999876,
+        "maturity": 1.0114999999999876,
         "xp_successes": 0,
         "xp_failures": 0,
         "total_engagement_xp": 0
@@ -481,7 +481,7 @@
       "meta": {
         "cell_id": "stem_0006",
         "tier": "trial",
-        "consistency": 0.5873330344312941,
+        "consistency": 0.4279579920039279,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -519,8 +519,8 @@
           0.0
         ],
         "subgraph": "krk",
-        "xp": 30.499999999999808,
-        "maturity": 0.3049999999999981,
+        "xp": 95.79999999999887,
+        "maturity": 0.9579999999999887,
         "xp_successes": 0,
         "xp_failures": 0,
         "total_engagement_xp": 0
@@ -534,7 +534,7 @@
       "meta": {
         "cell_id": "stem_0007",
         "tier": "trial",
-        "consistency": 0.5873330344312941,
+        "consistency": 0.4279579920039279,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -572,8 +572,8 @@
           0.0
         ],
         "subgraph": "krk",
-        "xp": 30.499999999999808,
-        "maturity": 0.3049999999999981,
+        "xp": 95.79999999999887,
+        "maturity": 0.9579999999999887,
         "xp_successes": 0,
         "xp_failures": 0,
         "total_engagement_xp": 0
@@ -640,7 +640,7 @@
       "meta": {
         "cell_id": "stem_0020",
         "tier": "trial",
-        "consistency": 0.5306904377195389,
+        "consistency": 0.4046961967817916,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -678,8 +678,8 @@
           0.0
         ],
         "subgraph": "krk",
-        "xp": 73.74999999999926,
-        "maturity": 0.7374999999999926,
+        "xp": 70.7999999999995,
+        "maturity": 0.707999999999995,
         "xp_successes": 0,
         "xp_failures": 0,
         "total_engagement_xp": 0
@@ -693,7 +693,7 @@
       "meta": {
         "cell_id": "stem_0008",
         "tier": "trial",
-        "consistency": 0.61384258430654,
+        "consistency": 0.4311704955222351,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -731,8 +731,8 @@
           0.0
         ],
         "subgraph": "krk",
-        "xp": 31.2499999999998,
-        "maturity": 0.312499999999998,
+        "xp": 90.599999999999,
+        "maturity": 0.90599999999999,
         "xp_successes": 0,
         "xp_failures": 0,
         "total_engagement_xp": 0
@@ -746,7 +746,7 @@
       "meta": {
         "cell_id": "stem_0009",
         "tier": "trial",
-        "consistency": 0.61384258430654,
+        "consistency": 0.4311704955222351,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -784,8 +784,8 @@
           0.0
         ],
         "subgraph": "krk",
-        "xp": 31.2499999999998,
-        "maturity": 0.312499999999998,
+        "xp": 90.599999999999,
+        "maturity": 0.90599999999999,
         "xp_successes": 0,
         "xp_failures": 0,
         "total_engagement_xp": 0
@@ -799,55 +799,7 @@
       "meta": {
         "cell_id": "stem_0016",
         "tier": "trial",
-        "consistency": 0.5593390014968946,
-        "promoted_tick": 0,
-        "pattern_signature": [
-          0.0,
-          0.0,
-          0.0,
-          1.0,
-          0.0,
-          1.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          1.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.6443148688046649,
-          0.4810495626822155,
-          0.8046647230320698,
-          0.6413994169096213,
-          0.0
-        ],
-        "subgraph": "krk"
-      }
-    },
-    {
-      "id": "TRIAL_stem_0017_0",
-      "type": "TERMINAL",
-      "group": "trial",
-      "factory": null,
-      "meta": {
-        "cell_id": "stem_0017",
-        "tier": "trial",
-        "consistency": 0.6566399042138792,
+        "consistency": 0.3985226746640378,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -885,8 +837,61 @@
           0.0
         ],
         "subgraph": "krk",
-        "xp": 31.749999999999815,
-        "maturity": 0.3174999999999982,
+        "xp": 76.14999999999937,
+        "maturity": 0.7614999999999936,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "total_engagement_xp": 0
+      }
+    },
+    {
+      "id": "TRIAL_stem_0017_0",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": null,
+      "meta": {
+        "cell_id": "stem_0017",
+        "tier": "trial",
+        "consistency": 0.3985226746640378,
+        "promoted_tick": 0,
+        "pattern_signature": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.6443148688046649,
+          0.4810495626822155,
+          0.8046647230320698,
+          0.6413994169096213,
+          0.0
+        ],
+        "subgraph": "krk",
+        "xp": 76.14999999999937,
+        "maturity": 0.7614999999999936,
         "xp_successes": 0,
         "xp_failures": 0,
         "total_engagement_xp": 0
@@ -953,7 +958,7 @@
       "meta": {
         "cell_id": "stem_0021",
         "tier": "trial",
-        "consistency": 0.6003913815830852,
+        "consistency": 0.4046961967817916,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -990,7 +995,12 @@
           0.7078891257995734,
           0.0
         ],
-        "subgraph": "krk"
+        "subgraph": "krk",
+        "xp": 70.7999999999995,
+        "maturity": 0.707999999999995,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "total_engagement_xp": 0
       }
     },
     {
@@ -1001,7 +1011,7 @@
       "meta": {
         "cell_id": "stem_0013",
         "tier": "trial",
-        "consistency": 0.686836240795486,
+        "consistency": 0.3741061861535928,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -1039,8 +1049,8 @@
           0.0
         ],
         "subgraph": "krk",
-        "xp": 30.99999999999982,
-        "maturity": 0.30999999999999817,
+        "xp": 81.59999999999924,
+        "maturity": 0.8159999999999924,
         "xp_successes": 0,
         "xp_failures": 0,
         "total_engagement_xp": 0
@@ -1107,7 +1117,7 @@
       "meta": {
         "cell_id": "stem_0015",
         "tier": "trial",
-        "consistency": 0.5229352462349555,
+        "consistency": 0.3875374821641059,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -1145,8 +1155,8 @@
           0.0
         ],
         "subgraph": "krk",
-        "xp": 296.40000000000606,
-        "maturity": 2.964000000000061,
+        "xp": 81.59999999999924,
+        "maturity": 0.8159999999999924,
         "xp_successes": 0,
         "xp_failures": 0,
         "total_engagement_xp": 0
@@ -1208,7 +1218,7 @@
       "meta": {
         "cell_id": "stem_0011",
         "tier": "trial",
-        "consistency": 0.5213806001622658,
+        "consistency": 0.35567495831710216,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -1246,8 +1256,8 @@
           0.0
         ],
         "subgraph": "krk",
-        "xp": 84.099999999999,
-        "maturity": 0.84099999999999,
+        "xp": 85.69999999999912,
+        "maturity": 0.8569999999999912,
         "xp_successes": 0,
         "xp_failures": 0,
         "total_engagement_xp": 0
@@ -1261,7 +1271,7 @@
       "meta": {
         "cell_id": "stem_0012",
         "tier": "trial",
-        "consistency": 0.686836240795486,
+        "consistency": 0.35567495831710216,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -1299,8 +1309,8 @@
           0.0
         ],
         "subgraph": "krk",
-        "xp": 30.99999999999982,
-        "maturity": 0.30999999999999817,
+        "xp": 85.69999999999912,
+        "maturity": 0.8569999999999912,
         "xp_successes": 0,
         "xp_failures": 0,
         "total_engagement_xp": 0
@@ -1314,7 +1324,7 @@
       "meta": {
         "cell_id": "stem_0022",
         "tier": "trial",
-        "consistency": 0.5433515196023331,
+        "consistency": 0.41881330098974423,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -1360,8 +1370,8 @@
           0.046
         ],
         "subgraph": "krk",
-        "xp": 70.49999999999939,
-        "maturity": 0.7049999999999939,
+        "xp": 65.19999999999963,
+        "maturity": 0.6519999999999964,
         "xp_successes": 0,
         "xp_failures": 0,
         "total_engagement_xp": 0
@@ -1436,7 +1446,7 @@
       "meta": {
         "cell_id": "stem_0024",
         "tier": "trial",
-        "consistency": 0.5491427294455965,
+        "consistency": 0.43024095199076573,
         "promoted_tick": 0,
         "pattern_signature": [
           0.0,
@@ -1482,8 +1492,8 @@
           0.048
         ],
         "subgraph": "krk",
-        "xp": 31.699999999999832,
-        "maturity": 0.31699999999999834,
+        "xp": 65.19999999999963,
+        "maturity": 0.6519999999999964,
         "xp_successes": 0,
         "xp_failures": 0,
         "total_engagement_xp": 0
@@ -2616,7 +2626,7 @@
       "confirmation_count": 0
     }
   ],
-  "last_modified": "2026-01-15T09:38:59.922104",
+  "last_modified": "2026-01-15T11:04:58.188633",
   "evolution_history": [
     {
       "tick": 0,
