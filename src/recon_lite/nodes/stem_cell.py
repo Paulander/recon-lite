@@ -1368,6 +1368,254 @@ class StemCellTerminal:
         return cell
 
 
+# =============================================================================
+# LAG META-TERMINALS: Temporal Gates for Trend Detection
+# =============================================================================
+# Design:
+# - LagMetaTerminal wraps a source terminal and provides t-1 (previous) value
+# - TemporalComparator compares current vs previous (LESS/GREATER)
+# - Emergent chaining: t-k delays via recursive lags (depth limited)
+# - Integrates with M5.1 spawning for discovery via co-occurrence
+# =============================================================================
+
+# Maximum lag recursion depth to prevent explosion
+MAX_LAG_DEPTH = 3
+
+# Comparator modes
+class ComparatorMode(Enum):
+    """Comparator types for temporal gates."""
+    LESS = "less"          # Current < Previous (decreasing/shrinking)
+    GREATER = "greater"    # Current > Previous (increasing/growing)
+    EQUAL = "equal"        # Within tolerance
+    DELTA = "delta"        # Just compute difference (continuous output)
+
+
+@dataclass
+class LagMetaTerminal:
+    """
+    Meta-terminal that tracks t-1 values of a source terminal.
+    
+    Enables temporal reasoning without bloating the feature vector.
+    The network can discover trends (e.g., "shrinking box area") through
+    co-occurrence of LagMetaTerminals with win outcomes.
+    
+    Design principles:
+    - References source terminal via child_id (no full decoupling)
+    - Mini-pipeline bubbles values: current → previous each tick
+    - Recursive chaining for t-k delays (up to MAX_LAG_DEPTH)
+    - XP/grace period for RL-guided pruning
+    """
+    
+    lag_id: str                          # Unique ID for this lag terminal
+    source_id: str                       # ID of the source terminal we're lagging
+    feature_index: int                   # Which feature in the vector we track
+    depth: int = 1                       # Lag depth (1=t-1, 2=t-2, etc.)
+    
+    # Value pipeline (mini-buffer)
+    current_value: float = 0.0           # Value at current tick
+    previous_value: float = 0.0          # Value at t-1
+    
+    # For recursive lags (e.g., lag of a lag for t-2)
+    parent_lag_id: Optional[str] = None  # If this is a lag of another lag
+    
+    # State tracking
+    tick_count: int = 0                  # Total ticks observed
+    valid: bool = False                  # True after first update cycle
+    
+    # Metadata for M5.1 integration
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    
+    def update(self, new_value: float) -> float:
+        """
+        Update the lag pipeline with a new value.
+        
+        Returns the delta (current - previous) for comparator consumption.
+        """
+        # Bubble values
+        self.previous_value = self.current_value
+        self.current_value = new_value
+        self.tick_count += 1
+        
+        # Valid after at least 2 observations
+        if self.tick_count >= 2:
+            self.valid = True
+        
+        return self.current_value - self.previous_value
+    
+    def get_delta(self) -> float:
+        """Get the change since last tick (positive = increasing)."""
+        if not self.valid:
+            return 0.0
+        return self.current_value - self.previous_value
+    
+    def is_decreasing(self, tolerance: float = 0.01) -> bool:
+        """Returns True if value decreased since last tick."""
+        return self.valid and self.get_delta() < -tolerance
+    
+    def is_increasing(self, tolerance: float = 0.01) -> bool:
+        """Returns True if value increased since last tick."""
+        return self.valid and self.get_delta() > tolerance
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize for persistence."""
+        return {
+            "lag_id": self.lag_id,
+            "source_id": self.source_id,
+            "feature_index": self.feature_index,
+            "depth": self.depth,
+            "current_value": self.current_value,
+            "previous_value": self.previous_value,
+            "parent_lag_id": self.parent_lag_id,
+            "tick_count": self.tick_count,
+            "valid": self.valid,
+            "metadata": self.metadata,
+        }
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "LagMetaTerminal":
+        """Deserialize from persistence."""
+        return cls(
+            lag_id=data["lag_id"],
+            source_id=data["source_id"],
+            feature_index=data["feature_index"],
+            depth=data.get("depth", 1),
+            current_value=data.get("current_value", 0.0),
+            previous_value=data.get("previous_value", 0.0),
+            parent_lag_id=data.get("parent_lag_id"),
+            tick_count=data.get("tick_count", 0),
+            valid=data.get("valid", False),
+            metadata=data.get("metadata", {}),
+        )
+
+
+@dataclass
+class TemporalComparator:
+    """
+    Script-like wrapper that compares current vs previous values.
+    
+    Fires like a SCRIPT node: (succeed, done) based on comparison result.
+    Integrates with POR chains for multi-tick confirmation.
+    
+    Modes:
+    - LESS: Fires when current < previous - tolerance (decreasing)
+    - GREATER: Fires when current > previous + tolerance (increasing)
+    - EQUAL: Fires when within tolerance (stable)
+    - DELTA: Always fires, passes delta value (continuous)
+    
+    Example use case:
+    - LESS(box_area) → fires when enemy king's confinement box is shrinking
+    - GREATER(edge_distance) → fires when enemy king escaping edge
+    """
+    
+    comparator_id: str                   # Unique ID
+    lag_terminal_id: str                 # ID of LagMetaTerminal we compare
+    mode: ComparatorMode                 # Type of comparison
+    tolerance: float = 0.02              # Fuzzy tolerance for continuous signals
+    
+    # State
+    last_result: bool = False            # Result of last comparison
+    fire_count: int = 0                  # Times this comparator fired True
+    total_count: int = 0                 # Total evaluations
+    
+    # XP system (for M5.1 pruning)
+    xp: int = 0                          # Reinforcement signal
+    
+    # Metadata for registry patterns
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    
+    def evaluate(self, delta: float) -> Tuple[bool, bool]:
+        """
+        Evaluate the comparator.
+        
+        Returns (succeed, done) like a SCRIPT node:
+        - succeed: True if comparison matches
+        - done: Always True (single-tick evaluation)
+        """
+        self.total_count += 1
+        
+        if self.mode == ComparatorMode.LESS:
+            result = delta < -self.tolerance
+        elif self.mode == ComparatorMode.GREATER:
+            result = delta > self.tolerance
+        elif self.mode == ComparatorMode.EQUAL:
+            result = abs(delta) <= self.tolerance
+        elif self.mode == ComparatorMode.DELTA:
+            result = True  # Always fires for delta mode
+        else:
+            result = False
+        
+        self.last_result = result
+        if result:
+            self.fire_count += 1
+        
+        return (result, True)
+    
+    def get_activation_rate(self) -> float:
+        """Fraction of evaluations where comparator fired."""
+        if self.total_count == 0:
+            return 0.0
+        return self.fire_count / self.total_count
+    
+    def record_reward(self, reward: float) -> None:
+        """Update XP based on reward correlation."""
+        if self.last_result and reward > 0:
+            self.xp += int(reward * 10)
+        elif self.last_result and reward < 0:
+            self.xp -= int(abs(reward) * 5)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize for persistence."""
+        return {
+            "comparator_id": self.comparator_id,
+            "lag_terminal_id": self.lag_terminal_id,
+            "mode": self.mode.value,
+            "tolerance": self.tolerance,
+            "last_result": self.last_result,
+            "fire_count": self.fire_count,
+            "total_count": self.total_count,
+            "xp": self.xp,
+            "metadata": self.metadata,
+        }
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "TemporalComparator":
+        """Deserialize from persistence."""
+        return cls(
+            comparator_id=data["comparator_id"],
+            lag_terminal_id=data["lag_terminal_id"],
+            mode=ComparatorMode(data["mode"]),
+            tolerance=data.get("tolerance", 0.02),
+            last_result=data.get("last_result", False),
+            fire_count=data.get("fire_count", 0),
+            total_count=data.get("total_count", 0),
+            xp=data.get("xp", 0),
+            metadata=data.get("metadata", {}),
+        )
+
+
+# Registry pattern for pool transfer
+LAG_REGISTRY_PATTERN = {
+    "type": "lag_meta_terminal",
+    "template": {
+        "lag_id": None,
+        "source_id": None,
+        "feature_index": None,
+        "depth": 1,
+    }
+}
+
+COMPARATOR_REGISTRY_PATTERN = {
+    "type": "temporal_comparator",
+    "modes": ["less", "greater", "equal", "delta"],
+    "template": {
+        "comparator_id": None,
+        "lag_terminal_id": None,
+        "mode": "less",
+        "tolerance": 0.02,
+    }
+}
+
+
 class StemCellManager:
     """
     Manages a pool of stem cells for pattern discovery.
@@ -1392,6 +1640,17 @@ class StemCellManager:
         self.win_coactivation: Dict[Tuple[str, str], int] = {}  # (a,b) -> co-fire count
         self.win_active_counts: Dict[str, int] = {}  # cell_id -> wins where active
         
+        # =========== LAG META-TERMINAL STORAGE ===========
+        # Store lag terminals and comparators for temporal trend detection
+        self.lag_terminals: Dict[str, LagMetaTerminal] = {}
+        self.comparators: Dict[str, TemporalComparator] = {}
+        self._next_lag_id = 0
+        self._next_comparator_id = 0
+        
+        # Feature variance tracking (for proactive lag spawning on high-variance features)
+        self.feature_variance: Dict[int, List[float]] = {}  # feature_index -> recent values
+        self._feature_variance_window = 20  # Track last N values per feature
+        
         # Default feature extractor for chess boards
         if feature_extractor is not None:
             self.feature_extractor = feature_extractor
@@ -1409,8 +1668,15 @@ class StemCellManager:
         - King distances and opposition (8 features)
         - Turn indicator (1 feature)
         - KRK-specific: Rook position, distances, cuts, box area (11 features)
+        - Signed deltas: WR-BK and WK-BK file/rank (4 features)
+        - Betweenness: BK between WK-WR on file/rank (2 features)
+        - DELAYED HINT: is_mate_in_1 (disabled by default, set M5_ENABLE_MATE_HINT=1)
         
-        Total: ~52 features (varies based on piece availability)
+        Total: ~59 features (varies based on piece availability)
+        
+        OPTION C ARCHITECTURE: Mate hint is disabled by default to enable pure
+        discovery via M5.1 emergence mechanics (co-occurrence, recursive spawning).
+        Enable only when stuck to help the network break through plateaus.
         """
         if not HAS_CHESS or not hasattr(board, 'piece_map'):
             return []
@@ -1601,10 +1867,110 @@ class StemCellManager:
                 features.append(1.0 if on_edge else 0.0)
             else:
                 features.append(0.0)
+            
+            # ============ SIGNED DELTAS (4 features) ============
+            # Signed deltas enable symmetry/transfer learning across board
+            
+            # Signed delta file WR-BK (1 feature) - positive = rook right of enemy king
+            if bk_sq:
+                wr_file = chess.square_file(rook_sq)
+                bk_f = chess.square_file(bk_sq)
+                signed_delta_file_wr_bk = (wr_file - bk_f) / 7.0  # Normalized -1 to 1
+                features.append(signed_delta_file_wr_bk)
+            else:
+                features.append(0.0)
+            
+            # Signed delta rank WR-BK (1 feature) - positive = rook above enemy king
+            if bk_sq:
+                wr_rank = chess.square_rank(rook_sq)
+                bk_r = chess.square_rank(bk_sq)
+                signed_delta_rank_wr_bk = (wr_rank - bk_r) / 7.0
+                features.append(signed_delta_rank_wr_bk)
+            else:
+                features.append(0.0)
+            
+            # Signed delta file WK-BK (1 feature) - positive = our king right of enemy
+            if wk_sq and bk_sq:
+                wk_f = chess.square_file(wk_sq)
+                bk_f = chess.square_file(bk_sq)
+                signed_delta_file_wk_bk = (wk_f - bk_f) / 7.0
+                features.append(signed_delta_file_wk_bk)
+            else:
+                features.append(0.0)
+            
+            # Signed delta rank WK-BK (1 feature) - positive = our king above enemy
+            if wk_sq and bk_sq:
+                wk_r = chess.square_rank(wk_sq)
+                bk_r = chess.square_rank(bk_sq)
+                signed_delta_rank_wk_bk = (wk_r - bk_r) / 7.0
+                features.append(signed_delta_rank_wk_bk)
+            else:
+                features.append(0.0)
+            
+            # ============ BETWEENNESS (2 features) ============
+            # Captures tempo dynamics - is enemy king interposed between our pieces?
+            
+            # BK between WK-WR on file (signed) - 1.0 if BK between and "ahead" of WR
+            if wk_sq and bk_sq:
+                wk_f = chess.square_file(wk_sq)
+                bk_f = chess.square_file(bk_sq)
+                wr_f = chess.square_file(rook_sq)
+                
+                # Check if BK is between WK and WR on file
+                min_f, max_f = min(wk_f, wr_f), max(wk_f, wr_f)
+                if min_f < bk_f < max_f:
+                    # BK is between - sign indicates direction from WR perspective
+                    between_file = 1.0 if bk_f > wr_f else -1.0
+                else:
+                    between_file = 0.0
+                features.append(between_file)
+            else:
+                features.append(0.0)
+            
+            # BK between WK-WR on rank (signed) - 1.0 if BK between and "above" WR
+            if wk_sq and bk_sq:
+                wk_r = chess.square_rank(wk_sq)
+                bk_r = chess.square_rank(bk_sq)
+                wr_r = chess.square_rank(rook_sq)
+                
+                # Check if BK is between WK and WR on rank
+                min_r, max_r = min(wk_r, wr_r), max(wk_r, wr_r)
+                if min_r < bk_r < max_r:
+                    # BK is between - sign indicates direction from WR perspective
+                    between_rank = 1.0 if bk_r > wr_r else -1.0
+                else:
+                    between_rank = 0.0
+                features.append(between_rank)
+            else:
+                features.append(0.0)
                 
         else:
-            # No rook - pad with zeros (11 features)
-            features.extend([0.0] * 11)
+            # No rook - pad with zeros (17 features now: 11 original + 4 signed + 2 between)
+            features.extend([0.0] * 17)
+        
+        # ============ MATE-IN-1 DETECTION (1 feature) - DELAYED HINT ============
+        # OPTION C: Disabled by default for pure discovery mode
+        # Set M5_ENABLE_MATE_HINT=1 to enable when stuck (after trying pure emergence)
+        # This gives M5.1 a chance to discover mate patterns from lower-level sensors
+        import os
+        enable_mate_hint = os.environ.get("M5_ENABLE_MATE_HINT", "0") == "1"
+        
+        if enable_mate_hint:
+            is_mate_in_1 = 0.0
+            try:
+                for move in board.legal_moves:
+                    board.push(move)
+                    if board.is_checkmate():
+                        is_mate_in_1 = 1.0
+                        board.pop()
+                        break
+                    board.pop()
+            except Exception:
+                pass
+            features.append(is_mate_in_1)
+        else:
+            # Pure discovery mode - append 0 to keep feature vector length consistent
+            features.append(0.0)
         
         return features
     
@@ -1781,6 +2147,202 @@ class StemCellManager:
                     cell.mark_confirmed(current_cycle)
                     count += 1
         return count
+    
+    # =========== LAG META-TERMINAL METHODS ===========
+    # These enable emergent discovery of temporal trends via M5.1
+    
+    def spawn_lag_terminal(
+        self,
+        source_id: str,
+        feature_index: int,
+        parent_lag_id: Optional[str] = None,
+    ) -> Optional[LagMetaTerminal]:
+        """
+        Spawn a new lag terminal for a feature.
+        
+        Can create recursive lags (lag of a lag) for t-k delays up to MAX_LAG_DEPTH.
+        
+        Args:
+            source_id: ID of the source terminal/cell we're tracking
+            feature_index: Which feature in the vector to track
+            parent_lag_id: If set, this is a lag of another lag (for t-2, t-3, etc.)
+        
+        Returns:
+            New LagMetaTerminal or None if depth limit reached
+        """
+        # Calculate depth
+        depth = 1
+        if parent_lag_id and parent_lag_id in self.lag_terminals:
+            parent = self.lag_terminals[parent_lag_id]
+            depth = parent.depth + 1
+            if depth > MAX_LAG_DEPTH:
+                return None  # Depth limit reached
+        
+        # Check for duplicate
+        for lag in self.lag_terminals.values():
+            if lag.source_id == source_id and lag.feature_index == feature_index:
+                if lag.parent_lag_id == parent_lag_id:
+                    return lag  # Already exists
+        
+        lag_id = f"lag_{self._next_lag_id:04d}"
+        self._next_lag_id += 1
+        
+        lag = LagMetaTerminal(
+            lag_id=lag_id,
+            source_id=source_id,
+            feature_index=feature_index,
+            depth=depth,
+            parent_lag_id=parent_lag_id,
+        )
+        
+        self.lag_terminals[lag_id] = lag
+        return lag
+    
+    def spawn_comparator(
+        self,
+        lag_terminal_id: str,
+        mode: ComparatorMode = ComparatorMode.LESS,
+        tolerance: float = 0.02,
+    ) -> Optional[TemporalComparator]:
+        """
+        Spawn a comparator for a lag terminal.
+        
+        Args:
+            lag_terminal_id: ID of the lag terminal to compare
+            mode: Type of comparison (LESS, GREATER, EQUAL, DELTA)
+            tolerance: Fuzzy tolerance for continuous signals
+        
+        Returns:
+            New TemporalComparator or None if lag doesn't exist
+        """
+        if lag_terminal_id not in self.lag_terminals:
+            return None
+        
+        # Check for duplicate
+        for comp in self.comparators.values():
+            if comp.lag_terminal_id == lag_terminal_id and comp.mode == mode:
+                return comp  # Already exists
+        
+        comp_id = f"comp_{self._next_comparator_id:04d}"
+        self._next_comparator_id += 1
+        
+        comp = TemporalComparator(
+            comparator_id=comp_id,
+            lag_terminal_id=lag_terminal_id,
+            mode=mode,
+            tolerance=tolerance,
+        )
+        
+        self.comparators[comp_id] = comp
+        return comp
+    
+    def update_lags(self, features: List[float]) -> Dict[str, float]:
+        """
+        Update all lag terminals with new feature values.
+        
+        Also updates feature variance tracking for proactive spawning.
+        
+        Args:
+            features: Current feature vector
+            
+        Returns:
+            Dict of lag_id -> delta for comparator consumption
+        """
+        deltas = {}
+        
+        for lag_id, lag in self.lag_terminals.items():
+            if lag.feature_index < len(features):
+                # Get value - either from parent lag or from feature vector
+                if lag.parent_lag_id and lag.parent_lag_id in self.lag_terminals:
+                    # This is a lag of a lag - use parent's previous value
+                    parent = self.lag_terminals[lag.parent_lag_id]
+                    value = parent.previous_value
+                else:
+                    value = features[lag.feature_index]
+                
+                delta = lag.update(value)
+                deltas[lag_id] = delta
+        
+        # Update feature variance tracking
+        for i, val in enumerate(features):
+            if i not in self.feature_variance:
+                self.feature_variance[i] = []
+            self.feature_variance[i].append(val)
+            # Keep only last N values
+            if len(self.feature_variance[i]) > self._feature_variance_window:
+                self.feature_variance[i].pop(0)
+        
+        return deltas
+    
+    def evaluate_comparators(self, deltas: Dict[str, float]) -> Dict[str, bool]:
+        """
+        Evaluate all comparators with updated deltas.
+        
+        Args:
+            deltas: Dict of lag_id -> delta from update_lags()
+            
+        Returns:
+            Dict of comparator_id -> fired
+        """
+        results = {}
+        for comp_id, comp in self.comparators.items():
+            if comp.lag_terminal_id in deltas:
+                delta = deltas[comp.lag_terminal_id]
+                fired, _ = comp.evaluate(delta)
+                results[comp_id] = fired
+        return results
+    
+    def spawn_lags_for_high_variance(
+        self,
+        min_variance: float = 0.1,
+        max_spawns: int = 3,
+    ) -> List[str]:
+        """
+        Proactively spawn lag terminals for high-variance features.
+        
+        High-variance features are more likely to be relevant for trend detection.
+        This is called during M5.1 proactive spawning phase.
+        
+        Args:
+            min_variance: Minimum variance to trigger lag spawning
+            max_spawns: Maximum number of lags to spawn per call
+            
+        Returns:
+            List of newly spawned lag IDs
+        """
+        spawned = []
+        
+        for feature_idx, values in self.feature_variance.items():
+            if len(spawned) >= max_spawns:
+                break
+            
+            if len(values) < 5:  # Need minimum data
+                continue
+            
+            # Compute variance
+            mean = sum(values) / len(values)
+            variance = sum((v - mean) ** 2 for v in values) / len(values)
+            
+            if variance >= min_variance:
+                # Check if we already have a lag for this feature
+                has_lag = any(
+                    lag.feature_index == feature_idx 
+                    for lag in self.lag_terminals.values()
+                )
+                
+                if not has_lag:
+                    lag = self.spawn_lag_terminal(
+                        source_id=f"feature_{feature_idx}",
+                        feature_index=feature_idx,
+                    )
+                    if lag:
+                        spawned.append(lag.lag_id)
+                        
+                        # Also spawn LESS and GREATER comparators
+                        self.spawn_comparator(lag.lag_id, ComparatorMode.LESS)
+                        self.spawn_comparator(lag.lag_id, ComparatorMode.GREATER)
+        
+        return spawned
     
     def stats(self) -> Dict[str, Any]:
         """Get manager statistics."""

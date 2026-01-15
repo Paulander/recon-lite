@@ -143,7 +143,7 @@ class KRKCurriculumConfig:
     trace_dir: Path = field(default_factory=lambda: Path("traces/krk_curriculum"))
     
     # Game settings
-    max_moves_per_game: int = 50  # Reduced for faster games
+    max_moves_per_game: int = 30  # Reduced from 50 for faster training
     max_ticks_per_move: int = 10  # Reduced from 50
     min_internal_ticks: int = 2   # Minimal for speed
     
@@ -352,7 +352,17 @@ def play_krk_game_recon(
         # Subgraph might already be locked or not exist
         pass
     
-    while move_count < config.max_moves_per_game:
+    # EARLY EXIT: Stage-specific move limits (fail fast if no mate)
+    stage_move_limits = {
+        "Mate_In_1": 3,
+        "Mate_In_2": 5,
+        "Mate_In_3": 8,
+        "Box_Method": 15,
+        "Edge_Confinement": 20,
+    }
+    max_moves_for_stage = stage_move_limits.get(stage.name, config.max_moves_per_game)
+    
+    while move_count < min(config.max_moves_per_game, max_moves_for_stage):
         if board.is_game_over():
             break
         
@@ -479,6 +489,24 @@ def play_krk_game_recon(
             # Feed to all exploring stem cells
             for cell in stem_manager.cells.values():
                 cell.observe(board, interim_reward, tick=game_tick)
+            
+            # ========== LAG TERMINAL UPDATES (Temporal Gates) ==========
+            # Update lag terminals with feature vector changes for trend detection
+            try:
+                features = stem_manager.feature_extractor(board)
+                if features:
+                    # Update all lags and get deltas
+                    deltas = stem_manager.update_lags(features)
+                    
+                    # Evaluate comparators to detect trends
+                    trend_signals = stem_manager.evaluate_comparators(deltas)
+                    
+                    # Record comparator reward correlation for XP
+                    for comp_id, fired in trend_signals.items():
+                        if comp_id in stem_manager.comparators:
+                            stem_manager.comparators[comp_id].record_reward(interim_reward)
+            except Exception:
+                pass  # Skip lag update on error
         
         # ========== PLASTICITY UPDATE (M3: per-tick edge weight adaptation) ==========
         if HAS_PLASTICITY and plasticity_state and plasticity_config:
@@ -504,15 +532,42 @@ def play_krk_game_recon(
             )
             
             # Apply fast weight updates based on reward
-            # Use checkmate as strong signal, check as medium
+            # BACKWARD CHAINING: Use LEARNED SENSOR PATTERNS, not hardcoded checks
+            # When a mastered stage's sensor fires, give bonus reward
             if board.is_checkmate():
                 reward_signal = 1.0
-            elif board.is_check():
-                reward_signal = 0.3
-            elif box_min_side(board) < initial_box_min:
-                reward_signal = 0.1  # Small reward for progress
             else:
                 reward_signal = 0.0
+                
+                # Check if any mastered sensor pattern matches current position
+                # This is the extensible backward chaining mechanism
+                if mastered_sensors and stem_manager:
+                    current_features = stem_manager.feature_extractor(board)
+                    
+                    for stage_id, sensor_info in mastered_sensors.items():
+                        pattern_sig = sensor_info.get("pattern_signature")
+                        if pattern_sig and current_features:
+                            # Compute cosine similarity between current features and mastered pattern
+                            if len(current_features) == len(pattern_sig):
+                                dot_product = sum(f * p for f, p in zip(current_features, pattern_sig))
+                                norm_f = sum(f * f for f in current_features) ** 0.5
+                                norm_p = sum(p * p for p in pattern_sig) ** 0.5
+                                if norm_f > 0 and norm_p > 0:
+                                    similarity = dot_product / (norm_f * norm_p)
+                                    
+                                    # If high similarity to mastered sensor, give bonus reward
+                                    # Trust score modulates the reward (higher trust = higher reward)
+                                    if similarity > 0.85:
+                                        trust = sensor_info.get("trust_score", 0.9)
+                                        sensor_reward = 0.7 * trust * similarity
+                                        reward_signal = max(reward_signal, sensor_reward)
+                
+                # Fallback: Basic progress rewards if no sensor match
+                if reward_signal == 0.0:
+                    if board.is_check():
+                        reward_signal = 0.3
+                    elif box_min_side(board) < initial_box_min:
+                        reward_signal = 0.1
             
             if reward_signal > 0:
                 deltas = apply_fast_update(
@@ -955,34 +1010,17 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                     # Create structural learner
                     struct_learner = StructureLearner(registry=registry)
                     
-                    # Try to promote CANDIDATE cells directly based on consistency
-                    # (Manual promotion as alternative to episode-based)
-                    direct_promotions = 0
-                    can_promote = stem_manager.can_promote_to_trial()
-                    candidates_checked = 0
+                    # DEBUG: Show first candidate's stats (M5 now handles all promotions)
+                    candidates = [c for c in stem_manager.cells.values() 
+                                 if c.state == StemCellState.CANDIDATE and len(c.samples) >= 30]
+                    if candidates:
+                        cell = candidates[0]
+                        consistency, _ = cell.analyze_pattern()
+                        can_promote = stem_manager.can_promote_to_trial()
+                        print(f"    First candidate: {cell.cell_id}, samples={len(cell.samples)}, consistency={consistency:.2f}, can_promote={can_promote}")
                     
-                    for cell in list(stem_manager.cells.values()):
-                        if cell.state == StemCellState.CANDIDATE and len(cell.samples) >= 30:
-                            candidates_checked += 1
-                            consistency, _ = cell.analyze_pattern()
-                            
-                            # Debug: show first candidate's stats
-                            if candidates_checked == 1:
-                                print(f"    First candidate: {cell.cell_id}, samples={len(cell.samples)}, consistency={consistency:.2f}, can_promote={can_promote}")
-                            
-                            if consistency >= 0.35 and can_promote:
-                                # Promote manually
-                                success = cell.promote_to_trial(
-                                    registry=registry,
-                                    parent_id="krk_detect",
-                                    wire_to_legs=True,
-                                    leg_node_ids=["krk_rook_leg", "krk_king_leg"],
-                                )
-                                if success:
-                                    direct_promotions += 1
-                                    print(f"    ✓ Promoted {cell.cell_id} to TRIAL (consistency={consistency:.2f})")
-                                    if direct_promotions >= 2:  # Max 2 per cycle
-                                        break
+                    # M5 STRUCTURAL PHASE HANDLES ALL PROMOTIONS
+                    # (Removed manual promotion loop - M5 uses failure bypass, vertical parenting, etc.)
                     
                     # Also run structural phase with collected episodes
                     # Update cumulative stall counter for failure-mode pack spawning
@@ -1137,6 +1175,19 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                                 if comp_cell:
                                     children = comp_cell.children[:2] if len(comp_cell.children) >= 2 else comp_cell.children
                                     print(f"      🔗 {comp_id}: {children[0]} AND {children[1]}")
+                    
+                    # ================================================================
+                    # LAG TERMINAL SPAWNING FOR HIGH-VARIANCE FEATURES
+                    # Enables emergent discovery of temporal trends (e.g., shrinking box)
+                    # ================================================================
+                    if cycle > 2 and len(stem_manager.feature_variance) > 0:
+                        new_lags = stem_manager.spawn_lags_for_high_variance(
+                            min_variance=0.05,  # Lower threshold for chess features
+                            max_spawns=2,
+                        )
+                        if new_lags:
+                            print(f"    ⏱️ Temporal: +{len(new_lags)} lag terminals for high-variance features")
+                            print(f"      → {len(stem_manager.comparators)} comparators active")
                     
                     # REFRESH CONSOLIDATION: Re-init to pick up newly spawned M5 edges
                     if consolidation_engine and (promoted > 0 or hoisted > 0 or len(stem_manager.win_coactivation) > 0):
