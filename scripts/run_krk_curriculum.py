@@ -837,8 +837,17 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                         
                         # Apply consolidation if threshold reached
                         if consolidation_engine.should_apply():
+                            # DEBUG: Show consolidation stats before apply
+                            edges_with_data = sum(1 for s in consolidation_engine.edge_states.values() if s.episode_count > 0)
+                            max_delta = max((abs(s.mean_weighted_delta()) for s in consolidation_engine.edge_states.values() if s.episode_count > 0), default=0)
+                            
                             deltas = consolidation_engine.apply_to_graph(graph)
-                            print(f"    [CONSOLIDATION] Applied {len(deltas)} weight updates")
+                            
+                            # If 0 updates, explain why
+                            if len(deltas) == 0 and edges_with_data > 0:
+                                print(f"    [CONSOLIDATION] Applied {len(deltas)} weight updates (edges_with_data={edges_with_data}, max_delta={max_delta:.6f} - likely stabilized)")
+                            else:
+                                print(f"    [CONSOLIDATION] Applied {len(deltas)} weight updates")
                 else:
                     result, move_count, box_escaped = play_krk_game_simple(
                         board=board,
