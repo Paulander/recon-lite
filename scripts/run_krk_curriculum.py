@@ -1120,8 +1120,26 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                     if len(stem_manager.cells) > 0:
                         print(f"    Cells: {exploring}E/{candidate}C/{trial}T, total_samples={total_samples}")
                     
+                    # ================================================================
+                    # M5.1 PROACTIVE COMPOSITION SPAWNING
+                    # Automatically create AND gates from win-correlated sensor pairs
+                    # ================================================================
+                    if len(stem_manager.win_coactivation) > 0 and cycle > 2:
+                        new_compositions = stem_manager.spawn_compositions_from_correlated_pairs(
+                            min_coactivations=20,
+                            min_ratio=0.60,
+                            max_spawns=2,
+                        )
+                        if new_compositions:
+                            print(f"    M5.1: +{len(new_compositions)} AND-gates from co-occurrence")
+                            for comp_id in new_compositions:
+                                comp_cell = stem_manager.cells.get(comp_id)
+                                if comp_cell:
+                                    children = comp_cell.children[:2] if len(comp_cell.children) >= 2 else comp_cell.children
+                                    print(f"      🔗 {comp_id}: {children[0]} AND {children[1]}")
+                    
                     # REFRESH CONSOLIDATION: Re-init to pick up newly spawned M5 edges
-                    if consolidation_engine and (promoted > 0 or hoisted > 0):
+                    if consolidation_engine and (promoted > 0 or hoisted > 0 or len(stem_manager.win_coactivation) > 0):
                         edge_list_refresh = graph.edges.values() if isinstance(graph.edges, dict) else graph.edges
                         new_edges = []
                         for e in edge_list_refresh:

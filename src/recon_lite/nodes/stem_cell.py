@@ -183,6 +183,22 @@ class StemCellTerminal:
         # Inertia Pruning: Track when cell last contributed to CONFIRM signal
         # Used to prune TRIAL cells that haven't been useful for N cycles
         self.last_confirm_cycle: Optional[int] = None
+        
+        # =========== M5.1 COMPOSITION FIELDS ===========
+        # Parent XP delegation: If set, this cell's XP is managed by parent
+        self.parent_xp_owner: Optional[str] = None  # Parent cell_id for XP delegation
+        
+        # Grace period: New compositions get N games before XP decay starts
+        self.grace_games: int = 20  # Default grace period
+        self.total_exposures: int = 0  # Total episodes this cell was exposed to
+        self.min_exposure_threshold: int = 50  # Can't prune before this many exposures
+        
+        # Recursive composition depth: 0=raw sensor, 1=AND/OR of raw, 2=AND of ANDs, etc.
+        self.depth: int = 0
+        
+        # Children for composition cells (AND/OR gates)
+        self.children: List[str] = []  # Child cell_ids (empty for raw sensors)
+        self.is_composition: bool = False  # True if this is an AND/OR gate
     
     def activate(self) -> None:
         """Start exploration."""
@@ -486,11 +502,34 @@ class StemCellTerminal:
         self.xp += xp_change
         return xp_change, result
     
+    def get_xp(self, manager: Optional["StemCellManager"] = None) -> int:
+        """
+        Get effective XP, delegating to parent if part of a composition.
+        
+        M5.1 XP DELEGATION: If this cell is part of a composition (AND/OR gate),
+        XP is tracked at the parent level. This cell's xp field is ignored
+        in favor of the parent's XP.
+        
+        Args:
+            manager: StemCellManager to look up parent cell (optional)
+            
+        Returns:
+            Effective XP value (parent's if delegated, own otherwise)
+        """
+        if self.parent_xp_owner and manager:
+            parent = manager.cells.get(self.parent_xp_owner)
+            if parent:
+                return parent.xp
+        return self.xp
+    
     def decay_xp(self) -> int:
         """
         Apply XP decay (cost of living).
         
         Called once per cycle for all TRIAL cells.
+        
+        M5.1 GRACE PERIOD: New cells/compositions are protected from decay
+        for the first `grace_games` exposures to give them time to prove value.
         
         XP FLOOR: Prevents decay below 10 to avoid "death spiral" in 0% stages.
         This gives cells time to accumulate engagement XP and partial signals.
@@ -500,6 +539,13 @@ class StemCellTerminal:
         """
         if self.state != StemCellState.TRIAL:
             return self.xp
+        
+        # M5.1: Track total exposures for min_exposure threshold
+        self.total_exposures += 1
+        
+        # M5.1 GRACE PERIOD: Skip decay during grace period
+        if self.total_exposures <= self.grace_games:
+            return self.xp  # Protected - no decay
         
         XP_FLOOR = 10  # Minimum XP to prevent death spiral
         
@@ -1271,6 +1317,14 @@ class StemCellTerminal:
             "pattern_centroid": self.pattern_centroid,
             # Inertia Pruning tracking
             "last_confirm_cycle": self.last_confirm_cycle,
+            # M5.1 Composition fields
+            "parent_xp_owner": self.parent_xp_owner,
+            "grace_games": self.grace_games,
+            "total_exposures": self.total_exposures,
+            "min_exposure_threshold": self.min_exposure_threshold,
+            "depth": self.depth,
+            "children": self.children,
+            "is_composition": self.is_composition,
         }
     
     @classmethod
@@ -1302,6 +1356,14 @@ class StemCellTerminal:
         cell.pattern_centroid = data.get("pattern_centroid")
         # Inertia Pruning tracking
         cell.last_confirm_cycle = data.get("last_confirm_cycle")
+        # M5.1 Composition fields
+        cell.parent_xp_owner = data.get("parent_xp_owner")
+        cell.grace_games = data.get("grace_games", 20)
+        cell.total_exposures = data.get("total_exposures", 0)
+        cell.min_exposure_threshold = data.get("min_exposure_threshold", 50)
+        cell.depth = data.get("depth", 0)
+        cell.children = data.get("children", [])
+        cell.is_composition = data.get("is_composition", False)
         
         return cell
 
@@ -1781,6 +1843,138 @@ class StemCellManager:
             "total_coactivations": sum(self.win_coactivation.values()),
             "top_pairs": self.find_win_correlated_pairs(min_coactivations=10, min_ratio=0.5)[:5],
         }
+    
+    # =========================================================================
+    # M5.1 PROACTIVE COMPOSITION SPAWNING
+    # =========================================================================
+    
+    # Tracking for already-tried compositions
+    _tried_compositions: Set[Tuple[str, str, str]] = set()  # (cell_a, cell_b, mode)
+    
+    def spawn_composition(
+        self,
+        cell_ids: List[str],
+        mode: str = "and",  # "and" or "or"
+        parent_node_id: Optional[str] = None,
+        fast_track: bool = True,
+    ) -> Optional[str]:
+        """
+        M5.1 PROACTIVE COMPOSITION: Create an AND/OR gate from sensor cells.
+        
+        Creates a composition cell that tracks XP at the gate level. Child cells
+        delegate their XP to this parent, and follow its fate (solidify/demote together).
+        
+        Args:
+            cell_ids: List of child cell IDs to compose
+            mode: "and" (all must fire) or "or" (any can fire)
+            parent_node_id: Optional graph node to wire to
+            fast_track: If True, use accelerated XP (faster promotion/demotion)
+            
+        Returns:
+            Composition cell ID if created, None if failed (duplicate/limit)
+        """
+        if len(cell_ids) < 2:
+            return None  # Need at least 2 cells to compose
+        
+        # Check if already tried this composition
+        sorted_ids = tuple(sorted(cell_ids))
+        composition_key = (*sorted_ids, mode)
+        if composition_key in self._tried_compositions:
+            return None  # Already tried
+        
+        # Verify all child cells exist and get their depth
+        child_cells = []
+        max_child_depth = 0
+        for cid in cell_ids:
+            cell = self.cells.get(cid)
+            if not cell:
+                return None  # Child not found
+            child_cells.append(cell)
+            max_child_depth = max(max_child_depth, cell.depth)
+        
+        # Check depth limit (MAX_COMPOSITION_DEPTH = 3)
+        new_depth = max_child_depth + 1
+        if new_depth > 3:
+            return None  # Too deep
+        
+        # Create composition cell
+        comp_id = f"{mode}_{sorted_ids[0]}_{sorted_ids[1]}_{self._next_id}"
+        self._next_id += 1
+        
+        comp_cell = StemCellTerminal(
+            cell_id=comp_id,
+            config=self.default_config,
+        )
+        
+        # Mark as composition
+        comp_cell.is_composition = True
+        comp_cell.children = list(cell_ids)
+        comp_cell.depth = new_depth
+        comp_cell.state = StemCellState.TRIAL
+        
+        # Fast-track XP if requested (accelerated evaluation)
+        if fast_track:
+            comp_cell.grace_games = 10  # Shorter grace period
+            comp_cell.min_exposure_threshold = 20  # Faster decision
+            comp_cell.metadata["fast_track"] = True
+        
+        # Store metadata
+        comp_cell.metadata["composition_mode"] = mode
+        comp_cell.metadata["child_ids"] = list(cell_ids)
+        comp_cell.metadata["parent_node_id"] = parent_node_id
+        comp_cell.metadata["spawn_reason"] = "proactive_composition"
+        
+        # Set up XP delegation for children
+        for child_cell in child_cells:
+            child_cell.parent_xp_owner = comp_id
+            child_cell.metadata["delegated_to"] = comp_id
+        
+        # Add to cells and mark as tried
+        self.cells[comp_id] = comp_cell
+        self._tried_compositions.add(composition_key)
+        
+        return comp_id
+    
+    def spawn_compositions_from_correlated_pairs(
+        self,
+        min_coactivations: int = 30,
+        min_ratio: float = 0.70,
+        max_spawns: int = 3,
+    ) -> List[str]:
+        """
+        M5.1 PROACTIVE: Auto-spawn AND gates from win-correlated pairs.
+        
+        Finds sensor pairs that fire together during wins and creates
+        AND gates to test if the combination is valuable.
+        
+        Args:
+            min_coactivations: Minimum co-fire count
+            min_ratio: Minimum correlation ratio
+            max_spawns: Maximum compositions to spawn per call
+            
+        Returns:
+            List of new composition cell IDs
+        """
+        correlated = self.find_win_correlated_pairs(
+            min_coactivations=min_coactivations,
+            min_ratio=min_ratio,
+        )
+        
+        spawned = []
+        for cell_a, cell_b, ratio, co_count in correlated:
+            if len(spawned) >= max_spawns:
+                break
+            
+            comp_id = self.spawn_composition(
+                cell_ids=[cell_a, cell_b],
+                mode="and",
+                fast_track=True,
+            )
+            
+            if comp_id:
+                spawned.append(comp_id)
+        
+        return spawned
     
     def spawn_exploratory_cells(
         self,
