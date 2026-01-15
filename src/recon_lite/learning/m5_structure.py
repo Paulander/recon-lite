@@ -47,8 +47,53 @@ BACKBONE_NODES: Set[str] = {
     "kqk_root", "kqk_detect", "kqk_execute", "kqk_finish",
 }
 
-# Maximum depth for vertical branches (beyond this, hoist to new manager)
+# ============================================================================
+# XP-DRIVEN RELATIVE DEPTH LIMITS (Option B + XP Scalar)
+# ============================================================================
+# Design:
+# - Each local root can have `effective_levels` children below it
+# - effective_levels = BASE_RELATIVE_DEPTH + floor(parent_XP / XP_PER_DEPTH_LEVEL)
+# - Global cap prevents runaway chains
+# - High-XP parents "unlock" deeper hierarchies via RL correlations
+# ============================================================================
+
+# Legacy absolute cap (used as fallback)
 MAX_BRANCH_DEPTH = 5
+
+# XP-driven relative depth settings
+BASE_RELATIVE_DEPTH = 3           # Every parent allows at least 3 levels below
+XP_PER_DEPTH_LEVEL = 50           # Each 50 XP grants +1 depth level
+MAX_XP_BONUS_LEVELS = 4           # Cap on XP-derived bonus (prevents explosion)
+GLOBAL_DEPTH_CAP = 10              # Hard cap on absolute depth (prevent runaway)
+
+
+def compute_effective_depth_limit(parent_xp: int, parent_depth: int) -> int:
+    """
+    Compute how many levels a parent can have underneath it.
+    
+    XP-driven: High-utility parents (proven by RL) unlock deeper hierarchies.
+    
+    Args:
+        parent_xp: XP of the parent node (higher = more proven utility)
+        parent_depth: Absolute depth of parent from backbone
+        
+    Returns:
+        Maximum absolute depth allowed for children under this parent
+    """
+    # Base levels every parent gets
+    base_levels = BASE_RELATIVE_DEPTH
+    
+    # XP bonus: each 50 XP grants +1 level, capped at MAX_XP_BONUS_LEVELS
+    xp_bonus = min(parent_xp // XP_PER_DEPTH_LEVEL, MAX_XP_BONUS_LEVELS)
+    
+    # Total relative levels this parent can have
+    relative_limit = base_levels + xp_bonus
+    
+    # Compute maximum child depth
+    max_child_depth = parent_depth + relative_limit
+    
+    # Apply global cap
+    return min(max_child_depth, GLOBAL_DEPTH_CAP)
 
 
 @dataclass
@@ -1439,6 +1484,28 @@ class StructureLearner:
                     if len(high_impact) >= max_promotions * 2:  # Double the quota
                         break
         
+        # =====================================================================
+        # Step 2c: CONSISTENCY-BASED FALLBACK - Promote high-consistency cells
+        # When high_impact is empty but we have CANDIDATE cells with good
+        # consistency (>= 0.35), promote them anyway. This fixes the deadlock
+        # where cells meet consistency threshold but don't align with spikes.
+        # =====================================================================
+        if len(high_impact) == 0:
+            consistency_threshold = 0.35
+            for cell in stem_manager.cells.values():
+                if cell.state != StemCellState.CANDIDATE:
+                    continue
+                if len(cell.samples) < 30:
+                    continue
+                
+                consistency, _ = cell.analyze_pattern()
+                if consistency >= consistency_threshold:
+                    high_impact.append(cell)
+                    cell.metadata["fallback_promoted"] = True
+                    cell.metadata["fallback_consistency"] = consistency
+                    if len(high_impact) >= max_promotions:
+                        break
+        
         # Step 3: Promote CANDIDATE cells to TRIAL tier
         trial_promotions: List[str] = []
         trial_errors: List[str] = []
@@ -1524,21 +1591,41 @@ class StructureLearner:
             
             if local_root_id:
                 # This cell was spawned from a SOLID parent - use vertical parenting
-                # Check depth limit to keep propagate_activation() efficient
+                # XP-DRIVEN DEPTH: High-utility parents unlock deeper hierarchies
                 try:
                     from recon_lite_chess.graph.builder import build_graph_from_topology
                     graph = build_graph_from_topology(self.registry.topology_path, self.registry)
                     
-                    current_depth = compute_node_depth(graph, local_root_id, BACKBONE_NODES)
-                    if current_depth >= MAX_BRANCH_DEPTH:
-                        # At max depth - fall back to backbone
+                    # Get parent depth
+                    parent_depth = compute_node_depth(graph, local_root_id, BACKBONE_NODES)
+                    
+                    # Get parent XP from stem cell (if available)
+                    parent_xp = 0
+                    parent_cell_id = cell.metadata.get("parent_cell_id")
+                    if parent_cell_id and hasattr(stem_manager, 'cells'):
+                        parent_cell = stem_manager.cells.get(parent_cell_id)
+                        if parent_cell:
+                            parent_xp = parent_cell.xp
+                    
+                    # Compute XP-driven depth limit
+                    max_allowed_depth = compute_effective_depth_limit(parent_xp, parent_depth)
+                    child_depth = parent_depth + 1
+                    
+                    if child_depth > max_allowed_depth:
+                        # At max depth for this parent - fall back to backbone
                         parent_id = parent_candidates[0] if parent_candidates else "kpk_detect"
                         cell.metadata["depth_limited"] = True
                         cell.metadata["original_local_root"] = local_root_id
+                        cell.metadata["parent_depth"] = parent_depth
+                        cell.metadata["max_allowed_depth"] = max_allowed_depth
+                        cell.metadata["parent_xp_at_limit"] = parent_xp
                     else:
-                        # Use vertical parent (local_root)
+                        # Use vertical parent (local_root) - allowed by XP-driven limit
                         parent_id = local_root_id
                         cell.metadata["vertical_promotion"] = True
+                        cell.metadata["parent_depth"] = parent_depth
+                        cell.metadata["child_depth"] = child_depth
+                        cell.metadata["xp_unlocked_depth"] = max_allowed_depth
                 except Exception:
                     # Fall back to backbone on error
                     parent_id = parent_candidates[0] if parent_candidates else "kpk_detect"
