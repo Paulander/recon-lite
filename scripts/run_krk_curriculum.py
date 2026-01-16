@@ -449,6 +449,7 @@ def play_krk_game_recon(
             
             if use_heuristic:
                 # Use simple box-shrinking heuristic as fallback
+                # PHASE B: Inject stem cell XP-weighted scoring
                 best_move = None
                 best_score = -1000
                 for m in legal[:20]:  # Limit for speed
@@ -464,6 +465,45 @@ def play_krk_game_recon(
                         new_box = box_min_side(board)
                         if new_box < initial_box_min:
                             score = 20
+                    
+                    # ================================================================
+                    # PHASE B: Stem Cell XP-Weighted Move Scoring
+                    # Scale scores by avg XP of TRIAL cells that match this state
+                    # Bias toward temporal cells (decreasing box_area)
+                    # ================================================================
+                    if stem_manager and not board.is_checkmate():
+                        try:
+                            stem_bonus = 0.0
+                            cell_count = 0
+                            new_box = box_min_side(board)
+                            
+                            for cell in stem_manager.cells.values():
+                                # Only consider TRIAL cells with XP
+                                if hasattr(cell, 'state') and cell.state.name == "TRIAL" and cell.xp > 0:
+                                    # Use trial_consistency as activation proxy (0-1 range)
+                                    consistency = getattr(cell, 'trial_consistency', 0.5)
+                                    
+                                    # XP-weighted contribution (higher XP = more influence)
+                                    weight = min(cell.xp / 10.0, 1.0)  # Normalize: XP 10+ = full weight
+                                    
+                                    # TEMPORAL BIAS: Boost moves that shrink box
+                                    # This teaches the network to prefer constricting moves
+                                    temporal_boost = 1.0
+                                    if new_box < initial_box_min:
+                                        temporal_boost = 1.5  # 50% boost for box shrinking
+                                    
+                                    stem_bonus += weight * consistency * temporal_boost
+                                    cell_count += 1
+                            
+                            # Apply stem bonus (scaled by cell count for normalization)
+                            if cell_count > 0:
+                                avg_bonus = stem_bonus / cell_count
+                                # Threshold: only boost if avg > 0.3 (lower for more influence)
+                                if avg_bonus > 0.3:
+                                    score += avg_bonus * 25  # Up to +25 from stem cells
+                        except Exception:
+                            pass  # Fallback silently if feature extraction fails
+                    
                     board.pop()
                     if score > best_score:
                         best_score = score
