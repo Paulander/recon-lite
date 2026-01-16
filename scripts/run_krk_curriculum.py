@@ -373,6 +373,9 @@ def play_krk_game_recon(
         
         # Build environment
         env = {"board": board}
+        # Pass stem_manager for arbiter access (Phase B deep wiring)
+        if stem_manager:
+            env["__stem_manager__"] = stem_manager
         
         # Reset engine states before each decision
         engine.reset_states()
@@ -498,11 +501,18 @@ def play_krk_game_recon(
                             # Apply stem bonus (scaled by cell count for normalization)
                             if cell_count > 0:
                                 avg_bonus = stem_bonus / cell_count
+                                # LOG: Show when bonus is applied
+                                log_bonus = os.environ.get("LOG_STEM_BONUS", "0") == "1"
+                                if log_bonus:
+                                    print(f"    [STEM-FALLBACK] cells={cell_count}, avg_bonus={avg_bonus:.2f}, score_before={score}")
                                 # Threshold: only boost if avg > 0.3 (lower for more influence)
                                 if avg_bonus > 0.3:
                                     score += avg_bonus * 25  # Up to +25 from stem cells
-                        except Exception:
-                            pass  # Fallback silently if feature extraction fails
+                                    if log_bonus:
+                                        print(f"    [STEM-FALLBACK] Applied +{avg_bonus * 25:.1f} -> score={score}")
+                        except Exception as e:
+                            if os.environ.get("LOG_STEM_BONUS", "0") == "1":
+                                print(f"    [STEM-FALLBACK] Error: {e}")
                     
                     board.pop()
                     if score > best_score:

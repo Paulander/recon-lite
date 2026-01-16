@@ -824,9 +824,13 @@ def create_krk_arbiter(nid: str) -> Node:
     - MATURITY: Scales activation by (XP/100)^4 if enabled to ignore structural noise.
     
     Writes to env["krk_root"]["policy"]["suggested_move"] (using _set_suggested_move)
+    
+    PHASE B DEEP: Stem cells now weight leg activations via cumulative (XP * consistency).
     """
     import os
     use_maturity = os.environ.get("RECON_USE_MATURITY_WEIGHTING", "1") == "1"
+    use_stem_wiring = os.environ.get("STEM_CELL_ARBITER_WIRING", "1") == "1"
+    log_stem_bonus = os.environ.get("LOG_STEM_BONUS", "0") == "1"
     
     def _predicate(node: Node, env: Dict[str, Any]):
         legs = env.get("krk", {}).get("legs", {})
@@ -836,16 +840,77 @@ def create_krk_arbiter(nid: str) -> Node:
         rook_act = rook_leg.get("activation", 0.0)
         king_act = king_leg.get("activation", 0.0)
         
+        # ================================================================
+        # PHASE B DEEP: Stem Cell XP-Weighted Leg Boosting
+        # Query stem cells from env and weight leg activations by
+        # cumulative (XP * trial_consistency). Cells with high XP boost
+        # their preferred leg based on pattern correlation.
+        # ================================================================
+        stem_bonus_rook = 0.0
+        stem_bonus_king = 0.0
+        stem_cells_active = 0
+        
+        if use_stem_wiring:
+            stem_manager = env.get("__stem_manager__")
+            if stem_manager:
+                try:
+                    board = env.get("board")
+                    box_area = None
+                    if board:
+                        from recon_lite_chess.predicates import box_area as calc_box
+                        box_area = calc_box(board)
+                    
+                    for cell in stem_manager.cells.values():
+                        # DEBUG: Log cell state and XP to trace issue
+                        if log_stem_bonus:
+                            state_name = cell.state.name if hasattr(cell, 'state') else 'UNKNOWN'
+                            xp_val = getattr(cell, 'xp', -999)
+                            print(f"  [STEM-DBG] Cell {cell.cell_id}: state={state_name}, xp={xp_val}")
+                        
+                        # Only consider TRIAL cells with XP > 0
+                        if hasattr(cell, 'state') and cell.state.name == "TRIAL" and cell.xp > 0:
+                            consistency = getattr(cell, 'trial_consistency', 0.5)
+                            xp_weight = min(cell.xp / 10.0, 1.0)  # Normalize: XP 10+ = full weight
+                            
+                            # Determine which leg this cell prefers based on pattern
+                            # Temporal bias: decreasing box_area patterns favor rook moves
+                            # Opposition patterns likely favor king moves
+                            cell_id = cell.cell_id.lower()
+                            
+                            # Heuristic: cells with "box" or "cut" patterns favor rook
+                            # cells with "opp" or "distance" patterns favor king
+                            # This is a starting heuristic - should evolve based on XP correlation
+                            if "box" in cell_id or "cut" in cell_id or "shrink" in cell_id:
+                                stem_bonus_rook += xp_weight * consistency
+                            elif "opp" in cell_id or "dist" in cell_id or "king" in cell_id:
+                                stem_bonus_king += xp_weight * consistency
+                            else:
+                                # Default: Split evenly for exploration
+                                stem_bonus_rook += 0.5 * xp_weight * consistency
+                                stem_bonus_king += 0.5 * xp_weight * consistency
+                            
+                            stem_cells_active += 1
+                            
+                            # LOG: Pattern firings
+                            if log_stem_bonus and stem_cells_active <= 3:
+                                print(f"  [STEM] {cell.cell_id}: XP={cell.xp}, cons={consistency:.2f}, bonus_R={stem_bonus_rook:.2f}, bonus_K={stem_bonus_king:.2f}")
+                
+                except Exception as e:
+                    if log_stem_bonus:
+                        print(f"  [STEM] Error: {e}")
+        
+        # Apply stem cell bonus to leg activations (normalized)
+        if stem_cells_active > 0:
+            # Normalize by cell count and scale to 0-0.5 range for boosting
+            rook_act += (stem_bonus_rook / stem_cells_active) * 0.5
+            king_act += (stem_bonus_king / stem_cells_active) * 0.5
+            
+            if log_stem_bonus:
+                print(f"  [STEM] Applied: R+{stem_bonus_rook/stem_cells_active*0.5:.2f}, K+{stem_bonus_king/stem_cells_active*0.5:.2f} from {stem_cells_active} cells")
+        
         # XP-Based Maturity Weighting (Power-law Scaling)
-        # We use a power of 4 to give mature backbone (1.0) a massive
-        # advantage over structural noise (e.g., 0.5^4 = 0.0625)
         if use_maturity:
-            # Backbone legs (rook/king) are treated as MATURE (1.0 maturity)
-            # unless trial nodes are specifically involved.
-            # In KRK, the legs are static backbone, so they keep 1.0.
-            # However, if trial nodes are wired to the legs, they influence 
-            # leg activation via require_child_confirm.
-            pass
+            pass  # Legacy - stem cell wiring above replaces this
             
         # Decision with tie-breaker for rook
         if rook_act >= king_act and rook_leg.get("proposal"):
@@ -864,8 +929,9 @@ def create_krk_arbiter(nid: str) -> Node:
             winner = "fallback"
             reason = "no_proposal"
         
-        # DEBUG: Trace Arbiter Decision
-        print(f"DEBUG: ARBITER | R_Act={rook_act:.2f} | K_Act={king_act:.2f} | Winner={winner} | Prop={proposal}")
+        # DEBUG: Trace Arbiter Decision (with stem info)
+        stem_info = f" STEM={stem_cells_active}" if stem_cells_active > 0 else ""
+        print(f"DEBUG: ARBITER | R_Act={rook_act:.2f} | K_Act={king_act:.2f} | Winner={winner} | Prop={proposal}{stem_info}")
 
         # Store final decision (using helper to write to correct location)
         if proposal:
@@ -874,6 +940,7 @@ def create_krk_arbiter(nid: str) -> Node:
         node.meta["winner"] = winner
         node.meta["rook_activation"] = rook_act
         node.meta["reason"] = reason
+        node.meta["stem_cells_active"] = stem_cells_active
         
         return True, True
     
