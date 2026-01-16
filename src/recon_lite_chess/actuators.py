@@ -75,9 +75,18 @@ def _can_force_mate(board: chess.Board,
 
 
 def _find_forced_mate_move(board: chess.Board,
-                           max_depth: int = 24,
+                           max_depth: int = 2,  # CAPPED: was 24 - deep search is ideological violation
                            *,
                            forbid_opposition: bool = True) -> Optional[chess.Move]:
+    """
+    Find a forced mate move using shallow search.
+    
+    # TEMP BRUTE FALLBACK - REMOVE FOR PUBLICATION
+    # This function uses iterative deepening which violates emergence principles.
+    # Should be replaced with: stem cell activation gating based on patterns
+    # like "rook_cuts", "knight_distance", "opposition" from high-XP cells.
+    # Depth capped at 2 to prevent 180s timeouts seen in profiling.
+    """
     us_color = board.turn
     legal_moves = list(board.legal_moves)
     if not legal_moves:
@@ -100,7 +109,9 @@ def _find_forced_mate_move(board: chess.Board,
     if not filtered:
         return None
 
-    for depth in range(2, max_depth + 1, 2):
+    # CAPPED: Only check depth 2 (single ply + response)
+    # Deep search (depth 4+) caused 450x slowdown on Mate_In_2 positions
+    for depth in range(2, min(max_depth + 1, 3), 2):  # Only depth=2
         for move in filtered:
             board.push(move)
             if _can_force_mate(board, depth - 1, us_color):
@@ -687,7 +698,8 @@ def choose_move_phase3(board: chess.Board, env: Optional[Dict[str, Any]] = None)
     if mate:
         return mate
 
-    forced = _find_forced_mate_move(board, max_depth=24, forbid_opposition=True)
+    # TEMP BRUTE FALLBACK - depth capped at 2 (was 24)
+    forced = _find_forced_mate_move(board, max_depth=2, forbid_opposition=True)
     if forced:
         return forced.uci()
 
@@ -759,7 +771,8 @@ def choose_move_phase4(board: chess.Board, env: Optional[Dict[str, Any]] = None)
     if mate:
         return mate
 
-    forced = _find_forced_mate_move(board, max_depth=24, forbid_opposition=False)
+    # TEMP BRUTE FALLBACK - depth capped at 2 (was 24)
+    forced = _find_forced_mate_move(board, max_depth=2, forbid_opposition=False)
     if forced:
         return forced.uci()
 

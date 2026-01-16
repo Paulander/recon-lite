@@ -19,8 +19,11 @@ Quick test:
 from __future__ import annotations
 
 import argparse
+import cProfile
+import io
 import json
 import os
+import pstats
 import random
 import sys
 from dataclasses import dataclass, field
@@ -137,6 +140,8 @@ class KRKCurriculumConfig:
     topology_path: Path = field(default_factory=lambda: Path("topologies/krk_legs_topology.json"))
     games_per_cycle: int = 50
     max_cycles_per_stage: int = 20
+    min_cycles_per_stage: int = 3      # NEW: Force at least 3 cycles even at 100% win
+    spawn_cooldown_cycles: int = 3     # NEW: Only spawn every 3 cycles to prevent bloat
     
     # Directories
     output_dir: Path = field(default_factory=lambda: Path("snapshots/evolution/krk_curriculum"))
@@ -977,6 +982,12 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                     box_escaped=box_escaped,
                 )
                 
+                # Only allow advancement if min_cycles met (force early learning)
+                if advanced and cycle < config.min_cycles_per_stage:
+                    print(f"\n  🔒 Win rate met but need min {config.min_cycles_per_stage} cycles (at {cycle})")
+                    # Reset stats so it doesn't try to advance again
+                    advanced = False
+                
                 if advanced:
                     print(f"\n  >>> STAGE ADVANCED to {curriculum.current_stage.name} <<<")
                     break
@@ -1212,7 +1223,9 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                             print(f"      Graph reused: {len(graph.nodes)} nodes (preserving earlier changes)")
                     
                     # Spawn new sensors if win rate is low (Stall Recovery)
-                    if win_rate < 0.3 and len(stem_manager.cells) < config.max_trial_slots and HAS_KRK_FEATURES:
+                    # Only spawn every spawn_cooldown_cycles to prevent bloat
+                    spawn_allowed = (cycle % config.spawn_cooldown_cycles == 0)
+                    if spawn_allowed and win_rate < 0.3 and len(stem_manager.cells) < config.max_trial_slots and HAS_KRK_FEATURES:
                         # Spawn new stem cells
                         spawned = 0
                         for _ in range(3):  # Spawn up to 3 new sensors
@@ -1441,6 +1454,8 @@ def main():
                         help="Enable M5 structural learning (stem cells)")
     parser.add_argument("--quick", action="store_true",
                         help="Quick test mode (5 games, 3 cycles)")
+    parser.add_argument("--profile", action="store_true",
+                        help="Enable cProfile to identify bottlenecks")
     
     args = parser.parse_args()
     
@@ -1458,8 +1473,31 @@ def main():
         enable_m5=args.enable_m5,
     )
     
-    # Run training
-    summary = run_krk_curriculum(config)
+    # Run training (with optional profiling)
+    if args.profile:
+        print("\n🔬 PROFILING ENABLED - will output hotspots\n")
+        profiler = cProfile.Profile()
+        profiler.enable()
+        summary = run_krk_curriculum(config)
+        profiler.disable()
+        
+        # Output profile results
+        s = io.StringIO()
+        ps = pstats.Stats(profiler, stream=s).sort_stats('cumulative')
+        ps.print_stats(30)  # Top 30 hotspots
+        
+        profile_output = s.getvalue()
+        print("\n" + "="*60)
+        print("PROFILE RESULTS (Top 30 by cumulative time):")
+        print("="*60)
+        print(profile_output)
+        
+        # Save to file
+        profile_path = config.output_dir / "profile_results.txt"
+        profile_path.write_text(profile_output)
+        print(f"\nProfile saved to: {profile_path}")
+    else:
+        summary = run_krk_curriculum(config)
     
     # Exit code based on success
     if "error" in summary:

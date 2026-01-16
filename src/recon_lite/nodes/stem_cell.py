@@ -23,7 +23,7 @@ Usage:
     # During game play, stem cell collects samples
     stem.observe(board, reward_tick)
     
-    # Promote to trial when consistency > 0.35
+    # Promote to trial when consistency > 0.25 (lowered from 0.35)
     if stem.can_enter_trial():
         stem.promote_to_trial(registry, parent_id)
     
@@ -327,7 +327,7 @@ class StemCellTerminal:
     # XP SYSTEM - THREE-TIER LIFECYCLE MANAGEMENT
     # =========================================================================
     
-    def can_enter_trial(self, min_samples: int = 100, min_consistency: float = 0.35) -> bool:
+    def can_enter_trial(self, min_samples: int = 100, min_consistency: float = 0.25) -> bool:
         """
         Check if cell is ready to enter TRIAL tier.
         

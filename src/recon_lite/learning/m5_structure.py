@@ -1487,11 +1487,12 @@ class StructureLearner:
         # =====================================================================
         # Step 2c: CONSISTENCY-BASED FALLBACK - Promote high-consistency cells
         # When high_impact is empty but we have CANDIDATE cells with good
-        # consistency (>= 0.35), promote them anyway. This fixes the deadlock
+        # consistency (>= 0.25), promote them anyway. This fixes the deadlock
         # where cells meet consistency threshold but don't align with spikes.
         # =====================================================================
         if len(high_impact) == 0:
-            consistency_threshold = 0.35
+            consistency_threshold = 0.25
+            sample_bypass_threshold = 300  # Promote after 300 samples regardless
             for cell in stem_manager.cells.values():
                 if cell.state != StemCellState.CANDIDATE:
                     continue
@@ -1499,10 +1500,14 @@ class StructureLearner:
                     continue
                 
                 consistency, _ = cell.analyze_pattern()
-                if consistency >= consistency_threshold:
+                # Promote if: (1) consistency >= 0.25 OR (2) 300+ samples (bypass)
+                sample_bypass = len(cell.samples) >= sample_bypass_threshold
+                if consistency >= consistency_threshold or sample_bypass:
                     high_impact.append(cell)
                     cell.metadata["fallback_promoted"] = True
                     cell.metadata["fallback_consistency"] = consistency
+                    if sample_bypass:
+                        cell.metadata["sample_bypass"] = True
                     if len(high_impact) >= max_promotions:
                         break
         

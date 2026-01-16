@@ -87,7 +87,7 @@ STAGE_0_MATE_IN_1 = KRKStage(
     description="Back-rank mate in 1 move",
     distance_to_mate="1 move",
     key_lesson="Basic rook mating pattern",
-    target_win_rate=0.95,
+    target_win_rate=0.98,  # Raised from 0.95 to ensure mastery
     positions=[
         # a) King at a8 corner, rook delivers Ra8#
         KRKStagePosition(
@@ -134,7 +134,7 @@ STAGE_1_MATE_IN_2 = KRKStage(
     description="Mate in 2 moves with varied patterns - no shortcuts",
     distance_to_mate="2 moves",
     key_lesson="King-rook coordination",
-    target_win_rate=0.90,
+    target_win_rate=0.95,  # Raised from 0.90 to ensure mastery
     positions=[
         # a) King approach needed, then mate (FIXED: king on b6 blocks Rh8#)
         # Old was: k7/8/K7 - Rh8# was instant mate!
@@ -185,7 +185,7 @@ STAGE_2_EDGE_TRAPPED_TEMPO = KRKStage(
     description="Opposition timing at edge",
     distance_to_mate="1-2 moves",
     key_lesson="Waiting moves / tempo",
-    target_win_rate=0.85,
+    target_win_rate=0.95,  # Raised from 0.85 to ensure mastery
     positions=[
         # a) Our turn, direct approach wins
         KRKStagePosition(
@@ -784,9 +784,9 @@ STAGE_D3_TEMPO_WAIT = KRKStage(
 
 KRK_STAGES: List[KRKStage] = [
     # PHASE 1: Endgame basics - recognize checkmate patterns
-    STAGE_0_MATE_IN_1,           # Stage 0: Mate in 1 (95% win rate)
-    STAGE_1_MATE_IN_2,           # Stage 1: Mate in 2 (FIXED - true 2-move requirement)
-    STAGE_2_EDGE_TRAPPED_TEMPO,  # Stage 2: Tempo/waiting moves at edge
+    STAGE_0_MATE_IN_1,           # Stage 0: Mate in 1 (98% win rate)
+    STAGE_2_EDGE_TRAPPED_TEMPO,  # Stage 1: SWAPPED - Easy opposition finishes
+    STAGE_1_MATE_IN_2,           # Stage 2: SWAPPED - Harder approach patterns
     
     # PHASE 1.5: Edge Fence - optimal finishing patterns (NEW)
     STAGE_2_1_EDGE_FENCE_KNIGHT,   # Stage 3: Knight distance (optimal finish)
