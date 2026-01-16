@@ -189,7 +189,7 @@ class StemCellTerminal:
         self.parent_xp_owner: Optional[str] = None  # Parent cell_id for XP delegation
         
         # Grace period: New compositions get N games before XP decay starts
-        self.grace_games: int = 20  # Default grace period
+        self.grace_games: int = 50  # Extended grace period (was 20)
         self.total_exposures: int = 0  # Total episodes this cell was exposed to
         self.min_exposure_threshold: int = 50  # Can't prune before this many exposures
         

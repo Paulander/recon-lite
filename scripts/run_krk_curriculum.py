@@ -148,7 +148,7 @@ class KRKCurriculumConfig:
     trace_dir: Path = field(default_factory=lambda: Path("traces/krk_curriculum"))
     
     # Game settings
-    max_moves_per_game: int = 30  # Reduced from 50 for faster training
+    max_moves_per_game: int = 40  # Increased from 30 for Stage 2+ approach
     max_ticks_per_move: int = 10  # Reduced from 50
     min_internal_ticks: int = 2   # Minimal for speed
     
@@ -360,10 +360,13 @@ def play_krk_game_recon(
     # EARLY EXIT: Stage-specific move limits (fail fast if no mate)
     stage_move_limits = {
         "Mate_In_1": 3,
-        "Mate_In_2": 5,
-        "Mate_In_3": 8,
-        "Box_Method": 15,
-        "Edge_Confinement": 20,
+        "Mate_In_2": 40,  # Increased from 5 - needs approach moves
+        "Mate_In_3": 40,
+        "Edge_Fence_Knight": 40,  # Approach stages need more moves
+        "Edge_Fence_Approach": 40,
+        "Edge_Fence_Deep": 40,
+        "Box_Method": 40,
+        "Edge_Confinement": 40,
     }
     max_moves_for_stage = stage_move_limits.get(stage.name, config.max_moves_per_game)
     
@@ -532,14 +535,28 @@ def play_krk_game_recon(
         if stem_manager:
             # Calculate interim reward based on position quality
             current_box = box_min_side(board)
+            box_shrink = initial_box_min - current_box  # Positive if shrunk
+            
             if board.is_checkmate():
                 interim_reward = 1.0
             elif board.is_check():
                 interim_reward = 0.6
-            elif current_box < initial_box_min:
+            elif box_shrink > 0:
                 interim_reward = 0.5  # Good - box is shrinking
             else:
-                interim_reward = 0.2  # Neutral position (above threshold)
+                interim_reward = 0.2  # Neutral position
+            
+            # MOVE PENALTY: -0.01 per move to encourage tighter mates
+            interim_reward -= 0.01 * move_count
+            interim_reward = max(interim_reward, 0.0)  # Floor at 0
+            
+            # PARTIAL XP REWARDS: Update TRIAL cells based on box shrink delta
+            # This gives cells XP credit for good moves, not just game outcomes
+            if box_shrink > 0:
+                xp_delta = 0.1 * abs(box_shrink)  # +0.1 per unit of box shrink
+                for cell in stem_manager.cells.values():
+                    if hasattr(cell, 'state') and cell.state.name == "TRIAL":
+                        cell.xp = int(cell.xp + xp_delta)
             
             # Feed to all exploring stem cells
             for cell in stem_manager.cells.values():

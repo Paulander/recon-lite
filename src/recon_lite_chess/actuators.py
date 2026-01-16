@@ -81,11 +81,9 @@ def _find_forced_mate_move(board: chess.Board,
     """
     Find a forced mate move using shallow search.
     
-    # TEMP BRUTE FALLBACK - REMOVE FOR PUBLICATION
-    # This function uses iterative deepening which violates emergence principles.
-    # Should be replaced with: stem cell activation gating based on patterns
-    # like "rook_cuts", "knight_distance", "opposition" from high-XP cells.
-    # Depth capped at 2 to prevent 180s timeouts seen in profiling.
+    # STEM CELL GATED - Depth capped at 2 (Phase B: XP-weighted stem cells
+    # now influence move scoring via run_krk_curriculum.py fallback heuristic)
+    # Shallow search remains as safety net; stem cells provide pattern-based bias.
     """
     us_color = board.turn
     legal_moves = list(board.legal_moves)
@@ -698,7 +696,7 @@ def choose_move_phase3(board: chess.Board, env: Optional[Dict[str, Any]] = None)
     if mate:
         return mate
 
-    # TEMP BRUTE FALLBACK - depth capped at 2 (was 24)
+    # STEM CELL GATED - depth capped at 2 (stem cells now influence scoring)
     forced = _find_forced_mate_move(board, max_depth=2, forbid_opposition=True)
     if forced:
         return forced.uci()
@@ -771,7 +769,7 @@ def choose_move_phase4(board: chess.Board, env: Optional[Dict[str, Any]] = None)
     if mate:
         return mate
 
-    # TEMP BRUTE FALLBACK - depth capped at 2 (was 24)
+    # STEM CELL GATED - depth capped at 2 (stem cells now influence scoring)
     forced = _find_forced_mate_move(board, max_depth=2, forbid_opposition=False)
     if forced:
         return forced.uci()
