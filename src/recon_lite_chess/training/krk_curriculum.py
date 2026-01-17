@@ -144,31 +144,33 @@ STAGE_1_MATE_IN_2 = KRKStage(
             optimal_moves=2,
             description="1.Kb6 (approach) 2.Ra1#",
         ),
-        # b) Rook must cut first, then mate (FIXED: moved rook to cut)
+        # b) Rook check forces king to edge, then mate (TRUE MATE-IN-2)
+        # 1.Rh8+ Ka7 2.Ra8# (rook cuts then delivers)
         KRKStagePosition(
-            fen="8/8/8/8/k7/8/8/R3K3 w - - 0 1",
+            fen="8/k7/1K6/8/8/8/8/7R w - - 0 1",
             optimal_moves=2,
-            description="1.Ra4+ Kb3 2.Kd2 then continue",
+            description="1.Rh8+ Ka7 2.Ra8# (check forces edge, then mate)",
         ),
-        # c) Drive king to corner first, then mate
+        # c) King approach gives opposition, then rook mates (TRUE MATE-IN-2)
+        # 1.Kb6 (opposition) 2.Ra8# regardless of black's reply
         KRKStagePosition(
-            fen="8/8/8/8/1k6/8/8/R3K3 w - - 0 1",
+            fen="k7/8/1K6/8/8/8/8/R7 w - - 0 1",
             optimal_moves=2,
-            description="1.Ra4+ Kb3 2.Ra1 (or Ke2)",
+            description="1.Kb6 (any) 2.Ra8# (approach + mate)",
         ),
-        # d) Tempo/waiting move required (FIXED: king not adjacent)
-        # Old was: 7k/5K2 - Kf8# was instant!
-        # Now: King on f6, must approach then mate
+        # d) Tempo/waiting move required (TRUE MATE-IN-2)
+        # 1.Kg6 (opposition) 2.Rh1# (king has no escape)
         KRKStagePosition(
             fen="7k/8/5K2/8/8/8/8/7R w - - 0 1",
             optimal_moves=2,
             description="1.Kg6 (opposition) 2.Rh1#",
         ),
-        # e) Cut maintained, king approach, mate
+        # e) Rook tempo then mate (TRUE MATE-IN-2)
+        # 1.Ra6+ Kb8 2.Ra8# (rook cuts file, delivers mate)
         KRKStagePosition(
-            fen="k7/R7/8/8/1K6/8/8/8 w - - 0 1",
+            fen="k7/8/8/8/8/K7/8/R7 w - - 0 1",
             optimal_moves=2,
-            description="1.Kb5 Kb8 2.Ka6 or Kb6 then Ra8#",
+            description="1.Ra6+ Kb8 2.Ra8# (rook drives + mates)",
         ),
     ]
 )

@@ -148,7 +148,7 @@ class KRKCurriculumConfig:
     trace_dir: Path = field(default_factory=lambda: Path("traces/krk_curriculum"))
     
     # Game settings
-    max_moves_per_game: int = 40  # Increased from 30 for Stage 2+ approach
+    max_moves_per_game: int = 30  # Optimized for faster training
     max_ticks_per_move: int = 10  # Reduced from 50
     min_internal_ticks: int = 2   # Minimal for speed
     
@@ -360,13 +360,10 @@ def play_krk_game_recon(
     # EARLY EXIT: Stage-specific move limits (fail fast if no mate)
     stage_move_limits = {
         "Mate_In_1": 3,
-        "Mate_In_2": 40,  # Increased from 5 - needs approach moves
-        "Mate_In_3": 40,
-        "Edge_Fence_Knight": 40,  # Approach stages need more moves
-        "Edge_Fence_Approach": 40,
-        "Edge_Fence_Deep": 40,
-        "Box_Method": 40,
-        "Edge_Confinement": 40,
+        "Mate_In_2": 5,  # True mate-in-2 positions (fixed)
+        "Mate_In_3": 8,
+        "Box_Method": 15,
+        "Edge_Confinement": 20,
     }
     max_moves_for_stage = stage_move_limits.get(stage.name, config.max_moves_per_game)
     
@@ -535,28 +532,14 @@ def play_krk_game_recon(
         if stem_manager:
             # Calculate interim reward based on position quality
             current_box = box_min_side(board)
-            box_shrink = initial_box_min - current_box  # Positive if shrunk
-            
             if board.is_checkmate():
                 interim_reward = 1.0
             elif board.is_check():
                 interim_reward = 0.6
-            elif box_shrink > 0:
+            elif current_box < initial_box_min:
                 interim_reward = 0.5  # Good - box is shrinking
             else:
                 interim_reward = 0.2  # Neutral position
-            
-            # MOVE PENALTY: -0.01 per move to encourage tighter mates
-            interim_reward -= 0.01 * move_count
-            interim_reward = max(interim_reward, 0.0)  # Floor at 0
-            
-            # PARTIAL XP REWARDS: Update TRIAL cells based on box shrink delta
-            # This gives cells XP credit for good moves, not just game outcomes
-            if box_shrink > 0:
-                xp_delta = 0.1 * abs(box_shrink)  # +0.1 per unit of box shrink
-                for cell in stem_manager.cells.values():
-                    if hasattr(cell, 'state') and cell.state.name == "TRIAL":
-                        cell.xp = int(cell.xp + xp_delta)
             
             # Feed to all exploring stem cells
             for cell in stem_manager.cells.values():
@@ -1066,7 +1049,17 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
             avg_reward = total_reward / config.games_per_cycle
             escape_rate = box_escapes / config.games_per_cycle
             
-            print(f"    Win Rate: {win_rate:.1%} ({wins}W/{losses}L/{stalemates}S/{draws}D)")
+            # Update desperation metric for tier-based exploration
+            if stem_manager and hasattr(stem_manager, 'update_desperation'):
+                desperation = stem_manager.update_desperation(win_rate)
+                tier_counts = stem_manager.tier_stats() if hasattr(stem_manager, 'tier_stats') else {}
+                tier_str = f" Tiers: V={tier_counts.get('VOLATILE',0)}/M={tier_counts.get('MEDIUM',0)}/I={tier_counts.get('INERT',0)}" if tier_counts else ""
+                desp_str = f" Desp={desperation:.2f}" if desperation > 0.1 else ""
+            else:
+                tier_str = ""
+                desp_str = ""
+            
+            print(f"    Win Rate: {win_rate:.1%} ({wins}W/{losses}L/{stalemates}S/{draws}D){desp_str}{tier_str}")
             print(f"    Avg Moves: {avg_moves:.1f}")
             print(f"    Avg Reward: {avg_reward:.3f}")
             print(f"    Box Escapes: {escape_rate:.1%}")

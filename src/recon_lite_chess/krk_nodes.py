@@ -834,8 +834,9 @@ def create_krk_arbiter(nid: str) -> Node:
     
     def _predicate(node: Node, env: Dict[str, Any]):
         legs = env.get("krk", {}).get("legs", {})
-        rook_leg = legs.get("rook", {})
-        king_leg = legs.get("king", {})
+        # FIX: Legs are stored under "krk_rook_leg" and "krk_king_leg", not "rook"/"king"
+        rook_leg = legs.get("krk_rook_leg", {})
+        king_leg = legs.get("krk_king_leg", {})
         
         rook_act = rook_leg.get("activation", 0.0)
         king_act = king_leg.get("activation", 0.0)

@@ -1,0 +1,453 @@
+DEBUG: KRK_NODES MODULE LOADED
+======================================================================
+KRK CURRICULUM TRAINING
+======================================================================
+  Consolidation enabled: eta=0.01, min_episodes=10
+
+Using RECON ENGINE mode with M5=True
+DEBUG: create_krk_execute CALLED for krk_execute
+  Graph loaded: 74 nodes
+  Consolidation tracking 138 KRK edges
+  Gating enabled: 0.3 → 1.0
+  M5 enabled: max_trial_slots=20, seeded 10 cells
+
+Starting curriculum with 17 stages
+Games per cycle: 40
+Win rate threshold: 0.75
+
+
+============================================================
+STAGE 0: Mate_In_1
+Description: Back-rank mate in 1 move
+Key Lesson: Basic rook mating pattern
+Target Win Rate: 0.98
+============================================================
+
+  Cycle 1/5
+    [CONSOLIDATION] Applied 123 weight updates
+    Game 10/40...
+    [CONSOLIDATION] Applied 123 weight updates
+    Game 20/40...
+    [CONSOLIDATION] Applied 123 weight updates
+    Game 30/40...
+
+  🔒 Win rate met but need min 3 cycles (at 1)
+    [CONSOLIDATION] Applied 123 weight updates
+    Game 40/40...
+    Win Rate: 97.5% (39W/1L/0S/0D)
+    Avg Moves: 1.0
+    Avg Reward: 0.975
+    Box Escapes: 0.0%
+    Duration: 0.3s
+    Top nodes: krk_detect(49), krk_king_distance(49), krk_opposition_probe(49), krk_box_area(49), krk_cut_established(49)
+    First candidate: stem_0000, samples=40, consistency=0.29, can_promote=True
+DEBUG: create_krk_execute CALLED for krk_execute
+    M5: +0 TRIAL, +0 HOISTED, depth=2
+    Cells: 0E/10C/0T, total_samples=400
+
+  Stage 0 Complete:
+    Games: 40
+    Cycles: 1
+    Final Win Rate: 100.0%
+    Stem cells saved: 10 cells → stem_cells_stage0.json
+    🎯 MASTERED: Exported Mate_In_1 sensor for backward chaining (trust=1.00)
+
+============================================================
+STAGE 1: Edge_Trapped_Tempo
+Description: Opposition timing at edge
+Key Lesson: Waiting moves / tempo
+Target Win Rate: 0.95
+============================================================
+
+  Cycle 1/5
+    [CONSOLIDATION] Applied 123 weight updates
+    Game 10/40...
+    [CONSOLIDATION] Applied 123 weight updates
+    Game 20/40...
+    [CONSOLIDATION] Applied 123 weight updates
+    Game 30/40...
+    [CONSOLIDATION] Applied 123 weight updates
+    Game 40/40...
+    Win Rate: 77.5% (31W/9L/0S/0D)
+    Avg Moves: 1.0
+    Avg Reward: 0.662
+    Box Escapes: 22.5%
+    Duration: 1.7s
+    Top nodes: krk_detect(121), krk_king_distance(121), krk_opposition_probe(121), krk_box_area(121), krk_cut_established(121)
+    First candidate: stem_0000, samples=80, consistency=0.27, can_promote=True
+DEBUG: create_krk_execute CALLED for krk_execute
+    M5: +0 TRIAL, +0 HOISTED, depth=2
+    Cells: 0E/10C/0T, total_samples=800
+
+  Cycle 2/5
+    [CONSOLIDATION] Applied 123 weight updates
+    Game 10/40...
+    [CONSOLIDATION] Applied 123 weight updates
+    Game 20/40...
+    [CONSOLIDATION] Applied 123 weight updates
+    Game 30/40...
+    [CONSOLIDATION] Applied 123 weight updates
+    Game 40/40...
+    Win Rate: 90.0% (36W/4L/0S/0D)
+    Avg Moves: 1.0
+    Avg Reward: 0.725
+    Box Escapes: 35.0%
+    Duration: 0.7s
+    Top nodes: krk_detect(76), krk_king_distance(76), krk_opposition_probe(76), krk_box_area(76), krk_cut_established(76)
+    First candidate: stem_0000, samples=120, consistency=0.35, can_promote=True
+DEBUG: create_krk_execute CALLED for krk_execute
+    M5: +3 TRIAL, +0 HOISTED, depth=2
+    Cells: 0E/7C/3T, total_samples=1200
+
+  Cycle 3/5
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=50
+    [STEM-FALLBACK] Applied +8.7 -> score=58.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=50
+    [STEM-FALLBACK] Applied +8.7 -> score=58.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=50
+    [STEM-FALLBACK] Applied +8.7 -> score=58.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=50
+    [STEM-FALLBACK] Applied +8.7 -> score=58.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=50
+    [STEM-FALLBACK] Applied +8.7 -> score=58.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [CONSOLIDATION] Applied 123 weight updates
+    Game 10/40...
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=50
+    [STEM-FALLBACK] Applied +8.7 -> score=58.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [CONSOLIDATION] Applied 123 weight updates
+    Game 20/40...
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=50
+    [STEM-FALLBACK] Applied +8.7 -> score=58.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=50
+    [STEM-FALLBACK] Applied +8.7 -> score=58.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [CONSOLIDATION] Applied 123 weight updates
+    Game 30/40...
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=50
+    [STEM-FALLBACK] Applied +8.7 -> score=58.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.52, score_before=20
+    [STEM-FALLBACK] Applied +13.1 -> score=33.1029065673648
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0
+    [STEM-FALLBACK] Applied +8.7 -> score=8.735271044909865
+    [STEM-FALLBACK] cells=3, avg_bonus=0.35, score_before=0

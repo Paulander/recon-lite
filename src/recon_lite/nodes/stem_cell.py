@@ -80,6 +80,20 @@ class StemCellState(Enum):
     PRUNED = auto()       # Removed/deleted
 
 
+class CellTier(Enum):
+    """Desperation tiers for adaptive exploration/exploitation.
+    
+    Cells are classified by their XP variance over recent observations:
+    - VOLATILE: High XP variance OR very low XP → aggressive exploration
+    - MEDIUM: Moderate XP variance → balanced exploration/exploitation
+    - INERT: Low XP variance, stable XP → conservative refinement
+    
+    When the system is "desperate" (win_delta < threshold), VOLATILE cells
+    get boosted UCB exploration bonus to try new strategies.
+    """
+    VOLATILE = auto()   # High variance / unstable → aggressive exploration
+    MEDIUM = auto()     # Balanced → normal UCB
+    INERT = auto()      # Low variance / stable → conservative refinement
 
 @dataclass
 class StemCellConfig:
@@ -189,7 +203,7 @@ class StemCellTerminal:
         self.parent_xp_owner: Optional[str] = None  # Parent cell_id for XP delegation
         
         # Grace period: New compositions get N games before XP decay starts
-        self.grace_games: int = 50  # Extended grace period (was 20)
+        self.grace_games: int = 20  # Default grace period
         self.total_exposures: int = 0  # Total episodes this cell was exposed to
         self.min_exposure_threshold: int = 50  # Can't prune before this many exposures
         
@@ -199,6 +213,17 @@ class StemCellTerminal:
         # Children for composition cells (AND/OR gates)
         self.children: List[str] = []  # Child cell_ids (empty for raw sensors)
         self.is_composition: bool = False  # True if this is an AND/OR gate
+        
+        # =========== DESPERATION TIERS ===========
+        # Track XP history for variance-based tier classification
+        self.xp_history: List[int] = []  # Last N XP values for variance calculation
+        self.xp_history_window: int = 10  # Window size for variance
+        self.cell_tier: CellTier = CellTier.MEDIUM  # Current tier classification
+        
+        # Tier thresholds (tuned for XP scale 0-100+)
+        self.tier_variance_high: float = 100.0  # XP variance for VOLATILE
+        self.tier_variance_low: float = 25.0    # XP variance for INERT
+        self.tier_xp_low: int = 20              # XP threshold for forced VOLATILE
     
     def activate(self) -> None:
         """Start exploration."""
@@ -500,7 +525,53 @@ class StemCellTerminal:
             result = "neutral"
         
         self.xp += xp_change
+        
+        # Record XP history for tier classification
+        self.xp_history.append(self.xp)
+        if len(self.xp_history) > self.xp_history_window:
+            self.xp_history.pop(0)
+        
+        # Reclassify tier based on updated history
+        self.classify_tier()
+        
         return xp_change, result
+    
+    def classify_tier(self) -> CellTier:
+        """
+        Classify cell into desperation tier based on XP variance.
+        
+        VOLATILE: High XP variance OR very low XP → aggressive exploration
+        MEDIUM: Moderate XP variance → balanced exploration/exploitation  
+        INERT: Low XP variance, stable XP → conservative refinement
+        
+        Returns:
+            The current CellTier classification
+        """
+        import math
+        
+        # Not enough history? Default to MEDIUM
+        if len(self.xp_history) < 3:
+            self.cell_tier = CellTier.MEDIUM
+            return self.cell_tier
+        
+        # Force VOLATILE if XP is dangerously low
+        if self.xp < self.tier_xp_low:
+            self.cell_tier = CellTier.VOLATILE
+            return self.cell_tier
+        
+        # Compute XP variance
+        mean_xp = sum(self.xp_history) / len(self.xp_history)
+        variance = sum((x - mean_xp) ** 2 for x in self.xp_history) / len(self.xp_history)
+        
+        # Classify based on variance thresholds
+        if variance >= self.tier_variance_high:
+            self.cell_tier = CellTier.VOLATILE
+        elif variance <= self.tier_variance_low:
+            self.cell_tier = CellTier.INERT
+        else:
+            self.cell_tier = CellTier.MEDIUM
+        
+        return self.cell_tier
     
     def get_xp(self, manager: Optional["StemCellManager"] = None) -> int:
         """
@@ -1651,6 +1722,15 @@ class StemCellManager:
         self.feature_variance: Dict[int, List[float]] = {}  # feature_index -> recent values
         self._feature_variance_window = 20  # Track last N values per feature
         
+        # =========== DESPERATION TRACKING ===========
+        # Track win rate changes to detect stalls and ramp exploration
+        self.prev_win_rate: float = 0.0          # Previous cycle's win rate
+        self.current_win_rate: float = 0.0       # Current cycle's win rate
+        self.desperation: float = 0.0            # 0.0 = not desperate, 1.0 = very desperate
+        self.desperation_threshold: float = 0.05  # win_delta below this triggers desperation
+        self.epsilon_base: float = 1.0           # Base exploration bonus
+        self.epsilon_desperation_scale: float = 2.0  # Multiplier when desperate
+        
         # Default feature extractor for chess boards
         if feature_extractor is not None:
             self.feature_extractor = feature_extractor
@@ -2298,51 +2378,134 @@ class StemCellManager:
         max_spawns: int = 3,
     ) -> List[str]:
         """
-        Proactively spawn lag terminals for high-variance features.
+        Proactively spawn lag terminals for high-variance features with UCB1 exploration.
         
         High-variance features are more likely to be relevant for trend detection.
-        This is called during M5.1 proactive spawning phase.
+        Uses UCB1 (Upper Confidence Bound) to balance exploitation (high variance/correlation)
+        with exploration (under-visited features).
+        
+        UCB1 score = std_dev + sqrt(2 * ln(total_visits) / (feature_visits + 1))
         
         Args:
-            min_variance: Minimum variance to trigger lag spawning
+            min_variance: Minimum variance to trigger lag spawning (default 0.1)
             max_spawns: Maximum number of lags to spawn per call
             
         Returns:
             List of newly spawned lag IDs
         """
+        import math
+        
         spawned = []
         
+        # Initialize visit tracking if not present
+        if not hasattr(self, '_feature_visits'):
+            self._feature_visits = {}
+        if not hasattr(self, '_total_spawn_visits'):
+            self._total_spawn_visits = 1
+        
+        self._total_spawn_visits += 1
+        
+        # Build candidate list with UCB1 scores
+        candidates = []
         for feature_idx, values in self.feature_variance.items():
-            if len(spawned) >= max_spawns:
-                break
-            
             if len(values) < 5:  # Need minimum data
                 continue
             
-            # Compute variance
+            # Check if we already have a lag for this feature
+            has_lag = any(
+                lag.feature_index == feature_idx 
+                for lag in self.lag_terminals.values()
+            )
+            if has_lag:
+                continue
+            
+            # Compute variance and std
             mean = sum(values) / len(values)
             variance = sum((v - mean) ** 2 for v in values) / len(values)
+            std_dev = math.sqrt(variance)
             
-            if variance >= min_variance:
-                # Check if we already have a lag for this feature
-                has_lag = any(
-                    lag.feature_index == feature_idx 
-                    for lag in self.lag_terminals.values()
-                )
+            if variance < min_variance:
+                continue
+            
+            # UCB1 exploration bonus with desperation scaling
+            # When desperate, exploration is boosted via get_epsilon()
+            visits = self._feature_visits.get(feature_idx, 0)
+            epsilon = getattr(self, 'epsilon_base', 1.0)
+            if hasattr(self, 'get_epsilon'):
+                epsilon = self.get_epsilon()  # Desperation-scaled epsilon
+            ucb_bonus = epsilon * math.sqrt(2 * math.log(self._total_spawn_visits) / (visits + 1))
+            
+            # Combined score: std_dev + UCB bonus (prioritize high variance + uncertainty)
+            ucb_score = std_dev + ucb_bonus
+            
+            candidates.append((ucb_score, feature_idx, variance, std_dev))
+        
+        # Sort by UCB score descending (best = highest std + uncertainty)
+        candidates.sort(key=lambda x: x[0], reverse=True)
+        
+        # Spawn top candidates
+        for ucb_score, feature_idx, variance, std_dev in candidates[:max_spawns]:
+            lag = self.spawn_lag_terminal(
+                source_id=f"feature_{feature_idx}",
+                feature_index=feature_idx,
+            )
+            if lag:
+                spawned.append(lag.lag_id)
                 
-                if not has_lag:
-                    lag = self.spawn_lag_terminal(
-                        source_id=f"feature_{feature_idx}",
-                        feature_index=feature_idx,
-                    )
-                    if lag:
-                        spawned.append(lag.lag_id)
+                # Update visit count for this feature
+                self._feature_visits[feature_idx] = self._feature_visits.get(feature_idx, 0) + 1
                         
-                        # Also spawn LESS and GREATER comparators
-                        self.spawn_comparator(lag.lag_id, ComparatorMode.LESS)
-                        self.spawn_comparator(lag.lag_id, ComparatorMode.GREATER)
+                # Also spawn LESS and GREATER comparators
+                self.spawn_comparator(lag.lag_id, ComparatorMode.LESS)
+                self.spawn_comparator(lag.lag_id, ComparatorMode.GREATER)
         
         return spawned
+    
+    def update_desperation(self, win_rate: float) -> float:
+        """
+        Update desperation metric based on win rate change.
+        
+        Desperation is used to scale UCB exploration bonus:
+        - High desperation (stall) → more exploration (VOLATILE cells prioritized)
+        - Low desperation (improving) → more exploitation
+        
+        Args:
+            win_rate: Current cycle's win rate (0.0 to 1.0)
+            
+        Returns:
+            Updated desperation value (0.0 to 1.0)
+        """
+        # Compute win delta
+        win_delta = win_rate - self.prev_win_rate
+        
+        # Update desperation: higher when win_delta is below threshold
+        if win_delta < self.desperation_threshold:
+            # Ramp desperation based on how far below threshold
+            # win_delta=0.05 → desperation=0, win_delta=-0.05 → desperation=1
+            self.desperation = min(1.0, max(0.0, 
+                (self.desperation_threshold - win_delta) / (2 * self.desperation_threshold)
+            ))
+        else:
+            # Improving: decay desperation
+            self.desperation = max(0.0, self.desperation - 0.2)
+        
+        # Store for next cycle
+        self.prev_win_rate = self.current_win_rate
+        self.current_win_rate = win_rate
+        
+        return self.desperation
+    
+    def get_epsilon(self) -> float:
+        """Get desperation-scaled exploration epsilon for UCB."""
+        return self.epsilon_base * (1.0 + self.desperation * self.epsilon_desperation_scale)
+    
+    def tier_stats(self) -> Dict[str, int]:
+        """Get count of cells by tier."""
+        counts = {tier.name: 0 for tier in CellTier}
+        for cell in self.cells.values():
+            if hasattr(cell, 'cell_tier'):
+                counts[cell.cell_tier.name] += 1
+        return counts
     
     def stats(self) -> Dict[str, Any]:
         """Get manager statistics."""
