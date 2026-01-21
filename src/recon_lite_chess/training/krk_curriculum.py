@@ -89,17 +89,17 @@ STAGE_0_MATE_IN_1 = KRKStage(
     key_lesson="Basic rook mating pattern",
     target_win_rate=0.98,  # Raised from 0.95 to ensure mastery
     positions=[
-        # a) King at a8 corner, rook delivers Ra8#
+        # a) King at a8 corner, rook delivers Rh8#
         KRKStagePosition(
-            fen="k7/8/1K6/8/8/8/8/R7 w - - 0 1",
+            fen="k7/8/1K6/8/8/8/8/7R w - - 0 1",
             optimal_moves=1,
-            description="King a8, Ra8# mate",
+            description="King a8, Rh8# mate",
         ),
-        # b) King at h1 corner, rook delivers Rh1#
+        # b) King at h8 corner, rook delivers Rh1#
         KRKStagePosition(
-            fen="8/8/8/8/8/6K1/8/R6k w - - 0 1",
+            fen="7k/5K2/8/8/8/8/8/R7 w - - 0 1",
             optimal_moves=1,
-            description="King h1, Rh1# or Ra1# mate",
+            description="King h8, Rh1# mate",
         ),
         # c) King at h4 (side edge), rook mates Rh1#
         KRKStagePosition(
@@ -107,13 +107,13 @@ STAGE_0_MATE_IN_1 = KRKStage(
             optimal_moves=1,
             description="King h4 side, Rh1# mate",
         ),
-        # d) King at h8 (corner), rook mates Rh1#
+        # d) King at h8 (corner), rook mates Ra8#
         KRKStagePosition(
             fen="7k/8/6K1/8/8/8/8/R7 w - - 0 1",
             optimal_moves=1,
-            description="King h8 corner, Rh1# mate",
+            description="King h8 corner, Ra8# mate",
         ),
-        # e) King at e8 (back rank), rook mates Re1# or Ra8#
+        # e) King at e8 (back rank), rook mates Ra8#
         KRKStagePosition(
             fen="4k3/8/4K3/8/8/8/8/R7 w - - 0 1",
             optimal_moves=1,

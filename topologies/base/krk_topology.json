@@ -166,20 +166,6 @@
       "meta": {}
     },
     {
-      "id": "krk_goal_actuator_hub",
-      "type": "SCRIPT",
-      "group": "backbone",
-      "factory": "recon_lite_chess.goal_actuators:create_goal_actuator_hub",
-      "meta": {}
-    },
-    {
-      "id": "krk_goal_solver",
-      "type": "SCRIPT",
-      "group": "backbone",
-      "factory": "recon_lite_chess.goal_actuators:create_goal_solver",
-      "meta": {}
-    },
-    {
       "id": "p0_check",
       "type": "SCRIPT",
       "group": "backbone",
@@ -379,22 +365,6 @@
     {
       "src": "krk_root",
       "dst": "no_progress_watch",
-      "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true,
-      "confirmation_count": 0
-    },
-    {
-      "src": "krk_root",
-      "dst": "krk_goal_actuator_hub",
-      "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true,
-      "confirmation_count": 0
-    },
-    {
-      "src": "krk_goal_actuator_hub",
-      "dst": "krk_goal_solver",
       "type": "SUB",
       "weight": 1.0,
       "consolidate": true,

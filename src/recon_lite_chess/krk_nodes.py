@@ -12,6 +12,7 @@ Strategy phases:
 
 from typing import Tuple, Any, Dict, List
 from dataclasses import dataclass
+import random
 import chess
 
 from recon_lite.graph import Node, NodeType, NodeState, LinkType  # LinkType for wire helper
@@ -623,49 +624,19 @@ def create_krk_rook_leg(nid: str) -> Node:
     Stores proposal in env["krk"]["legs"]["rook"]
     """
     def _predicate(node: Node, env: Dict[str, Any]):
-        from .actuators import choose_move_phase0, choose_move_phase1, choose_move_phase2, choose_move_phase3, choose_move_phase4
         board = env.get("board")
         if not board:
             node.meta["activation"] = 0.0
             return False, False
-        
-        # Try smart tactical phases in order (Mate -> Opposition -> Shrink -> Drive -> Rendezvous)
-        proposal = None
-        is_tactical = False
-        for phase_fn in [choose_move_phase4, choose_move_phase3, choose_move_phase2, choose_move_phase1, choose_move_phase0]:
-            mv = phase_fn(board, env)
-            if mv:
-                # CRITICAL: If this is a checkmate move, set it immediately regardless of piece type
-                try:
-                    mobj = chess.Move.from_uci(mv)
-                    if mobj in board.legal_moves:
-                        test_board = board.copy()
-                        test_board.push(mobj)
-                        if test_board.is_checkmate():
-                            # Checkmate takes priority - set and return immediately
-                            _set_suggested_move(env, mv)
-                            node.meta["suggested_moves"] = [mv]
-                            node.meta["activation"] = 1.0  # Max activation for mate
-                            return True, True
-                except:
-                    pass
-                
-                # Otherwise, only accept rook moves for this leg
-                mobj = chess.Move.from_uci(mv)
-                piece = board.piece_at(mobj.from_square)
-                if piece and piece.piece_type == chess.ROOK:
-                    proposal = mv
-                    is_tactical = True
-                    break
-        
-        # Fallback to any legal rook move if no tactical preference
-        if not proposal:
-            our_color = board.turn
-            for move in board.legal_moves:
-                piece = board.piece_at(move.from_square)
-                if piece and piece.piece_type == chess.ROOK and piece.color == our_color:
-                    proposal = move.uci()
-                    break
+        # Pure exploration: pick a random legal rook move.
+        our_color = board.turn
+        rook_moves = [
+            move for move in board.legal_moves
+            if (piece := board.piece_at(move.from_square))
+            and piece.piece_type == chess.ROOK
+            and piece.color == our_color
+        ]
+        proposal = random.choice(rook_moves).uci() if rook_moves else None
         
         # Maturity Calculation
         max_maturity = 1.0
@@ -680,7 +651,7 @@ def create_krk_rook_leg(nid: str) -> Node:
             
             # If we require child confirmation, we are purely driven by children.
             # If not, we have "Backbone Maturity" (1.0) as a base.
-            require_confirm = node.meta.get("require_child_confirm", False)
+            require_confirm = node.meta.get("require_child_confirm", True)
             
             if children:
                 if conf_mat_list:
@@ -694,17 +665,29 @@ def create_krk_rook_leg(nid: str) -> Node:
                     # Backbone persists despite noisy children
                     max_maturity = 1.0
 
-        # Activation: Tactical moves are much more confident than random fallbacks
-        base_act = 0.8 if is_tactical else 0.2
+        base_act = 0.2 if proposal else 0.0
         activation = base_act * (max_maturity ** 4) if proposal else 0.0
+        if graph:
+            children = graph.children(nid)
+            if children:
+                confirmed = [cid for cid in children if graph.nodes[cid].state == NodeState.CONFIRMED]
+                confirm_ratio = len(confirmed) / len(children)
+                if confirm_ratio > 0.0:
+                    activation = base_act * confirm_ratio
+                else:
+                    activation = 0.0 if node.meta.get("require_child_confirm", True) else base_act * 0.2
         
         # Store in env for arbiter
         leg_data = {
             "activation": activation,
             "proposal": proposal,
-            "reason": "rook_move",
+            "reason": "rook_random",
         }
-        env.setdefault("krk", {}).setdefault("legs", {})[nid] = leg_data
+        legs = env.setdefault("krk", {}).setdefault("legs", {})
+        # Store under stable key so arbiter can read it.
+        legs["rook"] = leg_data
+        # Keep legacy key for any diagnostics keyed by node id.
+        legs[nid] = leg_data
         node.meta["activation"] = activation
         node.meta["proposal"] = proposal
 
@@ -724,49 +707,19 @@ def create_krk_king_leg(nid: str) -> Node:
     Stores proposal in env["krk"]["legs"]["king"]
     """
     def _predicate(node: Node, env: Dict[str, Any]):
-        from .actuators import choose_move_phase0, choose_move_phase1, choose_move_phase2, choose_move_phase3, choose_move_phase4
         board = env.get("board")
         if not board:
             node.meta["activation"] = 0.0
             return False, False
-        
-        # Try smart tactical phases in order (Mate -> Opposition -> Shrink -> Drive -> Rendezvous)
-        proposal = None
-        is_tactical = False
-        for phase_fn in [choose_move_phase4, choose_move_phase3, choose_move_phase2, choose_move_phase1, choose_move_phase0]:
-            mv = phase_fn(board, env)
-            if mv:
-                # CRITICAL: If this is a checkmate move, set it immediately regardless of piece type
-                try:
-                    mobj = chess.Move.from_uci(mv)
-                    if mobj in board.legal_moves:
-                        test_board = board.copy()
-                        test_board.push(mobj)
-                        if test_board.is_checkmate():
-                            # Checkmate takes priority - set and return immediately
-                            _set_suggested_move(env, mv)
-                            node.meta["suggested_moves"] = [mv]
-                            node.meta["activation"] = 1.0  # Max activation for mate
-                            return True, True
-                except:
-                    pass
-                
-                # Otherwise, only accept king moves for this leg
-                mobj = chess.Move.from_uci(mv)
-                piece = board.piece_at(mobj.from_square)
-                if piece and piece.piece_type == chess.KING:
-                    proposal = mv
-                    is_tactical = True
-                    break
-
-        # Fallback to any legal king move
-        if not proposal:
-            our_color = board.turn
-            for move in board.legal_moves:
-                piece = board.piece_at(move.from_square)
-                if piece and piece.piece_type == chess.KING and piece.color == our_color:
-                    proposal = move.uci()
-                    break
+        # Pure exploration: pick a random legal king move.
+        our_color = board.turn
+        king_moves = [
+            move for move in board.legal_moves
+            if (piece := board.piece_at(move.from_square))
+            and piece.piece_type == chess.KING
+            and piece.color == our_color
+        ]
+        proposal = random.choice(king_moves).uci() if king_moves else None
         
         # Maturity-weighted activation:
         # Scale by (max_child_maturity ^ 4) to suppress trial noise.
@@ -780,7 +733,7 @@ def create_krk_king_leg(nid: str) -> Node:
                 if graph.nodes[cid].state == NodeState.CONFIRMED
             ]
             
-            require_confirm = node.meta.get("require_child_confirm", False)
+            require_confirm = node.meta.get("require_child_confirm", True)
             
             if children:
                 if conf_mat_list:
@@ -792,9 +745,17 @@ def create_krk_king_leg(nid: str) -> Node:
                 else:
                     max_maturity = 1.0
 
-        # Activation: Tactical moves are much more confident than random fallbacks
-        base_act = 0.8 if is_tactical else 0.2
+        base_act = 0.2 if proposal else 0.0
         activation = base_act * (max_maturity ** 4) if proposal else 0.0
+        if graph:
+            children = graph.children(nid)
+            if children:
+                confirmed = [cid for cid in children if graph.nodes[cid].state == NodeState.CONFIRMED]
+                confirm_ratio = len(confirmed) / len(children)
+                if confirm_ratio > 0.0:
+                    activation = base_act * confirm_ratio
+                else:
+                    activation = 0.0 if node.meta.get("require_child_confirm", True) else base_act * 0.2
         
         # DEBUG: Trace maturity calculation
         # print(f"DEBUG: KING_LEG | Mat={max_maturity:.4f} | Act={activation:.4f} | Prop={proposal}")
@@ -803,9 +764,11 @@ def create_krk_king_leg(nid: str) -> Node:
         leg_data = {
             "activation": activation,
             "proposal": proposal,
-            "reason": "king_move",
+            "reason": "king_random",
         }
-        env.setdefault("krk", {}).setdefault("legs", {})["king"] = leg_data
+        legs = env.setdefault("krk", {}).setdefault("legs", {})
+        legs["king"] = leg_data
+        legs[nid] = leg_data
         node.meta["activation"] = activation
         node.meta["proposal"] = proposal
         
@@ -833,10 +796,16 @@ def create_krk_arbiter(nid: str) -> Node:
     log_stem_bonus = os.environ.get("LOG_STEM_BONUS", "0") == "1"
     
     def _predicate(node: Node, env: Dict[str, Any]):
+        goal_policy = env.get("krk", {}).get("goal_policy", {})
+        if goal_policy.get("suggested_move"):
+            node.meta["winner"] = "goal_solver"
+            node.meta["reason"] = "goal_policy"
+            node.meta["rook_activation"] = 0.0
+            return True, True
+
         legs = env.get("krk", {}).get("legs", {})
-        # FIX: Legs are stored under "krk_rook_leg" and "krk_king_leg", not "rook"/"king"
-        rook_leg = legs.get("krk_rook_leg", {})
-        king_leg = legs.get("krk_king_leg", {})
+        rook_leg = legs.get("rook") or legs.get("krk_rook_leg") or {}
+        king_leg = legs.get("king") or legs.get("krk_king_leg") or {}
         
         rook_act = rook_leg.get("activation", 0.0)
         king_act = king_leg.get("activation", 0.0)
@@ -914,19 +883,32 @@ def create_krk_arbiter(nid: str) -> Node:
             pass  # Legacy - stem cell wiring above replaces this
             
         # Decision with tie-breaker for rook
-        if rook_act >= king_act and rook_leg.get("proposal"):
-            winner = "rook"
+        proposal = None
+        winner = "fallback"
+        reason = "no_proposal"
+        if rook_leg.get("proposal") or king_leg.get("proposal"):
+            if rook_leg.get("proposal") and king_leg.get("proposal"):
+                if rook_act > king_act:
+                    winner = "rook"
+                elif king_act > rook_act:
+                    winner = "king"
+                else:
+                    winner = "rook"
+            elif rook_leg.get("proposal"):
+                winner = "rook"
+            else:
+                winner = "king"
+        if winner == "rook" and rook_act > 0.0 and rook_leg.get("proposal"):
             proposal = rook_leg.get("proposal")
             reason = rook_leg.get("reason", "rook_move")
-        elif king_leg.get("proposal"):
-            winner = "king"
+        elif winner == "king" and king_act > 0.0 and king_leg.get("proposal"):
             proposal = king_leg.get("proposal")
             reason = king_leg.get("reason", "king_move")
         else:
             # Fallback to any legal move
             board = env.get("board")
             legal = list(board.legal_moves) if board else []
-            proposal = legal[0].uci() if legal else None
+            proposal = random.choice(legal).uci() if legal else None
             winner = "fallback"
             reason = "no_proposal"
         
@@ -990,6 +972,30 @@ def create_barrier_placement_moves(nid: str) -> BarrierPlacementMoves:
     return BarrierPlacementMoves(nid)
 
 def create_krk_root(nid: str) -> KRKCheckmateRoot: return KRKCheckmateRoot(nid)
+
+
+def create_white_to_play(nid: str) -> Node:
+    def _predicate(node: Node, env: Dict[str, Any]):
+        board = env.get("board")
+        if not board:
+            node.meta["activation"] = 0.0
+            return True, True
+        node.meta["activation"] = 1.0 if board.turn == chess.WHITE else 0.0
+        return True, True
+
+    return Node(nid=nid, ntype=NodeType.TERMINAL, predicate=_predicate)
+
+
+def create_black_to_play(nid: str) -> Node:
+    def _predicate(node: Node, env: Dict[str, Any]):
+        board = env.get("board")
+        if not board:
+            node.meta["activation"] = 0.0
+            return True, True
+        node.meta["activation"] = 1.0 if board.turn == chess.BLACK else 0.0
+        return True, True
+
+    return Node(nid=nid, ntype=NodeType.TERMINAL, predicate=_predicate)
 
 
 # ===== WIRING HELPER =====

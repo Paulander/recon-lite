@@ -34,7 +34,7 @@ Usage:
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from pathlib import Path
-from typing import Dict, List, Optional, Any, Callable, Tuple, Set
+from typing import Dict, List, Optional, Any, Callable, Tuple, Set, Iterable
 import json
 import random
 
@@ -51,6 +51,11 @@ try:
 except ImportError:
     chess = None
     HAS_CHESS = False
+
+
+def _random_goal_value() -> float:
+    """Generate a bounded random goal target for actuator vectors."""
+    return random.uniform(-1.0, 1.0)
 
 
 class StemCellState(Enum):
@@ -115,6 +120,11 @@ class StemCellSample:
     tick: int = 0
     metadata: Dict[str, Any] = field(default_factory=dict)
     
+    # Delta-based learning: store before/after features for transitions
+    features_before: Optional[List[float]] = None
+    features_after: Optional[List[float]] = None
+    is_transition: bool = False
+    
     def to_dict(self) -> Dict[str, Any]:
         return {
             "fen": self.fen,
@@ -122,6 +132,9 @@ class StemCellSample:
             "reward": self.reward,
             "tick": self.tick,
             "metadata": self.metadata,
+            "features_before": self.features_before,
+            "features_after": self.features_after,
+            "is_transition": self.is_transition,
         }
     
     @classmethod
@@ -132,6 +145,9 @@ class StemCellSample:
             reward=data.get("reward", 0.0),
             tick=data.get("tick", 0),
             metadata=data.get("metadata", {}),
+            features_before=data.get("features_before"),
+            features_after=data.get("features_after"),
+            is_transition=data.get("is_transition", False),
         )
 
 
@@ -262,8 +278,12 @@ class StemCellTerminal:
         if self.feature_extractor and board is not None:
             try:
                 features = self.feature_extractor(board)
-                if hasattr(features, 'tolist'):
+                if hasattr(features, "to_vector"):
+                    features = features.to_vector()
+                elif hasattr(features, "tolist"):
                     features = features.tolist()
+                elif isinstance(features, tuple):
+                    features = list(features)
             except Exception:
                 features = None
         
@@ -318,7 +338,7 @@ class StemCellTerminal:
             consistency_score: How consistent the pattern is (0-1)
             pattern_signature: Representative feature vector
         """
-        if not self.samples or not HAS_NUMPY:
+        if not self.samples:
             return 0.0, None
         
         # Get samples with features
@@ -328,25 +348,215 @@ class StemCellTerminal:
         
         # Stack features
         try:
-            features = np.array([s.features for s in featured])
+            feature_rows = [list(s.features) for s in featured]
         except Exception:
             return 0.0, None
+
+        original_len = len(feature_rows[0]) if feature_rows else 0
+
+        # Optionally mask features to a sparse subset
+        mask = self.metadata.get("feature_mask")
+        if mask:
+            try:
+                if isinstance(mask[0], bool):
+                    feature_rows = [
+                        [val for val, keep in zip(row, mask) if keep]
+                        for row in feature_rows
+                    ]
+                else:
+                    feature_rows = [
+                        [row[idx] for idx in mask if idx < len(row)]
+                        for row in feature_rows
+                    ]
+            except Exception:
+                pass
+
+        pattern_mode = self.metadata.get("pattern_mode", "centroid")
         
-        # Compute centroid
-        centroid = np.mean(features, axis=0)
-        
-        # Compute consistency (inverse of average distance to centroid)
-        distances = np.linalg.norm(features - centroid, axis=1)
-        avg_distance = np.mean(distances)
-        max_distance = np.max(distances) if len(distances) > 0 else 1.0
-        
+        if HAS_NUMPY:
+            try:
+                features = np.array(feature_rows)
+            except Exception:
+                return 0.0, None
+
+            # Compute pattern signature
+            if pattern_mode == "medoid":
+                try:
+                    diffs = features[:, None, :] - features[None, :, :]
+                    dists = np.linalg.norm(diffs, axis=2)
+                    avg_dists = np.mean(dists, axis=1)
+                    medoid_idx = int(np.argmin(avg_dists))
+                    signature_vec = features[medoid_idx]
+                except Exception:
+                    signature_vec = np.mean(features, axis=0)
+            else:
+                signature_vec = np.mean(features, axis=0)
+
+            # Compute consistency (inverse of average distance to signature)
+            distances = np.linalg.norm(features - signature_vec, axis=1)
+            avg_distance = np.mean(distances)
+            max_distance = np.max(distances) if len(distances) > 0 else 1.0
+        else:
+            # Manual fallback without numpy
+            feature_rows = [row for row in feature_rows if row]
+            if not feature_rows:
+                return 0.0, None
+
+            if pattern_mode == "medoid":
+                try:
+                    avg_dists = []
+                    for row in feature_rows:
+                        dist_sum = 0.0
+                        for other in feature_rows:
+                            dist_sum += sum((a - b) ** 2 for a, b in zip(row, other)) ** 0.5
+                        avg_dists.append(dist_sum / max(1, len(feature_rows)))
+                    medoid_idx = min(range(len(avg_dists)), key=avg_dists.__getitem__)
+                    signature_vec = feature_rows[medoid_idx]
+                except Exception:
+                    signature_vec = [
+                        sum(row[i] for row in feature_rows) / len(feature_rows)
+                        for i in range(len(feature_rows[0]))
+                    ]
+            else:
+                signature_vec = [
+                    sum(row[i] for row in feature_rows) / len(feature_rows)
+                    for i in range(len(feature_rows[0]))
+                ]
+
+            distances = [
+                sum((a - b) ** 2 for a, b in zip(row, signature_vec)) ** 0.5
+                for row in feature_rows
+            ]
+            avg_distance = sum(distances) / max(1, len(distances))
+            max_distance = max(distances) if distances else 1.0
+
         # Consistency: 1.0 if all samples are identical, lower if spread out
         consistency = 1.0 - min(1.0, avg_distance / (max_distance + 1e-6))
-        
-        # Store centroid for pattern signature and similarity comparison
-        self.pattern_signature = centroid.tolist()
+
+        # Store signature for pattern matching (expand to full length if masked)
+        if hasattr(signature_vec, "tolist"):
+            signature_list = signature_vec.tolist()
+        else:
+            signature_list = list(signature_vec)
+        if mask:
+            full_len = original_len
+            full_signature = [0.0] * full_len
+            if isinstance(mask[0], bool):
+                sig_idx = 0
+                for idx, keep in enumerate(mask):
+                    if keep and sig_idx < len(signature_list):
+                        full_signature[idx] = signature_list[sig_idx]
+                        sig_idx += 1
+            else:
+                for sig_idx, idx in enumerate(mask):
+                    if idx < full_len and sig_idx < len(signature_list):
+                        full_signature[idx] = signature_list[sig_idx]
+            signature_list = full_signature
+
+        self.pattern_signature = signature_list
         self.pattern_centroid = self.pattern_signature
         return float(consistency), self.pattern_signature
+    
+    def analyze_pattern_delta_based(self) -> Tuple[float, Optional[List[float]]]:
+        """
+        Compute consistency based on terminal output DELTAS, not centroids.
+        
+        This is the CORRECT approach per the spec:
+        - For each transition (v0, v1), compute terminal output s0 = T(v0), s1 = T(v1)
+        - Compute delta Δs = s1 - s0
+        - Consistency = how stable Δs is across different transitions (low variance)
+        
+        Returns:
+            (consistency_score, median_delta_value)
+        """
+        if not self.samples:
+            return 0.0, None
+        
+        # Filter to transition samples only
+        transitions = [s for s in self.samples if s.is_transition and s.features_before and s.features_after]
+        if len(transitions) < 3:
+            # Not enough transitions, fall back to centroid method
+            return self.analyze_pattern()
+        
+        # Compute deltas for each transition
+        deltas = []
+        for sample in transitions:
+            try:
+                # Compute terminal output as cosine similarity to current pattern
+                if self.pattern_centroid is None:
+                    # No pattern yet, use simple magnitude difference
+                    before_mag = sum(f ** 2 for f in sample.features_before) ** 0.5
+                    after_mag = sum(f ** 2 for f in sample.features_after) ** 0.5
+                    delta = after_mag - before_mag
+                else:
+                    # Compute similarity-based terminal output
+                    s_before = self._cosine_similarity(sample.features_before, self.pattern_centroid)
+                    s_after = self._cosine_similarity(sample.features_after, self.pattern_centroid)
+                    delta = s_after - s_before
+                
+                deltas.append(delta)
+            except Exception:
+                continue
+        
+        if len(deltas) < 3:
+            return 0.0, None
+        
+        # Measure consistency: how stable are the deltas?
+        mean_delta = sum(deltas) / len(deltas)
+        variance = sum((d - mean_delta) ** 2 for d in deltas) / len(deltas)
+        std_dev = variance ** 0.5
+        
+        # Consistency = inverse of coefficient of variation
+        # High consistency when deltas are stable (low std relative to mean)
+        if abs(mean_delta) < 1e-6:
+            # Deltas are near zero - not discriminative
+            consistency = 0.0
+        else:
+            # coefficient_of_variation = std_dev / abs(mean_delta)
+            # consistency = high when CV is low
+            cv = std_dev / abs(mean_delta)
+            consistency = 1.0 / (1.0 + cv)
+        
+        # Store mean delta as the "signature" for this terminal
+        return consistency, mean_delta
+    
+    def observe_transition(
+        self,
+        features_before: List[float],
+        features_after: List[float],
+        reward: float,
+        fen_before: str,
+        tick: int
+    ) -> bool:
+        """
+        Observe a state transition for delta-based learning.
+        
+        Args:
+            features_before: Feature vector before the transition
+            features_after: Feature vector after the transition
+            reward: Reward signal (1.0 for mate, 0.0 otherwise)
+            fen_before: FEN string before the transition
+            tick: Current tick
+            
+        Returns:
+            True if sample was stored
+        """
+        if self.state not in (StemCellState.EXPLORING, StemCellState.CANDIDATE, StemCellState.TRIAL):
+            return False
+        
+        sample = StemCellSample(
+            fen=fen_before,
+            features=features_after,  # For backward compatibility
+            reward=reward,
+            tick=tick,
+            features_before=features_before,
+            features_after=features_after,
+            is_transition=True
+        )
+        
+        self.samples.append(sample)
+        self._prune_samples()
+        return True
     
     # =========================================================================
     # XP SYSTEM - THREE-TIER LIFECYCLE MANAGEMENT
@@ -378,6 +588,9 @@ class StemCellTerminal:
         min_consistency: float = 0.30,  # Lowered from 0.50 for easier TRIAL promotion
         wire_to_legs: bool = True,  # NEW: Also wire as child of legs for gating
         leg_node_ids: Optional[List[str]] = None,  # NEW: Which legs to wire to
+        node_factory: Optional[str] = None,  # Optional factory override
+        extra_parent_ids: Optional[List[str]] = None,  # Optional extra SUB parents
+        node_meta_extra: Optional[Dict[str, Any]] = None,  # Extra meta to merge
     ) -> bool:
         """
         Promote cell to TRIAL tier as a transient vertex.
@@ -429,20 +642,55 @@ class StemCellTerminal:
         # This is CRITICAL: nodes must belong to the subgraph to be processed
         subgraph_name = parent_id.split("_")[0] if "_" in parent_id else parent_id
         
+        factory = node_factory or self.metadata.get("node_factory")
+        if factory is None:
+            factory = "recon_lite.learning.m5_structure:create_pattern_sensor"
+
+        node_meta = {
+            "cell_id": self.cell_id,
+            "tier": "trial",
+            "consistency": consistency,
+            "promoted_tick": current_tick,
+            "subgraph": subgraph_name,  # CRITICAL: Required for subgraph execution
+        }
+        feature_mask = self.metadata.get("feature_mask")
+        if feature_mask:
+            node_meta["feature_mask"] = list(feature_mask)
+        pattern_mode = self.metadata.get("pattern_mode")
+        if pattern_mode:
+            node_meta["pattern_mode"] = pattern_mode
+        threshold = self.metadata.get("threshold")
+        if threshold is not None:
+            node_meta["threshold"] = threshold
+        goal_features = self.metadata.get("goal_features")
+        if goal_features:
+            node_meta["goal_features"] = list(goal_features)
+        goal_weights = self.metadata.get("goal_weights")
+        if goal_weights:
+            node_meta["goal_weights"] = list(goal_weights)
+
         node_spec = {
             "id": self.trial_node_id,
             "type": "TERMINAL",
             "group": "trial",
-            "factory": None,
-            "meta": {
-                "cell_id": self.cell_id,
-                "tier": "trial",
-                "consistency": consistency,
-                "promoted_tick": current_tick,
-                "pattern_signature": signature,
-                "subgraph": subgraph_name,  # CRITICAL: Required for subgraph execution
-            }
+            "factory": factory,
+            "pattern_signature": signature,
+            "meta": node_meta,
         }
+        if node_meta_extra:
+            node_spec["meta"].update(node_meta_extra)
+
+        if factory.endswith("create_goal_actuator"):
+            goal_features = node_spec["meta"].get(
+                "goal_features",
+                ["box_area_delta", "king_distance_delta", "opposition_gain", "safe_check"],
+            )
+            goal_vector = node_spec["meta"].get("goal_vector")
+            if goal_vector is None:
+                goal_vector = [_random_goal_value() for _ in goal_features]
+                node_spec["meta"]["goal_vector"] = goal_vector
+            node_spec["meta"].setdefault("goal_features", goal_features)
+            node_spec["meta"].setdefault("goal_weights", [1.0] * len(goal_features))
         
         try:
             registry.add_node(node_spec, tick=current_tick)
@@ -474,6 +722,19 @@ class StemCellTerminal:
                             )
                     except Exception:
                         pass  # Skip if leg doesn't exist
+
+            if extra_parent_ids:
+                for extra_parent in extra_parent_ids:
+                    try:
+                        registry.add_edge(
+                            extra_parent,
+                            self.trial_node_id,
+                            "SUB",
+                            weight=0.5,
+                            tick=current_tick,
+                        )
+                    except Exception:
+                        pass
             
             registry.save()
         except ValueError:
@@ -509,12 +770,12 @@ class StemCellTerminal:
         if self.state != StemCellState.TRIAL:
             return 0, "not_trial"
         
-        if affordance_delta > 0.1:
+        if affordance_delta >= 0.05:
             # Success: positive affordance delta
             xp_change = self.XP_SUCCESS
             self.xp_successes += 1
             result = "success"
-        elif affordance_delta < -0.1:
+        elif affordance_delta <= -0.05:
             # Failure: negative affordance delta
             xp_change = self.XP_FAILURE
             self.xp_failures += 1
@@ -534,6 +795,38 @@ class StemCellTerminal:
         # Reclassify tier based on updated history
         self.classify_tier()
         
+        return xp_change, result
+
+    def update_actuator_xp(self, affordance_delta: float) -> Tuple[int, str]:
+        """
+        Update actuator XP separately from sensor XP.
+
+        Uses the same thresholds as sensor XP but stores values in metadata.
+        """
+        if self.state != StemCellState.TRIAL:
+            return 0, "not_trial"
+
+        actuator_xp = self.metadata.get("actuator_xp", self.XP_INITIAL)
+        actuator_history = self.metadata.get("actuator_xp_history", [])
+
+        if affordance_delta >= 0.05:
+            xp_change = self.XP_SUCCESS
+            result = "success"
+        elif affordance_delta <= -0.05:
+            xp_change = self.XP_FAILURE
+            result = "failure"
+        else:
+            xp_change = 0
+            result = "neutral"
+
+        actuator_xp += xp_change
+        actuator_history.append(actuator_xp)
+        if len(actuator_history) > self.xp_history_window:
+            actuator_history.pop(0)
+
+        self.metadata["actuator_xp"] = actuator_xp
+        self.metadata["actuator_xp_history"] = actuator_history
+
         return xp_change, result
     
     def classify_tier(self) -> CellTier:
@@ -1706,6 +1999,16 @@ class StemCellManager:
         self.default_config = config or StemCellConfig()
         self.cells: Dict[str, StemCellTerminal] = {}
         self._next_id = 0
+
+        # Optional sparse feature mask policy (used for targeted pattern discovery)
+        self.feature_mask_indices: Optional[List[int]] = None
+        self.feature_mask_size_range: Tuple[int, int] = (2, 4)
+        self.pattern_mode: Optional[str] = None
+        self.stage_goal_features: Optional[List[str]] = None
+        self.stage_goal_weights: Optional[List[float]] = None
+        self.stage_match_mode: Optional[str] = None
+        self.stage_goal_match_mode: Optional[str] = None
+        self.stage_match_threshold: Optional[float] = None
         
         # Win-coactivation tracking for AND-gate discovery (M5 Recursive Branching)
         self.win_coactivation: Dict[Tuple[str, str], int] = {}  # (a,b) -> co-fire count
@@ -1736,6 +2039,15 @@ class StemCellManager:
             self.feature_extractor = feature_extractor
         else:
             self.feature_extractor = self._default_board_features
+
+    def _sample_feature_mask(self) -> Optional[List[int]]:
+        if not self.feature_mask_indices:
+            return None
+        min_size, max_size = self.feature_mask_size_range
+        max_size = max(min_size, min(max_size, len(self.feature_mask_indices)))
+        size = random.randint(min_size, max_size)
+        size = min(size, len(self.feature_mask_indices))
+        return sorted(random.sample(self.feature_mask_indices, size))
     
     @staticmethod
     def _default_board_features(board) -> List[float]:
@@ -2072,6 +2384,21 @@ class StemCellManager:
             feature_extractor=self.feature_extractor,  # Pass feature extractor!
         )
         cell.activate()
+        mask = self._sample_feature_mask()
+        if mask:
+            cell.metadata["feature_mask"] = mask
+        if self.pattern_mode:
+            cell.metadata["pattern_mode"] = self.pattern_mode
+        if self.stage_goal_features:
+            cell.metadata["goal_features"] = list(self.stage_goal_features)
+        if self.stage_goal_weights:
+            cell.metadata["goal_weights"] = list(self.stage_goal_weights)
+        if self.stage_match_mode:
+            cell.metadata["match_mode"] = self.stage_match_mode
+        if self.stage_goal_match_mode:
+            cell.metadata["goal_match_mode"] = self.stage_goal_match_mode
+        if self.stage_match_threshold is not None:
+            cell.metadata["threshold"] = self.stage_match_threshold
         self.cells[cell_id] = cell
         return cell
     
@@ -2119,6 +2446,207 @@ class StemCellManager:
                 xp_change, result = cell.update_xp(affordance_delta)
                 results[cell_id] = (xp_change, result)
         return results
+
+    def update_trial_xp_for_cells(
+        self,
+        cell_ids: Iterable[str],
+        affordance_delta: float,
+    ) -> Dict[str, Tuple[int, str]]:
+        """
+        Update XP for a specific subset of TRIAL cells.
+
+        Args:
+            cell_ids: Iterable of stem cell IDs to update
+            affordance_delta: Change in affordance (positive = good move)
+
+        Returns:
+            Dict mapping cell_id to (xp_change, result)
+        """
+        results = {}
+        for cell_id in cell_ids:
+            cell = self.cells.get(cell_id)
+            if cell and cell.state == StemCellState.TRIAL:
+                xp_change, result = cell.update_xp(affordance_delta)
+                results[cell_id] = (xp_change, result)
+        return results
+
+    def update_actuator_xp_for_cells(
+        self,
+        cell_ids: Iterable[str],
+        affordance_delta: float,
+    ) -> Dict[str, Tuple[int, str]]:
+        """
+        Update actuator XP for a subset of TRIAL cells.
+        """
+        results = {}
+        for cell_id in cell_ids:
+            cell = self.cells.get(cell_id)
+            if cell and cell.state == StemCellState.TRIAL:
+                xp_change, result = cell.update_actuator_xp(affordance_delta)
+                results[cell_id] = (xp_change, result)
+        return results
+
+    def nudge_goal_vector(
+        self,
+        cell_id: str,
+        actual_features: Dict[str, float],
+        goal_features: List[str],
+        reward_signal: float,
+        lr: float = 0.1,
+    ) -> bool:
+        """
+        Move a cell's goal vector toward (or away from) the observed features.
+        """
+        cell = self.cells.get(cell_id)
+        if not cell:
+            return False
+
+        if reward_signal == 0.0:
+            return False
+
+        direction = 1.0 if reward_signal > 0 else -1.0
+        goal_vec = list(cell.metadata.get("goal_vector") or [0.0] * len(goal_features))
+        if len(goal_vec) < len(goal_features):
+            goal_vec += [0.0] * (len(goal_features) - len(goal_vec))
+        elif len(goal_vec) > len(goal_features):
+            goal_vec = goal_vec[: len(goal_features)]
+
+        for idx, name in enumerate(goal_features):
+            actual = actual_features.get(name, 0.0)
+            goal_vec[idx] += direction * lr * (actual - goal_vec[idx])
+            goal_vec[idx] = max(-1.0, min(1.0, goal_vec[idx]))
+
+        cell.metadata["goal_vector"] = goal_vec
+        cell.metadata["goal_features"] = list(goal_features)
+        return True
+
+    def ensure_goal_actuator_for_cell(
+        self,
+        cell: StemCellTerminal,
+        registry: "TopologyRegistry",
+        parent_node_id: str,
+        tick: int = 0,
+    ) -> Optional[str]:
+        """
+        Ensure a goal actuator node exists for a promoted sensor cell.
+        """
+        if not cell.trial_node_id:
+            return None
+
+        existing = cell.metadata.get("goal_actuator_node_id")
+        if existing:
+            return existing
+
+        node_id = f"goal_act_{cell.cell_id}"
+        if registry.get_node(node_id) is not None:
+            cell.metadata["goal_actuator_node_id"] = node_id
+            return node_id
+
+        node_spec = {
+            "id": node_id,
+            "type": "TERMINAL",
+            "group": "stem_goal_actuator",
+            "factory": "recon_lite_chess.goal_actuators:create_goal_actuator",
+            "pattern_signature": cell.pattern_signature or [],
+            "meta": {
+                "cell_id": cell.cell_id,
+                "source_trial_node": cell.trial_node_id,
+                "subgraph": "krk",
+            },
+        }
+        feature_mask = cell.metadata.get("feature_mask")
+        if feature_mask:
+            node_spec["meta"]["feature_mask"] = list(feature_mask)
+        match_mode = cell.metadata.get("match_mode")
+        if match_mode:
+            node_spec["meta"]["match_mode"] = match_mode
+        threshold = cell.metadata.get("threshold")
+        if threshold is not None:
+            node_spec["meta"]["threshold"] = threshold
+        goal_features = cell.metadata.get("goal_features")
+        if goal_features:
+            node_spec["meta"]["goal_features"] = list(goal_features)
+        goal_weights = cell.metadata.get("goal_weights")
+        if goal_weights:
+            node_spec["meta"]["goal_weights"] = list(goal_weights)
+        goal_match_mode = cell.metadata.get("goal_match_mode")
+        if goal_match_mode:
+            node_spec["meta"]["goal_match_mode"] = goal_match_mode
+        registry.add_node(node_spec, tick=tick)
+
+        try:
+            if registry.get_edge(parent_node_id, node_id, "SUB") is None:
+                registry.add_edge(parent_node_id, node_id, "SUB", weight=0.5, tick=tick)
+        except Exception:
+            pass
+
+        registry.save()
+        cell.metadata["goal_actuator_node_id"] = node_id
+        cell.metadata.setdefault("actuator_xp", cell.XP_INITIAL)
+        return node_id
+
+    def ensure_turn_composites_for_cell(
+        self,
+        cell: StemCellTerminal,
+        registry: "TopologyRegistry",
+        parent_node_id: Optional[str] = None,
+        tick: int = 0,
+    ) -> List[str]:
+        """
+        Spawn AND(pattern, white_to_play) and AND(pattern, black_to_play) composites.
+        """
+        if not cell.trial_node_id:
+            return []
+
+        composites = cell.metadata.setdefault("turn_composites", {})
+        parent_id = parent_node_id or cell.metadata.get("trial_prep", {}).get("parent_id") or "krk_detect"
+        created = []
+
+        for turn_id in ("white", "black"):
+            node_id = f"and_{cell.cell_id}_{turn_id}_to_play"
+            if composites.get(turn_id):
+                continue
+            if registry.get_node(node_id) is None:
+                node_spec = {
+                    "id": node_id,
+                    "type": "SCRIPT",
+                    "group": "stem_turn_composite",
+                    "meta": {
+                        "aggregation": "and",
+                        "source_trial_node": cell.trial_node_id,
+                        "source_cell_id": cell.cell_id,
+                        "turn": turn_id,
+                    },
+                }
+                registry.add_node(node_spec, tick=tick)
+
+            try:
+                if registry.get_edge(parent_id, node_id, "SUB") is None:
+                    registry.add_edge(parent_id, node_id, "SUB", weight=0.5, tick=tick)
+            except Exception:
+                continue
+
+            try:
+                if registry.get_edge(node_id, cell.trial_node_id, "SUB") is None:
+                    registry.add_edge(node_id, cell.trial_node_id, "SUB", weight=0.5, tick=tick)
+            except Exception:
+                pass
+
+            turn_node = f"krk_{turn_id}_to_play"
+            if registry.get_node(turn_node) is not None:
+                try:
+                    if registry.get_edge(node_id, turn_node, "SUB") is None:
+                        registry.add_edge(node_id, turn_node, "SUB", weight=0.5, tick=tick)
+                except Exception:
+                    pass
+
+            composites[turn_id] = node_id
+            created.append(node_id)
+
+        if created:
+            registry.save()
+
+        return created
     
     def get_trial_cells(self) -> List[StemCellTerminal]:
         """Get all cells in TRIAL state."""
@@ -2376,6 +2904,8 @@ class StemCellManager:
         self,
         min_variance: float = 0.1,
         max_spawns: int = 3,
+        allow_recursive: bool = False,
+        recursive_chance: float = 0.5,
     ) -> List[str]:
         """
         Proactively spawn lag terminals for high-variance features with UCB1 exploration.
@@ -2412,11 +2942,12 @@ class StemCellManager:
                 continue
             
             # Check if we already have a lag for this feature
-            has_lag = any(
-                lag.feature_index == feature_idx 
-                for lag in self.lag_terminals.values()
-            )
-            if has_lag:
+            feature_lags = [
+                lag for lag in self.lag_terminals.values()
+                if lag.feature_index == feature_idx
+            ]
+            has_lag = bool(feature_lags)
+            if has_lag and not allow_recursive:
                 continue
             
             # Compute variance and std
@@ -2438,16 +2969,23 @@ class StemCellManager:
             # Combined score: std_dev + UCB bonus (prioritize high variance + uncertainty)
             ucb_score = std_dev + ucb_bonus
             
-            candidates.append((ucb_score, feature_idx, variance, std_dev))
+            parent_lag_id = None
+            if has_lag and allow_recursive and feature_lags:
+                parent_lag = max(feature_lags, key=lambda lag: lag.depth)
+                if random.random() < recursive_chance:
+                    parent_lag_id = parent_lag.lag_id
+
+            candidates.append((ucb_score, feature_idx, variance, std_dev, parent_lag_id))
         
         # Sort by UCB score descending (best = highest std + uncertainty)
         candidates.sort(key=lambda x: x[0], reverse=True)
         
         # Spawn top candidates
-        for ucb_score, feature_idx, variance, std_dev in candidates[:max_spawns]:
+        for ucb_score, feature_idx, variance, std_dev, parent_lag_id in candidates[:max_spawns]:
             lag = self.spawn_lag_terminal(
                 source_id=f"feature_{feature_idx}",
                 feature_index=feature_idx,
+                parent_lag_id=parent_lag_id,
             )
             if lag:
                 spawned.append(lag.lag_id)

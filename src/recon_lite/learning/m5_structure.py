@@ -1578,8 +1578,16 @@ class StructureLearner:
             if survivor_bypass:
                 cell.metadata["promotion_reason"] = f"survivor_bypass_{cycles_survived}_cycles"
             
+            sample_bypass = bool(cell.metadata.get("sample_bypass") or cell.metadata.get("fallback_promoted"))
+
             # Either bypass allows promotion without consistency check
-            bypass_enabled = success_bypass or perfect_success or extreme_failure_bypass or survivor_bypass
+            bypass_enabled = (
+                success_bypass
+                or perfect_success
+                or extreme_failure_bypass
+                or survivor_bypass
+                or sample_bypass
+            )
             
             # Check if ready for trial - EXPANSION: lowered to 0.40
             consistency, _ = cell.analyze_pattern()
@@ -1639,8 +1647,19 @@ class StructureLearner:
                 # DUAL-WIRING: Sensors connect to kpk_detect (for sensing/activation)
                 parent_id = parent_candidates[0] if parent_candidates else "kpk_detect"
             
+            node_factory = None
+            wire_to_legs = True
+
             # Promote to TRIAL (not MATURE yet)
-            if cell.promote_to_trial(self.registry, parent_id, current_tick):
+            min_consistency = 0.0 if bypass_enabled else 0.30
+            if cell.promote_to_trial(
+                self.registry,
+                parent_id,
+                current_tick,
+                min_consistency=min_consistency,
+                wire_to_legs=wire_to_legs,
+                node_factory=node_factory,
+            ):
                 trial_promotions.append(cell.cell_id)
                 # Track promotion reason for debugging
                 if success_bypass and not perfect_success:
@@ -1653,6 +1672,35 @@ class StructureLearner:
                     cell.metadata["promotion_reason"] = f"consistency_{consistency:.2f}"
             else:
                 trial_errors.append(f"{cell.cell_id}: trial promotion failed")
+
+        # Spawn goal actuators and turn composites for newly promoted sensors.
+        if trial_promotions and self.registry:
+            goal_parent = "krk_goal_actuator_hub"
+            goal_parent_ok = self.registry.get_node(goal_parent) is not None
+            for cell_id in trial_promotions:
+                cell = stem_manager.cells.get(cell_id)
+                if not cell:
+                    continue
+                if goal_parent_ok:
+                    try:
+                        stem_manager.ensure_goal_actuator_for_cell(
+                            cell,
+                            self.registry,
+                            parent_node_id=goal_parent,
+                            tick=current_tick,
+                        )
+                    except Exception:
+                        pass
+                try:
+                    parent_id = cell.metadata.get("trial_prep", {}).get("parent_id")
+                    stem_manager.ensure_turn_composites_for_cell(
+                        cell,
+                        self.registry,
+                        parent_node_id=parent_id,
+                        tick=current_tick,
+                    )
+                except Exception:
+                    pass
         
         # Step 4: Apply XP decay to all TRIAL cells (-1 XP per cycle)
         xp_decays: List[Tuple[str, int]] = []
@@ -2148,17 +2196,48 @@ def create_pattern_sensor(node_id: str):
         if features is None:
             return True, True  # No features to compare, pass through
         
-        # Simple cosine similarity match
+        feature_mask = node.meta.get("feature_mask")
+        match_mode = node.meta.get("match_mode", "cosine")
+
+        def _apply_mask(values: List[float], mask: Optional[List[int]]) -> List[float]:
+            if not mask:
+                return list(values)
+            if isinstance(mask[0], bool):
+                return [v for v, keep in zip(values, mask) if keep]
+            return [values[idx] for idx in mask if idx < len(values)]
+
+        # Similarity match (masked + selectable mode)
         try:
-            import numpy as np
-            sig_arr = np.array(signature)
-            feat_arr = np.array(features)
-            
-            # Normalize
-            sig_norm = sig_arr / (np.linalg.norm(sig_arr) + 1e-8)
-            feat_norm = feat_arr / (np.linalg.norm(feat_arr) + 1e-8)
-            
-            similarity = float(np.dot(sig_norm, feat_norm))
+            try:
+                import numpy as np
+            except Exception:
+                np = None
+            sig_vals = _apply_mask(signature, feature_mask)
+            feat_vals = _apply_mask(features, feature_mask)
+            if np is not None:
+                sig_arr = np.array(sig_vals)
+                feat_arr = np.array(feat_vals)
+
+                # Normalize
+                sig_norm = sig_arr / (np.linalg.norm(sig_arr) + 1e-8)
+                feat_norm = feat_arr / (np.linalg.norm(feat_arr) + 1e-8)
+
+                if match_mode == "dot":
+                    similarity = float(np.dot(sig_arr, feat_arr))
+                else:
+                    similarity = float(np.dot(sig_norm, feat_norm))
+            else:
+                if match_mode == "dot":
+                    similarity = float(sum(a * b for a, b in zip(sig_vals, feat_vals)))
+                else:
+                    dot_product = sum(a * b for a, b in zip(sig_vals, feat_vals))
+                    sig_norm = sum(a * a for a in sig_vals) ** 0.5
+                    feat_norm = sum(b * b for b in feat_vals) ** 0.5
+                    if sig_norm == 0.0 or feat_norm == 0.0:
+                        similarity = 0.0
+                    else:
+                        similarity = dot_product / (sig_norm * feat_norm)
+
             node.meta["last_similarity"] = similarity
             
             # Match if similarity exceeds threshold

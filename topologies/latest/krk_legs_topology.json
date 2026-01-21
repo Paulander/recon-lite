@@ -154,36 +154,6 @@
         "description": "King approach/opposition patterns from KPK",
         "binding_space": "krk_king_binding"
       }
-    },
-    {
-      "id": "krk_goal_actuator_hub",
-      "type": "SCRIPT",
-      "factory": "recon_lite_chess.goal_actuators:create_goal_actuator_hub",
-      "meta": {
-        "aggregation": "avg"
-      }
-    },
-    {
-      "id": "krk_goal_solver",
-      "type": "SCRIPT",
-      "factory": "recon_lite_chess.goal_actuators:create_goal_solver",
-      "meta": {
-        "role": "goal_solver"
-      }
-    },
-    {
-      "id": "krk_white_to_play",
-      "type": "TERMINAL",
-      "group": "sensor",
-      "factory": "recon_lite_chess.krk_nodes:create_white_to_play",
-      "meta": {}
-    },
-    {
-      "id": "krk_black_to_play",
-      "type": "TERMINAL",
-      "group": "sensor",
-      "factory": "recon_lite_chess.krk_nodes:create_black_to_play",
-      "meta": {}
     }
   ],
   "edges": [
@@ -374,54 +344,6 @@
     {
       "src": "universal_king_logic",
       "dst": "krk_opposition_probe",
-      "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true,
-      "confirmation_count": 0
-    },
-    {
-      "src": "krk_execute",
-      "dst": "krk_goal_actuator_hub",
-      "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true,
-      "confirmation_count": 0
-    },
-    {
-      "src": "krk_execute",
-      "dst": "krk_goal_solver",
-      "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true,
-      "confirmation_count": 0
-    },
-    {
-      "src": "krk_goal_actuator_hub",
-      "dst": "krk_goal_solver",
-      "type": "POR",
-      "weight": 1.0,
-      "consolidate": true,
-      "confirmation_count": 0
-    },
-    {
-      "src": "krk_goal_solver",
-      "dst": "krk_arbiter",
-      "type": "POR",
-      "weight": 1.0,
-      "consolidate": true,
-      "confirmation_count": 0
-    },
-    {
-      "src": "krk_detect",
-      "dst": "krk_white_to_play",
-      "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true,
-      "confirmation_count": 0
-    },
-    {
-      "src": "krk_detect",
-      "dst": "krk_black_to_play",
       "type": "SUB",
       "weight": 1.0,
       "consolidate": true,

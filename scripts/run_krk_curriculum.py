@@ -25,6 +25,7 @@ import json
 import os
 import pstats
 import random
+import shutil
 import sys
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -77,6 +78,24 @@ except ImportError:
     KRK_STAGES = []
 
 try:
+    from recon_lite_chess.predicates import can_deliver_mate
+    HAS_KRK_PREDICATES = True
+except ImportError:
+    HAS_KRK_PREDICATES = False
+    can_deliver_mate = None
+
+try:
+    from recon_lite_chess.goal_actuators import (
+        compute_goal_feature_deltas,
+        DEFAULT_GOAL_FEATURES,
+    )
+    HAS_GOAL_ACTUATORS = True
+except ImportError:
+    HAS_GOAL_ACTUATORS = False
+    compute_goal_feature_deltas = None
+    DEFAULT_GOAL_FEATURES = []
+
+try:
     from recon_lite.engine import ReConEngine, GatingSchedule
     HAS_ENGINE = True
 except ImportError:
@@ -124,10 +143,98 @@ except ImportError:
     HAS_M5 = False
 
 try:
-    from recon_lite_chess.features.krk_features import extract_krk_features
+    from recon_lite_chess.features.krk_features import extract_krk_features, extract_move_features
     HAS_KRK_FEATURES = True
 except ImportError:
     HAS_KRK_FEATURES = False
+
+
+# ============================================================================
+# Topology Export Helper (for visualizer compatibility)
+# ============================================================================
+
+def extract_topology_for_visualizer(graph, stem_manager=None) -> dict:
+    """
+    Extract topology into visualizer-compatible format.
+    
+    Produces nodes + edges dicts matching evolution_visualizer.html 
+    and hierarchy_visualizer.html expected format.
+    
+    Args:
+        graph: ReCoN graph object with graph.nodes and graph.edges
+        stem_manager: Optional StemCellManager for additional stem cell metadata
+        
+    Returns:
+        Dict with 'nodes' and 'edges' keys in visualizer-compatible format
+    """
+    nodes_out = {}
+    edges_out = {}
+    
+    if not graph:
+        return {"nodes": {}, "edges": {}}
+    
+    # Extract nodes
+    for nid, node in graph.nodes.items():
+        node_data = {
+            "id": nid,
+            "type": getattr(node, "ntype", "UNKNOWN").name if hasattr(getattr(node, "ntype", None), "name") else str(getattr(node, "ntype", "UNKNOWN")),
+        }
+        
+        # Add group classification for visualizer coloring
+        nid_lower = nid.lower()
+        if "trial_" in nid_lower or "stem_" in nid_lower:
+            node_data["group"] = "trial"
+        elif "krk_" in nid_lower and not any(x in nid_lower for x in ["leg", "arbiter"]):
+            node_data["group"] = "sensor"
+        elif "leg" in nid_lower or "arbiter" in nid_lower:
+            node_data["group"] = "actuator"
+        elif any(x in nid_lower for x in ["pack_", "and_", "or_", "cluster_"]):
+            node_data["group"] = "stem_cell"
+        else:
+            node_data["group"] = "backbone"
+        
+        # Add meta if available
+        if hasattr(node, "meta") and node.meta:
+            node_data["meta"] = dict(node.meta) if isinstance(node.meta, dict) else {}
+        
+        # Add stem cell XP/consistency if available
+        if stem_manager and hasattr(stem_manager, 'cells'):
+            cell = stem_manager.cells.get(nid)
+            if cell:
+                node_data["meta"] = node_data.get("meta", {})
+                node_data["meta"]["xp"] = getattr(cell, "xp", 0)
+                node_data["meta"]["consistency"] = getattr(cell, "trial_consistency", 0)
+                if hasattr(cell, "pattern_signature") and cell.pattern_signature:
+                    node_data["pattern_signature"] = cell.pattern_signature
+        
+        nodes_out[nid] = node_data
+    
+    # Extract edges (handle both list and dict cases)
+    edge_idx = 0
+    edges_iterable = graph.edges.items() if isinstance(graph.edges, dict) else enumerate(graph.edges)
+    for eid, edge in edges_iterable:
+        src = getattr(edge, "src", None)
+        dst = getattr(edge, "dst", None)
+        etype = getattr(edge, "ltype", getattr(edge, "type", "SUB"))
+        
+        if src and dst:
+            # Normalize type to uppercase
+            etype_str = etype.name if hasattr(etype, "name") else str(etype).upper()
+            
+            edge_data = {
+                "src": src,
+                "dst": dst,
+                "type": etype_str,
+            }
+            
+            # Add weight if available
+            if hasattr(edge, "w"):
+                edge_data["w"] = getattr(edge, "w", 1.0)
+            
+            edges_out[f"e{edge_idx}"] = edge_data
+            edge_idx += 1
+    
+    return {"nodes": nodes_out, "edges": edges_out}
 
 
 # ============================================================================
@@ -162,7 +269,7 @@ class KRKCurriculumConfig:
     
     # Stem cell settings
     stem_cell_spawn_rate: float = 0.05
-    stem_cell_max_cells: int = 20
+    stem_cell_max_cells: int = 50
     max_trial_slots: int = 20
     
     # Gating settings (for hierarchy enforcement)
@@ -178,6 +285,13 @@ class KRKCurriculumConfig:
     enable_m5: bool = False
     m5_spawn_rate: float = 0.1
     m5_hoist_threshold: float = 0.7
+
+    # Drill Mode: Repeat same FEN until mastery or cycle end
+    drill_mode: bool = False
+    drill_wins_threshold: int = 3
+    
+    # Topology management
+    promote_latest_topology: bool = False
 
 
 # ============================================================================
@@ -321,6 +435,7 @@ def play_krk_game_recon(
     initial_box_min = box_min_side(board)
     active_nodes_log = []
     game_tick = 0
+    prev_interim_reward = 0.0
     
     # ========== TRACK EDGE ACTIVATIONS FOR CONSOLIDATION ==========
     edge_activations: Dict[str, float] = {}  # Track which edges fired during game
@@ -359,7 +474,7 @@ def play_krk_game_recon(
     
     # EARLY EXIT: Stage-specific move limits (fail fast if no mate)
     stage_move_limits = {
-        "Mate_In_1": 3,
+        "Mate_In_1": 1,
         "Mate_In_2": 5,  # True mate-in-2 positions (fixed)
         "Mate_In_3": 8,
         "Box_Method": 15,
@@ -373,9 +488,21 @@ def play_krk_game_recon(
         
         # Build environment
         env = {"board": board}
+        env.setdefault("krk", {})["actuator_proposals"] = []
         # Pass stem_manager for arbiter access (Phase B deep wiring)
         if stem_manager:
             env["__stem_manager__"] = stem_manager
+            # Provide features for pattern sensors (TRIAL/MATURE).
+            try:
+                features = stem_manager.feature_extractor(board)
+                if hasattr(features, "to_vector"):
+                    env["features"] = features.to_vector()
+                else:
+                    env["features"] = features
+            except Exception:
+                pass
+            if stage.name == "Mate_In_1":
+                env.setdefault("krk", {})["goal_move_filter"] = "rook_only"
         
         # Reset engine states before each decision
         engine.reset_states()
@@ -383,6 +510,8 @@ def play_krk_game_recon(
         # Run engine ticks
         suggested_move = None
         ticks_this_move = 0
+        last_active_nodes = []
+        active_nodes_at_move = None
         
         while ticks_this_move < config.max_ticks_per_move:
             try:
@@ -399,6 +528,7 @@ def play_krk_game_recon(
             ]
             if active:
                 active_nodes_log.extend(active)
+                last_active_nodes = active
             
             # Track edge activations for consolidation (M4)
             edge_list = graph.edges.values() if isinstance(graph.edges, dict) else graph.edges
@@ -419,6 +549,7 @@ def play_krk_game_recon(
             found_move = policy.get("suggested_move")
             if found_move:
                 suggested_move = found_move  # Capture the move
+                active_nodes_at_move = active if active else last_active_nodes
                 # For Stage 0 (mate-in-1), break immediately when we find it
                 if ticks_this_move >= config.min_internal_ticks:
                     break
@@ -438,120 +569,171 @@ def play_krk_game_recon(
         if suggested_move and suggested_move in legal_ucis:
             move = chess.Move.from_uci(suggested_move)
         else:
-            # ================================================================
-            # HEURISTIC FALLBACK (controlled by M5_HEURISTIC_PROB env var)
-            # Set M5_HEURISTIC_PROB=0.0 for pure ReCoN mode
-            # Set M5_HEURISTIC_PROB=0.5 for 50% heuristic bootstrap
-            # ================================================================
-            heuristic_prob = float(os.environ.get("M5_HEURISTIC_PROB", "1.0"))
-            use_heuristic = random.random() < heuristic_prob
-            
+            # Pure exploration fallback: random legal move when engine doesn't suggest.
             legal = list(board.legal_moves)
             if not legal:
                 break
-            
-            if use_heuristic:
-                # Use simple box-shrinking heuristic as fallback
-                # PHASE B: Inject stem cell XP-weighted scoring
-                best_move = None
-                best_score = -1000
-                for m in legal[:20]:  # Limit for speed
-                    score = 0
-                    board.push(m)
-                    if board.is_checkmate():
-                        score = 1000
-                    elif board.is_check():
-                        score = 50
-                    elif board.is_stalemate():
-                        score = -500
-                    else:
-                        new_box = box_min_side(board)
-                        if new_box < initial_box_min:
-                            score = 20
-                    
-                    # ================================================================
-                    # PHASE B: Stem Cell XP-Weighted Move Scoring
-                    # Scale scores by avg XP of TRIAL cells that match this state
-                    # Bias toward temporal cells (decreasing box_area)
-                    # ================================================================
-                    if stem_manager and not board.is_checkmate():
-                        try:
-                            stem_bonus = 0.0
-                            cell_count = 0
-                            new_box = box_min_side(board)
-                            
-                            for cell in stem_manager.cells.values():
-                                # Only consider TRIAL cells with XP
-                                if hasattr(cell, 'state') and cell.state.name == "TRIAL" and cell.xp > 0:
-                                    # Use trial_consistency as activation proxy (0-1 range)
-                                    consistency = getattr(cell, 'trial_consistency', 0.5)
-                                    
-                                    # XP-weighted contribution (higher XP = more influence)
-                                    weight = min(cell.xp / 10.0, 1.0)  # Normalize: XP 10+ = full weight
-                                    
-                                    # TEMPORAL BIAS: Boost moves that shrink box
-                                    # This teaches the network to prefer constricting moves
-                                    temporal_boost = 1.0
-                                    if new_box < initial_box_min:
-                                        temporal_boost = 1.5  # 50% boost for box shrinking
-                                    
-                                    stem_bonus += weight * consistency * temporal_boost
-                                    cell_count += 1
-                            
-                            # Apply stem bonus (scaled by cell count for normalization)
-                            if cell_count > 0:
-                                avg_bonus = stem_bonus / cell_count
-                                # LOG: Show when bonus is applied
-                                log_bonus = os.environ.get("LOG_STEM_BONUS", "0") == "1"
-                                if log_bonus:
-                                    print(f"    [STEM-FALLBACK] cells={cell_count}, avg_bonus={avg_bonus:.2f}, score_before={score}")
-                                # Threshold: only boost if avg > 0.3 (lower for more influence)
-                                if avg_bonus > 0.3:
-                                    score += avg_bonus * 25  # Up to +25 from stem cells
-                                    if log_bonus:
-                                        print(f"    [STEM-FALLBACK] Applied +{avg_bonus * 25:.1f} -> score={score}")
-                        except Exception as e:
-                            if os.environ.get("LOG_STEM_BONUS", "0") == "1":
-                                print(f"    [STEM-FALLBACK] Error: {e}")
-                    
-                    board.pop()
-                    if score > best_score:
-                        best_score = score
-                        best_move = m
-                move = best_move if best_move else random.choice(legal)
+            move = random.choice(legal)
+
+        if os.environ.get("LOG_KRK_POLICY", "0") == "1":
+            goal_policy = env.get("krk", {}).get("goal_policy", {})
+            if goal_policy.get("suggested_move"):
+                print(
+                    f"[KRK-POLICY] goal move={goal_policy.get('suggested_move')} "
+                    f"winner={goal_policy.get('winner_cell_id')}"
+                )
             else:
-                # PURE MODE: Random move when engine doesn't suggest
-                # This forces M5 to learn instead of relying on heuristics
-                move = random.choice(legal)
-        
+                legs = env.get("krk", {}).get("legs", {})
+                rook_act = legs.get("rook", {}).get("activation", 0.0)
+                king_act = legs.get("king", {}).get("activation", 0.0)
+                print(f"[KRK-POLICY] leg move={move.uci()} rook={rook_act:.2f} king={king_act:.2f}")
+
+        pre_move_board = board.copy(stack=False)
         board.push(move)
         move_count += 1
         game_tick += 1
+        active_nodes_for_update = active_nodes_at_move or last_active_nodes
         
         # Feed observation to stem cells (M5 learning)
         if stem_manager:
-            # Calculate interim reward based on position quality
-            current_box = box_min_side(board)
-            if board.is_checkmate():
-                interim_reward = 1.0
-            elif board.is_check():
-                interim_reward = 0.6
-            elif current_box < initial_box_min:
-                interim_reward = 0.5  # Good - box is shrinking
+            if stage.name == "Mate_In_1":
+                mate_in_one_pos = False
+                if HAS_KRK_PREDICATES and can_deliver_mate:
+                    try:
+                        mate_in_one_pos = can_deliver_mate(pre_move_board)
+                    except Exception:
+                        mate_in_one_pos = False
+
+                if mate_in_one_pos:
+                    stem_manager.tick(pre_move_board, 1.0, tick=game_tick)
+
+                move_delta = 1.0 if board.is_checkmate() else -1.0
+                prev_interim_reward = move_delta
+                
+                # DELTA-BASED LEARNING: Collect (before, after) feature transitions for mate moves
+                if board.is_checkmate():
+                    try:
+                        features_before = stem_manager.feature_extractor(pre_move_board)
+                        features_after = stem_manager.feature_extractor(board)
+                        fen_before = pre_move_board.fen()
+                        
+                        # Store transition in all active stem cells
+                        for cell_id, cell in stem_manager.cells.items():
+                            if cell.state in (StemCellState.EXPLORING, StemCellState.TRIAL):
+                                cell.observe_transition(
+                                    features_before=features_before,
+                                    features_after=features_after,
+                                    reward=1.0,
+                                    fen_before=fen_before,
+                                    tick=game_tick
+                                )
+                    except Exception:
+                        pass  # Skip on error
+
+                winner_cell_id = env.get("krk", {}).get("actuator_winner_cell_id")
+                if winner_cell_id:
+                    stem_manager.update_actuator_xp_for_cells([winner_cell_id], move_delta)
+                    if HAS_GOAL_ACTUATORS and compute_goal_feature_deltas:
+                        try:
+                            goal_features = DEFAULT_GOAL_FEATURES
+                            winner_cell = stem_manager.cells.get(winner_cell_id)
+                            if winner_cell:
+                                goal_features = winner_cell.metadata.get("goal_features", DEFAULT_GOAL_FEATURES)
+                            actual_feats = compute_goal_feature_deltas(
+                                pre_move_board,
+                                move,
+                                goal_features,
+                            )
+                            stem_manager.nudge_goal_vector(
+                                winner_cell_id,
+                                actual_feats,
+                                goal_features,
+                                move_delta,
+                                lr=0.1,
+                            )
+                        except Exception:
+                            pass
+
+                if mate_in_one_pos and active_nodes_for_update:
+                    sensor_cell_ids = []
+                    for cell_id, cell in stem_manager.cells.items():
+                        if cell.state == StemCellState.TRIAL and cell.trial_node_id in active_nodes_for_update:
+                            sensor_cell_ids.append(cell_id)
+                    if sensor_cell_ids:
+                        stem_manager.update_trial_xp_for_cells(sensor_cell_ids, 0.5)
             else:
-                interim_reward = 0.2  # Neutral position
-            
-            # Feed to all exploring stem cells
-            for cell in stem_manager.cells.values():
-                cell.observe(board, interim_reward, tick=game_tick)
+                # Calculate interim reward based on position quality
+                current_box = box_min_side(board)
+                if board.is_checkmate():
+                    interim_reward = 1.0
+                elif board.is_check():
+                    interim_reward = 0.6
+                elif current_box < initial_box_min:
+                    interim_reward = 0.5  # Good - box is shrinking
+                else:
+                    interim_reward = 0.2  # Neutral position
+                
+                # Spawn/observe exploratory cells and update TRIAL XP per move.
+                stem_manager.tick(board, interim_reward, tick=game_tick)
+                move_delta = 0.0
+                try:
+                    move_feats = extract_move_features(pre_move_board, move)
+                    delta = move_feats.get("delta", {})
+                    box_delta = delta.get("box_area_delta", 0)
+                    if box_delta < 0:
+                        move_delta += 0.1
+                    elif box_delta > 0:
+                        move_delta -= 0.1
+                    dist_delta = delta.get("king_distance_delta", 0)
+                    if dist_delta < 0:
+                        move_delta += 0.05
+                    elif dist_delta > 0:
+                        move_delta -= 0.05
+                except Exception:
+                    move_delta = 0.0
+
+                prev_interim_reward = interim_reward
+                winner_cell_id = env.get("krk", {}).get("actuator_winner_cell_id")
+                if winner_cell_id:
+                    stem_manager.update_actuator_xp_for_cells([winner_cell_id], move_delta)
+                    if HAS_GOAL_ACTUATORS and compute_goal_feature_deltas:
+                        try:
+                            goal_features = DEFAULT_GOAL_FEATURES
+                            winner_cell = stem_manager.cells.get(winner_cell_id)
+                            if winner_cell:
+                                goal_features = winner_cell.metadata.get("goal_features", DEFAULT_GOAL_FEATURES)
+                            actual_feats = compute_goal_feature_deltas(
+                                pre_move_board,
+                                move,
+                                goal_features,
+                            )
+                            stem_manager.nudge_goal_vector(
+                                winner_cell_id,
+                                actual_feats,
+                                goal_features,
+                                move_delta,
+                                lr=0.1,
+                            )
+                        except Exception:
+                            pass
+
+                sensor_cell_ids = []
+                if active_nodes_for_update:
+                    for cell_id, cell in stem_manager.cells.items():
+                        if cell.state == StemCellState.TRIAL and cell.trial_node_id in active_nodes_for_update:
+                            sensor_cell_ids.append(cell_id)
+
+                if sensor_cell_ids:
+                    stem_manager.update_trial_xp_for_cells(sensor_cell_ids, move_delta * 0.5)
             
             # ========== LAG TERMINAL UPDATES (Temporal Gates) ==========
             # Update lag terminals with feature vector changes for trend detection
             try:
                 features = stem_manager.feature_extractor(board)
-                if features:
+                if features is not None:
+                    feature_vec = features.to_vector() if hasattr(features, "to_vector") else features
                     # Update all lags and get deltas
-                    deltas = stem_manager.update_lags(features)
+                    deltas = stem_manager.update_lags(feature_vec)
                     
                     # Evaluate comparators to detect trends
                     trend_signals = stem_manager.evaluate_comparators(deltas)
@@ -598,15 +780,33 @@ def play_krk_game_recon(
                 # This is the extensible backward chaining mechanism
                 if mastered_sensors and stem_manager:
                     current_features = stem_manager.feature_extractor(board)
+                    if current_features is not None and hasattr(current_features, "to_vector"):
+                        current_features = current_features.to_vector()
                     
                     for stage_id, sensor_info in mastered_sensors.items():
                         pattern_sig = sensor_info.get("pattern_signature")
                         if pattern_sig and current_features:
+                            feature_mask = sensor_info.get("feature_mask")
+                            masked_features = current_features
+                            masked_signature = pattern_sig
+                            if feature_mask:
+                                if isinstance(feature_mask[0], bool):
+                                    masked_features = [f for f, keep in zip(current_features, feature_mask) if keep]
+                                else:
+                                    masked_features = [
+                                        current_features[idx]
+                                        for idx in feature_mask
+                                        if idx < len(current_features)
+                                    ]
+                                masked_signature = [
+                                    pattern_sig[idx]
+                                    for idx in range(min(len(pattern_sig), len(masked_features)))
+                                ]
                             # Compute cosine similarity between current features and mastered pattern
-                            if len(current_features) == len(pattern_sig):
-                                dot_product = sum(f * p for f, p in zip(current_features, pattern_sig))
-                                norm_f = sum(f * f for f in current_features) ** 0.5
-                                norm_p = sum(p * p for p in pattern_sig) ** 0.5
+                            if len(masked_features) == len(masked_signature):
+                                dot_product = sum(f * p for f, p in zip(masked_features, masked_signature))
+                                norm_f = sum(f * f for f in masked_features) ** 0.5
+                                norm_p = sum(p * p for p in masked_signature) ** 0.5
                                 if norm_f > 0 and norm_p > 0:
                                     similarity = dot_product / (norm_f * norm_p)
                                     
@@ -738,6 +938,8 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
     graph = None
     stem_manager = None
     consolidation_engine = None
+    requested_topology_path: Optional[Path] = None
+    topology_path: Optional[Path] = None
     
     # ========== INITIALIZE CONSOLIDATION ENGINE (M4: cross-game weight persistence) ==========
     if HAS_CONSOLIDATION and config.mode == "recon":
@@ -756,11 +958,26 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
         if not config.topology_path.exists():
             print(f"ERROR: Topology not found: {config.topology_path}")
             return {"error": "Topology not found"}
-        
-        registry = TopologyRegistry(config.topology_path)
+
+        # Keep base topologies clean: copy to run-specific file unless user points at latest/custom
+        requested_topology_path = config.topology_path
+        base_topologies = {
+            Path("topologies/krk_legs_topology.json").resolve(),
+            Path("topologies/krk_topology.json").resolve(),
+            Path("topologies/base/krk_legs_topology.json").resolve(),
+            Path("topologies/base/krk_topology.json").resolve(),
+        }
+        topology_path = requested_topology_path
+        if requested_topology_path.resolve() in base_topologies:
+            config.output_dir.mkdir(parents=True, exist_ok=True)
+            topology_path = config.output_dir / f"{requested_topology_path.stem}_run.json"
+            shutil.copy(requested_topology_path, topology_path)
+            print(f"  Fresh topology copy: {topology_path}")
+
+        registry = TopologyRegistry(topology_path)
         
         if HAS_BUILDER:
-            graph = build_graph_from_topology(config.topology_path)
+            graph = build_graph_from_topology(topology_path)
             print(f"  Graph loaded: {len(graph.nodes)} nodes")
         else:
             print("ERROR: Graph builder not available")
@@ -810,18 +1027,58 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
         # Initialize stem cells for M5
         if config.enable_m5 and HAS_STEM_CELL:
             # Lower reward threshold so more samples are collected
+            base_stem_min_samples = 30
+            base_stem_reward_threshold = 0.1
+            stage0_stem_min_samples = 10
+            stage0_stem_reward_threshold = 0.05
+
             stem_config = StemCellConfig(
-                min_samples=30, 
+                min_samples=base_stem_min_samples,
                 max_samples=500,
-                reward_threshold=0.1,  # Lowered from 0.3 to capture more positions
+                reward_threshold=base_stem_reward_threshold,
             )
-            stem_manager = StemCellManager(max_cells=config.max_trial_slots, config=stem_config, max_trial_slots=config.max_trial_slots)
-            
-            # Seed initial stem cells to start observing
-            initial_cells = 10
-            for _ in range(initial_cells):
+            stem_manager = StemCellManager(
+                max_cells=config.stem_cell_max_cells,
+                config=stem_config,
+                max_trial_slots=config.max_trial_slots,
+            )
+            stem_manager.feature_extractor = lambda board: extract_krk_features(board).to_vector()
+
+            # Stage 0: fewer explorers and faster sampling.
+            stage0_seed = 3 if curriculum.current_stage.name == "Mate_In_1" else 10
+            if curriculum.current_stage.name == "Mate_In_1":
+                stem_manager.default_config.min_samples = stage0_stem_min_samples
+                stem_manager.default_config.reward_threshold = stage0_stem_reward_threshold
+                stem_manager.feature_mask_indices = [1, 2, 3, 10]
+                stem_manager.feature_mask_size_range = (2, 3)
+                stem_manager.pattern_mode = "medoid"
+                stem_manager.stage_match_mode = "dot"
+                stem_manager.stage_goal_features = ["mate_delivered"]
+                stem_manager.stage_goal_match_mode = "dot"
+                stem_manager.stage_match_threshold = 0.0
+
+            for _ in range(stage0_seed):
                 stem_manager.spawn_cell()
-            
+
+            if curriculum.current_stage.name == "Mate_In_1":
+                for cell in stem_manager.cells.values():
+                    if "feature_mask" not in cell.metadata:
+                        mask = stem_manager._sample_feature_mask()
+                        if mask:
+                            cell.metadata["feature_mask"] = mask
+                    cell.metadata.setdefault("pattern_mode", stem_manager.pattern_mode)
+                    cell.metadata.setdefault("match_mode", stem_manager.stage_match_mode)
+                    cell.metadata.setdefault("goal_features", list(stem_manager.stage_goal_features or []))
+                    cell.metadata.setdefault("goal_match_mode", stem_manager.stage_goal_match_mode)
+                    cell.metadata.setdefault("threshold", stem_manager.stage_match_threshold)
+
+            stem_manager.metadata = {
+                "base_min_samples": base_stem_min_samples,
+                "base_reward_threshold": base_stem_reward_threshold,
+                "stage0_min_samples": stage0_stem_min_samples,
+                "stage0_reward_threshold": stage0_stem_reward_threshold,
+            }
+
             print(f"  M5 enabled: max_trial_slots={config.max_trial_slots}, seeded {len(stem_manager.cells)} cells")
     else:
         print(f"\nUsing SIMPLE heuristic mode for fast validation")
@@ -866,6 +1123,15 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
         start_stage_idx = curriculum.current_stage_id  # Track start position for advancement check
         stage = curriculum.current_stage
         stage_start_games = total_games
+
+        if stem_manager and hasattr(stem_manager, "default_config") and hasattr(stem_manager, "metadata"):
+            meta = getattr(stem_manager, "metadata", {})
+            if stage.name == "Mate_In_1":
+                stem_manager.default_config.min_samples = meta.get("stage0_min_samples", 10)
+                stem_manager.default_config.reward_threshold = meta.get("stage0_reward_threshold", 0.05)
+            else:
+                stem_manager.default_config.min_samples = meta.get("base_min_samples", 30)
+                stem_manager.default_config.reward_threshold = meta.get("base_reward_threshold", 0.1)
         cycle = 0
         win_rate_history = []  # Track last 10 cycles for plateau detection
         
@@ -899,10 +1165,19 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
             
             active_node_counts = {}  # Track which nodes fire
             
+            # Drill Mode state
+            current_fen = None
+            consecutive_wins = 0
+            
             for game_idx in range(config.games_per_cycle):
-                # Get position for current stage
-                board = curriculum.get_position()
-                starting_fen = board.fen()  # DEBUG: Capture starting position
+                # Select position
+                if config.drill_mode and current_fen:
+                    board = chess.Board(current_fen)
+                    # is_drill_repetition = True # Not used
+                else:
+                    board = curriculum.get_position()
+                    current_fen = board.fen()
+                    # is_drill_repetition = False # Not used
                 
                 # Play game based on mode
                 if config.mode == "recon" and engine and graph:
@@ -934,8 +1209,9 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                         )
                         
                         # Create episode summary
+                        # edge_delta_sums should reflect edge activity; outcome/reward is applied via delta_episode.
                         episode_summary = EpisodeSummary(
-                            edge_delta_sums={k: v * outcome_score for k, v in edge_activations.items()},
+                            edge_delta_sums=edge_activations,
                             outcome_score=outcome_score,
                             avg_reward_tick=reward,
                             total_reward_tick=reward,
@@ -964,6 +1240,18 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                         config=config,
                         stage=stage,
                     )
+                
+                # Drill Mode logic
+                if config.drill_mode:
+                    if result == "win":
+                        consecutive_wins += 1
+                    else:
+                        consecutive_wins = 0
+                    
+                    # Finish drill if mastered
+                    if consecutive_wins >= config.drill_wins_threshold:
+                        current_fen = None # New FEN next game
+                        consecutive_wins = 0
                 
                 # Progress indicator
                 if (game_idx + 1) % 10 == 0:
@@ -1101,14 +1389,19 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                         cumulative_stall_games = max(0, cumulative_stall_games - config.games_per_cycle // 2)  # Decay on success
                     
                     # Inject cumulative stall count into structure learner
-                    if hasattr(struct_learner, '_games_at_current_stage'):
-                        struct_learner._games_at_current_stage = cumulative_stall_games
+                    struct_learner._games_at_current_stage = cumulative_stall_games
+
                     
                     struct_result = struct_learner.apply_structural_phase(
                         stem_manager=stem_manager,
                         episodes=cycle_episodes,  # FIXED: Pass actual episodes for affordance spikes and POR discovery
                         max_promotions=3,
-                        parent_candidates=["krk_detect", "krk_execute", "krk_rook_leg", "krk_king_leg"],
+                        parent_candidates=[
+                            "krk_detect",
+                            "krk_execute",
+                            "krk_rook_leg",
+                            "krk_king_leg",
+                        ],
                         current_win_rate=win_rate,
                         mastered_sensors=mastered_sensors,  # BACKWARD CHAINING: previous stage sensors
                         current_stage_id=start_stage_idx,  # Current stage for chain lookup
@@ -1208,6 +1501,21 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                                         print(f"    🔗 POR CHAIN: {cut_id} → {king_id}")
                                     except Exception as e:
                                         pass  # POR may not be valid between these nodes
+
+                    # ================================================================
+                    # HOT RELOAD: Sync runtime graph with registry changes (TRIAL/pack nodes)
+                    # ================================================================
+                    if registry and graph and hasattr(graph, "refresh_bindings"):
+                        try:
+                            changes = graph.refresh_bindings(registry)
+                            if changes:
+                                added = sum(1 for status in changes.values() if status == "added")
+                                updated = sum(1 for status in changes.values() if status == "updated")
+                                print(f"    🔄 Graph refresh: +{added} nodes, {updated} updates")
+                                if hasattr(engine, "_subgraph_nodes_cache"):
+                                    engine._subgraph_nodes_cache.clear()
+                        except Exception as e:
+                            print(f"    ⚠ Graph refresh failed: {e}")
                     
                     # Compute branching metrics
                     metrics = compute_branching_metrics(graph)
@@ -1218,6 +1526,9 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                     
                     if promoted > 0 or hoisted > 0 or depth > 1:
                         print(f"    M5: +{promoted} TRIAL, +{hoisted} HOISTED, depth={depth}")
+                    elif struct_result.get("trial_errors"):
+                        sample_errors = struct_result["trial_errors"][:3]
+                        print(f"    M5: 0 TRIAL (examples: {', '.join(sample_errors)})")
                     
                     # Show stem cell stats
                     cell_stats = stem_manager.stats()
@@ -1252,9 +1563,14 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                     # Enables emergent discovery of temporal trends (e.g., shrinking box)
                     # ================================================================
                     if cycle > 2 and len(stem_manager.feature_variance) > 0:
+                        allow_recursive = win_rate < 0.2
+                        max_spawns = 4 if win_rate < 0.2 else 2
+                        min_variance = 0.03 if win_rate < 0.2 else 0.05
                         new_lags = stem_manager.spawn_lags_for_high_variance(
-                            min_variance=0.05,  # Lower threshold for chess features
-                            max_spawns=2,
+                            min_variance=min_variance,  # Lower threshold for chess features
+                            max_spawns=max_spawns,
+                            allow_recursive=allow_recursive,
+                            recursive_chance=0.6,
                         )
                         if new_lags:
                             print(f"    ⏱️ Temporal: +{len(new_lags)} lag terminals for high-variance features")
@@ -1285,7 +1601,7 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                     # Spawn new sensors if win rate is low (Stall Recovery)
                     # Only spawn every spawn_cooldown_cycles to prevent bloat
                     spawn_allowed = (cycle % config.spawn_cooldown_cycles == 0)
-                    if spawn_allowed and win_rate < 0.3 and len(stem_manager.cells) < config.max_trial_slots and HAS_KRK_FEATURES:
+                    if spawn_allowed and win_rate < 0.3 and len(stem_manager.cells) < config.stem_cell_max_cells and HAS_KRK_FEATURES:
                         # Spawn new stem cells
                         spawned = 0
                         for _ in range(3):  # Spawn up to 3 new sensors
@@ -1323,6 +1639,9 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                 except Exception:
                     pass
             
+            # Extract full topology for visualizer compatibility
+            topology = extract_topology_for_visualizer(graph, stem_manager)
+            
             snapshot_data = {
                 "stage_id": start_stage_idx,
                 "stage_name": stage.name,
@@ -1337,6 +1656,9 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                 # Consolidation weights for animation (like KPK epoch training)
                 "w_base": w_base,
                 "consolidation_applied": consolidation_engine.should_apply() if consolidation_engine else False,
+                # Full topology for evolution_visualizer / hierarchy_visualizer
+                "nodes": topology.get("nodes", {}),
+                "edges": topology.get("edges", {}),
             }
             snapshot_path.write_text(json.dumps(snapshot_data, indent=2))
             
@@ -1450,6 +1772,17 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
             print(f"Final weights snapshot saved to: {final_weights_path}")
         except Exception as e:
             print(f"Warning: Could not save consolidation state: {e}")
+
+    # Optionally promote the run topology to topologies/latest/
+    if config.promote_latest_topology and topology_path and requested_topology_path:
+        latest_dir = Path("topologies/latest")
+        latest_dir.mkdir(parents=True, exist_ok=True)
+        latest_path = latest_dir / requested_topology_path.name
+        try:
+            shutil.copy(topology_path, latest_path)
+            print(f"Latest topology updated: {latest_path}")
+        except Exception as e:
+            print(f"Warning: Could not update latest topology: {e}")
     
     # Final summary
     summary = {
@@ -1512,6 +1845,9 @@ def main():
                         help="Training mode: simple (heuristics) or recon (full engine)")
     parser.add_argument("--enable-m5", action="store_true",
                         help="Enable M5 structural learning (stem cells)")
+    parser.add_argument("--promote-latest-topology", action="store_true",
+                        help="Copy final topology to topologies/latest/")
+    parser.add_argument("--drill-mode", action="store_true", help="Repeat same FEN until solved")
     parser.add_argument("--quick", action="store_true",
                         help="Quick test mode (5 games, 3 cycles)")
     parser.add_argument("--profile", action="store_true",
@@ -1525,12 +1861,15 @@ def main():
         output_dir=args.output_dir,
         games_per_cycle=5 if args.quick else args.games_per_cycle,
         max_cycles_per_stage=3 if args.quick else args.max_cycles_per_stage,
+        max_moves_per_game=5 if args.quick else KRKCurriculumConfig().max_moves_per_game,
         win_rate_threshold=args.win_rate_threshold,
         min_games_per_stage=5 if args.quick else args.min_games_per_stage,
         min_internal_ticks=args.min_tick_depth,
         enable_gating=args.enable_gating,
         mode=args.mode,
         enable_m5=args.enable_m5,
+        promote_latest_topology=args.promote_latest_topology,
+        drill_mode=args.drill_mode,
     )
     
     # Run training (with optional profiling)
