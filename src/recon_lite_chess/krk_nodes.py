@@ -796,8 +796,27 @@ def create_krk_arbiter(nid: str) -> Node:
     log_stem_bonus = os.environ.get("LOG_STEM_BONUS", "0") == "1"
     
     def _predicate(node: Node, env: Dict[str, Any]):
+        graph = env.get("__graph__")
+        if not graph:
+            return True, True
+            
+        # WAIT for all children (Hub, Solver, etc.) to be CONFIRMED/TRUE
+        children = graph.children(nid)
+        all_done = True
+        for cid in children:
+            if graph.nodes[cid].state not in (NodeState.CONFIRMED, NodeState.TRUE):
+                all_done = False
+                break
+        
+        if not all_done:
+            # Stay WAITING to allow children (Hub, Solver, Actuators) to complete
+            return False, False
+
+        # Now that children are done, prioritize Goal Solver output
         goal_policy = env.get("krk", {}).get("goal_policy", {})
         if goal_policy.get("suggested_move"):
+            move = goal_policy.get("suggested_move")
+            _set_suggested_move(env, move)
             node.meta["winner"] = "goal_solver"
             node.meta["reason"] = "goal_policy"
             node.meta["rook_activation"] = 0.0

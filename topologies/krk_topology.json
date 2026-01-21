@@ -170,14 +170,18 @@
       "type": "SCRIPT",
       "group": "backbone",
       "factory": "recon_lite_chess.goal_actuators:create_goal_actuator_hub",
-      "meta": {}
+      "meta": {
+        "subgraph": "krk"
+      }
     },
     {
       "id": "krk_goal_solver",
       "type": "SCRIPT",
       "group": "backbone",
       "factory": "recon_lite_chess.goal_actuators:create_goal_solver",
-      "meta": {}
+      "meta": {
+        "subgraph": "krk"
+      }
     },
     {
       "id": "p0_check",

@@ -617,6 +617,14 @@ def play_krk_game_recon(
                         features_after = stem_manager.feature_extractor(board)
                         fen_before = pre_move_board.fen()
                         
+                        # Compute goal deltas if possible (Uses GLOBAL imports)
+                        goal_deltas = None
+                        if HAS_GOAL_ACTUATORS and compute_goal_feature_deltas:
+                            try:
+                                goal_deltas = compute_goal_feature_deltas(pre_move_board, move, DEFAULT_GOAL_FEATURES)
+                            except Exception:
+                                pass
+
                         # Store transition in all active stem cells
                         for cell_id, cell in stem_manager.cells.items():
                             if cell.state in (StemCellState.EXPLORING, StemCellState.TRIAL):
@@ -625,7 +633,8 @@ def play_krk_game_recon(
                                     features_after=features_after,
                                     reward=1.0,
                                     fen_before=fen_before,
-                                    tick=game_tick
+                                    tick=game_tick,
+                                    goal_deltas=goal_deltas
                                 )
                     except Exception:
                         pass  # Skip on error
@@ -1053,8 +1062,14 @@ def run_krk_curriculum(config: KRKCurriculumConfig) -> Dict[str, Any]:
                 stem_manager.feature_mask_size_range = (2, 3)
                 stem_manager.pattern_mode = "medoid"
                 stem_manager.stage_match_mode = "dot"
-                stem_manager.stage_goal_features = ["mate_delivered"]
-                stem_manager.stage_goal_match_mode = "dot"
+                stem_manager.stage_goal_features = [
+                    "box_area_delta",
+                    "king_distance_delta",
+                    "opposition_gain",
+                    "safe_check",
+                    "mate_delivered",
+                ]
+                stem_manager.stage_goal_match_mode = "l2"
                 stem_manager.stage_match_threshold = 0.0
 
             for _ in range(stage0_seed):

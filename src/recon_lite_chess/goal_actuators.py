@@ -40,6 +40,7 @@ DEFAULT_GOAL_FEATURES = [
     "king_distance_delta",
     "opposition_gain",
     "safe_check",
+    "mate_delivered",
 ]
 
 FEATURE_SCALES = {
@@ -198,6 +199,8 @@ def create_goal_actuator_hub(nid: str) -> Node:
 
 def create_goal_actuator(nid: str) -> Node:
     def _predicate(node: Node, env: Dict[str, Any]):
+        import os
+        import chess
         signature = node.meta.get("pattern_signature")
         features = env.get("features")
         stem_manager = env.get("__stem_manager__")
@@ -223,6 +226,11 @@ def create_goal_actuator(nid: str) -> Node:
         activation = similarity if matched else 0.0
         node.meta["activation"] = activation
 
+        if os.environ.get("LOG_KRK_POLICY") == "1" and matched:
+            goal_vector = node.meta.get("goal_vector")
+            gv_str = f"{goal_vector[:3]}..." if goal_vector and len(goal_vector) > 3 else str(goal_vector)
+            print(f"      🎯 Goal Actuator {node.nid} matched! sim={similarity:.2f} gv={gv_str}")
+        
         if matched:
             goal_features = node.meta.get("goal_features") or DEFAULT_GOAL_FEATURES
             goal_vector = node.meta.get("goal_vector")
@@ -269,11 +277,16 @@ def create_goal_actuator(nid: str) -> Node:
 
 def create_goal_solver(nid: str) -> Node:
     def _predicate(node: Node, env: Dict[str, Any]):
+        import os
+        import chess
         board = env.get("board")
         proposals = env.get("krk", {}).get("actuator_proposals", [])
         if not board:
             return True, True
 
+        if os.environ.get("LOG_KRK_POLICY") == "1":
+            print(f"      🔍 Goal Solver running... tick {env.get('tick')}, probes={len(proposals)}")
+        
         if not proposals:
             waits = env.setdefault("krk", {}).get("goal_solver_waits", 0)
             waits += 1
@@ -299,9 +312,16 @@ def create_goal_solver(nid: str) -> Node:
                 consistency = max(0.0, min(getattr(cell, "trial_consistency", 1.0), 1.0))
 
             score = activation * (0.5 + 0.5 * xp_weight) * (0.5 + 0.5 * consistency)
+            
+            if os.environ.get("LOG_KRK_POLICY") == "1":
+                print(f"        - Prop {prop.get('node_id')}: activation={activation:.2f}, xp={xp_weight:.2f}, cons={consistency:.2f} -> score={score:.2f}")
+
             if best_score is None or score > best_score:
                 best_score = score
                 best = prop
+
+        if os.environ.get("LOG_KRK_POLICY") == "1" and best:
+            print(f"      🏆 Goal Solver selected {best.get('node_id')} (score={best_score:.2f})")
 
         if best is None:
             return True, True
@@ -333,6 +353,12 @@ def create_goal_solver(nid: str) -> Node:
         env.setdefault("krk", {}).setdefault("policy", {})["suggested_move"] = move.uci()
 
         krk_state = env.setdefault("krk", {})
+        if os.environ.get("LOG_KRK_POLICY") == "1":
+            print(
+                f"      🏆 Goal Solver selected {best.get('node_id')} (score={best_score:.2f}) "
+                f"-> suggested move {move.uci()} (move_score={move_score:.2f})"
+            )
+        
         krk_state["goal_policy"] = {
             "suggested_move": move.uci(),
             "move_score": move_score,

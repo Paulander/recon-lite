@@ -123,6 +123,7 @@ class StemCellSample:
     # Delta-based learning: store before/after features for transitions
     features_before: Optional[List[float]] = None
     features_after: Optional[List[float]] = None
+    goal_deltas: Optional[Dict[str, float]] = None
     is_transition: bool = False
     
     def to_dict(self) -> Dict[str, Any]:
@@ -134,6 +135,7 @@ class StemCellSample:
             "metadata": self.metadata,
             "features_before": self.features_before,
             "features_after": self.features_after,
+            "goal_deltas": self.goal_deltas,
             "is_transition": self.is_transition,
         }
     
@@ -147,6 +149,7 @@ class StemCellSample:
             metadata=data.get("metadata", {}),
             features_before=data.get("features_before"),
             features_after=data.get("features_after"),
+            goal_deltas=data.get("goal_deltas"),
             is_transition=data.get("is_transition", False),
         )
 
@@ -457,7 +460,7 @@ class StemCellTerminal:
         self.pattern_centroid = self.pattern_signature
         return float(consistency), self.pattern_signature
     
-    def analyze_pattern_delta_based(self) -> Tuple[float, Optional[List[float]]]:
+    def analyze_pattern_delta_based(self) -> Tuple[float, Optional[List[float]], Optional[Any]]:
         """
         Compute consistency based on terminal output DELTAS, not centroids.
         
@@ -467,7 +470,7 @@ class StemCellTerminal:
         - Consistency = how stable Δs is across different transitions (low variance)
         
         Returns:
-            (consistency_score, median_delta_value)
+            (consistency_score, state_signature, mean_delta_value)
         """
         if not self.samples:
             return 0.0, None
@@ -476,7 +479,8 @@ class StemCellTerminal:
         transitions = [s for s in self.samples if s.is_transition and s.features_before and s.features_after]
         if len(transitions) < 3:
             # Not enough transitions, fall back to centroid method
-            return self.analyze_pattern()
+            c, s = self.analyze_pattern()
+            return c, s, None
         
         # Compute deltas for each transition
         deltas = []
@@ -517,8 +521,32 @@ class StemCellTerminal:
             cv = std_dev / abs(mean_delta)
             consistency = 1.0 / (1.0 + cv)
         
-        # Store mean delta as the "signature" for this terminal
-        return consistency, mean_delta
+        # Compute state centroid from features_before
+        before_rows = [s.features_before for s in transitions]
+        num_feats = len(before_rows[0])
+        state_centroid = [
+            sum(row[i] for row in before_rows) / len(before_rows)
+            for i in range(num_feats)
+        ]
+        
+        # Compute mean GOAL VECTOR from goal_deltas
+        all_goal_deltas = [s.goal_deltas for s in transitions if s.goal_deltas]
+        goal_vector = None
+        if all_goal_deltas:
+            # Use cell-specific features if available, else global default
+            from recon_lite_chess.goal_actuators import DEFAULT_GOAL_FEATURES
+            goal_features = self.metadata.get("goal_features") or DEFAULT_GOAL_FEATURES
+            
+            goal_vector = []
+            for feat in goal_features:
+                feat_vals = [d.get(feat, 0.0) for d in all_goal_deltas]
+                goal_vector.append(sum(feat_vals) / len(feat_vals))
+
+        # Store state centroid for future matching
+        self.pattern_centroid = state_centroid
+        self.pattern_signature = state_centroid
+        
+        return consistency, state_centroid, goal_vector
     
     def observe_transition(
         self,
@@ -526,7 +554,8 @@ class StemCellTerminal:
         features_after: List[float],
         reward: float,
         fen_before: str,
-        tick: int
+        tick: int,
+        goal_deltas: Optional[Dict[str, float]] = None,
     ) -> bool:
         """
         Observe a state transition for delta-based learning.
@@ -534,9 +563,10 @@ class StemCellTerminal:
         Args:
             features_before: Feature vector before the transition
             features_after: Feature vector after the transition
-            reward: Reward signal (1.0 for mate, 0.0 otherwise)
+            reward: Reward signal
             fen_before: FEN string before the transition
             tick: Current tick
+            goal_deltas: Vector of environment deltas (box_area, etc.)
             
         Returns:
             True if sample was stored
@@ -551,6 +581,7 @@ class StemCellTerminal:
             tick=tick,
             features_before=features_before,
             features_after=features_after,
+            goal_deltas=goal_deltas,
             is_transition=True
         )
         
@@ -2552,6 +2583,7 @@ class StemCellManager:
                 "cell_id": cell.cell_id,
                 "source_trial_node": cell.trial_node_id,
                 "subgraph": "krk",
+                "threshold": 0.5,
             },
         }
         feature_mask = cell.metadata.get("feature_mask")
@@ -2569,6 +2601,9 @@ class StemCellManager:
         goal_weights = cell.metadata.get("goal_weights")
         if goal_weights:
             node_spec["meta"]["goal_weights"] = list(goal_weights)
+        goal_vector = cell.metadata.get("goal_vector")
+        if goal_vector:
+            node_spec["meta"]["goal_vector"] = list(goal_vector)
         goal_match_mode = cell.metadata.get("goal_match_mode")
         if goal_match_mode:
             node_spec["meta"]["goal_match_mode"] = goal_match_mode

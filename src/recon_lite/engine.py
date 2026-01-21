@@ -537,13 +537,17 @@ class ReConEngine:
         return old_lock
     
     def _get_subgraph_nodes(self, root_id: str) -> Set[str]:
-        """Get all node IDs belonging to a subgraph (cached).
+        """Get all node IDs belonging to a subgraph.
         
         Uses both metadata 'subgraph' field and node ID prefix matching.
         E.g., for root_id='kpk_root', prefix='kpk_' matches 'kpk_move_selector'.
+        
+        NOTE: Caching is disabled because nodes are added dynamically during 
+        training (e.g., goal actuators). A stale cache would exclude new nodes.
         """
-        if root_id in self._subgraph_nodes_cache:
-            return self._subgraph_nodes_cache[root_id]
+        # Cache disabled - nodes are added dynamically
+        # if root_id in self._subgraph_nodes_cache:
+        #     return self._subgraph_nodes_cache[root_id]
         
         root_node = self.g.nodes.get(root_id)
         if not root_node:
@@ -600,11 +604,15 @@ class ReConEngine:
         min_ticks = self.subgraph_lock.min_internal_ticks
         
         for internal_tick in range(self.subgraph_lock.max_internal_ticks):
+            # CRITICAL: Request children BEFORE running predicates
+            # This ensures script nodes can request their children before their
+            # predicate runs and transitions them to TRUE/CONFIRMED.
+            # Without this, fast predicates (like goal_actuator_hub returning True,True)
+            # would transition before their children were ever requested.
+            self._process_script_requests_subset(now_requested, subgraph_nodes)
+            
             # Update only subgraph node predicates
             self._update_predicates_subset(env, now_requested, subgraph_nodes)
-            
-            # Process only subgraph script requests
-            self._process_script_requests_subset(now_requested, subgraph_nodes)
             
             # Confirm only subgraph scripts
             self._confirm_script_completions_subset(subgraph_nodes)

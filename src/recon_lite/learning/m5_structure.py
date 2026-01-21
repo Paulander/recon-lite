@@ -1282,6 +1282,7 @@ class StructureLearner:
                     "consistency": consistency,
                     "sample_count": len(cell.samples),
                     "avg_reward": sum(s.reward for s in cell.samples) / len(cell.samples) if cell.samples else 0,
+                    "threshold": 0.5,
                 }
             }
             
@@ -1589,8 +1590,10 @@ class StructureLearner:
                 or sample_bypass
             )
             
-            # Check if ready for trial - EXPANSION: lowered to 0.40
-            consistency, _ = cell.analyze_pattern()
+            # Check if ready for trial - Delta-based analysis
+            consistency, signature, goal = cell.analyze_pattern_delta_based()
+            if goal:
+                cell.metadata["goal_vector"] = goal
             
             if not bypass_enabled and consistency < 0.40:
                 trial_errors.append(f"{cell.cell_id}: consistency {consistency:.2f} < 0.40")
