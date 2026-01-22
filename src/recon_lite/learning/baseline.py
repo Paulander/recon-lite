@@ -460,8 +460,11 @@ def spawn_sensor(id: int,
     feature_mask = np.zeros(feature_dim, dtype=bool)
     feature_mask[chosen_indices] = True
     
-    # Random readout type
-    readout_type = np.random.choice(["identity", "sum", "mean", "min", "max", "threshold"])
+    # Random readout type (identity only for single features)
+    if mask_size == 1:
+        readout_type = "identity"
+    else:
+        readout_type = np.random.choice(["sum", "mean", "min", "max", "threshold"])
     
     # Readout params (if needed)
     readout_params = {}
@@ -471,13 +474,9 @@ def spawn_sensor(id: int,
     # Create sensor spec
     spec = SensorSpec(
         feature_mask=feature_mask,
-        readout_type=readout_type if mask_size > 1 or readout_type != "identity" else "identity",
+        readout_type=readout_type,
         readout_params=readout_params
     )
-    
-    # Force identity for single-feature masks
-    if mask_size == 1:
-        spec.readout_type = "identity"
     
     # Create terminal
     return Terminal(
@@ -549,9 +548,11 @@ class BaselineLearner:
         """
         # Check if similar goal already exists
         for goal in self.goal_memories:
-            if goal.label == label and np.allclose(goal.s0, s0, atol=0.1):
-                goal.count += 1
-                return goal
+            # Only compare if shapes match (same number of mature sensors)
+            if goal.label == label and goal.s0.shape == s0.shape:
+                if np.allclose(goal.s0, s0, atol=0.1):
+                    goal.count += 1
+                    return goal
         
         # Create new goal
         goal = GoalMemory(
