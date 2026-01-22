@@ -1,0 +1,2064 @@
+{
+  "nodes": {
+    "krk_entry": {
+      "id": "krk_entry",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_krk_entry_root",
+      "meta": {
+        "blackboard": {},
+        "description": "KRK entry point with feature extraction"
+      }
+    },
+    "krk_hub": {
+      "id": "krk_hub",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_krk_hub",
+      "meta": {
+        "bandit_enabled": true,
+        "description": "Bandit selector for Leg alternatives"
+      }
+    },
+    "leg_0": {
+      "id": "leg_0",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_leg_script",
+      "meta": {
+        "actuator_id": 0,
+        "description": "Leg for actuator pattern 0"
+      }
+    },
+    "precond_0": {
+      "id": "precond_0",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
+      "meta": {
+        "aggregation": "and",
+        "description": "Precondition sensors must all fire"
+      }
+    },
+    "sensor_6": {
+      "id": "sensor_6",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "min",
+        "feature_mask_keys": [
+          "feature_1",
+          "feature_7",
+          "feature_11",
+          "feature_12"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "sensor_7": {
+      "id": "sensor_7",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "min",
+        "feature_mask_keys": [
+          "feature_1",
+          "feature_2",
+          "feature_3",
+          "feature_8"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "sensor_11": {
+      "id": "sensor_11",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "identity",
+        "feature_mask_keys": [
+          "feature_8"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "sensor_18": {
+      "id": "sensor_18",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "identity",
+        "feature_mask_keys": [
+          "feature_7"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "sensor_19": {
+      "id": "sensor_19",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "threshold",
+        "feature_mask_keys": [
+          "feature_0",
+          "feature_6",
+          "feature_10"
+        ],
+        "readout_params": {
+          "threshold": 0.34730916417096314
+        },
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "actuator_0": {
+      "id": "actuator_0",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_actuator_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 1.5,
+        "targets": [
+          "sensor_6",
+          "sensor_7",
+          "sensor_11",
+          "sensor_18",
+          "sensor_19"
+        ],
+        "goal_delta": {
+          "sensor_6": -0.2,
+          "sensor_7": 0.2,
+          "sensor_11": 0.37,
+          "sensor_18": -0.98,
+          "sensor_19": -1.03
+        },
+        "match_mode": "cosine",
+        "activations": 1000,
+        "cycles_alive": 50
+      }
+    },
+    "postcond_0": {
+      "id": "postcond_0",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
+      "meta": {
+        "aggregation": "and",
+        "description": "Postcondition verification"
+      }
+    },
+    "sensor_6_post_0": {
+      "id": "sensor_6_post_0",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "min",
+        "feature_mask_keys": [
+          "feature_1",
+          "feature_7",
+          "feature_11",
+          "feature_12"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "sensor_7_post_0": {
+      "id": "sensor_7_post_0",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "min",
+        "feature_mask_keys": [
+          "feature_1",
+          "feature_2",
+          "feature_3",
+          "feature_8"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "sensor_11_post_0": {
+      "id": "sensor_11_post_0",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "identity",
+        "feature_mask_keys": [
+          "feature_8"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "sensor_18_post_0": {
+      "id": "sensor_18_post_0",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "identity",
+        "feature_mask_keys": [
+          "feature_7"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "sensor_19_post_0": {
+      "id": "sensor_19_post_0",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "threshold",
+        "feature_mask_keys": [
+          "feature_0",
+          "feature_6",
+          "feature_10"
+        ],
+        "readout_params": {
+          "threshold": 0.34730916417096314
+        },
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "leg_1": {
+      "id": "leg_1",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_leg_script",
+      "meta": {
+        "actuator_id": 1,
+        "description": "Leg for actuator pattern 1"
+      }
+    },
+    "precond_1": {
+      "id": "precond_1",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
+      "meta": {
+        "aggregation": "and",
+        "description": "Precondition sensors must all fire"
+      }
+    },
+    "sensor_20": {
+      "id": "sensor_20",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "sum",
+        "feature_mask_keys": [
+          "feature_0",
+          "feature_2",
+          "feature_9",
+          "feature_11"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "actuator_1": {
+      "id": "actuator_1",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_actuator_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 1.5,
+        "targets": [
+          "sensor_6",
+          "sensor_7",
+          "sensor_11",
+          "sensor_19",
+          "sensor_20"
+        ],
+        "goal_delta": {
+          "sensor_6": -0.25,
+          "sensor_7": 0.29,
+          "sensor_11": -0.81,
+          "sensor_19": -1.0,
+          "sensor_20": -1.0
+        },
+        "match_mode": "cosine",
+        "activations": 1000,
+        "cycles_alive": 50
+      }
+    },
+    "postcond_1": {
+      "id": "postcond_1",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
+      "meta": {
+        "aggregation": "and",
+        "description": "Postcondition verification"
+      }
+    },
+    "sensor_6_post_1": {
+      "id": "sensor_6_post_1",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "min",
+        "feature_mask_keys": [
+          "feature_1",
+          "feature_7",
+          "feature_11",
+          "feature_12"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "sensor_7_post_1": {
+      "id": "sensor_7_post_1",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "min",
+        "feature_mask_keys": [
+          "feature_1",
+          "feature_2",
+          "feature_3",
+          "feature_8"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "sensor_11_post_1": {
+      "id": "sensor_11_post_1",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "identity",
+        "feature_mask_keys": [
+          "feature_8"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "sensor_19_post_1": {
+      "id": "sensor_19_post_1",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "threshold",
+        "feature_mask_keys": [
+          "feature_0",
+          "feature_6",
+          "feature_10"
+        ],
+        "readout_params": {
+          "threshold": 0.34730916417096314
+        },
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "sensor_20_post_1": {
+      "id": "sensor_20_post_1",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "sum",
+        "feature_mask_keys": [
+          "feature_0",
+          "feature_2",
+          "feature_9",
+          "feature_11"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "leg_2": {
+      "id": "leg_2",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_leg_script",
+      "meta": {
+        "actuator_id": 2,
+        "description": "Leg for actuator pattern 2"
+      }
+    },
+    "precond_2": {
+      "id": "precond_2",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
+      "meta": {
+        "aggregation": "and",
+        "description": "Precondition sensors must all fire"
+      }
+    },
+    "actuator_2": {
+      "id": "actuator_2",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_actuator_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 1.5,
+        "targets": [
+          "sensor_6",
+          "sensor_7",
+          "sensor_19",
+          "sensor_20"
+        ],
+        "goal_delta": {
+          "sensor_6": 0.29,
+          "sensor_7": -0.81,
+          "sensor_19": -1.0,
+          "sensor_20": -1.0
+        },
+        "match_mode": "cosine",
+        "activations": 1000,
+        "cycles_alive": 50
+      }
+    },
+    "postcond_2": {
+      "id": "postcond_2",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
+      "meta": {
+        "aggregation": "and",
+        "description": "Postcondition verification"
+      }
+    },
+    "sensor_6_post_2": {
+      "id": "sensor_6_post_2",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "min",
+        "feature_mask_keys": [
+          "feature_1",
+          "feature_7",
+          "feature_11",
+          "feature_12"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "sensor_7_post_2": {
+      "id": "sensor_7_post_2",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "min",
+        "feature_mask_keys": [
+          "feature_1",
+          "feature_2",
+          "feature_3",
+          "feature_8"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "sensor_19_post_2": {
+      "id": "sensor_19_post_2",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "threshold",
+        "feature_mask_keys": [
+          "feature_0",
+          "feature_6",
+          "feature_10"
+        ],
+        "readout_params": {
+          "threshold": 0.34730916417096314
+        },
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "sensor_20_post_2": {
+      "id": "sensor_20_post_2",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "sum",
+        "feature_mask_keys": [
+          "feature_0",
+          "feature_2",
+          "feature_9",
+          "feature_11"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "leg_3": {
+      "id": "leg_3",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_leg_script",
+      "meta": {
+        "actuator_id": 3,
+        "description": "Leg for actuator pattern 3"
+      }
+    },
+    "precond_3": {
+      "id": "precond_3",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
+      "meta": {
+        "aggregation": "and",
+        "description": "Precondition sensors must all fire"
+      }
+    },
+    "actuator_3": {
+      "id": "actuator_3",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_actuator_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 1.5,
+        "targets": [
+          "sensor_6",
+          "sensor_7",
+          "sensor_18",
+          "sensor_19"
+        ],
+        "goal_delta": {
+          "sensor_6": 0.25,
+          "sensor_7": 0.38,
+          "sensor_18": -1.0,
+          "sensor_19": -1.0
+        },
+        "match_mode": "cosine",
+        "activations": 1000,
+        "cycles_alive": 50
+      }
+    },
+    "postcond_3": {
+      "id": "postcond_3",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
+      "meta": {
+        "aggregation": "and",
+        "description": "Postcondition verification"
+      }
+    },
+    "sensor_6_post_3": {
+      "id": "sensor_6_post_3",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "min",
+        "feature_mask_keys": [
+          "feature_1",
+          "feature_7",
+          "feature_11",
+          "feature_12"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "sensor_7_post_3": {
+      "id": "sensor_7_post_3",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "min",
+        "feature_mask_keys": [
+          "feature_1",
+          "feature_2",
+          "feature_3",
+          "feature_8"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "sensor_18_post_3": {
+      "id": "sensor_18_post_3",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "identity",
+        "feature_mask_keys": [
+          "feature_7"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "sensor_19_post_3": {
+      "id": "sensor_19_post_3",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "threshold",
+        "feature_mask_keys": [
+          "feature_0",
+          "feature_6",
+          "feature_10"
+        ],
+        "readout_params": {
+          "threshold": 0.34730916417096314
+        },
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "leg_4": {
+      "id": "leg_4",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_leg_script",
+      "meta": {
+        "actuator_id": 4,
+        "description": "Leg for actuator pattern 4"
+      }
+    },
+    "precond_4": {
+      "id": "precond_4",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
+      "meta": {
+        "aggregation": "and",
+        "description": "Precondition sensors must all fire"
+      }
+    },
+    "actuator_4": {
+      "id": "actuator_4",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_actuator_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 1.5,
+        "targets": [
+          "sensor_6",
+          "sensor_19",
+          "sensor_20"
+        ],
+        "goal_delta": {
+          "sensor_6": -0.81,
+          "sensor_19": -1.0,
+          "sensor_20": -1.0
+        },
+        "match_mode": "cosine",
+        "activations": 1000,
+        "cycles_alive": 50
+      }
+    },
+    "postcond_4": {
+      "id": "postcond_4",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
+      "meta": {
+        "aggregation": "and",
+        "description": "Postcondition verification"
+      }
+    },
+    "sensor_6_post_4": {
+      "id": "sensor_6_post_4",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "min",
+        "feature_mask_keys": [
+          "feature_1",
+          "feature_7",
+          "feature_11",
+          "feature_12"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "sensor_19_post_4": {
+      "id": "sensor_19_post_4",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "threshold",
+        "feature_mask_keys": [
+          "feature_0",
+          "feature_6",
+          "feature_10"
+        ],
+        "readout_params": {
+          "threshold": 0.34730916417096314
+        },
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "sensor_20_post_4": {
+      "id": "sensor_20_post_4",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "sum",
+        "feature_mask_keys": [
+          "feature_0",
+          "feature_2",
+          "feature_9",
+          "feature_11"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "leg_5": {
+      "id": "leg_5",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_leg_script",
+      "meta": {
+        "actuator_id": 5,
+        "description": "Leg for actuator pattern 5"
+      }
+    },
+    "precond_5": {
+      "id": "precond_5",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
+      "meta": {
+        "aggregation": "and",
+        "description": "Precondition sensors must all fire"
+      }
+    },
+    "actuator_5": {
+      "id": "actuator_5",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_actuator_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 1.5,
+        "targets": [
+          "sensor_7",
+          "sensor_11",
+          "sensor_18",
+          "sensor_19",
+          "sensor_20"
+        ],
+        "goal_delta": {
+          "sensor_7": 0.2,
+          "sensor_11": 0.37,
+          "sensor_18": -0.98,
+          "sensor_19": -1.03,
+          "sensor_20": -1.0
+        },
+        "match_mode": "cosine",
+        "activations": 1000,
+        "cycles_alive": 50
+      }
+    },
+    "postcond_5": {
+      "id": "postcond_5",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
+      "meta": {
+        "aggregation": "and",
+        "description": "Postcondition verification"
+      }
+    },
+    "sensor_7_post_5": {
+      "id": "sensor_7_post_5",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "min",
+        "feature_mask_keys": [
+          "feature_1",
+          "feature_2",
+          "feature_3",
+          "feature_8"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "sensor_11_post_5": {
+      "id": "sensor_11_post_5",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "identity",
+        "feature_mask_keys": [
+          "feature_8"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "sensor_18_post_5": {
+      "id": "sensor_18_post_5",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "identity",
+        "feature_mask_keys": [
+          "feature_7"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "sensor_19_post_5": {
+      "id": "sensor_19_post_5",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "threshold",
+        "feature_mask_keys": [
+          "feature_0",
+          "feature_6",
+          "feature_10"
+        ],
+        "readout_params": {
+          "threshold": 0.34730916417096314
+        },
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "sensor_20_post_5": {
+      "id": "sensor_20_post_5",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "sum",
+        "feature_mask_keys": [
+          "feature_0",
+          "feature_2",
+          "feature_9",
+          "feature_11"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "leg_6": {
+      "id": "leg_6",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_leg_script",
+      "meta": {
+        "actuator_id": 6,
+        "description": "Leg for actuator pattern 6"
+      }
+    },
+    "precond_6": {
+      "id": "precond_6",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
+      "meta": {
+        "aggregation": "and",
+        "description": "Precondition sensors must all fire"
+      }
+    },
+    "actuator_6": {
+      "id": "actuator_6",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_actuator_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 1.5,
+        "targets": [
+          "sensor_6",
+          "sensor_11",
+          "sensor_18",
+          "sensor_19"
+        ],
+        "goal_delta": {
+          "sensor_6": -0.2,
+          "sensor_11": 0.37,
+          "sensor_18": -0.98,
+          "sensor_19": -1.03
+        },
+        "match_mode": "cosine",
+        "activations": 1000,
+        "cycles_alive": 50
+      }
+    },
+    "postcond_6": {
+      "id": "postcond_6",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
+      "meta": {
+        "aggregation": "and",
+        "description": "Postcondition verification"
+      }
+    },
+    "sensor_6_post_6": {
+      "id": "sensor_6_post_6",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "min",
+        "feature_mask_keys": [
+          "feature_1",
+          "feature_7",
+          "feature_11",
+          "feature_12"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "sensor_11_post_6": {
+      "id": "sensor_11_post_6",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "identity",
+        "feature_mask_keys": [
+          "feature_8"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "sensor_18_post_6": {
+      "id": "sensor_18_post_6",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "identity",
+        "feature_mask_keys": [
+          "feature_7"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "sensor_19_post_6": {
+      "id": "sensor_19_post_6",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "threshold",
+        "feature_mask_keys": [
+          "feature_0",
+          "feature_6",
+          "feature_10"
+        ],
+        "readout_params": {
+          "threshold": 0.34730916417096314
+        },
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "leg_7": {
+      "id": "leg_7",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_leg_script",
+      "meta": {
+        "actuator_id": 7,
+        "description": "Leg for actuator pattern 7"
+      }
+    },
+    "precond_7": {
+      "id": "precond_7",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
+      "meta": {
+        "aggregation": "and",
+        "description": "Precondition sensors must all fire"
+      }
+    },
+    "actuator_7": {
+      "id": "actuator_7",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_actuator_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 1.5,
+        "targets": [
+          "sensor_7",
+          "sensor_18",
+          "sensor_19",
+          "sensor_20"
+        ],
+        "goal_delta": {
+          "sensor_7": 0.38,
+          "sensor_18": -1.0,
+          "sensor_19": -1.0,
+          "sensor_20": -1.0
+        },
+        "match_mode": "cosine",
+        "activations": 1000,
+        "cycles_alive": 50
+      }
+    },
+    "postcond_7": {
+      "id": "postcond_7",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
+      "meta": {
+        "aggregation": "and",
+        "description": "Postcondition verification"
+      }
+    },
+    "sensor_7_post_7": {
+      "id": "sensor_7_post_7",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "min",
+        "feature_mask_keys": [
+          "feature_1",
+          "feature_2",
+          "feature_3",
+          "feature_8"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "sensor_18_post_7": {
+      "id": "sensor_18_post_7",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "identity",
+        "feature_mask_keys": [
+          "feature_7"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "sensor_19_post_7": {
+      "id": "sensor_19_post_7",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "threshold",
+        "feature_mask_keys": [
+          "feature_0",
+          "feature_6",
+          "feature_10"
+        ],
+        "readout_params": {
+          "threshold": 0.34730916417096314
+        },
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    },
+    "sensor_20_post_7": {
+      "id": "sensor_20_post_7",
+      "type": "TERMINAL",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
+      "meta": {
+        "origin": "baseline",
+        "stage": 0,
+        "baseline_xp": 0.8,
+        "readout_type": "sum",
+        "feature_mask_keys": [
+          "feature_0",
+          "feature_2",
+          "feature_9",
+          "feature_11"
+        ],
+        "readout_params": {},
+        "is_mature": true,
+        "activations": 20000,
+        "cycles_alive": 50
+      }
+    }
+  },
+  "edges": [
+    {
+      "source": "krk_entry",
+      "target": "krk_hub",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "krk_hub",
+      "target": "leg_0",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "leg_0",
+      "target": "precond_0",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_0",
+      "target": "sensor_6",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_0",
+      "target": "sensor_7",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_0",
+      "target": "sensor_11",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_0",
+      "target": "sensor_18",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_0",
+      "target": "sensor_19",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "leg_0",
+      "target": "actuator_0",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_0",
+      "target": "actuator_0",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "source": "actuator_0",
+      "target": "precond_0",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "source": "leg_0",
+      "target": "postcond_0",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "actuator_0",
+      "target": "postcond_0",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_0",
+      "target": "actuator_0",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_0",
+      "target": "sensor_6_post_0",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_0",
+      "target": "sensor_7_post_0",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_0",
+      "target": "sensor_11_post_0",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_0",
+      "target": "sensor_18_post_0",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_0",
+      "target": "sensor_19_post_0",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "krk_hub",
+      "target": "leg_1",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "leg_1",
+      "target": "precond_1",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_1",
+      "target": "sensor_6",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_1",
+      "target": "sensor_7",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_1",
+      "target": "sensor_11",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_1",
+      "target": "sensor_19",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_1",
+      "target": "sensor_20",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "leg_1",
+      "target": "actuator_1",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_1",
+      "target": "actuator_1",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "source": "actuator_1",
+      "target": "precond_1",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "source": "leg_1",
+      "target": "postcond_1",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "actuator_1",
+      "target": "postcond_1",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_1",
+      "target": "actuator_1",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_1",
+      "target": "sensor_6_post_1",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_1",
+      "target": "sensor_7_post_1",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_1",
+      "target": "sensor_11_post_1",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_1",
+      "target": "sensor_19_post_1",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_1",
+      "target": "sensor_20_post_1",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "krk_hub",
+      "target": "leg_2",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "leg_2",
+      "target": "precond_2",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_2",
+      "target": "sensor_6",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_2",
+      "target": "sensor_7",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_2",
+      "target": "sensor_19",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_2",
+      "target": "sensor_20",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "leg_2",
+      "target": "actuator_2",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_2",
+      "target": "actuator_2",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "source": "actuator_2",
+      "target": "precond_2",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "source": "leg_2",
+      "target": "postcond_2",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "actuator_2",
+      "target": "postcond_2",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_2",
+      "target": "actuator_2",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_2",
+      "target": "sensor_6_post_2",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_2",
+      "target": "sensor_7_post_2",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_2",
+      "target": "sensor_19_post_2",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_2",
+      "target": "sensor_20_post_2",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "krk_hub",
+      "target": "leg_3",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "leg_3",
+      "target": "precond_3",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_3",
+      "target": "sensor_6",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_3",
+      "target": "sensor_7",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_3",
+      "target": "sensor_18",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_3",
+      "target": "sensor_19",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "leg_3",
+      "target": "actuator_3",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_3",
+      "target": "actuator_3",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "source": "actuator_3",
+      "target": "precond_3",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "source": "leg_3",
+      "target": "postcond_3",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "actuator_3",
+      "target": "postcond_3",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_3",
+      "target": "actuator_3",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_3",
+      "target": "sensor_6_post_3",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_3",
+      "target": "sensor_7_post_3",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_3",
+      "target": "sensor_18_post_3",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_3",
+      "target": "sensor_19_post_3",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "krk_hub",
+      "target": "leg_4",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "leg_4",
+      "target": "precond_4",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_4",
+      "target": "sensor_6",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_4",
+      "target": "sensor_19",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_4",
+      "target": "sensor_20",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "leg_4",
+      "target": "actuator_4",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_4",
+      "target": "actuator_4",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "source": "actuator_4",
+      "target": "precond_4",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "source": "leg_4",
+      "target": "postcond_4",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "actuator_4",
+      "target": "postcond_4",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_4",
+      "target": "actuator_4",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_4",
+      "target": "sensor_6_post_4",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_4",
+      "target": "sensor_19_post_4",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_4",
+      "target": "sensor_20_post_4",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "krk_hub",
+      "target": "leg_5",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "leg_5",
+      "target": "precond_5",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_5",
+      "target": "sensor_7",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_5",
+      "target": "sensor_11",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_5",
+      "target": "sensor_18",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_5",
+      "target": "sensor_19",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_5",
+      "target": "sensor_20",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "leg_5",
+      "target": "actuator_5",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_5",
+      "target": "actuator_5",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "source": "actuator_5",
+      "target": "precond_5",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "source": "leg_5",
+      "target": "postcond_5",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "actuator_5",
+      "target": "postcond_5",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_5",
+      "target": "actuator_5",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_5",
+      "target": "sensor_7_post_5",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_5",
+      "target": "sensor_11_post_5",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_5",
+      "target": "sensor_18_post_5",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_5",
+      "target": "sensor_19_post_5",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_5",
+      "target": "sensor_20_post_5",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "krk_hub",
+      "target": "leg_6",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "leg_6",
+      "target": "precond_6",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_6",
+      "target": "sensor_6",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_6",
+      "target": "sensor_11",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_6",
+      "target": "sensor_18",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_6",
+      "target": "sensor_19",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "leg_6",
+      "target": "actuator_6",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_6",
+      "target": "actuator_6",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "source": "actuator_6",
+      "target": "precond_6",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "source": "leg_6",
+      "target": "postcond_6",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "actuator_6",
+      "target": "postcond_6",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_6",
+      "target": "actuator_6",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_6",
+      "target": "sensor_6_post_6",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_6",
+      "target": "sensor_11_post_6",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_6",
+      "target": "sensor_18_post_6",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_6",
+      "target": "sensor_19_post_6",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "krk_hub",
+      "target": "leg_7",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "leg_7",
+      "target": "precond_7",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_7",
+      "target": "sensor_7",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_7",
+      "target": "sensor_18",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_7",
+      "target": "sensor_19",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_7",
+      "target": "sensor_20",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "leg_7",
+      "target": "actuator_7",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "precond_7",
+      "target": "actuator_7",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "source": "actuator_7",
+      "target": "precond_7",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "source": "leg_7",
+      "target": "postcond_7",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "actuator_7",
+      "target": "postcond_7",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_7",
+      "target": "actuator_7",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_7",
+      "target": "sensor_7_post_7",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_7",
+      "target": "sensor_18_post_7",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_7",
+      "target": "sensor_19_post_7",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "source": "postcond_7",
+      "target": "sensor_20_post_7",
+      "type": "SUB",
+      "weight": 1.0
+    }
+  ],
+  "meta": {
+    "origin": "baseline_compilation",
+    "mature_sensors": 25,
+    "total_actuators": 8,
+    "baseline_xp_avg": 0.8000000000000002
+  }
+}
