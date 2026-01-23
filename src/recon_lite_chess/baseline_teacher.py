@@ -109,7 +109,7 @@ class KRKTeacher:
     """
     
     # Feature dimension for KRK
-    FEATURE_DIM = 13
+    FEATURE_DIM = 14  # Added is_checkmate feature
     
     def __init__(self):
         """Initialize KRK teacher"""
@@ -193,6 +193,7 @@ class KRKTeacher:
         features.append(edge_distance(bk) / 3.5 if bk is not None else 0.0)
         features.append(1.0 if board.is_check() else 0.0)
         features.append(1.0 if can_deliver_mate(board) else 0.0)
+        features.append(1.0 if board.is_checkmate() else 0.0)  # THE GOAL STATE
         
         return np.array(features, dtype=np.float32)
     

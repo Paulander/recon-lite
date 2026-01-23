@@ -18,12 +18,14 @@ from recon_lite_chess.baseline_teacher import KRKTeacher
 _teacher = KRKTeacher()
 
 
-def create_krk_entry_root():
+def create_krk_entry_root(node_id=None):
     """
     Create KRK entry root node with blackboard caching.
     
     Extracts features once per tick and caches in blackboard.
     """
+    actual_id = node_id or "krk_entry"
+    
     def predicate(node, graph, env):
         # Initialize blackboard if needed
         if "blackboard" not in node.meta:
@@ -43,66 +45,73 @@ def create_krk_entry_root():
         return True, True
     
     return Node(
-        id="krk_entry",
+        nid=actual_id,
         ntype=NodeType.SCRIPT,
         predicate=predicate
     )
 
 
-def create_krk_hub():
+def create_krk_hub(node_id=None):
     """
     Create Hub node with bandit selection.
     
     Selects which Leg to activate based on bandit scores.
     """
+    actual_id = node_id or "krk_hub"
+    
     def predicate(node, graph, env):
         # For now, just pass through
-        # Bandit logic will be added in Phase 2
+        # Bandit logic will be added later
         return True, True
     
     return Node(
-        id="krk_hub",
+        nid=actual_id,
         ntype=NodeType.SCRIPT,
         predicate=predicate
     )
 
 
-def create_leg_script():
+def create_leg_script(node_id=None):
     """Create Leg SCRIPT node (simple pass-through)"""
+    actual_id = node_id or "leg_script"
+    
     def predicate(node, graph, env):
         return True, True
     
     return Node(
-        id="leg_script",
+        nid=actual_id,
         ntype=NodeType.SCRIPT,
         predicate=predicate
     )
 
 
-def create_and_gate():
+def create_and_gate(node_id=None):
     """
     Create AND-gate SCRIPT node.
     
     All children must confirm for this to confirm.
     """
+    actual_id = node_id or "and_gate"
+    
     def predicate(node, graph, env):
         # Aggregation handled by engine
         return True, True
     
     return Node(
-        id="and_gate",
+        nid=actual_id,
         ntype=NodeType.SCRIPT,
-        predicate=predicate,
-        aggregation="and"
+        predicate=predicate
     )
 
 
-def create_sensor_terminal():
+def create_sensor_terminal(node_id=None):
     """
     Create sensor TERMINAL node.
     
     Reads cached features from blackboard, applies readout, caches output.
     """
+    actual_id = node_id or "sensor_terminal"
+    
     def predicate(node, graph, env):
         # Get root blackboard
         root = graph.nodes.get("krk_entry")
@@ -130,31 +139,43 @@ def create_sensor_terminal():
                 if idx < len(features):
                     feature_mask[idx] = True
         
+        # Handle case where no features selected
+        if not np.any(feature_mask):
+            return False, False
+        
         # Apply readout
         sub_v = features[feature_mask]
-        output = apply_readout(sub_v, readout_type, readout_params)
+        try:
+            output = apply_readout(sub_v, readout_type, readout_params)
+        except Exception as e:
+            print(f"Warning: Sensor {node.nid} readout failed: {e}")
+            return False, False
         
         # Cache output for actuators
-        blackboard["sensor_outputs"][node.id] = output
+        blackboard["sensor_outputs"][node.nid] = output
         
         # Store in node state
-        node.state["output"] = output
+        if not hasattr(node, 'state') or node.state is None:
+            node.state = {}
+        node.meta["output"] = output
         
         return True, True
     
     return Node(
-        id="sensor_terminal",
+        nid=actual_id,
         ntype=NodeType.TERMINAL,
         predicate=predicate
     )
 
 
-def create_actuator_terminal():
+def create_actuator_terminal(node_id=None):
     """
     Create actuator TERMINAL node.
     
     Scores moves by similarity to goal_delta, selects best move.
     """
+    actual_id = node_id or "actuator_terminal"
+    
     def predicate(node, graph, env):
         # Get root blackboard
         root = graph.nodes.get("krk_entry")
@@ -202,7 +223,10 @@ def create_actuator_terminal():
             delta_s = []
             for target_id in targets:
                 # Get sensor spec from graph
-                sensor_node = graph.nodes.get(target_id.replace("_post_" + str(node.meta.get("actuator_id", "")), ""))
+                sensor_node = graph.nodes.get(target_id)
+                if not sensor_node:
+                    # Try without _post suffix
+                    sensor_node = graph.nodes.get(target_id.split("_post_")[0])
                 if not sensor_node:
                     continue
                 
@@ -218,17 +242,29 @@ def create_actuator_terminal():
                         if idx < len(features_1):
                             feature_mask[idx] = True
                 
+                if not np.any(feature_mask):
+                    continue
+                
                 sub_v = features_1[feature_mask]
-                s1 = apply_readout(sub_v, readout_type, readout_params)
+                try:
+                    s1 = apply_readout(sub_v, readout_type, readout_params)
+                except Exception:
+                    continue
                 
                 # Compute delta
                 delta = s1 - s0[target_id]
                 delta_s.append(delta)
             
+            if len(delta_s) == 0:
+                continue
+                
             # Score by similarity to goal_delta
-            goal_deltas = [goal_delta[t] for t in targets]
+            goal_deltas = [goal_delta[t] for t in targets if t in goal_delta][:len(delta_s)]
             similarity = cosine_similarity(delta_s, goal_deltas)
             scores[move] = similarity
+        
+        if not scores:
+            return False, False
         
         # Select best move
         best_move = max(scores, key=scores.get)
@@ -239,13 +275,15 @@ def create_actuator_terminal():
         env["move_confidence"] = best_score
         
         # Store in node state
-        node.state["move"] = best_move.uci()
-        node.state["confidence"] = best_score
+        if not hasattr(node, 'state') or node.state is None:
+            node.state = {}
+        node.meta["move"] = best_move.uci()
+        node.meta["confidence"] = best_score
         
         return True, True
     
     return Node(
-        id="actuator_terminal",
+        nid=actual_id,
         ntype=NodeType.TERMINAL,
         predicate=predicate
     )
@@ -255,9 +293,13 @@ def create_actuator_terminal():
 
 def apply_readout(sub_v: np.ndarray, readout_type: str, params: Dict) -> float:
     """Apply sensor readout function"""
+    if len(sub_v) == 0:
+        return 0.0
+        
     if readout_type == "identity":
         if len(sub_v) != 1:
-            raise ValueError(f"identity readout requires exactly 1 feature, got {len(sub_v)}")
+            # Fallback to mean if multiple features
+            return float(np.mean(sub_v))
         return float(sub_v[0])
     
     elif readout_type == "sum":
@@ -277,13 +319,23 @@ def apply_readout(sub_v: np.ndarray, readout_type: str, params: Dict) -> float:
         return 1.0 if np.mean(sub_v) > threshold else 0.0
     
     else:
-        raise ValueError(f"Unknown readout_type: {readout_type}")
+        # Default to mean for unknown types
+        return float(np.mean(sub_v))
 
 
 def cosine_similarity(a: list, b: list) -> float:
     """Compute cosine similarity between two vectors"""
+    if len(a) == 0 or len(b) == 0:
+        return 0.0
+        
     a = np.array(a)
     b = np.array(b)
+    
+    # Pad shorter to match length
+    if len(a) != len(b):
+        max_len = max(len(a), len(b))
+        a = np.pad(a, (0, max_len - len(a)))
+        b = np.pad(b, (0, max_len - len(b)))
     
     norm_a = np.linalg.norm(a)
     norm_b = np.linalg.norm(b)

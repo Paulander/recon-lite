@@ -1397,9 +1397,37 @@
       "consolidate": true
     },
     {
+      "src": "precond_0",
+      "dst": "actuator_0",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
+      "src": "actuator_0",
+      "dst": "precond_0",
+      "type": "RET",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
       "src": "leg_0",
       "dst": "postcond_0",
       "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
+      "src": "actuator_0",
+      "dst": "postcond_0",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
+      "src": "postcond_0",
+      "dst": "actuator_0",
+      "type": "RET",
       "weight": 1.0,
       "consolidate": true
     },
@@ -1495,9 +1523,37 @@
       "consolidate": true
     },
     {
+      "src": "precond_1",
+      "dst": "actuator_1",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
+      "src": "actuator_1",
+      "dst": "precond_1",
+      "type": "RET",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
       "src": "leg_1",
       "dst": "postcond_1",
       "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
+      "src": "actuator_1",
+      "dst": "postcond_1",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
+      "src": "postcond_1",
+      "dst": "actuator_1",
+      "type": "RET",
       "weight": 1.0,
       "consolidate": true
     },
@@ -1586,9 +1642,37 @@
       "consolidate": true
     },
     {
+      "src": "precond_2",
+      "dst": "actuator_2",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
+      "src": "actuator_2",
+      "dst": "precond_2",
+      "type": "RET",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
       "src": "leg_2",
       "dst": "postcond_2",
       "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
+      "src": "actuator_2",
+      "dst": "postcond_2",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
+      "src": "postcond_2",
+      "dst": "actuator_2",
+      "type": "RET",
       "weight": 1.0,
       "consolidate": true
     },
@@ -1670,9 +1754,37 @@
       "consolidate": true
     },
     {
+      "src": "precond_3",
+      "dst": "actuator_3",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
+      "src": "actuator_3",
+      "dst": "precond_3",
+      "type": "RET",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
       "src": "leg_3",
       "dst": "postcond_3",
       "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
+      "src": "actuator_3",
+      "dst": "postcond_3",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
+      "src": "postcond_3",
+      "dst": "actuator_3",
+      "type": "RET",
       "weight": 1.0,
       "consolidate": true
     },
@@ -1747,9 +1859,37 @@
       "consolidate": true
     },
     {
+      "src": "precond_4",
+      "dst": "actuator_4",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
+      "src": "actuator_4",
+      "dst": "precond_4",
+      "type": "RET",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
       "src": "leg_4",
       "dst": "postcond_4",
       "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
+      "src": "actuator_4",
+      "dst": "postcond_4",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
+      "src": "postcond_4",
+      "dst": "actuator_4",
+      "type": "RET",
       "weight": 1.0,
       "consolidate": true
     },
@@ -1831,9 +1971,37 @@
       "consolidate": true
     },
     {
+      "src": "precond_5",
+      "dst": "actuator_5",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
+      "src": "actuator_5",
+      "dst": "precond_5",
+      "type": "RET",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
       "src": "leg_5",
       "dst": "postcond_5",
       "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
+      "src": "actuator_5",
+      "dst": "postcond_5",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
+      "src": "postcond_5",
+      "dst": "actuator_5",
+      "type": "RET",
       "weight": 1.0,
       "consolidate": true
     },
@@ -1922,9 +2090,37 @@
       "consolidate": true
     },
     {
+      "src": "precond_6",
+      "dst": "actuator_6",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
+      "src": "actuator_6",
+      "dst": "precond_6",
+      "type": "RET",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
       "src": "leg_6",
       "dst": "postcond_6",
       "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
+      "src": "actuator_6",
+      "dst": "postcond_6",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
+      "src": "postcond_6",
+      "dst": "actuator_6",
+      "type": "RET",
       "weight": 1.0,
       "consolidate": true
     },
@@ -2006,9 +2202,37 @@
       "consolidate": true
     },
     {
+      "src": "precond_7",
+      "dst": "actuator_7",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
+      "src": "actuator_7",
+      "dst": "precond_7",
+      "type": "RET",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
       "src": "leg_7",
       "dst": "postcond_7",
       "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
+      "src": "actuator_7",
+      "dst": "postcond_7",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true
+    },
+    {
+      "src": "postcond_7",
+      "dst": "actuator_7",
+      "type": "RET",
       "weight": 1.0,
       "consolidate": true
     },
