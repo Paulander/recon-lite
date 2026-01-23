@@ -40,6 +40,9 @@ PPO(
     ent_coef=0.01,
 )
 ```
+Approx params (policy+value, separate nets): ~50.6k  
+Policy head: 218→64→64→218 ≈ 32.3k params  
+Value head: 218→64→64→1 ≈ 18.2k params
 
 ### ReCoN Configuration
 - 8-stage curriculum (Stages 0-7)
@@ -58,7 +61,7 @@ PPO(
 | **Win Rate** | 26.3% | **97.0%** |
 | Training Time | 42s | 180s |
 | Games | ~2,900 | 8,000 |
-| Interpretable | ❌ No | ✅ Yes |
+| Interpretable | No | Yes |
 
 ### Run 2: PPO 200k Timesteps
 
@@ -67,7 +70,7 @@ PPO(
 | **Win Rate** | 35.9% | **97.0%** |
 | Training Time | 194s | 180s |
 | Games | ~11,700 | 8,000 |
-| Interpretable | ❌ No | ✅ Yes |
+| Interpretable | No | Yes |
 
 ### Summary Table
 

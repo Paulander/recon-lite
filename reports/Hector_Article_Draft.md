@@ -41,6 +41,9 @@ We propose that genuine deliberation requires a **Distributed Orchestrator** cap
 - **Temporal sequencing** (POR/RET links enforce causal ordering)
 - **Structural plasticity** (stem cells discover and solidify new patterns)
 
+**Claim Preview.**
+In this work, we demonstrate that a ReCoN-based architecture can function as a distributed deliberative orchestrator: autonomously discovering, coordinating, and handing over between hierarchical subgoals without hardcoded phase logic. Using chess endgames as a controlled symbolic microcosm, Hector exhibits structural maturation through self-organizing subgraphs while remaining fully interpretable throughout training. This establishes a concrete, inspectable alternative to black-box reinforcement learning for studying deliberation and long-horizon control.
+
 ---
 
 ## II. The ReCoN Formalism: A Grammar of Deliberation
@@ -56,9 +59,9 @@ ReCoN networks consist of two fundamental node types:
 | **SCRIPT** | "A hypothesis requiring validation from sub-elements" | Intermediate goals, scripts, composite patterns |
 | **TERMINAL** | "Performs measurement, has activation representing value" | Sensors (read environment) or Actuators (execute actions) |
 
-A SCRIPT node represents a **hypothesis**—a claim about the world that must be validated by its children. For example, "opposition is established" is a hypothesis validated by checking king positions. TERMINAL nodes perform the actual measurements or actions.
+A SCRIPT node represents a **hypothesis**; a claim about the world that must be validated by its children. For example, "opposition is established" is a hypothesis validated by checking king positions. TERMINAL nodes perform the actual measurements or actions.
 
-> **Note**: These definitions are deliberately abstract. A SCRIPT node could range from a simple logical check to a full Multilayer Perceptron (MLP). Similarly, a TERMINAL node could be a Python function or a physical sensor (e.g., a thermometer) interacting with the real world.
+> **Note**: These definitions are deliberately abstract. A SCRIPT node could range from a simple logical check to a full Multilayer Perceptron (MLP) or an API call to an external service. Similarly, a TERMINAL node could be a Python function or a physical sensor (e.g., a thermometer) interacting with the real world.
 
 ### 2.2 Edge Types
 
@@ -111,15 +114,15 @@ ReCoN achieves the integration of top-down and bottom-up processing that charact
 - **Top-down**: Requests propagate from abstract goals (e.g., "promote pawn") through SUB links to concrete sensors (e.g., "check if path is clear")
 - **Bottom-up**: Confirmations propagate from sensors through SUR links, validating hypotheses at each level
 
-This bidirectional flow allows the network to both predict (top-down) and verify (bottom-up)—a requirement for robust perception and action.
+This bidirectional flow allows the network to both predict (top-down) and verify (bottom-up); a requirement for robust perception and action.
 
 ---
 
 ## III. Hector's Roadmap: Developmental Scaffolding
 
-Hector's development proceeded through two major phases, each building capabilities for the next.
+Hector's development proceeded through major phases, divided into milestones Mk, each building capabilities for the next. The first stage simply executed heuristics, implemented in a discrete, hand crafted, ReCoN network. After this we let the network learn increasingly challenging tasks and attributes; first selecting plans between hand-coded solver, then solving tasks based solely on terminal inputs and subgoal activations. Lastly, we aim to let the network learn the structure of the graph,effectively creating its own terminals and intermediate goals. 
 
-### 3.1 Embryonic Stage (M1-M4): Modular Coordination
+### 3.1 Fixed-Topology Phase (M1-M4): Modular Coordination
 
 The first phase established that ReCoN could orchestrate modular subgoals with learned coordination.
 
@@ -141,7 +144,7 @@ Within-game weight updates via eligibility traces:
 Δw = α × eligibility × reward
 ```
 
-When a move leads to a successful outcome, all edges that fired during that decision receive a weight boost. This is analogous to biological synaptic potentiation.
+When a move leads to a successful outcome, all edges that fired during that decision receive a weight boost. This is analogous to biological synaptic potentiation. This enables rapid, context-sensitive adaptation within a single game, allowing Hector to reinforce subgoal selections that immediately contribute to successful outcomes.
 
 #### M4: Slow Consolidation
 
@@ -151,23 +154,22 @@ Cross-game aggregation of weight changes:
 w_base ← (1-β) × w_base + β × mean(Δw_episodes)
 ```
 
-This prevents catastrophic forgetting and allows gradual refinement over many games.
+This prevents catastrophic forgetting and allows gradual refinement over many games. By separating fast within-game plasticity from slow cross-game consolidation, the architecture stabilizes useful coordination patterns while remaining responsive to novel configurations.
 
 #### The Big Result: KPK → KQK Handover
 
-Using these mechanisms, we demonstrated **autonomous strategic handovers**: a unified topology containing both King-Pawn-vs-King (KPK) and King-Queen-vs-King (KQK) subgraphs could transition from pawn promotion strategy to checkmate strategy **without hardcoded phase detection**.
+Using these mechanisms, we demonstrated **autonomous strategic handovers**: a unified topology containing both King-Pawn-vs-King (KPK) and King-Queen-vs-King (KQK) subgraphs could transition from pawn promotion strategy to checkmate strategy **without hardcoded phase detection**, as shown in section IV. 
 
 The transition occurs naturally through activation dynamics:
 - **Seamless Activation Flow**: As KPK goals (Promotion) are satisfied, their activation drops, allowing KQK goals (Checkmate) to rise as their sensors detect the new Queen. 
-- **Zero-Latency Handover**: Because activations propagate via parallel microticks within a single engine step, there is no discrete "phase switch" or sensing lag. The transition is functionally instantaneous.
+- **Seamless Handover**: Because activations propagate via parallel microticks within a single engine step, there is no discrete "phase switch" or sensing lag, KQK becomes active for white's next move.
 - **Activation-Driven Logic**: No explicit "if pawn promoted" code exists. The network simply settles into the most relevant strategic state based on real-time environmental evidence.
 
 ### 3.2 Maturation Stage (M5): Structural Learning
 
-To address the **Prodigy Problem** at its root, Hector must go beyond mere parameter tuning and engage in **Structural Maturation**. While M3/M4 plasticity optimizes the *importance* of existing concepts, the M5 evolution system allows the agent to *discover* new ones. 
+To address the **Prodigy Problem** at its root, Hector must go beyond mere parameter tuning and engage in **Structural Maturation**. While M3/M4 plasticity optimizes the *relative importance* of existing concepts, the M5 evolution system allows the agent to *discover* new ones. We hypothesize that genuine intelligence requires the ability to autonomously expand its own topological "grammar" when existing structures fail to resolve strategic plateaus. While M1–M4 provide a stable backbone of learned weights, M5 moves toward a breakthrough in structural agency, allowing Hector to transition from a fixed script-follower to a self-organizing system that discovers its own tactical reasoning trees.
 
-The maturation phase replaces hand-designed sensor nodes with self-discovering **stem cells**, enabling the ReCoN graph to autonomously grow its own topology. This process represents the agent "showing its work"—externalizing its learned correlations into persistent, inspectable symbolic structures.
-<!-- NOTE: M5 is currently in an exploratory phase. Results are promising but balancing recursive growth with XP survival remains an active area of investigation. -->
+The maturation phase replaces hand-designed sensor nodes with self-discovering **stem cells**, enabling the ReCoN graph to autonomously grow its own topology. This process represents the agent "showing its work"— externalizing its learned correlations into persistent, inspectable symbolic structures. M5 is currently in an exploratory phase. Results are promising but balancing recursive growth with XP survival remains an active area of investigation.
 
 #### The Stem Cell Lifecycle
 
@@ -188,7 +190,7 @@ EXPLORING → CANDIDATE → TRIAL → MATURE
 
 #### XP System
 
-TRIAL nodes earn or lose Experience Points based on their contribution to wins:
+TRIAL nodes earn or lose Experience Points based on their contribution to wins, e.g.:
 
 | Event | XP Change |
 |-------|-----------|
@@ -200,7 +202,7 @@ TRIAL nodes earn or lose Experience Points based on their contribution to wins:
 
 #### The FeatureHub: A Global Knowledge Bank
 
-To enable transfer learning between different strategic contexts (e.g., from King-Rook mate to King-Pawn promotion), Hector utilizes a **FeatureHub**. This centralized registry "hoists" discovered tactical patterns—such as *Opposition Status* or *Back-Rank Weakness*—making them available globally. 
+To enable transfer learning between different strategic contexts (e.g., from King-Rook mate to King-Pawn promotion), Hector utilizes a **FeatureHub**. This centralized registry "hoists" discovered tactical patterns, such as *Opposition Status* or *Back-Rank Weakness*, making them available globally. 
 
 When a stem cell discovers a relevant pattern in the KRK endgame, that pattern is registered in the Hub. Because the Hub is shared across the entire architecture, the KPK subgraphs can immediately "test" this known feature as a potential sensor for their own goals. This effectively provides Hector with a **Collective Working Memory**, where successful cognitive primitives are shared across the hierarchy.
 
@@ -214,10 +216,11 @@ When TRIAL cells demonstrate consistent coactivation (≥85% correlation in wins
 
 ```
 parent (SCRIPT)
-  └─ SUB → gate (SCRIPT, aggregation="and")
-             └─ SUB → sensor_A (TERMINAL)
-             └─ SUB → sensor_B (TERMINAL)
-             └─ SUB → actuator (TERMINAL)
+  └─ SUB → gate (SCRIPT, aggregation="min")     
+            └─ SUB → sensor_A (TERMINAL)
+            └─ SUB → sensor_B (TERMINAL)
+            └─ POR → action (SCRIPT)            
+                      └─ SUB → actuator (TERMINAL)
 ```
 
 The AND-gate fires only when ALL child sensors fire—enabling compositional pattern detection (e.g., "opposition AND path clear → push").
@@ -235,8 +238,8 @@ Depth 4: Nested AND-gate for multi-condition patterns
 
 Log output demonstrating deep spawning:
 ```
-🔗 AND-gate spawned (L1): and_stem_0002_gate
-🌲 AND-gate spawned (deep under and_stem_0002_gate): and_stem_0004_deep_gate
+[LINK] AND-gate spawned (L1): and_stem_0002_gate
+[TREE] AND-gate spawned (deep under and_stem_0002_gate): and_stem_0004_deep_gate
 ```
 
 ---
@@ -248,28 +251,59 @@ A key advantage of ReCoN over black-box approaches is inherent interpretability.
 ### 4.1 The "Window into Mental Model"
 
 Our visualization system renders:
-- **Node activations** as color intensity (white = inactive, green = active)
+- **Node activations** as color intensity (grey = inactive, green = active)
 - **Edge weights** as line thickness
-- **State machine states** as node borders
+- **State machine states** as node colors
+- **Node types** as node shapes (circular scripts, diamond terminals)
+- **Bindings** as tags on the chessboard; representing what relevant terminal sensors "look" at. 
+
+![Global Topology Overview](bindings.png)
+Single game view of the heuristics driven ReCoN graph, showing node activations, edge weights, and bindings.
+
 
 This real-time visualization represents the agent's instantiated **focus of attention** within a broader **working memory architecture**. Structurally, Hector serves as a concrete instantiation of **Global Workspace Theory** (Baars, 1988), where specialized ReCoN subgraphs compete for access to the motor system.
 
 Unlike PPO, where state is transient and latent, Hector’s "Mental Model" is a persistent topological structure. Here, we can observe the literal **binding** of abstract concepts (like "Opposition") to physical board coordinates, maintained as an active state in the network's cognitive registers (Cowan, 2001). When a specific node "lights up," we are observing selective attention—a "spotlight" that selects which sub-goals or sensors are currently task-relevant. Top-down REQUEST signals represent attentional control, while the persistent structure of the ReCoN graph functions as working memory, keeping information available for manipulation over time.
 
-### 4.2 Topology Timelapse
+### 4.2 Activation Graph and Strategic Handover
 
-We record topology snapshots at each training cycle, enabling timelapse visualization of structural growth. The evolution from a single backbone node to a 45+ node hierarchical structure demonstrates the emergence of tactical knowledge.
+During the KPK→KQK transition, the visualization system provides a real-time "fingerprint" of the agent's shifting strategic priorities (above). Unlike black-box weight matrices, the ReCoN topology reveals the precise moment the distributed orchestrator reallocates requests based on environmental affordance spikes.
 
-### 4.3 Activation Heatmaps
+To understand Hector’s deliberation, one must observe the global-to-local flow of requests. The following visualization sequence demonstrates the "Spotlight of Attention" as it moves through the ReCoN hierarchy during a live endgame transition.
 
-During the KPK→KQK handover, activation heatmaps show:
-1. KPK subgraph peak activation during pawn promotion phase
-2. Transition period with dual activation
-3. KQK subgraph dominance after promotion
+#### **I. Global Orchestration Context**
 
-This visual "fingerprint" of strategic handover is impossible with weight-matrix representations.
+ReCoN has a top down goal driven architecture, with bottom up sensor driven feedback.
+The root node represents the high level goal **"Win Game."** This goal propagates requests down through several parallel strategic subgraphs, including King-Pawn (KPK), King-Queen (KQK), and King-Rook (KRK) endgames. Based on the board state, the ReCoN graph dynamically request the most relevant strategic subgraph to activate.
+
+![Global Topology Overview](kpk_active.png)
+
+**Figure 1: Global Strategic Hierarchy.** Note that while all strategic legs (KPK, KQK, KRK) are technically "called" by their common parent, only the task-relevant sub-branch remains active. The inactive branches stay dormant in a "suppressed" or "inactive" state because their environmental sensors (e.g., "Is there a Rook on board?") fail to provide the necessary affordance for activation.
 
 ---
+
+#### **II. Phase A: Pawn Promotion (Local Detail)**
+
+As the agent enters the final stages of a pawn push, the orchestrator focuses exclusively on the KPK sub-hierarchy.
+
+![KPK Close-up Detail](closeup_kpk.png)
+
+**Figure 2: KPK Leg Dominance.** In this state, the KPK subleg is active; the top SCRIPT node (which has goal "promote pawn") is yellow (Requested, Waiting for children to complete), driven by active terminal nodes that specifically monitor pawn-relevant features like `kpk material check` and `kpk push window`. The neighboring KQK branch is rendered in gray, indicating it is currently irrelevant to the board state and is not being requested.
+
+---
+
+#### **III. Phase B: Post-Promotion Handover (Local Detail)**
+
+The precise moment the pawn promotes to a Queen, the internal mental model undergoes a functionally instantaneous shift.
+
+![KQK Close-up Detail](closeup_kqk.png)
+
+**Figure 3: KQK Leg Activation.** Following promotion, the `affordance_kpk` sensor immediately drops to zero, causing the KPK leg to collapse. Simultaneously, the `kqk material check` sensor spikes, satisfying the pre-conditions for the KQK leg. The orchestrator redirects requests to these new, specialized, subgoals—such as `kqk mate detector` and `kqk drive moves` to deliver the final checkmate.
+
+
+### 4.3 Topology Timelapse 
+
+For M5 worke, we record topology snapshots at each training cycle, enabling timelapse visualization of structural growth. The evolution from a single backbone node to a 45+ node hierarchical structure demonstrates the emergence of tactical knowledge. See supplementary timelapse video for details.
 
 ## V. Experiments and Results
 
@@ -329,7 +363,7 @@ Using pre-trained unified topology with both endgame subgraphs:
 | Metric | Value |
 |--------|-------|
 | Successful handovers | 100% |
-| Handover latency | 2-3 moves |
+| Handover latency | 1 move |
 | Hardcoded phase logic | **None** |
 
 The transition occurs via activation dynamics, demonstrating autonomous strategic orchestration.
@@ -342,14 +376,21 @@ The transition occurs via activation dynamics, demonstrating autonomous strategi
 
 | Component | Hardcoded | Learned |
 |-----------|-----------|---------|
-| Chess rules (legal moves) | ✅ | |
-| Piece categorization (pawn/king) | ✅ | |
-| Goal (promote = win) | ✅ | |
-| Move selection | | ✅ |
-| Pattern discovery | | ✅ |
-| Topology structure | | ✅ |
+| Chess rules (legal moves) | Yes | |
+| Piece categorization (pawn/king) | Yes | |
+| Goal (promote = win) | Yes | |
+| Move selection | | Yes |
+| Pattern discovery | | Yes |
+| Topology structure | | Yes |
 
 **The defensible claim**: Given only legal moves and win/loss rewards, Hector autonomously discovers hierarchical patterns corresponding to known chess theory (opposition, key squares, timing) without being programmed with those concepts. By mapping these patterns onto a transparent ReCoN topology, we move away from black-box heuristics toward a **structural deliberation** that is inspectable and verifiable.
+
+### Structural Deliberation vs. Search-Driven Opportunism
+
+A critical distinction must be made between Hector and traditional "brute-force" engines like Stockfish. Stockfish achieves superhuman performance through high-speed alpha-beta search; 
+an approach we characterize as search-driven opportunism. It does not "understand" a strategic plan; rather, it identifies the mathematically optimal move by forecasting millions of future states.
+
+In contrast, Hector utilizes structural deliberation. It does not rely on deep look-ahead trees to find a move; instead, it relies on a distributed orchestrator to identify the most relevant "mental model" for the current board state. Where Stockfish is a "Black Box" of exponential calculation, Hector is a "White Box" of hierarchical subgoals. Even without the search depth of traditional engines, Hector demonstrates that strategic competence can emerge from the self-organization of compositional agency, providing a transparent path toward machine intelligence that "shows its work".
 
 ### Limitations
 
@@ -358,16 +399,23 @@ The transition occurs via activation dynamics, demonstrating autonomous strategi
 3. **Tactical Precision vs. Strategic Orchestration**: Hector excels at hierarchical deliberation but does not yet natively incorporate deep look-ahead search. For complex middle-game combinations, a hybrid approach combining ReCoN with traditional search may be necessary.
 <!-- TODO: Mention that M5 results are characterized as an exploratory frontier with promising early results in depth discovery. -->
 
-### Future Work
+### Outlook and Future Work
 
-1. **Unified Endgame Generalization**: Extending validation to KQK and more complex endgames. Given that KRK already demonstrates the discovery of "cut" and "box" methods through stem cell evolution, scaling to Queen-based strategies is a straightforward extension of the current framework.
-2. **Dynamic Metabolic Pruning**: Developing a more robust Bayesian filter for "Inertia Pruning" that automatically evaporates low-utility branches in real-time without regressing win rates.
-3. **Real-Time Control and Robotics**: Generalizing the Hector architecture beyond discrete games to real-time applications such as drone navigation or robotic manipulation, where hierarchical subgoals and explainable "mental models" are safety-critical.
-4. **Cognitive Scaling: Search-Guided Activation**: 
-   Integrating ReCoN with Monte Carlo Tree Search (MCTS) to create a "Thinking Fast and Slow" (Kahneman, 2011) architecture. In this hybrid:
-   - **System 1 (Strategic Bias)**: The active ReCoN topology acts as a white-box evaluator, providing structured priors that focus search energy on task-relevant subgoals (e.g., "Shouldering") rather than raw move-space.
-   - **System 2 (Tactical Verification)**: MCTS functions as an internal "verification script" within the ReCoN hierarchy. A parent node enters a `WAITING` state while an MCTS terminal validates the tactical feasibility of the proposed plan, with `CONFIRM/FAILED` signals based on simulation outcomes.
-   - **Explainable Value**: Unlike black-box search, every move decision can be traced to specific activated subgoals, providing a path to high-precision reasoning that remains fully inspectable.
+The developmental trajectory of Hector suggests that hierarchical structural deliberation can scale through both autonomous discovery and architectural compilation. We identify three primary avenues for future expansion:
+
+#### **1. Structural Maturation and Recursive Branching**
+Future iterations will focus on **Recursive Branching**, where "Stem Cell Spawn Points" attached to mature SCRIPT nodes autonomously generate child sub-graphs. This mechanism aims to bridge the gap between high-level strategic orchestration and low-level tactical verification. Parallel research into **Dynamic Metabolic Pruning** will refine the Bayesian "Inertia" filters to ensure these deeper hierarchies remain sparse and causal, evaporating redundant branches without regressing win rates.
+
+
+#### **2. Preliminary Validation: Compiler-Driven Scaling**
+Initial results suggest that pre-trained sensory-motor patterns can be compiled into fixed ReCoN topologies to serve as high-precision strategic backbones. Preliminary tests on the KRK endgame have already demonstrated that these **compiled micro-scripts** can achieve near-perfect tactical precision. We intend to extend this validation to KQK and more complex adversarial endgames to prove the framework’s ability to scale beyond the initial "Discovery Bridge" curriculum.
+
+#### **3. Cognitive Scaling: Search-Guided Activation**
+To achieve high-precision reasoning in the middle-game, we propose a "Thinking Fast and Slow" hybrid architecture (Kahneman, 2011):
+
+* **System 1 (Strategic Bias):** The active ReCoN topology acts as a white-box evaluator, providing structured priors that focus search energy on task-relevant subgoals (e.g., "Shouldering") rather than raw move-space.
+* **System 2 (Tactical Verification):** Monte Carlo Tree Search (MCTS) functions as an internal "verification script" within the ReCoN hierarchy. A parent node enters a `WAITING` state while the MCTS terminal validates the tactical feasibility of a plan, returning `CONFIRM/FAILED` signals based on simulation outcomes.
+* **Explainable Value:** Unlike black-box search, every move decision remains traceable to specific activated subgoals, providing a path to high-precision reasoning that remains fully inspectable.
 
 ---
 
@@ -474,11 +522,11 @@ Sample output from the `evolution_driver.py` during a hybrid growth run (M5 enab
   Online Phase: Playing 200 games...
     Win rate: 100.0% (Stage 6: ESCORT)
   Structural Phase: Analyzing 200 traces...
-    [M5] 🌱 GROWTH MODE: 100% Win Rate detected.
+    [M5] [SEED] GROWTH MODE: 100% Win Rate detected.
     [M5] Analyzing affordance spikes...
-    [M5] 🌲 VERTICAL GROWTH: Spawning under active gate: and_stem_0080_1_gate
-    [M5] 🔗 AND-gate spawned (deep): and_stem_0080_2_gate
-    [M5] 🔗 OR-gate spawned (L1): or_stem_0080_3_gate
+    [M5] [TREE] VERTICAL GROWTH: Spawning under active gate: and_stem_0080_1_gate
+    [M5] [LINK] AND-gate spawned (deep): and_stem_0080_2_gate
+    [M5] [LINK] OR-gate spawned (L1): or_stem_0080_3_gate
     [M5] [PRUNING] Evaporated node TRIAL_stem_0042 (Inertia < 0.05)
     
     Graph Status: 154 active nodes, 412 edges

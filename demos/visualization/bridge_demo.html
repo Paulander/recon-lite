@@ -69,6 +69,42 @@
       font-size: 0.85rem;
     }
 
+    .file-upload {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 0.75rem;
+    }
+
+    .file-upload input[type="file"] {
+      display: none;
+    }
+
+    .file-upload label {
+      background: #2563eb;
+      color: #fff;
+      border-radius: 6px;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .file-upload label:hover {
+      background: #1d4ed8;
+    }
+
+    .file-name {
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: #94a3b8;
+    }
+
     .status-badge {
       padding: 4px 12px;
       border-radius: 12px;
@@ -380,6 +416,11 @@
         <option value="sample_data/bridge_trained.json">Trained Network</option>
         <option value="sample_data/bridge_untrained.json">Untrained Network</option>
       </select>
+      <div class="file-upload">
+        <input type="file" id="file-input" accept=".json">
+        <label for="file-input">Load JSON</label>
+        <span id="file-name" class="file-name">No file</span>
+      </div>
       <span id="trained-badge" class="status-badge badge-trained">TRAINED</span>
       <span id="lock-badge" class="status-badge badge-none">No Lock</span>
     </div>
@@ -486,6 +527,8 @@
     const lockBadge = document.getElementById('lock-badge');
     const trainedBadge = document.getElementById('trained-badge');
     const fileSelect = document.getElementById('file-select');
+    const fileInput = document.getElementById('file-input');
+    const fileName = document.getElementById('file-name');
     const showLabels = document.getElementById('show-labels');
     const showEdges = document.getElementById('show-edges');
     const showInactive = document.getElementById('show-inactive');
@@ -974,15 +1017,21 @@
       labelEl.textContent = `Frame ${currentFrame + 1} / ${demoData.frames.length}`;
     }
 
+    function loadDemoData(data) {
+      demoData = data;
+      sliderEl.max = demoData.frames.length - 1;
+      currentFrame = 0;
+      trainedBadge.textContent = demoData.trained ? 'TRAINED' : 'UNTRAINED';
+      trainedBadge.className = `status-badge ${demoData.trained ? 'badge-trained' : 'badge-untrained'}`;
+      updateDisplay();
+    }
+
     async function loadDemo(path) {
       try {
         const res = await fetch(path);
-        demoData = await res.json();
-        sliderEl.max = demoData.frames.length - 1;
-        currentFrame = 0;
-        trainedBadge.textContent = demoData.trained ? 'TRAINED' : 'UNTRAINED';
-        trainedBadge.className = `status-badge ${demoData.trained ? 'badge-trained' : 'badge-untrained'}`;
-        updateDisplay();
+        const data = await res.json();
+        loadDemoData(data);
+        fileName.textContent = path.split('/').pop();
       } catch (err) {
         console.error('Load failed:', err);
         alert(`Failed to load ${path}`);
@@ -1022,6 +1071,24 @@
     fileSelect.addEventListener('change', (e) => {
       if (playInterval) togglePlay();
       loadDemo(e.target.value);
+    });
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (playInterval) togglePlay();
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = JSON.parse(reader.result);
+          loadDemoData(data);
+          fileName.textContent = file.name;
+          fileSelect.value = '';
+        } catch (err) {
+          console.error('Invalid JSON file:', err);
+          alert('Invalid JSON file.');
+        }
+      };
+      reader.readAsText(file);
     });
     showLabels.addEventListener('change', updateDisplay);
     showEdges.addEventListener('change', updateDisplay);
