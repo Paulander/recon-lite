@@ -43,6 +43,9 @@ class TrainingConfig:
         sensors_per_spawn: int = 5,
         output_dir: Path = Path("snapshots/baseline_krk"),
         save_interval: int = 10,
+        goal_eps: float = 0.15,
+        max_goals: int = 100,
+        min_mature_for_goals: int = 8,
     ):
         self.samples_per_cycle = samples_per_cycle
         self.max_cycles = max_cycles
@@ -51,6 +54,9 @@ class TrainingConfig:
         self.sensors_per_spawn = sensors_per_spawn
         self.output_dir = output_dir
         self.save_interval = save_interval
+        self.goal_eps = goal_eps
+        self.max_goals = max_goals
+        self.min_mature_for_goals = min_mature_for_goals
         self.save_learner_path: Path | None = None
 
 
@@ -74,7 +80,12 @@ def train_baseline_krk(config: TrainingConfig) -> Dict:
     
     # Initialize teacher and learner
     teacher = KRKTeacher()
-    learner = BaselineLearner(feature_dim=teacher.feature_dim, stage=0)
+    learner = BaselineLearner(
+        feature_dim=teacher.feature_dim,
+        stage=0,
+        goal_eps=config.goal_eps,
+        max_goals=config.max_goals,
+    )
     
     print(f"\nInitialization:")
     print(f"  Feature dimension: {teacher.feature_dim}")
@@ -220,7 +231,7 @@ def train_baseline_krk(config: TrainingConfig) -> Dict:
         # 7. Collect goal memories from positive starting states
         # ====================================================================
         newly_created_goals = 0
-        if len(mature_sensors) > 0:
+        if len(mature_sensors) >= config.min_mature_for_goals:
             # Group transitions by starting position
             start_positions = {}
             for trans in all_transitions:
@@ -237,8 +248,13 @@ def train_baseline_krk(config: TrainingConfig) -> Dict:
                 
                 # Check if this is a new goal
                 initial_goal_count = len(learner.goal_memories)
-                learner.add_goal_memory(s0, label="mate_in_1")
-                if len(learner.goal_memories) > initial_goal_count:
+                added = learner.add_goal_memory(
+                    s0,
+                    label="mate_in_1",
+                    goal_eps=config.goal_eps,
+                    max_goals=config.max_goals,
+                )
+                if added is not None and len(learner.goal_memories) > initial_goal_count:
                     newly_created_goals += 1
         
         # ====================================================================
@@ -390,6 +406,12 @@ def main():
                        help="Output directory for checkpoints")
     parser.add_argument("--save-interval", type=int, default=10,
                        help="Save checkpoint every N cycles")
+    parser.add_argument("--goal-eps", type=float, default=0.15,
+                       help="Goal prototype merge threshold in terminal space")
+    parser.add_argument("--max-goals", type=int, default=100,
+                       help="Max number of goal prototypes to keep")
+    parser.add_argument("--min-mature-for-goals", type=int, default=8,
+                       help="Minimum mature sensors before storing goals")
     parser.add_argument("--save-learner", type=Path, default=None,
                        help="Optional path to save BaselineLearner pickle")
     
@@ -403,6 +425,9 @@ def main():
         sensors_per_spawn=args.sensors_per_spawn,
         output_dir=args.output_dir,
         save_interval=args.save_interval,
+        goal_eps=args.goal_eps,
+        max_goals=args.max_goals,
+        min_mature_for_goals=args.min_mature_for_goals,
     )
     if args.save_learner:
         config.save_learner_path = args.save_learner

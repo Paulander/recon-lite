@@ -502,7 +502,14 @@ class BaselineLearner:
     - XP computation and promotion
     """
     
-    def __init__(self, feature_dim: int, stage: int = 0):
+    def __init__(
+        self,
+        feature_dim: int,
+        stage: int = 0,
+        goal_eps: float = 0.15,
+        max_goals: int = 100,
+        normalize_goals: bool = True,
+    ):
         """
         Initialize learner.
         
@@ -516,6 +523,9 @@ class BaselineLearner:
         self.sensors: List[Terminal] = []
         self.actuators: List[Terminal] = []
         self.goal_memories: List[GoalMemory] = []
+        self.goal_eps = goal_eps
+        self.max_goals = max_goals
+        self.normalize_goals = normalize_goals
         
         self._next_sensor_id = 0
         self._next_actuator_id = 0
@@ -535,7 +545,14 @@ class BaselineLearner:
         self._next_sensor_id += 1
         return sensor
     
-    def add_goal_memory(self, s0: np.ndarray, label: str) -> GoalMemory:
+    def add_goal_memory(
+        self,
+        s0: np.ndarray,
+        label: str,
+        goal_eps: float | None = None,
+        max_goals: int | None = None,
+        normalize: bool | None = None,
+    ) -> GoalMemory | None:
         """
         Add a goal memory for a successful starting state.
         
@@ -546,15 +563,48 @@ class BaselineLearner:
         Returns:
             Created or updated GoalMemory
         """
-        # Check if similar goal already exists
+        if s0.size == 0:
+            return None
+
+        eps = goal_eps if goal_eps is not None else self.goal_eps
+        cap = max_goals if max_goals is not None else self.max_goals
+        do_norm = normalize if normalize is not None else self.normalize_goals
+
+        s = np.array(s0, dtype=np.float32)
+        if do_norm:
+            denom = np.linalg.norm(s) + 1e-6
+            s = s / denom
+
+        # Find nearest goal with same label and shape
+        best = None
+        best_dist = None
         for goal in self.goal_memories:
-            # Only compare if shapes match (same number of mature sensors)
-            if goal.label == label and goal.s0.shape == s0.shape:
-                if np.allclose(goal.s0, s0, atol=0.1):
-                    goal.count += 1
-                    return goal
-        
-        # Create new goal
+            if goal.label != label or goal.s0.shape != s.shape:
+                continue
+            g = goal.s0
+            if do_norm:
+                g = g / (np.linalg.norm(g) + 1e-6)
+            dist = np.linalg.norm(s - g)
+            if best is None or dist < best_dist:
+                best = goal
+                best_dist = dist
+
+        # Merge if close enough
+        if best is not None and best_dist is not None and best_dist < eps:
+            best.s0 = best.s0 + (s0 - best.s0) / (best.count + 1)
+            best.count += 1
+            return best
+
+        # Create new goal if under cap (or evict weakest)
+        if len(self.goal_memories) >= cap and cap > 0:
+            # Evict lowest-count goal with matching label/shape if possible
+            candidates = [g for g in self.goal_memories if g.label == label and g.s0.shape == s.shape]
+            if candidates:
+                evict = min(candidates, key=lambda g: g.count)
+            else:
+                evict = min(self.goal_memories, key=lambda g: g.count)
+            self.goal_memories.remove(evict)
+
         goal = GoalMemory(
             id=self._next_goal_id,
             s0=s0,

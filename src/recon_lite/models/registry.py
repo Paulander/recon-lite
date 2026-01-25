@@ -92,9 +92,13 @@ class EdgeSpec:
     
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "EdgeSpec":
+        src = data.get("src") or data.get("from") or data.get("source")
+        dst = data.get("dst") or data.get("to") or data.get("target")
+        if src is None or dst is None:
+            raise KeyError("Edge spec missing 'src'/'dst' (or 'from'/'to')")
         return cls(
-            src=data["src"],
-            dst=data["dst"],
+            src=src,
+            dst=dst,
             type=data["type"],
             weight=data.get("weight", 1.0),
             consolidate=data.get("consolidate", True),

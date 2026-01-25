@@ -44,6 +44,11 @@ Repo: `/home/paulander/git/recon-lite`
 - Stage‑0: learns sensors/actuators from mate‑in‑1.
 - Stage‑1: labels transitions by moving **closer to mate‑in‑1 goal memories**.
 
+5) **Goal memory prototyping + cap**
+- `src/recon_lite/learning/baseline.py`
+- Merge goal memories in terminal space (nearest‑neighbor within `goal_eps`)
+- Hard cap via `max_goals`; evict lowest‑count when full.
+
 ---
 
 ## Recommended run sequence

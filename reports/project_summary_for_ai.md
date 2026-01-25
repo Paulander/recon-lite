@@ -199,6 +199,35 @@ Training uses reverse curriculum: start from easy endgames, work backward.
 | 11 | CORNER_TRAP | Rook pawn draws |
 | 12 | ZUGZWANG | Triangulation |
 
+---
+
+## KRK Pure Baseline Path (Current Work)
+
+**Goal:** remove hand-coded move selection; learn actuators purely from terminal-space deltas with backchaining.
+
+Key components:
+- `src/recon_lite_chess/baseline_teacher.py`
+  - Generates *valid* KRK mate-in-1 positions by brute force.
+  - Provides designer feature vector for baseline training.
+- `src/recon_lite/learning/baseline.py`
+  - Terminal/Actuator specs.
+  - **Goal memory prototyping** in terminal space (`goal_eps`, `max_goals`, normalize).
+- `scripts/train_baseline_krk.py`
+  - Baseline Stage-0 training; supports `--save-learner`.
+- `scripts/train_baseline_krk_chain.py`
+  - Stage-0 + Stage-1 backchain (goal memory).
+- `scripts/baseline_to_recon.py`
+  - Compiles baseline learner into ReCoN graph:
+    - Root → Hub → Legs (parallel SUB)
+    - Precond → Act Script → Postcond (POR only inside leg)
+    - Edges use `src/dst` keys (loader requirement).
+- `scripts/test_krk_entry.py`
+  - Executes compiled topology (no dynamic growth).
+
+**Note:** `TopologyRegistry.EdgeSpec.from_dict` now accepts legacy edge keys (`from`/`to` or `source`/`target`) to avoid KeyError in older topology JSON files.
+
+**Important:** `test_krk_integration.py` still uses the checkmate anchor (oracle), so it can achieve 100% but is not “pure”. The pure path is `train_baseline_krk_chain.py` → `baseline_to_recon.py` → `test_krk_entry.py`.
+
 ### FeatureHub (`features/hub.py`)
 Global registry of 30+ hoisted features across 6 categories:
 - **TACTICAL**: fork_available, pin_present, hanging_piece, skewer, back_rank_vulnerable
@@ -584,5 +613,3 @@ For detailed training logs and experimental results, see:
 - **Pack Template Design**: `notes/pack_template_design.md` - Design rationale and article constraints
 
 Latest significant run: `snapshots/evolution/krk_curriculum/curriculum_summary.json`
-
-

@@ -62,10 +62,24 @@ def goal_distance(current: Dict[int, float], goal: Dict[int, float]) -> float:
     return float(np.linalg.norm(diffs))
 
 
+def compute_sensor_vector_by_ids(learner: BaselineLearner, v: np.ndarray, sensor_ids: List[int]) -> np.ndarray:
+    """Compute sensor vector in a fixed, stable sensor-id order."""
+    sensor_map = {s.id: s for s in learner.sensors}
+    vals = []
+    for sid in sensor_ids:
+        sensor = sensor_map.get(sid)
+        if sensor is None:
+            vals.append(0.0)
+            continue
+        vals.append(apply_sensor(sensor, v))
+    return np.array(vals, dtype=np.float32)
+
+
 def label_transitions_by_goal(
     learner: BaselineLearner,
     board: chess.Board,
-    goals: List[Dict[int, float]],
+    goal_vectors: List[np.ndarray],
+    sensor_ids: List[int],
     eps: float = 1e-3,
 ) -> List[TransitionData]:
     """Label transitions as positive if they move closer to any goal memory."""
@@ -73,16 +87,15 @@ def label_transitions_by_goal(
     teacher = KRKTeacher()
     v0 = teacher.features(board)
 
-    # Precompute current terminal outputs (by sensor id)
-    s0 = {s.id: apply_sensor(s, v0) for s in learner.get_mature_sensors()}
-    d0 = min((goal_distance(s0, g) for g in goals), default=float("inf"))
+    s0 = compute_sensor_vector_by_ids(learner, v0, sensor_ids)
+    d0 = min((np.linalg.norm(s0 - g) for g in goal_vectors), default=float("inf"))
 
     for move in board.legal_moves:
         b1 = board.copy()
         b1.push(move)
         v1 = teacher.features(b1)
-        s1 = {s.id: apply_sensor(s, v1) for s in learner.get_mature_sensors()}
-        d1 = min((goal_distance(s1, g) for g in goals), default=float("inf"))
+        s1 = compute_sensor_vector_by_ids(learner, v1, sensor_ids)
+        d1 = min((np.linalg.norm(s1 - g) for g in goal_vectors), default=float("inf"))
         label = 1 if d1 < d0 - eps else 0
         transitions.append(TransitionData(v0=v0, v1=v1, label=label, action=move))
     return transitions
@@ -172,10 +185,18 @@ def main() -> None:
     parser.add_argument("--sensors-per-spawn", type=int, default=5)
     parser.add_argument("--output-dir", type=Path, default=Path("snapshots/baseline_krk_chain"))
     parser.add_argument("--save-learner", type=Path, default=Path("snapshots/baseline_krk_chain/final_learner.pkl"))
+    parser.add_argument("--goal-eps", type=float, default=0.15)
+    parser.add_argument("--max-goals", type=int, default=100)
+    parser.add_argument("--min-mature-for-goals", type=int, default=8)
     args = parser.parse_args()
 
     teacher = KRKTeacher()
-    learner = BaselineLearner(feature_dim=teacher.feature_dim, stage=0)
+    learner = BaselineLearner(
+        feature_dim=teacher.feature_dim,
+        stage=0,
+        goal_eps=args.goal_eps,
+        max_goals=args.max_goals,
+    )
 
     for _ in range(args.initial_sensors):
         learner.sensors.append(learner.spawn_sensor())
@@ -185,24 +206,32 @@ def main() -> None:
     print("=" * 70)
     print("Stage 0: Mate-in-1")
     print("=" * 70)
-    goal_memories: List[Dict[int, float]] = []
+    goal_sensor_ids: List[int] | None = None
 
     for cycle in range(args.stage0_cycles):
         transitions = []
         for _ in range(args.samples_per_cycle):
             b0 = generate_krk_mate_in_1_position()
             transitions.extend(teacher.label_transitions(b0))
-            # Store sparse goal memory for starting state
-            goal = collect_goal_memories(learner, teacher.features(b0))
-            if goal:
-                goal_memories.append(goal)
+            # Store goal prototypes only after enough mature sensors
+            if len(learner.get_mature_sensors()) >= args.min_mature_for_goals:
+                if goal_sensor_ids is None:
+                    goal_sensor_ids = [s.id for s in learner.get_mature_sensors()]
+                v0 = teacher.features(b0)
+                s0 = compute_sensor_vector_by_ids(learner, v0, goal_sensor_ids)
+                learner.add_goal_memory(
+                    s0,
+                    label="mate_in_1",
+                    goal_eps=args.goal_eps,
+                    max_goals=args.max_goals,
+                )
 
         stats = update_learner_from_transitions(learner, transitions)
 
         if cycle % 10 == 0 or stats["newly_promoted"] or stats["newly_created_actuators"]:
             mature = len(learner.get_mature_sensors())
             print(f"Cycle {cycle:3d}: sensors={len(learner.sensors)} (mature={mature}) "
-                  f"actuators={len(learner.actuators)} goals={len(goal_memories)}")
+                  f"actuators={len(learner.actuators)} goal_prototypes={len(learner.goal_memories)}")
 
         if cycle % args.spawn_interval == 0 and cycle > 0:
             for _ in range(args.sensors_per_spawn):
@@ -212,19 +241,25 @@ def main() -> None:
     print("Stage 1: Backchain to Mate-in-1 goals")
     print("=" * 70)
     learner.stage = 1
+    if goal_sensor_ids is None:
+        goal_sensor_ids = [s.id for s in learner.get_mature_sensors()]
 
     for cycle in range(args.stage1_cycles):
         transitions = []
         for _ in range(args.samples_per_cycle):
             b0 = generate_random_krk_position()
-            transitions.extend(label_transitions_by_goal(learner, b0, goal_memories))
+            goal_vectors = [
+                g.s0 for g in learner.goal_memories
+                if g.label == "mate_in_1" and g.s0.shape == (len(goal_sensor_ids),)
+            ]
+            transitions.extend(label_transitions_by_goal(learner, b0, goal_vectors, goal_sensor_ids))
 
         stats = update_learner_from_transitions(learner, transitions)
 
         if cycle % 10 == 0 or stats["newly_promoted"] or stats["newly_created_actuators"]:
             mature = len(learner.get_mature_sensors())
             print(f"Cycle {cycle:3d}: sensors={len(learner.sensors)} (mature={mature}) "
-                  f"actuators={len(learner.actuators)} goals={len(goal_memories)}")
+                  f"actuators={len(learner.actuators)} goal_prototypes={len(learner.goal_memories)}")
 
         if cycle % args.spawn_interval == 0 and cycle > 0:
             for _ in range(args.sensors_per_spawn):
