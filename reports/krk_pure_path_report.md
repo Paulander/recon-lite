@@ -43,6 +43,7 @@ Repo: `/home/paulander/git/recon-lite`
 - `scripts/train_baseline_krk_chain.py`
 - Stage‑0: learns sensors/actuators from mate‑in‑1.
 - Stage‑1: labels transitions by moving **closer to mate‑in‑1 goal memories**.
+  - Dense reward uses distance‑to‑goal delta.
 
 5) **Goal memory prototyping + cap**
 - `src/recon_lite/learning/baseline.py`
@@ -77,6 +78,7 @@ uv run python3 scripts/test_krk_entry.py
 ---
 
 ## Open questions / next upgrades
+- **Stage spotlight bias:** actuator scoring boosts Stage‑0 when mate is visible (feature `can_deliver_mate`).
 - **Goal memory format**: currently stored as sparse `{sensor_id: value}` in chain trainer.
 - **Backchain depth**: Stage‑2 can reuse Stage‑1 goal memories the same way (add another loop).
 - **Recursive spawn in runtime**: can attach spawn points to legs to grow deeper goals live.

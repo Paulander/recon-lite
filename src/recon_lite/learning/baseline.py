@@ -311,6 +311,7 @@ class TransitionData:
     v1: np.ndarray
     label: int  # 1 for positive, 0 for negative
     action: Any = None  # environment-specific action
+    reward: float = 0.0  # optional dense reward signal
 
 
 def extract_actuator_patterns(positive_transitions: List[TransitionData],

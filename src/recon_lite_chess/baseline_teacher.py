@@ -220,12 +220,14 @@ class KRKTeacher:
             
             v1 = self.features(x1)
             label = 1 if x1.is_checkmate() else 0
+            reward = 1.0 if label == 1 else 0.0
             
             transitions.append(TransitionData(
                 v0=v0,
                 v1=v1,
                 label=label,
-                action=move
+                action=move,
+                reward=reward
             ))
         
         return transitions

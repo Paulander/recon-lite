@@ -216,6 +216,7 @@ Key components:
   - Baseline Stage-0 training; supports `--save-learner`.
 - `scripts/train_baseline_krk_chain.py`
   - Stage-0 + Stage-1 backchain (goal memory).
+  - Stage-1 uses **dense reward** from distance-to-goal deltas.
 - `scripts/baseline_to_recon.py`
   - Compiles baseline learner into ReCoN graph:
     - Root → Hub → Legs (parallel SUB)
@@ -223,6 +224,7 @@ Key components:
     - Edges use `src/dst` keys (loader requirement).
 - `scripts/test_krk_entry.py`
   - Executes compiled topology (no dynamic growth).
+  - Actuator scoring applies **stage spotlight bias** (mate-in-1 affordance boosts Stage‑0 actuators).
 
 **Note:** `TopologyRegistry.EdgeSpec.from_dict` now accepts legacy edge keys (`from`/`to` or `source`/`target`) to avoid KeyError in older topology JSON files.
 

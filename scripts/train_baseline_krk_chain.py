@@ -96,8 +96,9 @@ def label_transitions_by_goal(
         v1 = teacher.features(b1)
         s1 = compute_sensor_vector_by_ids(learner, v1, sensor_ids)
         d1 = min((np.linalg.norm(s1 - g) for g in goal_vectors), default=float("inf"))
-        label = 1 if d1 < d0 - eps else 0
-        transitions.append(TransitionData(v0=v0, v1=v1, label=label, action=move))
+        reward = d0 - d1
+        label = 1 if reward > eps else 0
+        transitions.append(TransitionData(v0=v0, v1=v1, label=label, action=move, reward=reward))
     return transitions
 
 
@@ -107,10 +108,15 @@ def update_learner_from_transitions(learner: BaselineLearner, transitions: List[
     sensor_deltas_neg = {s.id: [] for s in learner.sensors}
 
     for trans in transitions:
+        # Use dense reward if provided; fallback to 1.0 for positive labels
+        if trans.label == 1:
+            weight = min(max(trans.reward, 0.0), 1.0) if trans.reward > 0 else 1.0
+        else:
+            weight = min(max(-trans.reward, 0.0), 1.0) if trans.reward < 0 else 1.0
         for sensor in learner.sensors:
             t0 = apply_sensor(sensor, trans.v0)
             t1 = apply_sensor(sensor, trans.v1)
-            delta_t = t1 - t0
+            delta_t = (t1 - t0) * weight
             if trans.label == 1:
                 sensor_deltas_pos[sensor.id].append(delta_t)
             else:

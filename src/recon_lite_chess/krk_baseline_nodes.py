@@ -202,6 +202,7 @@ def create_actuator_terminal(node_id=None):
         # Get targets and goal_delta
         targets = node.meta.get("targets", [])
         goal_delta = node.meta.get("goal_delta", {})
+        stage = int(node.meta.get("stage", 0))
         
         if not targets or not goal_delta:
             return False, False
@@ -215,6 +216,18 @@ def create_actuator_terminal(node_id=None):
         if len(s0) != len(targets):
             return False, False  # Not all sensors available
         
+        # Determine spotlight weight (affordance gating)
+        features = blackboard.get("krk_features")
+        mate_possible = False
+        if features is not None and len(features) > 12:
+            mate_possible = features[12] >= 0.5  # can_deliver_mate
+
+        # Stage bias: spotlight tactical (stage 0) when mate is visible
+        if mate_possible:
+            stage_weight = 2.5 if stage == 0 else 0.5
+        else:
+            stage_weight = 0.7 if stage == 0 else 1.0
+
         # Score each legal move
         board = env.get("board")
         if not board:
@@ -275,7 +288,7 @@ def create_actuator_terminal(node_id=None):
             # Score by similarity to goal_delta
             goal_deltas = [goal_delta[t] for t in targets if t in goal_delta][:len(delta_s)]
             similarity = cosine_similarity(delta_s, goal_deltas)
-            scores[move] = similarity
+            scores[move] = similarity * stage_weight
         
         if not scores:
             return False, False
