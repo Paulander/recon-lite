@@ -49,6 +49,11 @@ Repo: `/home/paulander/git/recon-lite`
 - `src/recon_lite/learning/baseline.py`
 - Merge goal memories in terminal space (nearest‑neighbor within `goal_eps`)
 - Hard cap via `max_goals`; evict lowest‑count when full.
+6) **Actuator quantization + cap (Q1 fix)**
+- `src/recon_lite/learning/baseline.py`
+- Quantize Δs per sensor type for actuator pattern keys.
+- `scripts/train_baseline_krk_chain.py` / `train_baseline_krk.py`
+  - Prototype merge by Δ distance + per‑stage actuator cap.
 
 ---
 

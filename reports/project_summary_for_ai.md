@@ -212,11 +212,13 @@ Key components:
 - `src/recon_lite/learning/baseline.py`
   - Terminal/Actuator specs.
   - **Goal memory prototyping** in terminal space (`goal_eps`, `max_goals`, normalize).
+  - **Actuator Δ quantization** per sensor type to reduce actuator explosion.
 - `scripts/train_baseline_krk.py`
   - Baseline Stage-0 training; supports `--save-learner`.
 - `scripts/train_baseline_krk_chain.py`
   - Stage-0 + Stage-1 backchain (goal memory).
   - Stage-1 uses **dense reward** from distance-to-goal deltas.
+  - Per-stage actuator cap (`--max-actuators-per-stage`) with prototype merge.
 - `scripts/baseline_to_recon.py`
   - Compiles baseline learner into ReCoN graph:
     - Root → Hub → Legs (parallel SUB)

@@ -17,7 +17,7 @@ import numpy as np
 from recon_lite.learning.baseline import (
     BaselineLearner, Terminal, TerminalRole,
     compute_sensor_xp, should_promote_sensor,
-    extract_actuator_patterns, find_similar_actuator,
+    extract_actuator_patterns, find_similar_actuator, enforce_actuator_cap,
     TransitionData, apply_sensor,
 )
 from recon_lite_chess.baseline_teacher import KRKTeacher, generate_krk_mate_in_1_position
@@ -102,7 +102,11 @@ def label_transitions_by_goal(
     return transitions
 
 
-def update_learner_from_transitions(learner: BaselineLearner, transitions: List[TransitionData]) -> Dict[str, Any]:
+def update_learner_from_transitions(
+    learner: BaselineLearner,
+    transitions: List[TransitionData],
+    max_actuators_per_stage: int,
+) -> Dict[str, Any]:
     """Shared update logic for sensors/actuators."""
     sensor_deltas_pos = {s.id: [] for s in learner.sensors}
     sensor_deltas_neg = {s.id: [] for s in learner.sensors}
@@ -155,7 +159,12 @@ def update_learner_from_transitions(learner: BaselineLearner, transitions: List[
         if positive_trans:
             actuator_specs = extract_actuator_patterns(positive_trans, mature_sensors, eps=0.1, top_k=5)
             for spec in actuator_specs:
-                existing = find_similar_actuator(learner.actuators, spec, similarity_threshold=0.9)
+                existing = find_similar_actuator(
+                    learner.actuators,
+                    spec,
+                    similarity_threshold=0.9,
+                    delta_eps=0.15,
+                )
                 if existing:
                     existing.actuator_spec.goal_delta = (
                         0.8 * existing.actuator_spec.goal_delta +
@@ -170,9 +179,16 @@ def update_learner_from_transitions(learner: BaselineLearner, transitions: List[
                         role=TerminalRole.ACTUATOR,
                         actuator_spec=spec
                     )
+                    actuator.xp = float(np.mean(np.abs(spec.goal_delta)))
                     learner._next_actuator_id += 1
                     learner.actuators.append(actuator)
                     newly_created_actuators += 1
+
+            learner.actuators, pruned_actuators = enforce_actuator_cap(
+                learner.actuators,
+                stage=learner.stage,
+                max_actuators=max_actuators_per_stage,
+            )
 
     return {
         "newly_promoted": newly_promoted,
@@ -194,6 +210,7 @@ def main() -> None:
     parser.add_argument("--goal-eps", type=float, default=0.15)
     parser.add_argument("--max-goals", type=int, default=100)
     parser.add_argument("--min-mature-for-goals", type=int, default=8)
+    parser.add_argument("--max-actuators-per-stage", type=int, default=30)
     args = parser.parse_args()
 
     teacher = KRKTeacher()
@@ -232,7 +249,11 @@ def main() -> None:
                     max_goals=args.max_goals,
                 )
 
-        stats = update_learner_from_transitions(learner, transitions)
+        stats = update_learner_from_transitions(
+            learner,
+            transitions,
+            max_actuators_per_stage=args.max_actuators_per_stage,
+        )
 
         if cycle % 10 == 0 or stats["newly_promoted"] or stats["newly_created_actuators"]:
             mature = len(learner.get_mature_sensors())
@@ -260,7 +281,11 @@ def main() -> None:
             ]
             transitions.extend(label_transitions_by_goal(learner, b0, goal_vectors, goal_sensor_ids))
 
-        stats = update_learner_from_transitions(learner, transitions)
+        stats = update_learner_from_transitions(
+            learner,
+            transitions,
+            max_actuators_per_stage=args.max_actuators_per_stage,
+        )
 
         if cycle % 10 == 0 or stats["newly_promoted"] or stats["newly_created_actuators"]:
             mature = len(learner.get_mature_sensors())

@@ -341,7 +341,7 @@ def extract_actuator_patterns(positive_transitions: List[TransitionData],
     if len(mature_sensors) == 0:
         return []
     
-    pattern_map = {}  # key: (indices_tuple, signs_tuple) -> list of raw deltas
+    pattern_map = {}  # key: (indices_tuple, quant_bins_tuple) -> list of raw deltas
     
     for trans in positive_transitions:
         # Compute Δs using mature sensors
@@ -359,11 +359,14 @@ def extract_actuator_patterns(positive_transitions: List[TransitionData],
             top_indices = np.argsort(np.abs(delta_s[significant]))[-top_k:]
             significant = significant[top_indices]
         
-        # Quantize for pattern key (just signs for now)
-        signs = tuple(np.sign(delta_s[significant]).astype(int))
+        # Quantize for pattern key (per-sensor type)
+        quant_bins = tuple(
+            quantize_delta(mature_sensors[i], float(delta_s[i]), eps=eps)
+            for i in significant
+        )
         
         # Create pattern key
-        key = (tuple(sorted(significant)), signs)
+        key = (tuple(sorted(significant)), quant_bins)
         
         # Accumulate raw deltas for this pattern
         if key not in pattern_map:
@@ -372,7 +375,7 @@ def extract_actuator_patterns(positive_transitions: List[TransitionData],
     
     # Merge patterns: compute mean goal_delta for each
     actuator_specs = []
-    for (indices, signs), delta_list in pattern_map.items():
+    for (indices, _quant_bins), delta_list in pattern_map.items():
         mean_delta = np.mean(delta_list, axis=0)
         
         # Map indices back to sensor IDs
@@ -390,7 +393,8 @@ def extract_actuator_patterns(positive_transitions: List[TransitionData],
 
 def find_similar_actuator(actuators: List[Terminal], 
                           spec: ActuatorSpec,
-                          similarity_threshold: float = 0.9) -> Optional[Terminal]:
+                          similarity_threshold: float = 0.9,
+                          delta_eps: float = 0.15) -> Optional[Terminal]:
     """
     Find an existing actuator with similar pattern.
     
@@ -420,11 +424,18 @@ def find_similar_actuator(actuators: List[Terminal],
         if jaccard < similarity_threshold:
             continue
         
-        # Cosine similarity of goal_delta (if indices overlap)
-        if len(set_a & set_b) > 0:
-            # TODO: implement proper cosine similarity
-            # For now, just check Jaccard
-            return act
+        # If identical sensor sets, compare goal_delta distance
+        if set_a == set_b:
+            a_map = {sid: val for sid, val in zip(spec.sensor_indices, spec.goal_delta)}
+            b_map = {sid: val for sid, val in zip(act_spec.sensor_indices, act_spec.goal_delta)}
+            ordered = sorted(set_a)
+            diffs = np.array([a_map[sid] - b_map[sid] for sid in ordered], dtype=np.float32)
+            if np.linalg.norm(diffs) <= delta_eps:
+                return act
+            continue
+        
+        # Overlap but not identical: allow merge on high Jaccard only
+        return act
     
     return None
 
@@ -486,6 +497,42 @@ def spawn_sensor(id: int,
         role=TerminalRole.SENSOR,
         sensor_spec=spec
     )
+
+
+def quantize_delta(sensor: Terminal, delta: float, eps: float = 0.1) -> int:
+    """
+    Quantize delta per sensor type to reduce actuator proliferation.
+    Returns an integer bin label.
+    """
+    readout_type = sensor.sensor_spec.readout_type if sensor.sensor_spec else "identity"
+    if readout_type in ("threshold", "bucketize"):
+        # Discrete outputs: clamp to {-1, 0, +1}
+        return int(np.clip(np.round(delta), -1, 1))
+    # Continuous outputs: quantize to coarse bins
+    bin_width = max(eps, 0.25)
+    q = int(np.round(delta / bin_width))
+    return int(np.clip(q, -3, 3))
+
+
+def enforce_actuator_cap(
+    actuators: List[Terminal],
+    stage: int,
+    max_actuators: int,
+) -> tuple[list[Terminal], int]:
+    """
+    Enforce a max actuator count per stage. Returns (kept, pruned_count).
+    """
+    if max_actuators <= 0:
+        return actuators, 0
+    stage_acts = [a for a in actuators if a.stage == stage and a.role == TerminalRole.ACTUATOR]
+    if len(stage_acts) <= max_actuators:
+        return actuators, 0
+    # Keep top by XP
+    stage_sorted = sorted(stage_acts, key=lambda a: a.xp, reverse=True)
+    keep_ids = {a.id for a in stage_sorted[:max_actuators]}
+    pruned_count = len(stage_acts) - max_actuators
+    kept = [a for a in actuators if not (a.stage == stage and a.id not in keep_ids)]
+    return kept, pruned_count
 
 
 # ============================================================================

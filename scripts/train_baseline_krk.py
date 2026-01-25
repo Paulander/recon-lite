@@ -21,7 +21,7 @@ import numpy as np
 from recon_lite.learning.baseline import (
     BaselineLearner, Terminal, TerminalRole, ActuatorSpec,
     compute_sensor_xp, should_promote_sensor,
-    extract_actuator_patterns, find_similar_actuator,
+    extract_actuator_patterns, find_similar_actuator, enforce_actuator_cap,
     TransitionData
 )
 from recon_lite_chess.baseline_teacher import KRKTeacher, generate_krk_mate_in_1_position
@@ -57,6 +57,7 @@ class TrainingConfig:
         self.goal_eps = goal_eps
         self.max_goals = max_goals
         self.min_mature_for_goals = min_mature_for_goals
+        self.max_actuators_per_stage: int = 30
         self.save_learner_path: Path | None = None
 
 
@@ -205,7 +206,12 @@ def train_baseline_krk(config: TrainingConfig) -> Dict:
                 # Create/update actuator terminals
                 for spec in actuator_specs:
                     # Check if similar actuator exists
-                    existing = find_similar_actuator(learner.actuators, spec, similarity_threshold=0.9)
+                    existing = find_similar_actuator(
+                        learner.actuators,
+                        spec,
+                        similarity_threshold=0.9,
+                        delta_eps=0.15,
+                    )
                     
                     if existing:
                         # Update existing (running mean)
@@ -223,9 +229,16 @@ def train_baseline_krk(config: TrainingConfig) -> Dict:
                             role=TerminalRole.ACTUATOR,
                             actuator_spec=spec
                         )
+                        actuator.xp = float(np.mean(np.abs(spec.goal_delta)))
                         learner._next_actuator_id += 1
                         learner.actuators.append(actuator)
                         newly_created_actuators += 1
+
+                learner.actuators, pruned_actuators = enforce_actuator_cap(
+                    learner.actuators,
+                    stage=0,
+                    max_actuators=config.max_actuators_per_stage,
+                )
         
         # ====================================================================
         # 7. Collect goal memories from positive starting states
@@ -412,6 +425,8 @@ def main():
                        help="Max number of goal prototypes to keep")
     parser.add_argument("--min-mature-for-goals", type=int, default=8,
                        help="Minimum mature sensors before storing goals")
+    parser.add_argument("--max-actuators-per-stage", type=int, default=30,
+                       help="Max actuators to keep per stage")
     parser.add_argument("--save-learner", type=Path, default=None,
                        help="Optional path to save BaselineLearner pickle")
     
@@ -429,6 +444,7 @@ def main():
         max_goals=args.max_goals,
         min_mature_for_goals=args.min_mature_for_goals,
     )
+    config.max_actuators_per_stage = args.max_actuators_per_stage
     if args.save_learner:
         config.save_learner_path = args.save_learner
     
