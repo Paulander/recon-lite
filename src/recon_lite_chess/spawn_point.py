@@ -17,8 +17,9 @@ from dataclasses import dataclass, field
 from typing import List, Dict, Any, Optional, Tuple
 import numpy as np
 
-from recon_lite.graph import Node, NodeType, Graph
+from recon_lite.graph import Node, NodeType, Graph, LinkType
 from recon_lite_chess.baseline_teacher import KRKTeacher
+from recon_lite_chess.krk_baseline_nodes import apply_readout
 
 
 # Global teacher for feature extraction
@@ -52,8 +53,8 @@ class TrialMicroScript:
     trial_id: str
     spawn_point_id: str
     
-    # Feature subset being explored
-    feature_indices: List[int]
+    # Terminal subset being explored (sensor IDs)
+    sensor_ids: List[str]
     
     # Learning stats
     samples: int = 0
@@ -63,7 +64,7 @@ class TrialMicroScript:
     ticks_alive: int = 0
     last_update_tick: int = 0
     
-    # Learned delta pattern
+    # Learned delta pattern in terminal space (Δs)
     delta_mean: Optional[np.ndarray] = field(default=None)
     delta_std: Optional[np.ndarray] = field(default=None)
     
@@ -143,24 +144,24 @@ class SpawnPoint:
         
         return random.random() < self.config.spawn_probability
     
-    def spawn_trial(self, tick: int) -> TrialMicroScript:
+    def spawn_trial(self, tick: int, available_sensor_ids: List[str]) -> TrialMicroScript:
         """
         Spawn a new trial micro-script.
         
-        Randomly selects a subset of features to explore.
+        Randomly selects a subset of sensor terminals to explore.
         """
         trial_id = f"{self.spawn_point_id}_trial_{self.total_spawns}"
         self.total_spawns += 1
         
-        # Randomly select 1-4 features to explore
-        num_features = random.randint(1, 4)
-        feature_indices = random.sample(range(_teacher.feature_dim), num_features)
-        feature_indices.sort()
+        # Randomly select 1-4 sensors to explore
+        num_sensors = random.randint(1, min(4, max(1, len(available_sensor_ids))))
+        sensor_ids = random.sample(available_sensor_ids, num_sensors)
+        sensor_ids.sort()
         
         trial = TrialMicroScript(
             trial_id=trial_id,
             spawn_point_id=self.spawn_point_id,
-            feature_indices=feature_indices,
+            sensor_ids=sensor_ids,
             last_update_tick=tick
         )
         
@@ -169,8 +170,8 @@ class SpawnPoint:
     
     def process_transition(
         self,
-        v0: np.ndarray,
-        v1: np.ndarray,
+        s0: Dict[str, float],
+        s1: Dict[str, float],
         resulted_in_checkmate: bool,
         tick: int
     ):
@@ -178,14 +179,20 @@ class SpawnPoint:
         Update all active trials with a new transition observation.
         
         Args:
-            v0: Features before move
-            v1: Features after move
+            s0: Terminal outputs before move
+            s1: Terminal outputs after move
             resulted_in_checkmate: Whether the move achieved checkmate
             tick: Current tick number
         """
         for trial in list(self.active_trials.values()):
-            # Compute delta for trial's feature subset
-            delta = v1[trial.feature_indices] - v0[trial.feature_indices]
+            # Compute delta for trial's terminal subset
+            deltas = []
+            for sensor_id in trial.sensor_ids:
+                if sensor_id in s0 and sensor_id in s1:
+                    deltas.append(s1[sensor_id] - s0[sensor_id])
+            if not deltas:
+                continue
+            delta = np.array(deltas, dtype=np.float32)
             
             # Update statistics
             trial.samples += 1
@@ -211,19 +218,19 @@ class SpawnPoint:
             # Update XP
             trial.update_xp()
     
-    def prune_and_promote(self, tick: int) -> Tuple[List[str], List[str]]:
+    def prune_and_promote(self, tick: int) -> Tuple[List["TrialMicroScript"], List[str]]:
         """
         Prune low-XP trials and promote high-XP trials.
         
         Returns:
-            (promoted_ids, pruned_ids)
+            (promoted_trials, pruned_ids)
         """
-        promoted = []
+        promoted: List[TrialMicroScript] = []
         pruned = []
         
         for trial_id, trial in list(self.active_trials.items()):
             if trial.should_promote():
-                promoted.append(trial_id)
+                promoted.append(trial)
                 self.promoted_trials.append(trial_id)
                 self.total_promotions += 1
                 del self.active_trials[trial_id]
@@ -253,15 +260,21 @@ class SpawnPointManager:
     Manages spawn points across all Legs in the KRK_entry graph.
     """
     
-    def __init__(self, config: Optional[SpawnPointConfig] = None):
+    def __init__(self, config: Optional[SpawnPointConfig] = None, graph: Optional[Graph] = None):
         self.config = config or SpawnPointConfig()
+        self.graph = graph
         self.spawn_points: Dict[str, SpawnPoint] = {}
         self.tick = 0
+        self.sensor_ids: List[str] = []
     
     def attach_to_legs(self, graph: Graph, leg_prefix: str = "leg_"):
         """
         Attach spawn points to all Leg nodes in the graph.
         """
+        self.graph = graph
+        self.sensor_ids = sorted(
+            [nid for nid in graph.nodes if nid.startswith("sensor_") and "_post" not in nid]
+        )
         for node_id in graph.nodes:
             if node_id.startswith(leg_prefix):
                 spawn_point_id = f"spawn_{node_id}"
@@ -286,21 +299,27 @@ class SpawnPointManager:
         """
         self.tick += 1
         
+        if self.graph is None:
+            return
         # Extract features before and after
         v0 = _teacher.features(board)
-        
         board_after = board.copy()
         board_after.push(selected_move)
         v1 = _teacher.features(board_after)
         
+        # Compute terminal outputs (s0, s1)
+        s0 = self._compute_terminal_outputs(v0)
+        s1 = self._compute_terminal_outputs(v1)
+        
         # Check for spawning (on affordance spike)
         for sp in self.spawn_points.values():
             if sp.should_spawn(v0):
-                trial = sp.spawn_trial(self.tick)
-                print(f"  Spawned trial: {trial.trial_id} exploring features {trial.feature_indices}")
+                if self.sensor_ids:
+                    trial = sp.spawn_trial(self.tick, self.sensor_ids)
+                    print(f"  Spawned trial: {trial.trial_id} exploring sensors {trial.sensor_ids}")
             
             # Update all active trials with this transition
-            sp.process_transition(v0, v1, resulted_in_checkmate, self.tick)
+            sp.process_transition(s0, s1, resulted_in_checkmate, self.tick)
         
         # Periodic prune/promote
         if self.tick % 10 == 0:
@@ -316,8 +335,10 @@ class SpawnPointManager:
             total_promoted += len(promoted)
             total_pruned += len(pruned)
             
-            for trial_id in promoted:
-                print(f"  ✓ PROMOTED: {trial_id}")
+            for trial in promoted:
+                print(f"  ✓ PROMOTED: {trial.trial_id}")
+                # Attempt to materialize into the graph if available
+                self._promote_trial_to_graph(sp, trial)
             for trial_id in pruned:
                 print(f"  ✗ Pruned: {trial_id}")
         
@@ -340,6 +361,149 @@ class SpawnPointManager:
             ),
         }
         return stats
+
+    def _compute_terminal_outputs(self, features: np.ndarray) -> Dict[str, float]:
+        """Compute terminal outputs for all baseline sensors from a feature vector."""
+        outputs: Dict[str, float] = {}
+        if self.graph is None:
+            return outputs
+        for sensor_id in self.sensor_ids:
+            node = self.graph.nodes.get(sensor_id)
+            if not node:
+                continue
+            readout_type = node.meta.get("readout_type", "identity")
+            feature_mask_keys = node.meta.get("feature_mask_keys", [])
+            readout_params = node.meta.get("readout_params", {})
+            feature_mask = np.zeros(len(features), dtype=bool)
+            for key in feature_mask_keys:
+                if key.startswith("feature_"):
+                    idx = int(key.split("_")[1])
+                    if idx < len(features):
+                        feature_mask[idx] = True
+            if not np.any(feature_mask):
+                continue
+            sub_v = features[feature_mask]
+            try:
+                outputs[sensor_id] = float(apply_readout(sub_v, readout_type, readout_params))
+            except Exception:
+                continue
+        return outputs
+
+    def _promote_trial_to_graph(self, sp: SpawnPoint, trial: TrialMicroScript) -> None:
+        """
+        Materialize a promoted trial as a 3-part micro-script in the active graph.
+        
+        Structure:
+            parent_leg (SCRIPT)
+              ├─ SUB → trial_leg (SCRIPT)
+              │    ├─ SUB → precond (SCRIPT, aggregation="and")
+              │    │      ├─ SUB → sensor_i (TERMINAL)
+              │    ├─ SUB → actuator (TERMINAL)
+              │    └─ SUB → postcond (SCRIPT, aggregation="and")
+              │           ├─ SUB → sensor_i_post (TERMINAL)
+        """
+        if self.graph is None:
+            return
+        
+        try:
+            from recon_lite_chess.krk_baseline_nodes import (
+                create_leg_script,
+                create_and_gate,
+                create_act_script,
+                create_sensor_terminal,
+                create_actuator_terminal,
+            )
+        except Exception:
+            return
+        
+        # Build node ids
+        leg_id = f"{trial.trial_id}_leg"
+        precond_id = f"{trial.trial_id}_precond"
+        act_script_id = f"{trial.trial_id}_act_script"
+        postcond_id = f"{trial.trial_id}_postcond"
+        actuator_id = f"{trial.trial_id}_act"
+        
+        if leg_id in self.graph.nodes:
+            return
+        
+        # Parent leg: attach under the leg that spawned this trial
+        parent_leg_id = sp.leg_id if sp.leg_id in self.graph.nodes else "krk_entry"
+        
+        # Create nodes
+        leg = create_leg_script(leg_id)
+        leg.meta["factory"] = "recon_lite_chess.krk_baseline_nodes:create_leg_script"
+        leg.meta["origin"] = "spawn_point"
+        leg.meta["trial_id"] = trial.trial_id
+        
+        precond = create_and_gate(precond_id)
+        precond.meta["aggregation"] = "and"
+        precond.meta["factory"] = "recon_lite_chess.krk_baseline_nodes:create_and_gate"
+        precond.meta["origin"] = "spawn_point"
+        
+        act_script = create_act_script(act_script_id)
+        act_script.meta["factory"] = "recon_lite_chess.krk_baseline_nodes:create_act_script"
+        act_script.meta["origin"] = "spawn_point"
+        
+        postcond = create_and_gate(postcond_id)
+        postcond.meta["aggregation"] = "and"
+        postcond.meta["factory"] = "recon_lite_chess.krk_baseline_nodes:create_and_gate"
+        postcond.meta["origin"] = "spawn_point"
+        
+        actuator = create_actuator_terminal(actuator_id)
+        actuator.meta["factory"] = "recon_lite_chess.krk_baseline_nodes:create_actuator_terminal"
+        actuator.meta["origin"] = "spawn_point"
+        actuator.meta["trial_id"] = trial.trial_id
+        
+        # Add core nodes first so edges can target them
+        self.graph.add_node(leg)
+        self.graph.add_node(precond)
+        self.graph.add_node(act_script)
+        self.graph.add_node(postcond)
+        self.graph.add_node(actuator)
+        
+        # Create sensor terminals for each feature index
+        sensor_ids = []
+        goal_delta = {}
+        if trial.delta_mean is None:
+            return
+        for sensor_id, delta in zip(trial.sensor_ids, list(trial.delta_mean)):
+            sensor_ids.append(sensor_id)
+            goal_delta[sensor_id] = float(delta)
+            
+            sensor_node = self.graph.nodes.get(sensor_id)
+            if sensor_node is None:
+                continue
+            
+            # Precondition uses existing sensors
+            self.graph.add_edge(precond_id, sensor_id, LinkType.SUB)
+            
+            # Postcondition uses new sensor clones with same spec
+            post_id = f"{sensor_id}_post_{trial.trial_id}"
+            if post_id not in self.graph.nodes:
+                sensor_post = create_sensor_terminal(post_id)
+                sensor_post.meta["factory"] = "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal"
+                sensor_post.meta["readout_type"] = sensor_node.meta.get("readout_type", "identity")
+                sensor_post.meta["feature_mask_keys"] = list(sensor_node.meta.get("feature_mask_keys", []))
+                sensor_post.meta["readout_params"] = dict(sensor_node.meta.get("readout_params", {}))
+                sensor_post.meta["origin"] = "spawn_point"
+                sensor_post.meta["trial_id"] = trial.trial_id
+                self.graph.add_node(sensor_post)
+            self.graph.add_edge(postcond_id, post_id, LinkType.SUB)
+        
+        # Configure actuator targets
+        actuator.meta["targets"] = list(sensor_ids)
+        actuator.meta["goal_delta"] = goal_delta
+        
+        # Wire leg structure (no POR between legs or terminals)
+        self.graph.add_edge(parent_leg_id, leg_id, LinkType.SUB)
+        self.graph.add_edge(leg_id, precond_id, LinkType.SUB)
+        self.graph.add_edge(leg_id, act_script_id, LinkType.SUB)
+        self.graph.add_edge(leg_id, postcond_id, LinkType.SUB)
+        self.graph.add_edge(act_script_id, actuator_id, LinkType.SUB)
+        
+        # POR sequencing between scripts only
+        self.graph.add_edge(precond_id, act_script_id, LinkType.POR)
+        self.graph.add_edge(act_script_id, postcond_id, LinkType.POR)
 
 
 # Convenience function for testing

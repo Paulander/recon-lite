@@ -51,6 +51,7 @@ class TrainingConfig:
         self.sensors_per_spawn = sensors_per_spawn
         self.output_dir = output_dir
         self.save_interval = save_interval
+        self.save_learner_path: Path | None = None
 
 
 # ============================================================================
@@ -333,6 +334,12 @@ def train_baseline_krk(config: TrainingConfig) -> Dict:
     final_path = config.output_dir / "final_checkpoint.json"
     save_checkpoint(learner, stats, final_path)
     print(f"\n💾 Saved final checkpoint: {final_path}")
+
+    if config.save_learner_path:
+        config.save_learner_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(config.save_learner_path, "wb") as f:
+            pickle.dump(learner, f)
+        print(f"💾 Saved learner pickle: {config.save_learner_path}")
     
     return {
         "learner": learner,
@@ -383,6 +390,8 @@ def main():
                        help="Output directory for checkpoints")
     parser.add_argument("--save-interval", type=int, default=10,
                        help="Save checkpoint every N cycles")
+    parser.add_argument("--save-learner", type=Path, default=None,
+                       help="Optional path to save BaselineLearner pickle")
     
     args = parser.parse_args()
     
@@ -395,6 +404,8 @@ def main():
         output_dir=args.output_dir,
         save_interval=args.save_interval,
     )
+    if args.save_learner:
+        config.save_learner_path = args.save_learner
     
     result = train_baseline_krk(config)
     

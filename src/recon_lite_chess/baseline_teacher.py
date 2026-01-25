@@ -237,24 +237,40 @@ class KRKTeacher:
 
 def generate_krk_mate_in_1_position() -> chess.Board:
     """
-    Generate a random KRK position where white can deliver mate in 1.
-    
-    For now, use a simple heuristic: place pieces randomly and check.
-    In production, you'd use a database of mate-in-1 positions.
+    Generate a random legal KRK position where white can deliver mate in 1.
+
+    This brute-forces random legal KRK boards until it finds one with a
+    mate-in-1 move for White. This avoids invalid "mate-in-1" templates.
     
     Returns:
         Chess board with a mate-in-1 position
     """
     import random
-    
-    # Simple mate-in-1 patterns
-    mate_in_1_fens = [
-        "7k/5K2/6R1/8/8/8/8/8 w - - 0 1",  # Back rank mate
-        "6k1/5K2/6R1/8/8/8/8/8 w - - 0 1",  # Corner mate
-        "7k/6K1/5R2/8/8/8/8/8 w - - 0 1",  # Edge mate
-        "k7/2K5/1R6/8/8/8/8/8 w - - 0 1",  # Corner mate variant
-        "7k/6RK/8/8/8/8/8/8 w - - 0 1",  # Simple back rank
-    ]
-    
-    fen = random.choice(mate_in_1_fens)
-    return chess.Board(fen)
+
+    squares = list(chess.SQUARES)
+    max_attempts = 10000
+
+    for _ in range(max_attempts):
+        wk, bk, wr = random.sample(squares, 3)
+        board = chess.Board(None)
+        board.set_piece_at(wk, chess.Piece(chess.KING, chess.WHITE))
+        board.set_piece_at(bk, chess.Piece(chess.KING, chess.BLACK))
+        board.set_piece_at(wr, chess.Piece(chess.ROOK, chess.WHITE))
+        board.turn = chess.WHITE
+
+        # Basic legality filters
+        if chess.square_distance(wk, bk) <= 1:
+            continue
+        if not board.is_valid():
+            continue
+        if board.is_check():
+            continue
+
+        # Check if any legal move is checkmate
+        for move in board.legal_moves:
+            b2 = board.copy()
+            b2.push(move)
+            if b2.is_checkmate():
+                return board
+
+    raise RuntimeError("Failed to find KRK mate-in-1 position after many attempts")

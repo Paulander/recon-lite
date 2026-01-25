@@ -98,7 +98,7 @@ def main():
             print(f"\n  {sp_id}:")
             for trial_id, trial in sp.active_trials.items():
                 print(f"    {trial_id}:")
-                print(f"      Features: {trial.feature_indices}")
+                print(f"      Sensors: {trial.sensor_ids}")
                 print(f"      Samples: {trial.samples}")
                 print(f"      Mate hits: {trial.checkmate_hits}/{trial.samples}")
                 print(f"      XP: {trial.xp:.3f}")

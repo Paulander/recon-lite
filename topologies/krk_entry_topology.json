@@ -1,49 +1,42 @@
 {
-  "version": "1.0",
-  "network": "krk_entry",
-  "created": "2026-01-23T00:00:00",
-  "nodes": [
-    {
+  "nodes": {
+    "krk_entry": {
       "id": "krk_entry",
       "type": "SCRIPT",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_krk_entry_root",
       "meta": {
         "blackboard": {},
         "description": "KRK entry point with feature extraction"
-      },
-      "group": "root"
+      }
     },
-    {
+    "krk_hub": {
       "id": "krk_hub",
       "type": "SCRIPT",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_krk_hub",
       "meta": {
         "bandit_enabled": true,
         "description": "Bandit selector for Leg alternatives"
-      },
-      "group": "hub"
+      }
     },
-    {
+    "leg_0": {
       "id": "leg_0",
       "type": "SCRIPT",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_leg_script",
       "meta": {
         "actuator_id": 0,
         "description": "Leg for actuator pattern 0"
-      },
-      "group": "leg"
+      }
     },
-    {
+    "precond_0": {
       "id": "precond_0",
       "type": "SCRIPT",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
       "meta": {
         "aggregation": "and",
         "description": "Precondition sensors must all fire"
-      },
-      "group": "gate"
+      }
     },
-    {
+    "sensor_6": {
       "id": "sensor_6",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -62,10 +55,9 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "sensor_7": {
       "id": "sensor_7",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -84,10 +76,9 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "sensor_11": {
       "id": "sensor_11",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -103,10 +94,9 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "sensor_18": {
       "id": "sensor_18",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -122,10 +112,9 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "sensor_19": {
       "id": "sensor_19",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -145,10 +134,17 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "act_script_0": {
+      "id": "act_script_0",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_act_script",
+      "meta": {
+        "description": "Actuator wrapper (SCRIPT)"
+      }
+    },
+    "actuator_0": {
       "id": "actuator_0",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_actuator_terminal",
@@ -173,20 +169,18 @@
         "match_mode": "cosine",
         "activations": 1000,
         "cycles_alive": 50
-      },
-      "group": "actuator"
+      }
     },
-    {
+    "postcond_0": {
       "id": "postcond_0",
       "type": "SCRIPT",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
       "meta": {
         "aggregation": "and",
         "description": "Postcondition verification"
-      },
-      "group": "gate"
+      }
     },
-    {
+    "sensor_6_post_0": {
       "id": "sensor_6_post_0",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -205,10 +199,9 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "sensor_7_post_0": {
       "id": "sensor_7_post_0",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -227,10 +220,9 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "sensor_11_post_0": {
       "id": "sensor_11_post_0",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -246,10 +238,9 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "sensor_18_post_0": {
       "id": "sensor_18_post_0",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -265,10 +256,9 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "sensor_19_post_0": {
       "id": "sensor_19_post_0",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -288,30 +278,27 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "leg_1": {
       "id": "leg_1",
       "type": "SCRIPT",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_leg_script",
       "meta": {
         "actuator_id": 1,
         "description": "Leg for actuator pattern 1"
-      },
-      "group": "leg"
+      }
     },
-    {
+    "precond_1": {
       "id": "precond_1",
       "type": "SCRIPT",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
       "meta": {
         "aggregation": "and",
         "description": "Precondition sensors must all fire"
-      },
-      "group": "gate"
+      }
     },
-    {
+    "sensor_20": {
       "id": "sensor_20",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -330,10 +317,17 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "act_script_1": {
+      "id": "act_script_1",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_act_script",
+      "meta": {
+        "description": "Actuator wrapper (SCRIPT)"
+      }
+    },
+    "actuator_1": {
       "id": "actuator_1",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_actuator_terminal",
@@ -358,20 +352,18 @@
         "match_mode": "cosine",
         "activations": 1000,
         "cycles_alive": 50
-      },
-      "group": "actuator"
+      }
     },
-    {
+    "postcond_1": {
       "id": "postcond_1",
       "type": "SCRIPT",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
       "meta": {
         "aggregation": "and",
         "description": "Postcondition verification"
-      },
-      "group": "gate"
+      }
     },
-    {
+    "sensor_6_post_1": {
       "id": "sensor_6_post_1",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -390,10 +382,9 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "sensor_7_post_1": {
       "id": "sensor_7_post_1",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -412,10 +403,9 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "sensor_11_post_1": {
       "id": "sensor_11_post_1",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -431,10 +421,9 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "sensor_19_post_1": {
       "id": "sensor_19_post_1",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -454,10 +443,9 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "sensor_20_post_1": {
       "id": "sensor_20_post_1",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -476,30 +464,35 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "leg_2": {
       "id": "leg_2",
       "type": "SCRIPT",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_leg_script",
       "meta": {
         "actuator_id": 2,
         "description": "Leg for actuator pattern 2"
-      },
-      "group": "leg"
+      }
     },
-    {
+    "precond_2": {
       "id": "precond_2",
       "type": "SCRIPT",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
       "meta": {
         "aggregation": "and",
         "description": "Precondition sensors must all fire"
-      },
-      "group": "gate"
+      }
     },
-    {
+    "act_script_2": {
+      "id": "act_script_2",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_act_script",
+      "meta": {
+        "description": "Actuator wrapper (SCRIPT)"
+      }
+    },
+    "actuator_2": {
       "id": "actuator_2",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_actuator_terminal",
@@ -522,20 +515,18 @@
         "match_mode": "cosine",
         "activations": 1000,
         "cycles_alive": 50
-      },
-      "group": "actuator"
+      }
     },
-    {
+    "postcond_2": {
       "id": "postcond_2",
       "type": "SCRIPT",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
       "meta": {
         "aggregation": "and",
         "description": "Postcondition verification"
-      },
-      "group": "gate"
+      }
     },
-    {
+    "sensor_6_post_2": {
       "id": "sensor_6_post_2",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -554,10 +545,9 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "sensor_7_post_2": {
       "id": "sensor_7_post_2",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -576,10 +566,9 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "sensor_19_post_2": {
       "id": "sensor_19_post_2",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -599,10 +588,9 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "sensor_20_post_2": {
       "id": "sensor_20_post_2",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -621,30 +609,35 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "leg_3": {
       "id": "leg_3",
       "type": "SCRIPT",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_leg_script",
       "meta": {
         "actuator_id": 3,
         "description": "Leg for actuator pattern 3"
-      },
-      "group": "leg"
+      }
     },
-    {
+    "precond_3": {
       "id": "precond_3",
       "type": "SCRIPT",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
       "meta": {
         "aggregation": "and",
         "description": "Precondition sensors must all fire"
-      },
-      "group": "gate"
+      }
     },
-    {
+    "act_script_3": {
+      "id": "act_script_3",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_act_script",
+      "meta": {
+        "description": "Actuator wrapper (SCRIPT)"
+      }
+    },
+    "actuator_3": {
       "id": "actuator_3",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_actuator_terminal",
@@ -667,20 +660,18 @@
         "match_mode": "cosine",
         "activations": 1000,
         "cycles_alive": 50
-      },
-      "group": "actuator"
+      }
     },
-    {
+    "postcond_3": {
       "id": "postcond_3",
       "type": "SCRIPT",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
       "meta": {
         "aggregation": "and",
         "description": "Postcondition verification"
-      },
-      "group": "gate"
+      }
     },
-    {
+    "sensor_6_post_3": {
       "id": "sensor_6_post_3",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -699,10 +690,9 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "sensor_7_post_3": {
       "id": "sensor_7_post_3",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -721,10 +711,9 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "sensor_18_post_3": {
       "id": "sensor_18_post_3",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -740,10 +729,9 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "sensor_19_post_3": {
       "id": "sensor_19_post_3",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -763,30 +751,35 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "leg_4": {
       "id": "leg_4",
       "type": "SCRIPT",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_leg_script",
       "meta": {
         "actuator_id": 4,
         "description": "Leg for actuator pattern 4"
-      },
-      "group": "leg"
+      }
     },
-    {
+    "precond_4": {
       "id": "precond_4",
       "type": "SCRIPT",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
       "meta": {
         "aggregation": "and",
         "description": "Precondition sensors must all fire"
-      },
-      "group": "gate"
+      }
     },
-    {
+    "act_script_4": {
+      "id": "act_script_4",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_act_script",
+      "meta": {
+        "description": "Actuator wrapper (SCRIPT)"
+      }
+    },
+    "actuator_4": {
       "id": "actuator_4",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_actuator_terminal",
@@ -807,20 +800,18 @@
         "match_mode": "cosine",
         "activations": 1000,
         "cycles_alive": 50
-      },
-      "group": "actuator"
+      }
     },
-    {
+    "postcond_4": {
       "id": "postcond_4",
       "type": "SCRIPT",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
       "meta": {
         "aggregation": "and",
         "description": "Postcondition verification"
-      },
-      "group": "gate"
+      }
     },
-    {
+    "sensor_6_post_4": {
       "id": "sensor_6_post_4",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -839,10 +830,9 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "sensor_19_post_4": {
       "id": "sensor_19_post_4",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -862,10 +852,9 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "sensor_20_post_4": {
       "id": "sensor_20_post_4",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -884,30 +873,35 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "leg_5": {
       "id": "leg_5",
       "type": "SCRIPT",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_leg_script",
       "meta": {
         "actuator_id": 5,
         "description": "Leg for actuator pattern 5"
-      },
-      "group": "leg"
+      }
     },
-    {
+    "precond_5": {
       "id": "precond_5",
       "type": "SCRIPT",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
       "meta": {
         "aggregation": "and",
         "description": "Precondition sensors must all fire"
-      },
-      "group": "gate"
+      }
     },
-    {
+    "act_script_5": {
+      "id": "act_script_5",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_act_script",
+      "meta": {
+        "description": "Actuator wrapper (SCRIPT)"
+      }
+    },
+    "actuator_5": {
       "id": "actuator_5",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_actuator_terminal",
@@ -932,20 +926,18 @@
         "match_mode": "cosine",
         "activations": 1000,
         "cycles_alive": 50
-      },
-      "group": "actuator"
+      }
     },
-    {
+    "postcond_5": {
       "id": "postcond_5",
       "type": "SCRIPT",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
       "meta": {
         "aggregation": "and",
         "description": "Postcondition verification"
-      },
-      "group": "gate"
+      }
     },
-    {
+    "sensor_7_post_5": {
       "id": "sensor_7_post_5",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -964,10 +956,9 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "sensor_11_post_5": {
       "id": "sensor_11_post_5",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -983,10 +974,9 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "sensor_18_post_5": {
       "id": "sensor_18_post_5",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -1002,10 +992,9 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "sensor_19_post_5": {
       "id": "sensor_19_post_5",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -1025,10 +1014,9 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "sensor_20_post_5": {
       "id": "sensor_20_post_5",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -1047,30 +1035,35 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "leg_6": {
       "id": "leg_6",
       "type": "SCRIPT",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_leg_script",
       "meta": {
         "actuator_id": 6,
         "description": "Leg for actuator pattern 6"
-      },
-      "group": "leg"
+      }
     },
-    {
+    "precond_6": {
       "id": "precond_6",
       "type": "SCRIPT",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
       "meta": {
         "aggregation": "and",
         "description": "Precondition sensors must all fire"
-      },
-      "group": "gate"
+      }
     },
-    {
+    "act_script_6": {
+      "id": "act_script_6",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_act_script",
+      "meta": {
+        "description": "Actuator wrapper (SCRIPT)"
+      }
+    },
+    "actuator_6": {
       "id": "actuator_6",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_actuator_terminal",
@@ -1093,20 +1086,18 @@
         "match_mode": "cosine",
         "activations": 1000,
         "cycles_alive": 50
-      },
-      "group": "actuator"
+      }
     },
-    {
+    "postcond_6": {
       "id": "postcond_6",
       "type": "SCRIPT",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
       "meta": {
         "aggregation": "and",
         "description": "Postcondition verification"
-      },
-      "group": "gate"
+      }
     },
-    {
+    "sensor_6_post_6": {
       "id": "sensor_6_post_6",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -1125,10 +1116,9 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "sensor_11_post_6": {
       "id": "sensor_11_post_6",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -1144,10 +1134,9 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "sensor_18_post_6": {
       "id": "sensor_18_post_6",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -1163,10 +1152,9 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "sensor_19_post_6": {
       "id": "sensor_19_post_6",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -1186,30 +1174,35 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "leg_7": {
       "id": "leg_7",
       "type": "SCRIPT",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_leg_script",
       "meta": {
         "actuator_id": 7,
         "description": "Leg for actuator pattern 7"
-      },
-      "group": "leg"
+      }
     },
-    {
+    "precond_7": {
       "id": "precond_7",
       "type": "SCRIPT",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
       "meta": {
         "aggregation": "and",
         "description": "Precondition sensors must all fire"
-      },
-      "group": "gate"
+      }
     },
-    {
+    "act_script_7": {
+      "id": "act_script_7",
+      "type": "SCRIPT",
+      "factory": "recon_lite_chess.krk_baseline_nodes:create_act_script",
+      "meta": {
+        "description": "Actuator wrapper (SCRIPT)"
+      }
+    },
+    "actuator_7": {
       "id": "actuator_7",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_actuator_terminal",
@@ -1232,20 +1225,18 @@
         "match_mode": "cosine",
         "activations": 1000,
         "cycles_alive": 50
-      },
-      "group": "actuator"
+      }
     },
-    {
+    "postcond_7": {
       "id": "postcond_7",
       "type": "SCRIPT",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_and_gate",
       "meta": {
         "aggregation": "and",
         "description": "Postcondition verification"
-      },
-      "group": "gate"
+      }
     },
-    {
+    "sensor_7_post_7": {
       "id": "sensor_7_post_7",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -1264,10 +1255,9 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "sensor_18_post_7": {
       "id": "sensor_18_post_7",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -1283,10 +1273,9 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "sensor_19_post_7": {
       "id": "sensor_19_post_7",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -1306,10 +1295,9 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     },
-    {
+    "sensor_20_post_7": {
       "id": "sensor_20_post_7",
       "type": "TERMINAL",
       "factory": "recon_lite_chess.krk_baseline_nodes:create_sensor_terminal",
@@ -1328,720 +1316,765 @@
         "is_mature": true,
         "activations": 20000,
         "cycles_alive": 50
-      },
-      "group": "sensor"
+      }
     }
-  ],
+  },
   "edges": [
     {
       "src": "krk_entry",
       "dst": "krk_hub",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "krk_hub",
       "dst": "leg_0",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "leg_0",
       "dst": "precond_0",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_0",
       "dst": "sensor_6",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_0",
       "dst": "sensor_7",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_0",
       "dst": "sensor_11",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_0",
       "dst": "sensor_18",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_0",
       "dst": "sensor_19",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "leg_0",
+      "dst": "act_script_0",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_0",
       "dst": "actuator_0",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "leg_0",
       "dst": "postcond_0",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
+    },
+    {
+      "src": "precond_0",
+      "dst": "act_script_0",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_0",
+      "dst": "postcond_0",
+      "type": "POR",
+      "weight": 1.0
     },
     {
       "src": "postcond_0",
       "dst": "sensor_6_post_0",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "postcond_0",
       "dst": "sensor_7_post_0",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "postcond_0",
       "dst": "sensor_11_post_0",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "postcond_0",
       "dst": "sensor_18_post_0",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "postcond_0",
       "dst": "sensor_19_post_0",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "krk_hub",
       "dst": "leg_1",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "leg_1",
       "dst": "precond_1",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_1",
       "dst": "sensor_6",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_1",
       "dst": "sensor_7",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_1",
       "dst": "sensor_11",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_1",
       "dst": "sensor_19",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_1",
       "dst": "sensor_20",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "leg_1",
+      "dst": "act_script_1",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_1",
       "dst": "actuator_1",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "leg_1",
       "dst": "postcond_1",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
+    },
+    {
+      "src": "precond_1",
+      "dst": "act_script_1",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_1",
+      "dst": "postcond_1",
+      "type": "POR",
+      "weight": 1.0
     },
     {
       "src": "postcond_1",
       "dst": "sensor_6_post_1",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "postcond_1",
       "dst": "sensor_7_post_1",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "postcond_1",
       "dst": "sensor_11_post_1",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "postcond_1",
       "dst": "sensor_19_post_1",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "postcond_1",
       "dst": "sensor_20_post_1",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "krk_hub",
       "dst": "leg_2",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "leg_2",
       "dst": "precond_2",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_2",
       "dst": "sensor_6",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_2",
       "dst": "sensor_7",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_2",
       "dst": "sensor_19",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_2",
       "dst": "sensor_20",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "leg_2",
+      "dst": "act_script_2",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_2",
       "dst": "actuator_2",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "leg_2",
       "dst": "postcond_2",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
+    },
+    {
+      "src": "precond_2",
+      "dst": "act_script_2",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_2",
+      "dst": "postcond_2",
+      "type": "POR",
+      "weight": 1.0
     },
     {
       "src": "postcond_2",
       "dst": "sensor_6_post_2",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "postcond_2",
       "dst": "sensor_7_post_2",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "postcond_2",
       "dst": "sensor_19_post_2",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "postcond_2",
       "dst": "sensor_20_post_2",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "krk_hub",
       "dst": "leg_3",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "leg_3",
       "dst": "precond_3",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_3",
       "dst": "sensor_6",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_3",
       "dst": "sensor_7",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_3",
       "dst": "sensor_18",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_3",
       "dst": "sensor_19",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "leg_3",
+      "dst": "act_script_3",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_3",
       "dst": "actuator_3",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "leg_3",
       "dst": "postcond_3",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
+    },
+    {
+      "src": "precond_3",
+      "dst": "act_script_3",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_3",
+      "dst": "postcond_3",
+      "type": "POR",
+      "weight": 1.0
     },
     {
       "src": "postcond_3",
       "dst": "sensor_6_post_3",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "postcond_3",
       "dst": "sensor_7_post_3",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "postcond_3",
       "dst": "sensor_18_post_3",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "postcond_3",
       "dst": "sensor_19_post_3",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "krk_hub",
       "dst": "leg_4",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "leg_4",
       "dst": "precond_4",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_4",
       "dst": "sensor_6",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_4",
       "dst": "sensor_19",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_4",
       "dst": "sensor_20",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "leg_4",
+      "dst": "act_script_4",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_4",
       "dst": "actuator_4",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "leg_4",
       "dst": "postcond_4",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
+    },
+    {
+      "src": "precond_4",
+      "dst": "act_script_4",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_4",
+      "dst": "postcond_4",
+      "type": "POR",
+      "weight": 1.0
     },
     {
       "src": "postcond_4",
       "dst": "sensor_6_post_4",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "postcond_4",
       "dst": "sensor_19_post_4",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "postcond_4",
       "dst": "sensor_20_post_4",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "krk_hub",
       "dst": "leg_5",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "leg_5",
       "dst": "precond_5",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_5",
       "dst": "sensor_7",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_5",
       "dst": "sensor_11",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_5",
       "dst": "sensor_18",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_5",
       "dst": "sensor_19",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_5",
       "dst": "sensor_20",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "leg_5",
+      "dst": "act_script_5",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_5",
       "dst": "actuator_5",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "leg_5",
       "dst": "postcond_5",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
+    },
+    {
+      "src": "precond_5",
+      "dst": "act_script_5",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_5",
+      "dst": "postcond_5",
+      "type": "POR",
+      "weight": 1.0
     },
     {
       "src": "postcond_5",
       "dst": "sensor_7_post_5",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "postcond_5",
       "dst": "sensor_11_post_5",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "postcond_5",
       "dst": "sensor_18_post_5",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "postcond_5",
       "dst": "sensor_19_post_5",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "postcond_5",
       "dst": "sensor_20_post_5",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "krk_hub",
       "dst": "leg_6",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "leg_6",
       "dst": "precond_6",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_6",
       "dst": "sensor_6",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_6",
       "dst": "sensor_11",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_6",
       "dst": "sensor_18",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_6",
       "dst": "sensor_19",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "leg_6",
+      "dst": "act_script_6",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_6",
       "dst": "actuator_6",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "leg_6",
       "dst": "postcond_6",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
+    },
+    {
+      "src": "precond_6",
+      "dst": "act_script_6",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_6",
+      "dst": "postcond_6",
+      "type": "POR",
+      "weight": 1.0
     },
     {
       "src": "postcond_6",
       "dst": "sensor_6_post_6",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "postcond_6",
       "dst": "sensor_11_post_6",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "postcond_6",
       "dst": "sensor_18_post_6",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "postcond_6",
       "dst": "sensor_19_post_6",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "krk_hub",
       "dst": "leg_7",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "leg_7",
       "dst": "precond_7",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_7",
       "dst": "sensor_7",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_7",
       "dst": "sensor_18",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_7",
       "dst": "sensor_19",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "precond_7",
       "dst": "sensor_20",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "leg_7",
+      "dst": "act_script_7",
+      "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_7",
       "dst": "actuator_7",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "leg_7",
       "dst": "postcond_7",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
+    },
+    {
+      "src": "precond_7",
+      "dst": "act_script_7",
+      "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_7",
+      "dst": "postcond_7",
+      "type": "POR",
+      "weight": 1.0
     },
     {
       "src": "postcond_7",
       "dst": "sensor_7_post_7",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "postcond_7",
       "dst": "sensor_18_post_7",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "postcond_7",
       "dst": "sensor_19_post_7",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     },
     {
       "src": "postcond_7",
       "dst": "sensor_20_post_7",
       "type": "SUB",
-      "weight": 1.0,
-      "consolidate": true
+      "weight": 1.0
     }
   ],
-  "stem_cells": [],
-  "promoted_nodes": [],
-  "evolution_history": []
+  "meta": {
+    "origin": "baseline_compilation",
+    "mature_sensors": 25,
+    "total_actuators": 8,
+    "baseline_xp_avg": 0.8000000000000002
+  }
 }

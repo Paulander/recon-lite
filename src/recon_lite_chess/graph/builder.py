@@ -92,6 +92,7 @@ def _create_node_from_spec(spec: NodeSpec, registry: TopologyRegistry) -> Node:
     if factory is not None:
         try:
             node = factory(spec.id)
+            node.meta["factory"] = spec.factory
             # Preserve any pattern signature in meta
             if spec.pattern_signature is not None:
                 node.meta["pattern_signature"] = spec.pattern_signature
@@ -104,6 +105,7 @@ def _create_node_from_spec(spec: NodeSpec, registry: TopologyRegistry) -> Node:
     
     # Fallback: create basic node without predicate
     node = Node(nid=spec.id, ntype=ntype)
+    node.meta["factory"] = spec.factory
     if spec.pattern_signature is not None:
         node.meta["pattern_signature"] = spec.pattern_signature
     if spec.weight_source is not None:
@@ -151,6 +153,22 @@ def export_topology_from_graph(
     registry.data["network"] = network_name
     registry.data["created"] = datetime.now().isoformat()
     
+    def _to_jsonable(val: Any):
+        try:
+            import numpy as np
+        except Exception:
+            np = None
+        if np is not None:
+            if isinstance(val, np.ndarray):
+                return val.tolist()
+            if isinstance(val, (np.floating, np.integer)):
+                return val.item()
+        if isinstance(val, dict):
+            return {k: _to_jsonable(v) for k, v in val.items()}
+        if isinstance(val, (list, tuple)):
+            return [_to_jsonable(v) for v in val]
+        return val
+    
     # Export nodes
     for nid, node in graph.nodes.items():
         node_spec = {
@@ -158,7 +176,11 @@ def export_topology_from_graph(
             "type": "TERMINAL" if node.ntype == NodeType.TERMINAL else "SCRIPT",
             "group": node.meta.get("group", "generic"),
             "factory": node.meta.get("factory"),
-            "meta": {k: v for k, v in node.meta.items() if k not in ("group", "factory")},
+            "meta": {
+                k: _to_jsonable(v)
+                for k, v in node.meta.items()
+                if k not in ("group", "factory", "blackboard")
+            },
         }
         
         # Include pattern signature if present

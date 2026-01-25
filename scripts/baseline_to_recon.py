@@ -108,8 +108,8 @@ def create_hub_node(topology: Dict):
     
     # Edge: Root → Hub
     topology["edges"].append({
-        "source": "krk_entry",
-        "target": "krk_hub",
+        "src": "krk_entry",
+        "dst": "krk_hub",
         "type": "SUB",
         "weight": 1.0
     })
@@ -139,6 +139,7 @@ def create_leg_micro_script(
     """
     leg_id = f"leg_{actuator.id}"
     precond_id = f"precond_{actuator.id}"
+    act_script_id = f"act_script_{actuator.id}"
     actuator_id = f"actuator_{actuator.id}"
     postcond_id = f"postcond_{actuator.id}"
     
@@ -155,8 +156,8 @@ def create_leg_micro_script(
     
     # Edge: Hub → Leg (parallel alternative)
     topology["edges"].append({
-        "source": "krk_hub",
-        "target": leg_id,
+        "src": "krk_hub",
+        "dst": leg_id,
         "type": "SUB",
         "weight": 1.0
     })
@@ -173,8 +174,8 @@ def create_leg_micro_script(
     }
     
     topology["edges"].append({
-        "source": leg_id,
-        "target": precond_id,
+        "src": leg_id,
+        "dst": precond_id,
         "type": "SUB",
         "weight": 1.0
     })
@@ -182,40 +183,49 @@ def create_leg_micro_script(
     # Add precondition sensors
     sensor_map = {s.id: s for s in sensors}
     for sensor_idx in actuator.actuator_spec.sensor_indices:
-        if sensor_idx in sensor_map:
+        sensor = None
+        # Actuator spec indices are relative to the mature sensor list
+        if 0 <= sensor_idx < len(sensors):
+            sensor = sensors[sensor_idx]
+        elif sensor_idx in sensor_map:
+            # Fallback: treat as absolute sensor id
             sensor = sensor_map[sensor_idx]
+        if sensor is not None:
             sensor_id = f"sensor_{sensor.id}"
             
             create_sensor_terminal(topology, sensor_id, sensor)
             
             topology["edges"].append({
-                "source": precond_id,
-                "target": sensor_id,
+                "src": precond_id,
+                "dst": sensor_id,
                 "type": "SUB",
                 "weight": 1.0
             })
     
-    # Part 2: Actuator terminal
-    create_actuator_terminal(topology, actuator_id, actuator, sensors)
+    # Part 2: Actuator script wrapper (SCRIPT)
+    topology["nodes"][act_script_id] = {
+        "id": act_script_id,
+        "type": "SCRIPT",
+        "factory": "recon_lite_chess.krk_baseline_nodes:create_act_script",
+        "meta": {
+            "description": "Actuator wrapper (SCRIPT)"
+        }
+    }
     
     topology["edges"].append({
-        "source": leg_id,
-        "target": actuator_id,
+        "src": leg_id,
+        "dst": act_script_id,
         "type": "SUB",
         "weight": 1.0
     })
     
-    topology["edges"].append({
-        "source": precond_id,
-        "target": actuator_id,
-        "type": "POR",  # Sequence: precond → actuator
-        "weight": 1.0
-    })
+    # Actuator terminal (SUB under actuator script)
+    create_actuator_terminal(topology, actuator_id, actuator, sensors)
     
     topology["edges"].append({
-        "source": actuator_id,
-        "target": precond_id,
-        "type": "RET",
+        "src": act_script_id,
+        "dst": actuator_id,
+        "type": "SUB",
         "weight": 1.0
     })
     
@@ -231,37 +241,42 @@ def create_leg_micro_script(
     }
     
     topology["edges"].append({
-        "source": leg_id,
-        "target": postcond_id,
+        "src": leg_id,
+        "dst": postcond_id,
         "type": "SUB",
         "weight": 1.0
     })
     
+    # POR sequencing between scripts only
     topology["edges"].append({
-        "source": actuator_id,
-        "target": postcond_id,
-        "type": "POR",  # Sequence: actuator → postcond
+        "src": precond_id,
+        "dst": act_script_id,
+        "type": "POR",
         "weight": 1.0
     })
     
     topology["edges"].append({
-        "source": postcond_id,
-        "target": actuator_id,
-        "type": "RET",
+        "src": act_script_id,
+        "dst": postcond_id,
+        "type": "POR",
         "weight": 1.0
     })
     
     # Add postcondition sensors (same as precondition, different instances)
     for sensor_idx in actuator.actuator_spec.sensor_indices:
-        if sensor_idx in sensor_map:
+        sensor = None
+        if 0 <= sensor_idx < len(sensors):
+            sensor = sensors[sensor_idx]
+        elif sensor_idx in sensor_map:
             sensor = sensor_map[sensor_idx]
+        if sensor is not None:
             sensor_post_id = f"sensor_{sensor.id}_post_{actuator.id}"
             
             create_sensor_terminal(topology, sensor_post_id, sensor)
             
             topology["edges"].append({
-                "source": postcond_id,
-                "target": sensor_post_id,
+                "src": postcond_id,
+                "dst": sensor_post_id,
                 "type": "SUB",
                 "weight": 1.0
             })
@@ -312,8 +327,13 @@ def create_actuator_terminal(
         actuator.actuator_spec.sensor_indices,
         actuator.actuator_spec.goal_delta
     ):
-        if idx in sensor_map:
-            sensor_id = f"sensor_{idx}"
+        sensor = None
+        if 0 <= idx < len(sensors):
+            sensor = sensors[idx]
+        elif idx in sensor_map:
+            sensor = sensor_map[idx]
+        if sensor is not None:
+            sensor_id = f"sensor_{sensor.id}"
             targets.append(sensor_id)
             goal_delta[sensor_id] = float(delta_val)
     

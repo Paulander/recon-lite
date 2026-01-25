@@ -85,6 +85,20 @@ def create_leg_script(node_id=None):
     )
 
 
+def create_act_script(node_id=None):
+    """Create actuator wrapper SCRIPT node."""
+    actual_id = node_id or "act_script"
+    
+    def predicate(node, graph, env):
+        return True, True
+    
+    return Node(
+        nid=actual_id,
+        ntype=NodeType.SCRIPT,
+        predicate=predicate
+    )
+
+
 def create_and_gate(node_id=None):
     """
     Create AND-gate SCRIPT node.
@@ -270,9 +284,18 @@ def create_actuator_terminal(node_id=None):
         best_move = max(scores, key=scores.get)
         best_score = scores[best_move]
         
-        # Store in environment
-        env["suggested_move"] = best_move
-        env["move_confidence"] = best_score
+        # Store suggestions in environment, keep best across actuators
+        suggestions = env.setdefault("actuator_suggestions", [])
+        suggestions.append({
+            "actuator": node.nid,
+            "move": best_move,
+            "score": best_score,
+        })
+        
+        best = max(suggestions, key=lambda s: s["score"])
+        env["suggested_move"] = best["move"]
+        env["move_confidence"] = best["score"]
+        env["suggested_actuator"] = best["actuator"]
         
         # Store in node state
         if not hasattr(node, 'state') or node.state is None:

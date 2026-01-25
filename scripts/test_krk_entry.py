@@ -49,13 +49,11 @@ def execute_graph(graph: Graph, env: dict):
             except Exception as e:
                 pass  # Ignore sensor errors
     
-    # Finally run actuator terminals to select moves
+    # Finally run all actuator terminals to select best move
     for nid, node in graph.nodes.items():
         if "actuator" in nid and node.predicate:
             try:
-                result = node.predicate(node, graph, env)
-                if result[0] and "suggested_move" in env:
-                    return  # Got a move!
+                node.predicate(node, graph, env)
             except Exception as e:
                 pass
 
