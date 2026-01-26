@@ -107,9 +107,10 @@ class ChessBoard {
                 if (bindings && bindings.length) {
                     boardHtml += '<div class="binding-overlay">';
                     bindings.slice(0, 3).forEach((info) => {
-                        const abbrev = info.feature ? info.feature.split(/[\s_]+/)[0] : '•';
-                        const label = abbrev.length > 4 ? abbrev.slice(0, 4) : abbrev;
-                        const title = `${info.namespace}: ${info.feature}`;
+                        const rawLabel = info.terminalId || info.feature || info.namespace || '•';
+                        const compact = rawLabel.replace(/[^a-zA-Z0-9_]/g, '');
+                        const label = compact.length > 6 ? compact.slice(0, 6) : compact;
+                        const title = `${info.namespace} | ${info.terminalId || info.feature || 'binding'}`;
                         boardHtml += `<span class="binding-chip" style="background:${info.color}" title="${title}">${label}</span>`;
                     });
                     boardHtml += '</div>';
@@ -139,6 +140,16 @@ class ChessBoard {
         return this.bindingColors[namespace];
     }
 
+    colorForKey(key) {
+        if (!key) return '#64748b';
+        if (!this.bindingColors[key]) {
+            const palette = this.bindingPalette;
+            const index = Object.keys(this.bindingColors).length % palette.length;
+            this.bindingColors[key] = palette[index];
+        }
+        return this.bindingColors[key];
+    }
+
     computeBindingMap(bindingPayload) {
         const mapping = {};
         if (!bindingPayload || typeof bindingPayload !== 'object') {
@@ -149,7 +160,9 @@ class ChessBoard {
             instances.forEach((instance) => {
                 if (!instance || !Array.isArray(instance.items)) return;
                 const feature = instance.feature || instance.id || namespace;
-                const color = this.colorForNamespace(namespace);
+                const terminalId = instance.id || instance.terminal_id || instance.node || feature;
+                const colorKey = `${namespace}:${terminalId}`;
+                const color = this.colorForKey(colorKey);
                 instance.items.forEach((item) => {
                     if (typeof item !== 'string') return;
                     const [kind, value] = item.split(':');
@@ -158,7 +171,7 @@ class ChessBoard {
                     if (!mapping[square]) {
                         mapping[square] = [];
                     }
-                    mapping[square].push({ namespace, feature, color });
+                    mapping[square].push({ namespace, feature, color, terminalId });
                 });
             });
         });

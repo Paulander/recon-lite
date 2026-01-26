@@ -16,6 +16,10 @@ class NetworkVisualization {
         this.highlightActivePath = true;
         this.smallNodes = false;
         this.layoutMode = 'static'; // 'static' | 'hier'
+        this.showOnlyChanged = false;
+        this.pathOnlyEdges = false;
+        this.terminalNodes = new Set();
+        this.scriptNodes = new Set();
         this.lastFrame = null;
         this.lastNewRequests = new Set();
         this.lastLatents = {};
@@ -231,92 +235,84 @@ class NetworkVisualization {
         const radius = smallNodes ? 10 : 18;
         const marginX = 80;
         const marginY = 80;
-        const levelSpacing = 90;
-        const nodeSpacing = 70;
+        const baseLevelSpacing = 90;
 
         const nodes = nodeIds || [];
         const subEdges = edgeList.filter((e) => e.type === 'SUB');
-        const porEdges = edgeList.filter((e) => e.type === 'POR');
 
-        const depths = {};
-        nodes.forEach((id) => { depths[id] = 0; });
-
-        for (let i = 0; i < nodes.length; i++) {
-            let updated = false;
-            subEdges.forEach((e) => {
-                const srcDepth = depths[e.src] ?? 0;
-                const dstDepth = depths[e.dst] ?? 0;
-                if (srcDepth + 1 > dstDepth) {
-                    depths[e.dst] = srcDepth + 1;
-                    updated = true;
-                }
-            });
-            if (!updated) break;
-        }
-
-        const levels = {};
+        const children = new Map();
+        const parents = new Map();
         nodes.forEach((id) => {
-            const d = depths[id] ?? 0;
-            if (!levels[d]) levels[d] = [];
-            levels[d].push(id);
+            children.set(id, []);
         });
 
-        const levelKeys = Object.keys(levels).map(Number).sort((a, b) => a - b);
-        const positions = {};
-
-        levelKeys.forEach((depth) => {
-            const levelNodes = levels[depth] || [];
-            const levelSet = new Set(levelNodes);
-
-            const adjacency = new Map();
-            const indegree = new Map();
-            levelNodes.forEach((id) => {
-                adjacency.set(id, []);
-                indegree.set(id, 0);
-            });
-
-            porEdges.forEach((e) => {
-                if (!levelSet.has(e.src) || !levelSet.has(e.dst)) return;
-                adjacency.get(e.src).push(e.dst);
-                indegree.set(e.dst, (indegree.get(e.dst) || 0) + 1);
-            });
-
-            const queue = [];
-            levelNodes.forEach((id) => {
-                if ((indegree.get(id) || 0) === 0) queue.push(id);
-            });
-
-            const ordered = [];
-            while (queue.length) {
-                const id = queue.shift();
-                ordered.push(id);
-                adjacency.get(id).forEach((next) => {
-                    indegree.set(next, (indegree.get(next) || 0) - 1);
-                    if ((indegree.get(next) || 0) === 0) queue.push(next);
-                });
+        subEdges.forEach((e) => {
+            if (!children.has(e.src)) children.set(e.src, []);
+            if (!children.has(e.dst)) children.set(e.dst, []);
+            if (!parents.has(e.dst)) {
+                parents.set(e.dst, e.src);
+                children.get(e.src).push(e.dst);
             }
+        });
 
-            const finalOrder = ordered.length === levelNodes.length
-                ? ordered
-                : levelNodes.slice().sort();
+        children.forEach((list) => list.sort());
 
-            const availableWidth = Math.max(300, width - marginX * 2);
-            const spacing = finalOrder.length > 1
-                ? Math.min(nodeSpacing, availableWidth / (finalOrder.length - 1))
-                : nodeSpacing;
+        const roots = nodes.filter((id) => !parents.has(id));
+        if (roots.length === 0 && nodes.length) {
+            roots.push(nodes[0]);
+        }
 
-            finalOrder.forEach((id, idx) => {
-                positions[id] = {
-                    x: marginX + idx * spacing,
-                    y: marginY + depth * levelSpacing
-                };
+        let leafIndex = 0;
+        const positions = {};
+        const depthMap = {};
+
+        const assign = (id, depth) => {
+            depthMap[id] = Math.max(depthMap[id] || 0, depth);
+            const kids = children.get(id) || [];
+            if (!kids.length) {
+                const x = leafIndex++;
+                positions[id] = { x, y: depth };
+                return x;
+            }
+            let min = Infinity;
+            let max = -Infinity;
+            kids.forEach((child) => {
+                const cx = assign(child, depth + 1);
+                min = Math.min(min, cx);
+                max = Math.max(max, cx);
             });
+            const x = (min + max) / 2;
+            positions[id] = { x, y: depth };
+            return x;
+        };
+
+        roots.forEach((root) => assign(root, 0));
+        nodes.forEach((id) => {
+            if (!(id in positions)) {
+                const x = leafIndex++;
+                positions[id] = { x, y: depthMap[id] || 0 };
+            }
+        });
+
+        const maxX = Math.max(...Object.values(positions).map((p) => p.x), 1);
+        const maxDepth = Math.max(...Object.values(positions).map((p) => p.y), 1);
+        const usableW = Math.max(1, width - marginX * 2);
+        const usableH = Math.max(1, height - marginY * 2);
+        const scaleX = usableW / Math.max(1, maxX);
+        const levelSpacing = Math.min(baseLevelSpacing, usableH / Math.max(1, maxDepth));
+
+        const scaledPositions = {};
+        Object.entries(positions).forEach(([id, pos]) => {
+            scaledPositions[id] = {
+                x: marginX + pos.x * scaleX,
+                y: marginY + pos.y * levelSpacing
+            };
         });
 
         return {
-            positions,
+            positions: scaledPositions,
             radius,
-            scale: 1,
+            scale: Math.min(scaleX, 1.0),
             labelMargin: 14,
             labelFontSize: 11,
             labelLineHeight: 13,
@@ -580,10 +576,29 @@ class NetworkVisualization {
         if (!topology || typeof topology !== 'object') return;
         if (topology.nodes && typeof topology.nodes === 'object') {
             this.templateNodeIds = Object.keys(topology.nodes);
+            this.terminalNodes.clear();
+            this.scriptNodes.clear();
+            Object.entries(topology.nodes).forEach(([id, node]) => {
+                const rawType = node && typeof node.type === 'string' ? node.type : '';
+                const type = rawType.toUpperCase();
+                const normId = this.normalizeId(id);
+                if (type === 'TERMINAL') {
+                    this.terminalNodes.add(normId);
+                } else if (type === 'SCRIPT') {
+                    this.scriptNodes.add(normId);
+                }
+            });
         }
         if (Array.isArray(topology.edges)) {
             this.externalEdges = topology.edges;
         }
+    }
+
+    isTerminal(nodeId) {
+        if (this.terminalNodes && this.terminalNodes.size > 0) {
+            return this.terminalNodes.has(nodeId);
+        }
+        return NetworkVisualization.sensorNodes.has(nodeId);
     }
 
     setShowOnlyActive(value) {
@@ -608,6 +623,16 @@ class NetworkVisualization {
 
     setLayoutMode(value) {
         this.layoutMode = value;
+        this.draw();
+    }
+
+    setShowOnlyChanged(value) {
+        this.showOnlyChanged = value;
+        this.draw();
+    }
+
+    setPathOnlyEdges(value) {
+        this.pathOnlyEdges = value;
         this.draw();
     }
 
@@ -839,7 +864,7 @@ class NetworkVisualization {
             this.ctx.strokeStyle = border;
             this.ctx.lineWidth = (state === 'REQUESTED' || state === 'WAITING' || state === 'ACTIVE') ? 4 : 2;
 
-            if (NetworkVisualization.sensorNodes.has(nodeId)) {
+            if (this.isTerminal(nodeId)) {
                 // Diamond for sensors
                 this.ctx.beginPath();
                 this.ctx.moveTo(pos.x, pos.y - radius);
@@ -863,7 +888,7 @@ class NetworkVisualization {
                 this.ctx.shadowColor = 'rgba(255,255,255,0.8)';
                 this.ctx.shadowBlur = 12;
                 this.ctx.beginPath();
-                if (NetworkVisualization.sensorNodes.has(nodeId)) {
+                if (this.isTerminal(nodeId)) {
                     this.ctx.moveTo(pos.x, pos.y - (radius + 4));
                     this.ctx.lineTo(pos.x + (radius + 4), pos.y);
                     this.ctx.lineTo(pos.x, pos.y + (radius + 4));
@@ -945,16 +970,24 @@ class NetworkVisualization {
             });
         }
 
-        const activeStates = new Set(['REQUESTED', 'ACTIVE', 'WAITING', 'TRUE', 'CONFIRMED']);
-        const activeNodes = new Set(
-            Object.entries(nodesState)
-                .filter(([, state]) => activeStates.has(state))
-                .map(([id]) => id)
-        );
+        this.updateTransitionSet(nodesState);
+
+        const activeStates = new Set(['REQUESTED', 'ACTIVE', 'CONFIRMED', 'FAILED']);
+        const activeNodes = new Set();
+        Object.entries(nodesState).forEach(([id, state]) => {
+            if (activeStates.has(state)) activeNodes.add(id);
+        });
+        requestSet.forEach((id) => activeNodes.add(this.normalizeId(id)));
 
         if (this.showOnlyActive && activeNodes.size > 0) {
             nodesState = Object.fromEntries(
                 Object.entries(nodesState).filter(([id]) => activeNodes.has(id))
+            );
+        }
+
+        if (this.showOnlyChanged && this.transitionSet.size > 0) {
+            nodesState = Object.fromEntries(
+                Object.entries(nodesState).filter(([id]) => this.transitionSet.has(id))
             );
         }
 
@@ -1012,6 +1045,14 @@ class NetworkVisualization {
             : NetworkVisualization.edges.map(([a, b]) => ({ src: a, dst: b, type: 'SUB', weight: 1 }));
 
         let edgesToDraw = edgeList.map((e) => [e.src, e.dst, e.type, e.weight]);
+
+        if (this.pathOnlyEdges) {
+            if (requestSet.size > 0) {
+                edgesToDraw = edgesToDraw.filter(([, dst]) => requestSet.has(dst));
+            } else {
+                edgesToDraw = [];
+            }
+        }
 
         // --- Compact mode: hide wrapper script nodes and rewire edges visually ---
         if (this.compact) {
@@ -1106,7 +1147,7 @@ class NetworkVisualization {
                 this.ctx.strokeStyle = baseColor;
             }
 
-            const edgeActive = activeNodes.has(src) || activeNodes.has(dst) || isNewReq;
+            const edgeActive = requestSet.has(dst) || requestSet.has(src) || activeNodes.has(src) || activeNodes.has(dst) || isNewReq;
             if (this.fadeInactiveEdges && !edgeActive) {
                 this.ctx.strokeStyle = NetworkVisualization.applyAlpha(this.ctx.strokeStyle, 0.15);
             }
@@ -1157,7 +1198,7 @@ class NetworkVisualization {
             this.ctx.strokeStyle = border;
             this.ctx.lineWidth = (state === 'REQUESTED' || state === 'WAITING' || state === 'ACTIVE') ? layout.emphasisStrokeWidth : layout.baseStrokeWidth;
 
-            if (NetworkVisualization.sensorNodes.has(nodeId)) {
+            if (this.isTerminal(nodeId)) {
                 // Diamond for sensors
                 this.ctx.beginPath();
                 this.ctx.moveTo(pos.x, pos.y - radius);
@@ -1182,7 +1223,7 @@ class NetworkVisualization {
                 this.ctx.lineWidth = layout.glowLineWidth * (1 + pulse);
                 this.ctx.strokeStyle = NetworkVisualization.applyAlpha('#38bdf8', Math.min(0.6, pulse));
                 this.ctx.beginPath();
-                if (NetworkVisualization.sensorNodes.has(nodeId)) {
+                if (this.isTerminal(nodeId)) {
                     this.ctx.moveTo(pos.x, pos.y - glowRadius);
                     this.ctx.lineTo(pos.x + glowRadius, pos.y);
                     this.ctx.lineTo(pos.x, pos.y + glowRadius);
@@ -1210,7 +1251,7 @@ class NetworkVisualization {
                 this.ctx.shadowColor = 'rgba(255,255,255,0.8)';
                 this.ctx.shadowBlur = layout.glowBlur;
                 this.ctx.beginPath();
-                if (NetworkVisualization.sensorNodes.has(nodeId)) {
+                if (this.isTerminal(nodeId)) {
                     this.ctx.moveTo(pos.x, pos.y - (radius + layout.glowRadiusOffset));
                     this.ctx.lineTo(pos.x + (radius + layout.glowRadiusOffset), pos.y);
                     this.ctx.lineTo(pos.x, pos.y + (radius + layout.glowRadiusOffset));
