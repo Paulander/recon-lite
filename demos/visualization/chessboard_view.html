@@ -52,6 +52,8 @@
                 <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px; flex-wrap: wrap;">
                     <input type="file" id="file-input" accept="application/json" />
                     <button class="control-btn" id="load-file-btn">Load JSON</button>
+                    <input type="file" id="topology-input" accept="application/json" />
+                    <button class="control-btn" id="load-topology-btn">Load Topology</button>
                     <div style="display:flex; align-items:center; gap:6px;">
                         <span style="font-size:12px;color:#555;">Speed</span>
                         <select id="speed-select" class="control-btn" style="padding:6px 10px; background:#fff; color:#333; border:1px solid #ddd;">
@@ -64,6 +66,29 @@
                     <label for="toggle-labels" class="label-toggle">
                         <input type="checkbox" id="toggle-labels" checked>
                         <span>Show labels</span>
+                    </label>
+                    <label for="toggle-active-only" class="label-toggle">
+                        <input type="checkbox" id="toggle-active-only">
+                        <span>Active only</span>
+                    </label>
+                    <label for="toggle-fade-edges" class="label-toggle">
+                        <input type="checkbox" id="toggle-fade-edges">
+                        <span>Fade inactive edges</span>
+                    </label>
+                    <label for="toggle-highlight-path" class="label-toggle">
+                        <input type="checkbox" id="toggle-highlight-path" checked>
+                        <span>Highlight active path</span>
+                    </label>
+                    <label for="toggle-small-nodes" class="label-toggle">
+                        <input type="checkbox" id="toggle-small-nodes">
+                        <span>Small nodes</span>
+                    </label>
+                    <label for="layout-mode" class="label-toggle">
+                        <span>Layout</span>
+                        <select id="layout-mode" class="control-btn" style="padding:6px 10px; background:#fff; color:#333; border:1px solid #ddd;">
+                            <option value="static">Static</option>
+                            <option value="hier">Hierarchy</option>
+                        </select>
                     </label>
                     <label for="toggle-bindings" class="label-toggle">
                         <input type="checkbox" id="toggle-bindings" checked>
@@ -142,11 +167,17 @@
 
                     // Load visualization data (this will show initial state)
                     await this.dataManager.loadVisualizationData();
+                    await this.dataManager.loadTopology();
 
                     // Set external edges if available
                     const externalEdges = this.dataManager.getExternalEdges();
                     if (externalEdges) {
                         this.networkVis.setExternalEdges(externalEdges);
+                    }
+
+                    const topology = this.dataManager.getTopology();
+                    if (topology) {
+                        this.networkVis.setTemplateGraph(topology);
                     }
 
                     console.log('ReCoN visualization initialized successfully');
@@ -167,8 +198,15 @@
                 const nextMoveBtn = document.getElementById('next-move-btn');
                 const labelToggle = document.getElementById('toggle-labels');
                 const bindingsToggle = document.getElementById('toggle-bindings');
+                const activeOnlyToggle = document.getElementById('toggle-active-only');
+                const fadeEdgesToggle = document.getElementById('toggle-fade-edges');
+                const highlightPathToggle = document.getElementById('toggle-highlight-path');
+                const smallNodesToggle = document.getElementById('toggle-small-nodes');
+                const layoutModeSelect = document.getElementById('layout-mode');
                 const stepInput = document.getElementById('step-input');
                 const jumpBtn = document.getElementById('jump-btn');
+                const topologyInput = document.getElementById('topology-input');
+                const loadTopologyBtn = document.getElementById('load-topology-btn');
 
                 this.stepInput = stepInput;
                 this.jumpButton = jumpBtn;
@@ -209,6 +247,36 @@
                     this.networkVis.setShowLabels(labelToggle.checked);
                     labelToggle.addEventListener('change', (e) => {
                         this.networkVis.setShowLabels(e.target.checked);
+                    });
+                }
+                if (activeOnlyToggle) {
+                    this.networkVis.setShowOnlyActive(activeOnlyToggle.checked);
+                    activeOnlyToggle.addEventListener('change', (e) => {
+                        this.networkVis.setShowOnlyActive(e.target.checked);
+                    });
+                }
+                if (fadeEdgesToggle) {
+                    this.networkVis.setFadeInactiveEdges(fadeEdgesToggle.checked);
+                    fadeEdgesToggle.addEventListener('change', (e) => {
+                        this.networkVis.setFadeInactiveEdges(e.target.checked);
+                    });
+                }
+                if (highlightPathToggle) {
+                    this.networkVis.setHighlightActivePath(highlightPathToggle.checked);
+                    highlightPathToggle.addEventListener('change', (e) => {
+                        this.networkVis.setHighlightActivePath(e.target.checked);
+                    });
+                }
+                if (smallNodesToggle) {
+                    this.networkVis.setSmallNodes(smallNodesToggle.checked);
+                    smallNodesToggle.addEventListener('change', (e) => {
+                        this.networkVis.setSmallNodes(e.target.checked);
+                    });
+                }
+                if (layoutModeSelect) {
+                    this.networkVis.setLayoutMode(layoutModeSelect.value);
+                    layoutModeSelect.addEventListener('change', (e) => {
+                        this.networkVis.setLayoutMode(e.target.value);
                     });
                 }
                 if (bindingsToggle) {
@@ -560,6 +628,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             const input = document.getElementById('file-input');
             const btn = document.getElementById('load-file-btn');
+            const topologyInput = document.getElementById('topology-input');
+            const topologyBtn = document.getElementById('load-topology-btn');
             if (btn && input) {
                 btn.addEventListener('click', async () => {
                     const file = input.files && input.files[0];
@@ -572,6 +642,21 @@
                         app.updateVisualization(0);
                     } catch (e) {
                         console.error('Failed to load JSON file:', e);
+                    }
+                });
+            }
+            if (topologyBtn && topologyInput) {
+                topologyBtn.addEventListener('click', async () => {
+                    const file = topologyInput.files && topologyInput.files[0];
+                    if (!file) return;
+                    try {
+                        const topo = await app.dataManager.loadTopologyFromFile(file);
+                        if (topo) {
+                            app.networkVis.setTemplateGraph(topo);
+                            app.updateVisualization(app.currentStep);
+                        }
+                    } catch (e) {
+                        console.error('Failed to load topology JSON file:', e);
                     }
                 });
             }

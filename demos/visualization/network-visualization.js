@@ -6,14 +6,25 @@ class NetworkVisualization {
         this.canvas = null;
         this.ctx = null;
         this.externalEdges = null; // from JSON graph.edges if provided
+        this.templateNodeIds = null;
         this.lastNodesState = {};  // for transition detection
         this.transitionSet = new Set(); // nodes that changed state this frame
         this.compact = true; // render without wrapper script nodes by default
         this.showLabels = true;
+        this.showOnlyActive = false;
+        this.fadeInactiveEdges = false;
+        this.highlightActivePath = true;
+        this.smallNodes = false;
+        this.layoutMode = 'static'; // 'static' | 'hier'
         this.lastFrame = null;
         this.lastNewRequests = new Set();
         this.lastLatents = {};
         this.pulseStrength = {};
+        this.panX = 0;
+        this.panY = 0;
+        this.zoom = 1;
+        this.isDragging = false;
+        this.dragStart = null;
         // M3: Track edge weight changes for visualization
         this.edgeWeights = {};      // current edge weights from frame
         this.edgeDeltas = {};       // recent weight changes (positive/negative)
@@ -142,12 +153,13 @@ class NetworkVisualization {
         };
     }
 
-    static computeLayout(width, height) {
+    static computeLayout(width, height, extraNodeIds = null, smallNodes = false) {
         const { baseWidth, baseHeight, nodeRadius, positions } = NetworkVisualization.layoutConfig;
         const scaleX = width / baseWidth;
         const scaleY = height / baseHeight;
         const scale = Math.min(scaleX, scaleY);
-        const radius = Math.max(18, Math.round(nodeRadius * scale));
+        const radiusBase = Math.max(12, Math.round(nodeRadius * scale));
+        const radius = smallNodes ? Math.max(8, Math.round(radiusBase * 0.7)) : radiusBase;
         const labelMargin = Math.max(radius * 0.55, 18 * scale);
         const labelFontSize = Math.round(Math.max(12, 14 * scale));
         const labelLineHeight = Math.round(labelFontSize + Math.max(2, 4 * scale));
@@ -164,8 +176,29 @@ class NetworkVisualization {
         const glowLineWidth = Math.max(1.5, 2.4 * scale);
         const glowRadiusOffset = Math.max(4, 6 * scale);
 
+        const mergedPositions = { ...positions };
+
+        if (Array.isArray(extraNodeIds) && extraNodeIds.length) {
+            const missing = extraNodeIds.filter((id) => !(id in mergedPositions));
+            if (missing.length) {
+                const maxX = Math.max(...Object.values(mergedPositions).map((p) => p.x));
+                const startX = Number.isFinite(maxX) ? maxX + 120 : 200;
+                const startY = 140;
+                const spacing = 70;
+                const cols = Math.max(6, Math.ceil(Math.sqrt(missing.length)));
+                missing.forEach((id, idx) => {
+                    const col = idx % cols;
+                    const row = Math.floor(idx / cols);
+                    mergedPositions[id] = {
+                        x: startX + col * spacing,
+                        y: startY + row * spacing
+                    };
+                });
+            }
+        }
+
         const scaledPositions = {};
-        Object.entries(positions).forEach(([id, pos]) => {
+        Object.entries(mergedPositions).forEach(([id, pos]) => {
             scaledPositions[id] = {
                 x: pos.x * scaleX,
                 y: pos.y * scaleY
@@ -191,6 +224,114 @@ class NetworkVisualization {
             glowBlur,
             glowLineWidth,
             glowRadiusOffset
+        };
+    }
+
+    static computeHierLayout(width, height, nodeIds, edgeList, smallNodes = false) {
+        const radius = smallNodes ? 10 : 18;
+        const marginX = 80;
+        const marginY = 80;
+        const levelSpacing = 90;
+        const nodeSpacing = 70;
+
+        const nodes = nodeIds || [];
+        const subEdges = edgeList.filter((e) => e.type === 'SUB');
+        const porEdges = edgeList.filter((e) => e.type === 'POR');
+
+        const depths = {};
+        nodes.forEach((id) => { depths[id] = 0; });
+
+        for (let i = 0; i < nodes.length; i++) {
+            let updated = false;
+            subEdges.forEach((e) => {
+                const srcDepth = depths[e.src] ?? 0;
+                const dstDepth = depths[e.dst] ?? 0;
+                if (srcDepth + 1 > dstDepth) {
+                    depths[e.dst] = srcDepth + 1;
+                    updated = true;
+                }
+            });
+            if (!updated) break;
+        }
+
+        const levels = {};
+        nodes.forEach((id) => {
+            const d = depths[id] ?? 0;
+            if (!levels[d]) levels[d] = [];
+            levels[d].push(id);
+        });
+
+        const levelKeys = Object.keys(levels).map(Number).sort((a, b) => a - b);
+        const positions = {};
+
+        levelKeys.forEach((depth) => {
+            const levelNodes = levels[depth] || [];
+            const levelSet = new Set(levelNodes);
+
+            const adjacency = new Map();
+            const indegree = new Map();
+            levelNodes.forEach((id) => {
+                adjacency.set(id, []);
+                indegree.set(id, 0);
+            });
+
+            porEdges.forEach((e) => {
+                if (!levelSet.has(e.src) || !levelSet.has(e.dst)) return;
+                adjacency.get(e.src).push(e.dst);
+                indegree.set(e.dst, (indegree.get(e.dst) || 0) + 1);
+            });
+
+            const queue = [];
+            levelNodes.forEach((id) => {
+                if ((indegree.get(id) || 0) === 0) queue.push(id);
+            });
+
+            const ordered = [];
+            while (queue.length) {
+                const id = queue.shift();
+                ordered.push(id);
+                adjacency.get(id).forEach((next) => {
+                    indegree.set(next, (indegree.get(next) || 0) - 1);
+                    if ((indegree.get(next) || 0) === 0) queue.push(next);
+                });
+            }
+
+            const finalOrder = ordered.length === levelNodes.length
+                ? ordered
+                : levelNodes.slice().sort();
+
+            const availableWidth = Math.max(300, width - marginX * 2);
+            const spacing = finalOrder.length > 1
+                ? Math.min(nodeSpacing, availableWidth / (finalOrder.length - 1))
+                : nodeSpacing;
+
+            finalOrder.forEach((id, idx) => {
+                positions[id] = {
+                    x: marginX + idx * spacing,
+                    y: marginY + depth * levelSpacing
+                };
+            });
+        });
+
+        return {
+            positions,
+            radius,
+            scale: 1,
+            labelMargin: 14,
+            labelFontSize: 11,
+            labelLineHeight: 13,
+            labelPaddingX: 5,
+            labelPaddingY: 3,
+            labelMaxWidth: 110,
+            edgeFontSize: 10,
+            edgeLabelOffset: 8,
+            baseStrokeWidth: 2,
+            emphasisStrokeWidth: 3,
+            baseEdgeWidth: 2,
+            emphasisEdgeWidth: 3,
+            glowBlur: 10,
+            glowLineWidth: 2,
+            glowRadiusOffset: 4
         };
     }
 
@@ -383,12 +524,91 @@ class NetworkVisualization {
         resizeCanvas.call(this);
         window.addEventListener('resize', resizeCanvas.bind(this));
 
+        const clamp = (val, min, max) => Math.min(max, Math.max(min, val));
+
+        this.canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const delta = e.deltaY < 0 ? 1.1 : 0.9;
+            const rect = this.canvas.getBoundingClientRect();
+            const cx = e.clientX - rect.left;
+            const cy = e.clientY - rect.top;
+            const worldX = (cx - this.panX) / this.zoom;
+            const worldY = (cy - this.panY) / this.zoom;
+            this.zoom = clamp(this.zoom * delta, 0.2, 3.5);
+            this.panX = cx - worldX * this.zoom;
+            this.panY = cy - worldY * this.zoom;
+            this.draw();
+        }, { passive: false });
+
+        this.canvas.addEventListener('mousedown', (e) => {
+            this.isDragging = true;
+            this.dragStart = { x: e.clientX - this.panX, y: e.clientY - this.panY };
+            this.canvas.style.cursor = 'grabbing';
+        });
+
+        this.canvas.addEventListener('mousemove', (e) => {
+            if (!this.isDragging || !this.dragStart) return;
+            this.panX = e.clientX - this.dragStart.x;
+            this.panY = e.clientY - this.dragStart.y;
+            this.draw();
+        });
+
+        const stopDrag = () => {
+            this.isDragging = false;
+            this.dragStart = null;
+            this.canvas.style.cursor = 'grab';
+        };
+        this.canvas.addEventListener('mouseup', stopDrag);
+        this.canvas.addEventListener('mouseleave', stopDrag);
+        this.canvas.addEventListener('dblclick', () => {
+            this.panX = 0;
+            this.panY = 0;
+            this.zoom = 1;
+            this.draw();
+        });
+        this.canvas.style.cursor = 'grab';
+
         // Draw initial network
         this.draw();
     }
 
     setExternalEdges(edges) {
         this.externalEdges = edges;
+    }
+
+    setTemplateGraph(topology) {
+        if (!topology || typeof topology !== 'object') return;
+        if (topology.nodes && typeof topology.nodes === 'object') {
+            this.templateNodeIds = Object.keys(topology.nodes);
+        }
+        if (Array.isArray(topology.edges)) {
+            this.externalEdges = topology.edges;
+        }
+    }
+
+    setShowOnlyActive(value) {
+        this.showOnlyActive = value;
+        this.draw();
+    }
+
+    setFadeInactiveEdges(value) {
+        this.fadeInactiveEdges = value;
+        this.draw();
+    }
+
+    setHighlightActivePath(value) {
+        this.highlightActivePath = value;
+        this.draw();
+    }
+
+    setSmallNodes(value) {
+        this.smallNodes = value;
+        this.draw();
+    }
+
+    setLayoutMode(value) {
+        this.layoutMode = value;
+        this.draw();
     }
 
     // M3/M4: Update plasticity and consolidation visualization data from frame
@@ -614,7 +834,7 @@ class NetworkVisualization {
             const border = NetworkVisualization.stateBorderColors[state] || '#607d8b';
 
             // Node circle
-            const radius = 22;
+            const radius = layout.radius || 18;
             this.ctx.fillStyle = fill;
             this.ctx.strokeStyle = border;
             this.ctx.lineWidth = (state === 'REQUESTED' || state === 'WAITING' || state === 'ACTIVE') ? 4 : 2;
@@ -716,6 +936,28 @@ class NetworkVisualization {
             nodesState = this.normalizeNodes(drawFrame.nodes || {});
         }
 
+        if (this.templateNodeIds && this.templateNodeIds.length) {
+            this.templateNodeIds.forEach((id) => {
+                const normId = this.normalizeId(id);
+                if (!(normId in nodesState)) {
+                    nodesState[normId] = 'INACTIVE';
+                }
+            });
+        }
+
+        const activeStates = new Set(['REQUESTED', 'ACTIVE', 'WAITING', 'TRUE', 'CONFIRMED']);
+        const activeNodes = new Set(
+            Object.entries(nodesState)
+                .filter(([, state]) => activeStates.has(state))
+                .map(([id]) => id)
+        );
+
+        if (this.showOnlyActive && activeNodes.size > 0) {
+            nodesState = Object.fromEntries(
+                Object.entries(nodesState).filter(([id]) => activeNodes.has(id))
+            );
+        }
+
         const rawLatents = (drawFrame && drawFrame.latents) ? drawFrame.latents : {};
         const latents = {};
         Object.entries(rawLatents).forEach(([key, value]) => {
@@ -753,12 +995,23 @@ class NetworkVisualization {
         const canvas = this.ctx.canvas;
 
         // Clear canvas
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
         this.ctx.clearRect(0, 0, canvas.width, canvas.height);
+        this.ctx.save();
+        this.ctx.translate(this.panX, this.panY);
+        this.ctx.scale(this.zoom, this.zoom);
 
         // Determine edges to draw: JSON-provided else fallback static
-        let edgesToDraw = this.externalEdges ?
-            this.externalEdges.map((e) => [this.normalizeId(e.src), this.normalizeId(e.dst), e.type, Number.isFinite(e.weight) ? Number(e.weight) : 1]) :
-            NetworkVisualization.edges.map(([a,b]) => [a,b,'SUB', 1]);
+        const edgeList = this.externalEdges
+            ? this.externalEdges.map((e) => ({
+                src: this.normalizeId(e.src),
+                dst: this.normalizeId(e.dst),
+                type: e.type || 'SUB',
+                weight: Number.isFinite(e.weight) ? Number(e.weight) : 1
+            }))
+            : NetworkVisualization.edges.map(([a, b]) => ({ src: a, dst: b, type: 'SUB', weight: 1 }));
+
+        let edgesToDraw = edgeList.map((e) => [e.src, e.dst, e.type, e.weight]);
 
         // --- Compact mode: hide wrapper script nodes and rewire edges visually ---
         if (this.compact) {
@@ -806,8 +1059,17 @@ class NetworkVisualization {
             edgesToDraw = filtered;
         }
 
-        const layout = NetworkVisualization.computeLayout(canvas.width, canvas.height);
+        const layoutNodeIds = (this.templateNodeIds && this.templateNodeIds.length)
+            ? this.templateNodeIds
+            : Object.keys(nodesState);
+        const layout = this.layoutMode === 'hier' && edgeList.length
+            ? NetworkVisualization.computeHierLayout(canvas.width, canvas.height, layoutNodeIds, edgeList, this.smallNodes)
+            : NetworkVisualization.computeLayout(canvas.width, canvas.height, layoutNodeIds, this.smallNodes);
         const positions = layout.positions;
+
+        if (this.showOnlyActive && activeNodes.size > 0) {
+            edgesToDraw = edgesToDraw.filter(([src, dst]) => activeNodes.has(src) && activeNodes.has(dst));
+        }
 
         const maxWeight = edgesToDraw.reduce((acc, [, , , w]) => {
             const val = Number.isFinite(w) ? Math.abs(w) : NaN;
@@ -842,6 +1104,14 @@ class NetworkVisualization {
                 this.ctx.strokeStyle = wBaseDriftColor;
             } else {
                 this.ctx.strokeStyle = baseColor;
+            }
+
+            const edgeActive = activeNodes.has(src) || activeNodes.has(dst) || isNewReq;
+            if (this.fadeInactiveEdges && !edgeActive) {
+                this.ctx.strokeStyle = NetworkVisualization.applyAlpha(this.ctx.strokeStyle, 0.15);
+            }
+            if (this.highlightActivePath && edgeActive) {
+                this.ctx.strokeStyle = '#f59e0b';
             }
 
             // M3: Apply weight-based thickness multiplier
@@ -987,6 +1257,8 @@ class NetworkVisualization {
                 });
             }
         });
+
+        this.ctx.restore();
     }
 
     setShowLabels(show) {

@@ -5,6 +5,7 @@ class DataManager {
     constructor() {
         this.visualizationData = [];
         this.externalEdges = null;
+        this.topology = null;
         const params = new URLSearchParams(window.location.search);
         this.seedFen = params.get('fen') || '';
     }
@@ -54,6 +55,33 @@ class DataManager {
 
             return this.visualizationData;
         }
+    }
+
+    async loadTopology() {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const topologyParam = params.get('topology');
+            if (!topologyParam) {
+                return null;
+            }
+            const url = `${topologyParam}${topologyParam.includes('?') ? '&' : '?'}t=${Date.now()}`;
+            const response = await fetch(url, { cache: 'no-store' });
+            if (!response.ok) throw new Error('Failed to load topology');
+            const data = await response.json();
+            this.topology = data;
+            if (data && Array.isArray(data.edges)) {
+                this.externalEdges = data.edges;
+            }
+            return data;
+        } catch (error) {
+            console.error('Error loading topology:', error);
+            this.topology = null;
+            return null;
+        }
+    }
+
+    getTopology() {
+        return this.topology;
     }
 
     // Update header with data type information
@@ -106,6 +134,21 @@ class DataManager {
             return data;
         } catch (e) {
             console.error('Failed to load JSON file:', e);
+            throw e;
+        }
+    }
+
+    async loadTopologyFromFile(file) {
+        try {
+            const text = await file.text();
+            const data = JSON.parse(text);
+            this.topology = data;
+            if (data && Array.isArray(data.edges)) {
+                this.externalEdges = data.edges;
+            }
+            return data;
+        } catch (e) {
+            console.error('Failed to load topology JSON file:', e);
             throw e;
         }
     }
