@@ -218,7 +218,8 @@ Key components:
 - `scripts/train_baseline_krk_chain.py`
   - Stage-0 + Stage-1 backchain (goal memory).
   - Stage-1 uses **dense reward** from distance-to-goal deltas.
-  - Per-stage actuator cap (`--max-actuators-per-stage`) with prototype merge.
+  - Per-stage actuator cap (`--max-actuators-per-stage`) + **global cap** (`--max-actuators-total`).
+  - Actuator merge loosened via `--delta-eps` (default 0.22) and **top‑K=3** in extraction.
 - `scripts/baseline_to_recon.py`
   - Compiles baseline learner into ReCoN graph:
     - Root → Hub → Legs (parallel SUB)

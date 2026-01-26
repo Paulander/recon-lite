@@ -317,7 +317,7 @@ class TransitionData:
 def extract_actuator_patterns(positive_transitions: List[TransitionData],
                               mature_sensors: List[Terminal],
                               eps: float = 0.1,
-                              top_k: int = 5) -> List[ActuatorSpec]:
+                              top_k: int = 3) -> List[ActuatorSpec]:
     """
     Extract sparse Δs patterns from positive transitions.
     
@@ -333,7 +333,7 @@ def extract_actuator_patterns(positive_transitions: List[TransitionData],
         positive_transitions: List of transitions with label=1
         mature_sensors: List of mature sensor terminals
         eps: Threshold for significant delta (default 0.1)
-        top_k: Maximum number of sensors per actuator pattern (default 5)
+        top_k: Maximum number of sensors per actuator pattern (default 3)
     
     Returns:
         List of ActuatorSpec extracted from patterns
@@ -532,6 +532,30 @@ def enforce_actuator_cap(
     keep_ids = {a.id for a in stage_sorted[:max_actuators]}
     pruned_count = len(stage_acts) - max_actuators
     kept = [a for a in actuators if not (a.stage == stage and a.id not in keep_ids)]
+    return kept, pruned_count
+
+
+def enforce_actuator_cap_total(
+    actuators: List[Terminal],
+    max_total: int,
+) -> tuple[list[Terminal], int]:
+    """
+    Enforce a global cap on total actuator count. Returns (kept, pruned_count).
+    """
+    if max_total <= 0:
+        return actuators, 0
+    all_acts = [a for a in actuators if a.role == TerminalRole.ACTUATOR]
+    if len(all_acts) <= max_total:
+        return actuators, 0
+    # Keep top by XP (then uses, then id for stability)
+    sorted_acts = sorted(
+        all_acts,
+        key=lambda a: (a.xp, getattr(a, "uses", a.activations), a.id),
+        reverse=True,
+    )
+    keep_ids = {a.id for a in sorted_acts[:max_total]}
+    pruned_count = len(all_acts) - max_total
+    kept = [a for a in actuators if not (a.role == TerminalRole.ACTUATOR and a.id not in keep_ids)]
     return kept, pruned_count
 
 

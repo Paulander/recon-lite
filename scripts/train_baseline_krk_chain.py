@@ -18,6 +18,7 @@ from recon_lite.learning.baseline import (
     BaselineLearner, Terminal, TerminalRole,
     compute_sensor_xp, should_promote_sensor,
     extract_actuator_patterns, find_similar_actuator, enforce_actuator_cap,
+    enforce_actuator_cap_total,
     TransitionData, apply_sensor,
 )
 from recon_lite_chess.baseline_teacher import KRKTeacher, generate_krk_mate_in_1_position
@@ -106,6 +107,9 @@ def update_learner_from_transitions(
     learner: BaselineLearner,
     transitions: List[TransitionData],
     max_actuators_per_stage: int,
+    max_actuators_total: int,
+    delta_eps: float,
+    top_k: int,
 ) -> Dict[str, Any]:
     """Shared update logic for sensors/actuators."""
     sensor_deltas_pos = {s.id: [] for s in learner.sensors}
@@ -157,13 +161,13 @@ def update_learner_from_transitions(
     if len(mature_sensors) >= 3:
         positive_trans = [t for t in transitions if t.label == 1]
         if positive_trans:
-            actuator_specs = extract_actuator_patterns(positive_trans, mature_sensors, eps=0.1, top_k=5)
+            actuator_specs = extract_actuator_patterns(positive_trans, mature_sensors, eps=0.1, top_k=top_k)
             for spec in actuator_specs:
                 existing = find_similar_actuator(
                     learner.actuators,
                     spec,
                     similarity_threshold=0.9,
-                    delta_eps=0.15,
+                    delta_eps=delta_eps,
                 )
                 if existing:
                     existing.actuator_spec.goal_delta = (
@@ -189,6 +193,10 @@ def update_learner_from_transitions(
                 stage=learner.stage,
                 max_actuators=max_actuators_per_stage,
             )
+            learner.actuators, _ = enforce_actuator_cap_total(
+                learner.actuators,
+                max_total=max_actuators_total,
+            )
 
     return {
         "newly_promoted": newly_promoted,
@@ -211,6 +219,9 @@ def main() -> None:
     parser.add_argument("--max-goals", type=int, default=100)
     parser.add_argument("--min-mature-for-goals", type=int, default=8)
     parser.add_argument("--max-actuators-per-stage", type=int, default=30)
+    parser.add_argument("--max-actuators-total", type=int, default=0)
+    parser.add_argument("--delta-eps", type=float, default=0.22)
+    parser.add_argument("--top-k", type=int, default=3)
     args = parser.parse_args()
 
     teacher = KRKTeacher()
@@ -253,6 +264,9 @@ def main() -> None:
             learner,
             transitions,
             max_actuators_per_stage=args.max_actuators_per_stage,
+            max_actuators_total=args.max_actuators_total,
+            delta_eps=args.delta_eps,
+            top_k=args.top_k,
         )
 
         if cycle % 10 == 0 or stats["newly_promoted"] or stats["newly_created_actuators"]:
@@ -285,6 +299,9 @@ def main() -> None:
             learner,
             transitions,
             max_actuators_per_stage=args.max_actuators_per_stage,
+            max_actuators_total=args.max_actuators_total,
+            delta_eps=args.delta_eps,
+            top_k=args.top_k,
         )
 
         if cycle % 10 == 0 or stats["newly_promoted"] or stats["newly_created_actuators"]:

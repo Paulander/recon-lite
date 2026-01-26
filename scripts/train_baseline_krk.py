@@ -22,6 +22,7 @@ from recon_lite.learning.baseline import (
     BaselineLearner, Terminal, TerminalRole, ActuatorSpec,
     compute_sensor_xp, should_promote_sensor,
     extract_actuator_patterns, find_similar_actuator, enforce_actuator_cap,
+    enforce_actuator_cap_total,
     TransitionData
 )
 from recon_lite_chess.baseline_teacher import KRKTeacher, generate_krk_mate_in_1_position
@@ -58,6 +59,9 @@ class TrainingConfig:
         self.max_goals = max_goals
         self.min_mature_for_goals = min_mature_for_goals
         self.max_actuators_per_stage: int = 30
+        self.max_actuators_total: int = 0
+        self.delta_eps: float = 0.22
+        self.top_k: int = 3
         self.save_learner_path: Path | None = None
 
 
@@ -200,7 +204,7 @@ def train_baseline_krk(config: TrainingConfig) -> Dict:
                     positive_trans,
                     mature_sensors,
                     eps=0.1,
-                    top_k=5
+                    top_k=config.top_k
                 )
                 
                 # Create/update actuator terminals
@@ -210,7 +214,7 @@ def train_baseline_krk(config: TrainingConfig) -> Dict:
                         learner.actuators,
                         spec,
                         similarity_threshold=0.9,
-                        delta_eps=0.15,
+                        delta_eps=config.delta_eps,
                     )
                     
                     if existing:
@@ -238,6 +242,10 @@ def train_baseline_krk(config: TrainingConfig) -> Dict:
                     learner.actuators,
                     stage=0,
                     max_actuators=config.max_actuators_per_stage,
+                )
+                learner.actuators, _ = enforce_actuator_cap_total(
+                    learner.actuators,
+                    max_total=config.max_actuators_total,
                 )
         
         # ====================================================================
@@ -427,6 +435,12 @@ def main():
                        help="Minimum mature sensors before storing goals")
     parser.add_argument("--max-actuators-per-stage", type=int, default=30,
                        help="Max actuators to keep per stage")
+    parser.add_argument("--max-actuators-total", type=int, default=0,
+                       help="Global cap on total actuators (0 disables)")
+    parser.add_argument("--delta-eps", type=float, default=0.22,
+                       help="Delta merge threshold for actuator similarity")
+    parser.add_argument("--top-k", type=int, default=3,
+                       help="Top-K sensor deltas to keep per actuator pattern")
     parser.add_argument("--save-learner", type=Path, default=None,
                        help="Optional path to save BaselineLearner pickle")
     
@@ -445,6 +459,9 @@ def main():
         min_mature_for_goals=args.min_mature_for_goals,
     )
     config.max_actuators_per_stage = args.max_actuators_per_stage
+    config.max_actuators_total = args.max_actuators_total
+    config.delta_eps = args.delta_eps
+    config.top_k = args.top_k
     if args.save_learner:
         config.save_learner_path = args.save_learner
     
