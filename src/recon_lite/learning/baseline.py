@@ -167,6 +167,7 @@ class GoalMemory:
     s0: np.ndarray      # state vector using mature sensors
     label: str          # e.g., "mate_in_1", "king_at_edge"
     count: int = 1      # how many times this pattern was seen
+    sensor_ids: list[int] | None = None  # stable sensor id order for s0
     
     def __repr__(self) -> str:
         return f"GoalMemory({self.id}, {self.label}, count={self.count}, dim={len(self.s0)})"
@@ -621,6 +622,7 @@ class BaselineLearner:
         self,
         s0: np.ndarray,
         label: str,
+        sensor_ids: list[int] | None = None,
         goal_eps: float | None = None,
         max_goals: int | None = None,
         normalize: bool | None = None,
@@ -653,6 +655,8 @@ class BaselineLearner:
         for goal in self.goal_memories:
             if goal.label != label or goal.s0.shape != s.shape:
                 continue
+            if sensor_ids is not None and goal.sensor_ids is not None and goal.sensor_ids != sensor_ids:
+                continue
             g = goal.s0
             if do_norm:
                 g = g / (np.linalg.norm(g) + 1e-6)
@@ -665,6 +669,8 @@ class BaselineLearner:
         if best is not None and best_dist is not None and best_dist < eps:
             best.s0 = best.s0 + (s0 - best.s0) / (best.count + 1)
             best.count += 1
+            if best.sensor_ids is None and sensor_ids is not None:
+                best.sensor_ids = list(sensor_ids)
             return best
 
         # Create new goal if under cap (or evict weakest)
@@ -680,7 +686,8 @@ class BaselineLearner:
         goal = GoalMemory(
             id=self._next_goal_id,
             s0=s0,
-            label=label
+            label=label,
+            sensor_ids=list(sensor_ids) if sensor_ids is not None else None,
         )
         self._next_goal_id += 1
         self.goal_memories.append(goal)

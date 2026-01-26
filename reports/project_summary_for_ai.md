@@ -43,6 +43,10 @@ Source docs: `updates_continuous.md`, `recon_roadmap_m3_fast_plasticity.md`, `re
 - Propagation: `z_i = Σ(w_ij * a_j)` smoothed via exponential moving average
 - Supports aggregation modes: "avg" (OR-like), "and" (min, TRUE AND gate)
 
+### KRK Baseline Learner (Offline → Topology Export)
+- The KRK chain learner uses `baseline_teacher.py` features; **side_to_move is included** in the feature vector (tempo is critical for opposition/zugzwang).
+- Learner outputs are exported via `scripts/baseline_to_recon.py` into `topologies/krk_entry_topology.json` and then used by demos.
+
 ### Plasticity System
 
 | Layer | File | Scope | Description |

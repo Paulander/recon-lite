@@ -109,7 +109,7 @@ class KRKTeacher:
     """
     
     # Feature dimension for KRK
-    FEATURE_DIM = 14  # Added is_checkmate feature
+    FEATURE_DIM = 15  # Added side_to_move feature
     
     def __init__(self):
         """Initialize KRK teacher"""
@@ -138,6 +138,8 @@ class KRKTeacher:
         10. edge_distance_black_king (normalized 0-1)
         11. is_check (binary 0 or 1)
         12. can_deliver_mate (binary 0 or 1)
+        13. is_checkmate (binary 0 or 1)
+        14. side_to_move (1 if White to move, 0 if Black)
         
         All domain-specific logic (e.g., "dist_to_edge") is computed HERE,
         not in baseline readouts.
@@ -194,6 +196,7 @@ class KRKTeacher:
         features.append(1.0 if board.is_check() else 0.0)
         features.append(1.0 if can_deliver_mate(board) else 0.0)
         features.append(1.0 if board.is_checkmate() else 0.0)  # THE GOAL STATE
+        features.append(1.0 if board.turn == chess.WHITE else 0.0)
         
         return np.array(features, dtype=np.float32)
     

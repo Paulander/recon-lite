@@ -5,13 +5,16 @@ class DataManager {
     constructor() {
         this.visualizationData = [];
         this.externalEdges = null;
+        const params = new URLSearchParams(window.location.search);
+        this.seedFen = params.get('fen') || '';
     }
 
     // Load visualization data from JSON
     async loadVisualizationData() {
         try {
             const params = new URLSearchParams(window.location.search);
-            const file = params.get('file') || '../outputs/krk_persistent_visualization.json';
+            const fileParam = params.get('file');
+            const file = fileParam || '../outputs/krk_persistent_visualization.json';
             const url = `${file}${file.includes('?') ? '&' : '?'}t=${Date.now()}`;
 
             const response = await fetch(url, { cache: 'no-store' });
@@ -19,6 +22,7 @@ class DataManager {
 
             this.visualizationData = await response.json();
             this.fillMissingNodeStates();
+            this.applySeedFen();
             console.log('Loaded visualization data from', url, this.visualizationData);
 
             // Read graph edges if present on first frame
@@ -33,11 +37,19 @@ class DataManager {
 
         } catch (error) {
             console.error('Error loading visualization data:', error);
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('file')) {
+                console.warn('File parameter provided; not falling back to mock data.');
+                this.visualizationData = [];
+                this.updateDataTypeDisplay();
+                return this.visualizationData;
+            }
             console.log('Falling back to mock data for testing');
 
             // Create mock data for testing
             this.visualizationData = this.createMockData();
             this.fillMissingNodeStates();
+            this.applySeedFen();
             this.updateDataTypeDisplay();
 
             return this.visualizationData;
@@ -63,7 +75,7 @@ class DataManager {
 
         // Check if it's evaluation data (has ReCoN node states)
         const hasReconNodes = this.visualizationData.some(frame =>
-            frame.nodes && (frame.nodes.krk_root || frame.nodes.phase1_drive_to_edge)
+            frame.nodes && Object.keys(frame.nodes).length > 0
         );
 
         if (hasGameMoves && hasReconNodes) {
@@ -88,7 +100,9 @@ class DataManager {
             const data = JSON.parse(text);
             this.visualizationData = data;
             this.fillMissingNodeStates();
+            this.applySeedFen();
             this.externalEdges = (data.length > 0 && data[0].graph && data[0].graph.edges) ? data[0].graph.edges : null;
+            this.updateDataTypeDisplay();
             return data;
         } catch (e) {
             console.error('Failed to load JSON file:', e);
@@ -172,6 +186,20 @@ class DataManager {
 
     getExternalEdges() {
         return this.externalEdges;
+    }
+
+    applySeedFen() {
+        if (!this.seedFen || !this.visualizationData || this.visualizationData.length === 0) {
+            return;
+        }
+        const first = this.visualizationData[0];
+        if (!first.env) {
+            first.env = {};
+        }
+        if (!first.env.initial_fen && !first.env.fen) {
+            first.env.initial_fen = this.seedFen;
+            first.env.fen = this.seedFen;
+        }
     }
 
     fillMissingNodeStates() {

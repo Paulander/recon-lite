@@ -8,6 +8,7 @@ class ChessBoard {
         this.lastEnv = null; // Cache the last env that had position info
         this.bindingColors = {};
         this.bindingPalette = ['#0ea5e9', '#f97316', '#22c55e', '#a855f7', '#ef4444', '#14b8a6'];
+        this.showBindings = true;
     }
 
     init() {
@@ -81,7 +82,7 @@ class ChessBoard {
 
         let boardHtml = '';
         const board = this.chess.board();
-        const bindingMap = this.computeBindingMap(renderEnv.binding);
+        const bindingMap = this.showBindings ? this.computeBindingMap(renderEnv.binding) : {};
 
         for (let row = 0; row < 8; row++) {
             for (let col = 0; col < 8; col++) {
@@ -119,6 +120,13 @@ class ChessBoard {
         }
 
         boardElement.innerHTML = boardHtml;
+    }
+
+    setBindingsEnabled(enabled) {
+        this.showBindings = Boolean(enabled);
+        if (this.lastEnv) {
+            this.render(this.lastEnv);
+        }
     }
 
     colorForNamespace(namespace) {

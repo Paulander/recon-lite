@@ -46,6 +46,7 @@ def compile_baseline_to_topology(
     print(f"Mature sensors: {len(mature_sensors)}")
     
     # Build topology
+    goal_bank = build_goal_bank(learner, label="mate_in_1")
     topology = {
         "nodes": {},
         "edges": [],
@@ -53,12 +54,17 @@ def compile_baseline_to_topology(
             "origin": "baseline_compilation",
             "mature_sensors": len(mature_sensors),
             "total_actuators": len(learner.actuators),
-            "baseline_xp_avg": float(np.mean([s.xp for s in mature_sensors]))
+            "baseline_xp_avg": float(np.mean([s.xp for s in mature_sensors])),
+            "goal_bank": goal_bank,
+            "goal_label": "mate_in_1",
+            "goal_normalize": bool(getattr(learner, "normalize_goals", True)),
+            "goal_weight": 0.7,
+            "goal_lookahead": "max",
         }
     }
     
     # Create Root
-    create_root_node(topology)
+    create_root_node(topology, goal_bank)
     
     # Create Hub
     create_hub_node(topology)
@@ -79,7 +85,7 @@ def compile_baseline_to_topology(
     return topology
 
 
-def create_root_node(topology: Dict):
+def create_root_node(topology: Dict, goal_bank: Dict | None = None):
     """Create KRK_entry root node with blackboard cache"""
     topology["nodes"]["krk_entry"] = {
         "id": "krk_entry",
@@ -87,6 +93,11 @@ def create_root_node(topology: Dict):
         "factory": "recon_lite_chess.krk_baseline_nodes:create_krk_entry_root",
         "meta": {
             "blackboard": {},  # Will cache features + sensor outputs
+            "goal_bank": topology.get("meta", {}).get("goal_bank"),
+            "goal_label": topology.get("meta", {}).get("goal_label", "mate_in_1"),
+            "goal_normalize": topology.get("meta", {}).get("goal_normalize", True),
+            "goal_weight": topology.get("meta", {}).get("goal_weight", 0.7),
+            "goal_lookahead": topology.get("meta", {}).get("goal_lookahead", "max"),
             "description": "KRK entry point with feature extraction"
         }
     }
@@ -362,6 +373,63 @@ def get_feature_keys_from_mask(feature_mask: np.ndarray) -> List[str]:
     """
     indices = np.where(feature_mask)[0]
     return [f"feature_{i}" for i in indices]
+
+
+def build_goal_bank(learner: BaselineLearner, label: str = "mate_in_1") -> Dict[str, Any] | None:
+    """
+    Build a compact goal bank for runtime scoring.
+
+    Returns a dict with:
+      - label
+      - sensor_ids
+      - vectors
+      - counts
+    """
+    goals = [g for g in learner.goal_memories if g.label == label]
+    if not goals:
+        return None
+
+    # Prefer goals with explicit sensor_ids
+    sensor_ids = None
+    for g in goals:
+        if getattr(g, "sensor_ids", None):
+            sensor_ids = g.sensor_ids
+            break
+
+    if sensor_ids is None:
+        # Best-effort fallback: cannot safely align goal vectors without sensor ids
+        print("⚠️  Warning: goal prototypes missing sensor_ids; skipping goal bank export.")
+        return None
+
+    sensor_map = {s.id: s for s in learner.sensors}
+    vectors = []
+    counts = []
+    sensor_specs: Dict[str, Any] = {}
+    for sid in sensor_ids:
+        sensor = sensor_map.get(sid)
+        if sensor is None:
+            continue
+        sensor_specs[f"sensor_{sid}"] = {
+            "readout_type": sensor.sensor_spec.readout_type,
+            "feature_mask_keys": get_feature_keys_from_mask(sensor.sensor_spec.feature_mask),
+            "readout_params": sensor.sensor_spec.readout_params,
+        }
+    for g in goals:
+        if getattr(g, "sensor_ids", None) != sensor_ids:
+            continue
+        vectors.append(g.s0.tolist())
+        counts.append(int(getattr(g, "count", 1)))
+
+    if not vectors:
+        return None
+
+    return {
+        "label": label,
+        "sensor_ids": list(sensor_ids),
+        "vectors": vectors,
+        "counts": counts,
+        "sensor_specs": sensor_specs,
+    }
 
 
 if __name__ == "__main__":

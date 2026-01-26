@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ReCoN KRK Checkmate Visualization</title>
+    <title>ReCoN Game Visualization</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.12.0/chess.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
     <script>
-        window.__RECON_PROFILE__ = 'krk';
+        const params = new URLSearchParams(window.location.search);
+        window.__RECON_PROFILE__ = params.get('profile') || 'generic';
     </script>
 </head>
 <body>
     <div class="header">
-        <h1><i class="fas fa-chess-rook"></i> ReCoN KRK Checkmate Visualization</h1>
+        <h1><i class="fas fa-chess-rook"></i> ReCoN Game Visualization</h1>
         <div id="game-info" style="font-size: 0.8em; color: rgba(255,255,255,0.8); margin-top: 5px;">
             Loading visualization data...
         </div>
@@ -29,36 +30,6 @@
                 <div class="chess-info" id="chess-info">Loading position...</div>
             </div>
 
-            <!-- AI Portrait & Thoughts -->
-            <div class="ai-panel">
-                <div class="ai-portrait">
-                    <i class="fas fa-brain"></i>
-                </div>
-                <div class="thoughts-container">
-                    <div class="thoughts-label">AI Thoughts:</div>
-                    <div class="thoughts-text" id="thoughts-text">Initializing ReCoN network...</div>
-                    <div class="rationale-ribbon" id="rationale-ribbon" style="display:none;"></div>
-                    <div class="macro-summary" id="macro-summary">
-                        <div class="macro-title">Macrograph Snapshot</div>
-                        <div class="macro-lines" id="macro-lines"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Phase Schematic -->
-            <div class="phase-container">
-                <div class="phase-title"><i class="fas fa-layer-group"></i> KRK Checkmate Phases</div>
-                <div class="phases-grid" id="phases-grid">
-                    <div class="phase-item state-inactive" data-phase="krk_root">ROOT: KRK Checkmate</div>
-                    <div class="phase-item state-inactive" data-phase="phase1_drive_to_edge">PHASE1: Drive to Edge</div>
-                    <div class="phase-item state-inactive" data-phase="phase2_shrink_box">PHASE2: Shrink Box</div>
-                    <div class="phase-item state-inactive" data-phase="phase3_take_opposition">PHASE3: Take Opposition</div>
-                    <div class="phase-item state-inactive" data-phase="phase4_deliver_mate">PHASE4: Deliver Mate</div>
-                    <div class="phase-item state-inactive" data-phase="king_at_edge">King at Edge?</div>
-                    <div class="phase-item state-inactive" data-phase="box_can_shrink">Box Shrink Possible?</div>
-                    <div class="phase-item state-inactive" data-phase="can_take_opposition">Has Opposition?</div>
-                </div>
-            </div>
         </div>
 
         <!-- Right Panel -->
@@ -93,6 +64,10 @@
                     <label for="toggle-labels" class="label-toggle">
                         <input type="checkbox" id="toggle-labels" checked>
                         <span>Show labels</span>
+                    </label>
+                    <label for="toggle-bindings" class="label-toggle">
+                        <input type="checkbox" id="toggle-bindings" checked>
+                        <span>Show bindings</span>
                     </label>
                     <label for="toggle-compact" class="label-toggle">
                         <input type="checkbox" id="toggle-compact" checked>
@@ -178,7 +153,7 @@
 
                 } catch (error) {
                     console.error('Error initializing application:', error);
-                    document.getElementById('thoughts-text').textContent = 'Error initializing visualization';
+                    document.getElementById('game-info').textContent = 'Error initializing visualization';
                 }
             }
 
@@ -191,6 +166,7 @@
                 const prevMoveBtn = document.getElementById('prev-move-btn');
                 const nextMoveBtn = document.getElementById('next-move-btn');
                 const labelToggle = document.getElementById('toggle-labels');
+                const bindingsToggle = document.getElementById('toggle-bindings');
                 const stepInput = document.getElementById('step-input');
                 const jumpBtn = document.getElementById('jump-btn');
 
@@ -233,6 +209,12 @@
                     this.networkVis.setShowLabels(labelToggle.checked);
                     labelToggle.addEventListener('change', (e) => {
                         this.networkVis.setShowLabels(e.target.checked);
+                    });
+                }
+                if (bindingsToggle) {
+                    this.chessBoard.setBindingsEnabled(bindingsToggle.checked);
+                    bindingsToggle.addEventListener('change', (e) => {
+                        this.chessBoard.setBindingsEnabled(e.target.checked);
                     });
                 }
 
@@ -396,9 +378,12 @@
                     document.getElementById('chess-info').textContent = positionInfo;
                 }
 
-                // Update thoughts
+                // Update thoughts (if panel exists)
                 if (frame.thoughts) {
-                    document.getElementById('thoughts-text').textContent = frame.thoughts;
+                    const thoughtsEl = document.getElementById('thoughts-text');
+                    if (thoughtsEl) {
+                        thoughtsEl.textContent = frame.thoughts;
+                    }
                 }
 
                 const rationaleEl = document.getElementById('rationale-ribbon');

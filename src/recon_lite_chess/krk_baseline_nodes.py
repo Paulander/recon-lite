@@ -26,23 +26,32 @@ def create_krk_entry_root(node_id=None):
     """
     actual_id = node_id or "krk_entry"
     
-    def predicate(node, graph, env):
+    def predicate(node, env):
         # Initialize blackboard if needed
         if "blackboard" not in node.meta:
             node.meta["blackboard"] = {}
-        
+        blackboard = env.setdefault("blackboard", node.meta["blackboard"])
+        node.meta["blackboard"] = blackboard
+
         # Extract features ONCE per tick
-        if "krk_features" not in node.meta["blackboard"]:
+        if "krk_features" not in blackboard:
             board = env.get("board")
             if board:
                 features = _teacher.features(board)
-                node.meta["blackboard"]["krk_features"] = features
-        
-        # Initialize sensor output cache
-        if "sensor_outputs" not in node.meta["blackboard"]:
-            node.meta["blackboard"]["sensor_outputs"] = {}
-        
-        return True, True
+                blackboard["krk_features"] = features
+
+        # Initialize caches
+        blackboard.setdefault("sensor_outputs", {})
+        blackboard.setdefault("sensor_specs", {})
+        if "goal_bank" not in blackboard and node.meta.get("goal_bank"):
+            blackboard["goal_bank"] = node.meta.get("goal_bank")
+            blackboard["goal_label"] = node.meta.get("goal_label", "mate_in_1")
+            blackboard["goal_normalize"] = node.meta.get("goal_normalize", True)
+            blackboard["goal_weight"] = node.meta.get("goal_weight", 0.7)
+            blackboard["goal_lookahead"] = node.meta.get("goal_lookahead", "max")
+
+        # Keep root in WAITING so children can run this tick
+        return False, False
     
     return Node(
         nid=actual_id,
@@ -59,10 +68,11 @@ def create_krk_hub(node_id=None):
     """
     actual_id = node_id or "krk_hub"
     
-    def predicate(node, graph, env):
+    def predicate(node, env):
         # For now, just pass through
         # Bandit logic will be added later
-        return True, True
+        # Keep hub waiting so children get requested
+        return False, False
     
     return Node(
         nid=actual_id,
@@ -75,8 +85,9 @@ def create_leg_script(node_id=None):
     """Create Leg SCRIPT node (simple pass-through)"""
     actual_id = node_id or "leg_script"
     
-    def predicate(node, graph, env):
-        return True, True
+    def predicate(node, env):
+        # Keep leg waiting so children get requested
+        return False, False
     
     return Node(
         nid=actual_id,
@@ -89,8 +100,9 @@ def create_act_script(node_id=None):
     """Create actuator wrapper SCRIPT node."""
     actual_id = node_id or "act_script"
     
-    def predicate(node, graph, env):
-        return True, True
+    def predicate(node, env):
+        # Keep actuator wrapper waiting so child terminal runs
+        return False, False
     
     return Node(
         nid=actual_id,
@@ -107,9 +119,10 @@ def create_and_gate(node_id=None):
     """
     actual_id = node_id or "and_gate"
     
-    def predicate(node, graph, env):
+    def predicate(node, env):
         # Aggregation handled by engine
-        return True, True
+        # Keep AND gate waiting so children can confirm
+        return False, False
     
     return Node(
         nid=actual_id,
@@ -126,13 +139,10 @@ def create_sensor_terminal(node_id=None):
     """
     actual_id = node_id or "sensor_terminal"
     
-    def predicate(node, graph, env):
-        # Get root blackboard
-        root = graph.nodes.get("krk_entry")
-        if not root or "blackboard" not in root.meta:
+    def predicate(node, env):
+        blackboard = env.get("blackboard")
+        if not blackboard:
             return False, False
-        
-        blackboard = root.meta["blackboard"]
         
         # Read cached features
         features = blackboard.get("krk_features")
@@ -165,8 +175,13 @@ def create_sensor_terminal(node_id=None):
             print(f"Warning: Sensor {node.nid} readout failed: {e}")
             return False, False
         
-        # Cache output for actuators
+        # Cache output + spec for actuators
         blackboard["sensor_outputs"][node.nid] = output
+        blackboard["sensor_specs"][node.nid] = {
+            "readout_type": readout_type,
+            "feature_mask_keys": feature_mask_keys,
+            "readout_params": readout_params,
+        }
         
         # Store in node state
         if not hasattr(node, 'state') or node.state is None:
@@ -190,14 +205,12 @@ def create_actuator_terminal(node_id=None):
     """
     actual_id = node_id or "actuator_terminal"
     
-    def predicate(node, graph, env):
-        # Get root blackboard
-        root = graph.nodes.get("krk_entry")
-        if not root or "blackboard" not in root.meta:
+    def predicate(node, env):
+        blackboard = env.get("blackboard")
+        if not blackboard:
             return False, False
-        
-        blackboard = root.meta["blackboard"]
         sensor_outputs = blackboard.get("sensor_outputs", {})
+        sensor_specs = blackboard.get("sensor_specs", {})
         
         # Get targets and goal_delta
         targets = node.meta.get("targets", [])
@@ -228,6 +241,22 @@ def create_actuator_terminal(node_id=None):
         else:
             stage_weight = 0.7 if stage == 0 else 1.0
 
+        # Optional goal bank for backchaining (pure terminal-space objective)
+        goal_bank = blackboard.get("goal_bank")
+        goal_label = blackboard.get("goal_label", "mate_in_1")
+        goal_normalize = blackboard.get("goal_normalize", True)
+        goal_weight = float(blackboard.get("goal_weight", 0.7))
+        goal_lookahead = blackboard.get("goal_lookahead", "max")
+        goal_vectors = []
+        goal_sensor_ids = []
+        if goal_bank and stage > 0:
+            if isinstance(goal_bank, dict) and goal_bank.get("label") == goal_label:
+                goal_vectors = goal_bank.get("vectors", [])
+                goal_sensor_ids = goal_bank.get("sensor_ids", [])
+            elif isinstance(goal_bank, list):
+                goal_vectors = [g.get("s0") for g in goal_bank if g.get("label") == goal_label]
+                goal_sensor_ids = (goal_bank[0].get("sensor_ids") if goal_bank else []) or []
+
         # Score each legal move
         board = env.get("board")
         if not board:
@@ -249,33 +278,15 @@ def create_actuator_terminal(node_id=None):
             # Compute Δs for target sensors
             delta_s = []
             for target_id in targets:
-                # Get sensor spec from graph
-                sensor_node = graph.nodes.get(target_id)
-                if not sensor_node:
-                    # Try without _post suffix
-                    sensor_node = graph.nodes.get(target_id.split("_post_")[0])
-                if not sensor_node:
+                spec = sensor_specs.get(target_id)
+                if spec is None:
+                    base_id = target_id.split("_post_")[0]
+                    spec = sensor_specs.get(base_id)
+                if spec is None:
                     continue
                 
-                # Apply readout to new features
-                readout_type = sensor_node.meta.get("readout_type", "identity")
-                feature_mask_keys = sensor_node.meta.get("feature_mask_keys", [])
-                readout_params = sensor_node.meta.get("readout_params", {})
-                
-                feature_mask = np.zeros(len(features_1), dtype=bool)
-                for key in feature_mask_keys:
-                    if key.startswith("feature_"):
-                        idx = int(key.split("_")[1])
-                        if idx < len(features_1):
-                            feature_mask[idx] = True
-                
-                if not np.any(feature_mask):
-                    continue
-                
-                sub_v = features_1[feature_mask]
-                try:
-                    s1 = apply_readout(sub_v, readout_type, readout_params)
-                except Exception:
+                s1 = _apply_spec_to_features(spec, features_1)
+                if s1 is None:
                     continue
                 
                 # Compute delta
@@ -288,7 +299,55 @@ def create_actuator_terminal(node_id=None):
             # Score by similarity to goal_delta
             goal_deltas = [goal_delta[t] for t in targets if t in goal_delta][:len(delta_s)]
             similarity = cosine_similarity(delta_s, goal_deltas)
-            scores[move] = similarity * stage_weight
+            score = similarity * stage_weight
+
+            # Goal distance shaping (Stage > 0 only)
+            if goal_vectors and goal_sensor_ids:
+                def _goal_distance_for_board(b):
+                    f = _teacher.features(b)
+                    s_goal = []
+                    for sid in goal_sensor_ids:
+                        sid_key = f"sensor_{sid}"
+                        spec = sensor_specs.get(sid_key)
+                        if spec is None and isinstance(goal_bank, dict):
+                            spec = goal_bank.get("sensor_specs", {}).get(sid_key)
+                        if spec is None:
+                            continue
+                        val = _apply_spec_to_features(spec, f)
+                        if val is None:
+                            continue
+                        s_goal.append(val)
+                    if not s_goal:
+                        return None
+                    s_goal = np.array(s_goal, dtype=np.float32)
+                    if goal_normalize:
+                        s_goal = s_goal / (np.linalg.norm(s_goal) + 1e-6)
+                    def _dist(gv):
+                        g = np.array(gv, dtype=np.float32)
+                        if goal_normalize:
+                            g = g / (np.linalg.norm(g) + 1e-6)
+                        return np.linalg.norm(s_goal - g)
+                    return min((_dist(g) for g in goal_vectors), default=None)
+
+                # If lookahead enabled, evaluate after one black reply (worst-case by default)
+                d1 = None
+                if goal_lookahead and goal_lookahead != "none":
+                    d1_candidates = []
+                    for reply in board_copy.legal_moves:
+                        b2 = board_copy.copy()
+                        b2.push(reply)
+                        d2 = _goal_distance_for_board(b2)
+                        if d2 is not None:
+                            d1_candidates.append(d2)
+                    if d1_candidates:
+                        d1 = max(d1_candidates) if goal_lookahead == "max" else min(d1_candidates)
+                else:
+                    d1 = _goal_distance_for_board(board_copy)
+
+                if d1 is not None:
+                    score += goal_weight * (-float(d1))
+
+            scores[move] = score
         
         if not scores:
             return False, False
@@ -306,7 +365,7 @@ def create_actuator_terminal(node_id=None):
         })
         
         best = max(suggestions, key=lambda s: s["score"])
-        env["suggested_move"] = best["move"]
+        env["suggested_move"] = best["move"].uci()
         env["move_confidence"] = best["score"]
         env["suggested_actuator"] = best["actuator"]
         
@@ -357,6 +416,29 @@ def apply_readout(sub_v: np.ndarray, readout_type: str, params: Dict) -> float:
     else:
         # Default to mean for unknown types
         return float(np.mean(sub_v))
+
+
+def _apply_spec_to_features(spec: Dict[str, Any], features: np.ndarray) -> float | None:
+    """Apply a sensor spec dict to features, returning a scalar or None."""
+    readout_type = spec.get("readout_type", "identity")
+    feature_mask_keys = spec.get("feature_mask_keys", [])
+    readout_params = spec.get("readout_params", {})
+
+    feature_mask = np.zeros(len(features), dtype=bool)
+    for key in feature_mask_keys:
+        if key.startswith("feature_"):
+            idx = int(key.split("_")[1])
+            if idx < len(features):
+                feature_mask[idx] = True
+
+    if not np.any(feature_mask):
+        return None
+
+    sub_v = features[feature_mask]
+    try:
+        return apply_readout(sub_v, readout_type, readout_params)
+    except Exception:
+        return None
 
 
 def cosine_similarity(a: list, b: list) -> float:

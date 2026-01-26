@@ -82,8 +82,14 @@ def label_transitions_by_goal(
     goal_vectors: List[np.ndarray],
     sensor_ids: List[int],
     eps: float = 1e-3,
+    lookahead_black: bool = True,
+    opponent_mode: str = "max",
 ) -> List[TransitionData]:
-    """Label transitions as positive if they move closer to any goal memory."""
+    """Label transitions as positive if they move closer to any goal memory.
+
+    If lookahead_black=True, evaluate distance after one black reply.
+    opponent_mode="max" uses worst-case (robust) distance across replies.
+    """
     transitions = []
     teacher = KRKTeacher()
     v0 = teacher.features(board)
@@ -95,8 +101,23 @@ def label_transitions_by_goal(
         b1 = board.copy()
         b1.push(move)
         v1 = teacher.features(b1)
-        s1 = compute_sensor_vector_by_ids(learner, v1, sensor_ids)
-        d1 = min((np.linalg.norm(s1 - g) for g in goal_vectors), default=float("inf"))
+        if lookahead_black:
+            d1_candidates = []
+            for reply in b1.legal_moves:
+                b2 = b1.copy()
+                b2.push(reply)
+                v2 = teacher.features(b2)
+                s2 = compute_sensor_vector_by_ids(learner, v2, sensor_ids)
+                d2 = min((np.linalg.norm(s2 - g) for g in goal_vectors), default=float("inf"))
+                d1_candidates.append(d2)
+            if d1_candidates:
+                d1 = max(d1_candidates) if opponent_mode == "max" else min(d1_candidates)
+            else:
+                s1 = compute_sensor_vector_by_ids(learner, v1, sensor_ids)
+                d1 = min((np.linalg.norm(s1 - g) for g in goal_vectors), default=float("inf"))
+        else:
+            s1 = compute_sensor_vector_by_ids(learner, v1, sensor_ids)
+            d1 = min((np.linalg.norm(s1 - g) for g in goal_vectors), default=float("inf"))
         reward = d0 - d1
         label = 1 if reward > eps else 0
         transitions.append(TransitionData(v0=v0, v1=v1, label=label, action=move, reward=reward))
@@ -256,6 +277,7 @@ def main() -> None:
                 learner.add_goal_memory(
                     s0,
                     label="mate_in_1",
+                    sensor_ids=goal_sensor_ids,
                     goal_eps=args.goal_eps,
                     max_goals=args.max_goals,
                 )
@@ -293,7 +315,16 @@ def main() -> None:
                 g.s0 for g in learner.goal_memories
                 if g.label == "mate_in_1" and g.s0.shape == (len(goal_sensor_ids),)
             ]
-            transitions.extend(label_transitions_by_goal(learner, b0, goal_vectors, goal_sensor_ids))
+            transitions.extend(
+                label_transitions_by_goal(
+                    learner,
+                    b0,
+                    goal_vectors,
+                    goal_sensor_ids,
+                    lookahead_black=True,
+                    opponent_mode="max",
+                )
+            )
 
         stats = update_learner_from_transitions(
             learner,
