@@ -229,9 +229,12 @@ Key components:
     - Root → Hub → Legs (parallel SUB)
     - Precond → Act Script → Postcond (POR only inside leg)
     - Edges use `src/dst` keys (loader requirement).
+  - Goal bank now exported as **sensor_id-keyed dicts** (stable IDs) with sensor specs for runtime scoring.
+  - Root meta includes `goal_min_overlap` + `goal_handoff_threshold` for safe chaining.
 - `scripts/test_krk_entry.py`
   - Executes compiled topology (no dynamic growth).
   - Actuator scoring applies **stage spotlight bias** (mate-in-1 affordance boosts Stage‑0 actuators).
+  - **Handoff gating**: when goal distance falls below threshold **and** mate is possible, Stage‑0 is boosted and Stage>0 is suppressed.
 
 **Note:** `TopologyRegistry.EdgeSpec.from_dict` now accepts legacy edge keys (`from`/`to` or `source`/`target`) to avoid KeyError in older topology JSON files.
 

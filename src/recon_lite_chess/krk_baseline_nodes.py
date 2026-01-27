@@ -49,6 +49,21 @@ def create_krk_entry_root(node_id=None):
             blackboard["goal_normalize"] = node.meta.get("goal_normalize", True)
             blackboard["goal_weight"] = node.meta.get("goal_weight", 0.7)
             blackboard["goal_lookahead"] = node.meta.get("goal_lookahead", "max")
+            blackboard["goal_min_overlap"] = node.meta.get("goal_min_overlap", 8)
+            blackboard["goal_handoff_threshold"] = node.meta.get("goal_handoff_threshold", 0.2)
+
+        # Compute current goal distance (for handoff gating) when goal bank exists
+        if blackboard.get("goal_bank") and blackboard.get("krk_features") is not None:
+            dist, overlap = _goal_distance_from_features(
+                blackboard["krk_features"],
+                blackboard.get("goal_bank"),
+                normalize=blackboard.get("goal_normalize", True),
+                min_overlap=int(blackboard.get("goal_min_overlap", 8)),
+            )
+            blackboard["goal_distance_now"] = dist
+            blackboard["goal_overlap_now"] = overlap
+            thresh = float(blackboard.get("goal_handoff_threshold", 0.2))
+            blackboard["goal_ready"] = (dist is not None and dist <= thresh)
 
         # Keep root in WAITING so children can run this tick
         return False, False
@@ -229,14 +244,17 @@ def create_actuator_terminal(node_id=None):
         if len(s0) != len(targets):
             return False, False  # Not all sensors available
         
-        # Determine spotlight weight (affordance gating)
+        # Determine spotlight weight (handoff A + C)
         features = blackboard.get("krk_features")
         mate_possible = False
         if features is not None and len(features) > 12:
             mate_possible = features[12] >= 0.5  # can_deliver_mate
 
-        # Stage bias: spotlight tactical (stage 0) when mate is visible
-        if mate_possible:
+        goal_ready = bool(blackboard.get("goal_ready"))
+        # Stage bias: spotlight tactical (stage 0) when goal basin reached AND mate is visible
+        if goal_ready and mate_possible:
+            stage_weight = 3.0 if stage == 0 else 0.2
+        elif mate_possible:
             stage_weight = 2.5 if stage == 0 else 0.5
         else:
             stage_weight = 0.7 if stage == 0 else 1.0
@@ -247,15 +265,11 @@ def create_actuator_terminal(node_id=None):
         goal_normalize = blackboard.get("goal_normalize", True)
         goal_weight = float(blackboard.get("goal_weight", 0.7))
         goal_lookahead = blackboard.get("goal_lookahead", "max")
-        goal_vectors = []
-        goal_sensor_ids = []
+        min_goal_overlap = int(blackboard.get("goal_min_overlap", 8))
+        goal_entries = []
         if goal_bank and stage > 0:
             if isinstance(goal_bank, dict) and goal_bank.get("label") == goal_label:
-                goal_vectors = goal_bank.get("vectors", [])
-                goal_sensor_ids = goal_bank.get("sensor_ids", [])
-            elif isinstance(goal_bank, list):
-                goal_vectors = [g.get("s0") for g in goal_bank if g.get("label") == goal_label]
-                goal_sensor_ids = (goal_bank[0].get("sensor_ids") if goal_bank else []) or []
+                goal_entries = goal_bank.get("goals", [])
 
         # Score each legal move
         board = env.get("board")
@@ -302,32 +316,43 @@ def create_actuator_terminal(node_id=None):
             score = similarity * stage_weight
 
             # Goal distance shaping (Stage > 0 only)
-            if goal_vectors and goal_sensor_ids:
+            if goal_entries:
                 def _goal_distance_for_board(b):
                     f = _teacher.features(b)
-                    s_goal = []
-                    for sid in goal_sensor_ids:
-                        sid_key = f"sensor_{sid}"
-                        spec = sensor_specs.get(sid_key)
-                        if spec is None and isinstance(goal_bank, dict):
-                            spec = goal_bank.get("sensor_specs", {}).get(sid_key)
-                        if spec is None:
-                            continue
+                    # Build current sensor map by stable id (graph specs + goal specs)
+                    s_goal: Dict[str, float] = {}
+                    goal_specs = {}
+                    if isinstance(goal_bank, dict):
+                        goal_specs = goal_bank.get("sensor_specs", {}) or {}
+                    merged_specs = dict(goal_specs)
+                    merged_specs.update(sensor_specs)
+                    for sid_key, spec in merged_specs.items():
                         val = _apply_spec_to_features(spec, f)
-                        if val is None:
-                            continue
-                        s_goal.append(val)
+                        if val is not None:
+                            s_goal[sid_key] = float(val)
                     if not s_goal:
                         return None
-                    s_goal = np.array(s_goal, dtype=np.float32)
-                    if goal_normalize:
-                        s_goal = s_goal / (np.linalg.norm(s_goal) + 1e-6)
-                    def _dist(gv):
-                        g = np.array(gv, dtype=np.float32)
+
+                    def _dist(entry):
+                        gvals = entry.get("values", {})
+                        keys = set(s_goal.keys()) & set(gvals.keys())
+                        if len(keys) < min_goal_overlap:
+                            return None
+                        vec_cur = np.array([s_goal[k] for k in keys], dtype=np.float32)
+                        vec_goal = np.array([gvals[k] for k in keys], dtype=np.float32)
                         if goal_normalize:
-                            g = g / (np.linalg.norm(g) + 1e-6)
-                        return np.linalg.norm(s_goal - g)
-                    return min((_dist(g) for g in goal_vectors), default=None)
+                            vec_cur = vec_cur / (np.linalg.norm(vec_cur) + 1e-6)
+                            vec_goal = vec_goal / (np.linalg.norm(vec_goal) + 1e-6)
+                        return float(np.linalg.norm(vec_cur - vec_goal))
+
+                    best = None
+                    for entry in goal_entries:
+                        d = _dist(entry)
+                        if d is None:
+                            continue
+                        if best is None or d < best:
+                            best = d
+                    return best
 
                 # If lookahead enabled, evaluate after one black reply (worst-case by default)
                 d1 = None
@@ -439,6 +464,49 @@ def _apply_spec_to_features(spec: Dict[str, Any], features: np.ndarray) -> float
         return apply_readout(sub_v, readout_type, readout_params)
     except Exception:
         return None
+
+
+def _goal_distance_from_features(
+    features: np.ndarray,
+    goal_bank: Dict[str, Any] | None,
+    normalize: bool = True,
+    min_overlap: int = 8,
+) -> tuple[float | None, int]:
+    """Compute min distance to goal prototypes in stable sensor-id space."""
+    if not goal_bank or not isinstance(goal_bank, dict):
+        return None, 0
+    goals = goal_bank.get("goals", [])
+    if not goals:
+        return None, 0
+    sensor_specs = goal_bank.get("sensor_specs", {}) or {}
+
+    current: Dict[str, float] = {}
+    for sid_key, spec in sensor_specs.items():
+        val = _apply_spec_to_features(spec, features)
+        if val is not None:
+            current[sid_key] = float(val)
+
+    if not current:
+        return None, 0
+
+    best = None
+    best_overlap = 0
+    for entry in goals:
+        gvals = entry.get("values", {})
+        keys = set(current.keys()) & set(gvals.keys())
+        if len(keys) < min_overlap:
+            continue
+        vec_cur = np.array([current[k] for k in keys], dtype=np.float32)
+        vec_goal = np.array([gvals[k] for k in keys], dtype=np.float32)
+        if normalize:
+            vec_cur = vec_cur / (np.linalg.norm(vec_cur) + 1e-6)
+            vec_goal = vec_goal / (np.linalg.norm(vec_goal) + 1e-6)
+        dist = float(np.linalg.norm(vec_cur - vec_goal))
+        if best is None or dist < best:
+            best = dist
+            best_overlap = len(keys)
+
+    return best, best_overlap
 
 
 def cosine_similarity(a: list, b: list) -> float:

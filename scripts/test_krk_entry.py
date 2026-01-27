@@ -10,7 +10,8 @@ import chess
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from recon_lite.graph import Graph
+from recon_lite.engine import ReConEngine
+from recon_lite.graph import Graph, NodeState
 from recon_lite_chess.graph.builder import build_graph_from_topology
 from recon_lite_chess.baseline_teacher import generate_krk_mate_in_1_position, KRKTeacher
 
@@ -30,59 +31,67 @@ def load_krk_entry_topology():
     return graph
 
 
-def execute_graph(graph: Graph, env: dict):
+def choose_move_with_engine(graph: Graph, engine: ReConEngine, board: chess.Board, max_ticks: int = 200):
     """
-    Execute all nodes in the graph in proper order.
-    
-    This is a simplified execution - just runs all predicates to get move selection.
+    Run the graph via the ReCon engine until a move is chosen or max_ticks is reached.
     """
-    # First, run root to extract features
-    root = graph.nodes.get("krk_entry")
-    if root and root.predicate:
-        root.predicate(root, graph, env)
-    
-    # Then run all sensor terminals to cache outputs
-    for nid, node in graph.nodes.items():
-        if "sensor" in nid and node.predicate:
-            try:
-                node.predicate(node, graph, env)
-            except Exception as e:
-                pass  # Ignore sensor errors
-    
-    # Finally run all actuator terminals to select best move
-    for nid, node in graph.nodes.items():
-        if "actuator" in nid and node.predicate:
-            try:
-                node.predicate(node, graph, env)
-            except Exception as e:
-                pass
+    env = {
+        "board": board,
+        "chosen_move": None,
+        "suggested_move": None,
+    }
+
+    engine.reset_states()
+
+    # Request the root script node.
+    root_id = None
+    if "krk_entry" in graph.nodes:
+        root_id = "krk_entry"
+    elif "ROOT" in graph.nodes:
+        root_id = "ROOT"
+    else:
+        # Fallback: first SCRIPT node without a parent
+        for nid, node in graph.nodes.items():
+            if node.ntype.name == "SCRIPT" and graph.parent_of(nid) is None:
+                root_id = nid
+                break
+
+    if root_id:
+        graph.nodes[root_id].state = NodeState.REQUESTED
+
+    ticks = 0
+    while ticks < max_ticks and env.get("chosen_move") is None:
+        ticks += 1
+        engine.step(env)
+
+    chosen = env.get("chosen_move") or env.get("suggested_move")
+    confidence = env.get("move_confidence", 0.0)
+    return chosen, confidence
 
 
-def test_single_position(graph: Graph, board: chess.Board):
+def test_single_position(graph: Graph, engine: ReConEngine, board: chess.Board):
     """
     Test KRK_entry on a single position.
     
     Returns:
         (move, confidence, is_mate) tuple
     """
-    # Create environment
-    env = {
-        "board": board,
-    }
-    
-    # Execute graph to get move
-    execute_graph(graph, env)
-    
-    # Get suggested move from environment
-    suggested_move = env.get("suggested_move")
-    confidence = env.get("move_confidence", 0.0)
+    suggested_move, confidence = choose_move_with_engine(graph, engine, board)
     
     if suggested_move is None:
         return None, 0.0, False
     
     # Check if it's mate
     board_copy = board.copy()
-    board_copy.push(suggested_move)
+    move_obj = suggested_move
+    if isinstance(suggested_move, str):
+        try:
+            move_obj = chess.Move.from_uci(suggested_move)
+        except Exception:
+            move_obj = None
+    if move_obj is None:
+        return suggested_move, confidence, False
+    board_copy.push(move_obj)
     is_mate = board_copy.is_checkmate()
     
     return suggested_move, confidence, is_mate
@@ -107,13 +116,15 @@ def run_evaluation(graph: Graph, num_positions: int = 100):
         "wrong_move": 0,
         "confidences": [],
     }
+
+    engine = ReConEngine(graph)
     
     for i in range(num_positions):
         # Generate position
         board = generate_krk_mate_in_1_position()
         
         # Test
-        move, confidence, is_mate = test_single_position(graph, board)
+        move, confidence, is_mate = test_single_position(graph, engine, board)
         
         stats["total"] += 1
         

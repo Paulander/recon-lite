@@ -296,7 +296,7 @@ def _load_learner(learner_path: Path | None) -> tuple[BaselineLearner | None, di
 def _goal_prototypes(learner: BaselineLearner | None, label: str = "mate_in_1") -> list:
     if not learner:
         return []
-    return [g.s0 for g in learner.goal_memories if g.label == label]
+    return [g for g in learner.goal_memories if g.label == label]
 
 
 def _state_vector(learner: BaselineLearner, features) -> list[float]:
@@ -304,21 +304,39 @@ def _state_vector(learner: BaselineLearner, features) -> list[float]:
     return [apply_sensor(s, features) for s in sensors]
 
 
-def _goal_distance(learner: BaselineLearner, prototypes: list, features) -> float | None:
-    if not prototypes:
+def _goal_distance(
+    learner: BaselineLearner,
+    goals: list,
+    features,
+    min_overlap: int = 8,
+) -> float | None:
+    if not goals:
         return None
-    s = _state_vector(learner, features)
-    if len(s) == 0:
-        return None
-    s = np.asarray(s, dtype=np.float32)
-    if getattr(learner, "normalize_goals", True):
-        s = s / (np.linalg.norm(s) + 1e-6)
+    sensor_map = {s.id: s for s in learner.sensors}
     best = None
-    for proto in prototypes:
-        g = np.asarray(proto, dtype=np.float32)
+    for goal in goals:
+        sensor_ids = getattr(goal, "sensor_ids", None)
+        if not sensor_ids:
+            continue
+        keys = [sid for sid in sensor_ids if sid in sensor_map]
+        if len(keys) < min_overlap:
+            continue
+        cur = []
+        for sid in keys:
+            cur.append(apply_sensor(sensor_map[sid], features))
+        if not cur:
+            continue
+        vec_cur = np.asarray(cur, dtype=np.float32)
+        vec_goal = np.asarray(goal.s0, dtype=np.float32)
+        if len(vec_goal) != len(sensor_ids):
+            continue
+        # Align goal vector to keys subset
+        idx_map = {sid: idx for idx, sid in enumerate(sensor_ids)}
+        vec_goal = np.asarray([vec_goal[idx_map[sid]] for sid in keys], dtype=np.float32)
         if getattr(learner, "normalize_goals", True):
-            g = g / (np.linalg.norm(g) + 1e-6)
-        dist = float(np.linalg.norm(s - g))
+            vec_cur = vec_cur / (np.linalg.norm(vec_cur) + 1e-6)
+            vec_goal = vec_goal / (np.linalg.norm(vec_goal) + 1e-6)
+        dist = float(np.linalg.norm(vec_cur - vec_goal))
         if best is None or dist < best:
             best = dist
     return best
@@ -424,6 +442,7 @@ def choose_move_with_graph(board: chess.Board, logger: RunLogger, move_no: int,
         )
 
         if log_every_tick or ticks % 10 == 0:
+            bb = env.get("blackboard", {}) or {}
             logger.snapshot(
                 engine=eng,
                 note=f"Eval tick {ticks} (move {move_no})",
@@ -434,12 +453,16 @@ def choose_move_with_graph(board: chess.Board, logger: RunLogger, move_no: int,
                     "binding": env.get("binding"),
                     "suggested_actuator": env.get("suggested_actuator"),
                     "suggested_move": env.get("suggested_move"),
+                    "goal_distance_now": bb.get("goal_distance_now"),
+                    "goal_overlap_now": bb.get("goal_overlap_now"),
+                    "goal_ready": bb.get("goal_ready"),
                 },
                 thoughts="Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move'].",
                 new_requests=list(now_req.keys()) if now_req else []
             )
 
     if env.get("chosen_move") is not None:
+        bb = env.get("blackboard", {}) or {}
         logger.snapshot(
             engine=eng,
             note=f"Decision at tick {ticks} (move {move_no})",
@@ -451,6 +474,9 @@ def choose_move_with_graph(board: chess.Board, logger: RunLogger, move_no: int,
                 "binding": env.get("binding"),
                 "suggested_actuator": env.get("suggested_actuator"),
                 "suggested_move": env.get("suggested_move"),
+                "goal_distance_now": bb.get("goal_distance_now"),
+                "goal_overlap_now": bb.get("goal_overlap_now"),
+                "goal_ready": bb.get("goal_ready"),
             },
             thoughts="Decision made; capturing final node states.",
             new_requests=[]
@@ -480,12 +506,16 @@ def choose_move_with_graph(board: chess.Board, logger: RunLogger, move_no: int,
     if suggestions:
         sorted_suggestions = sorted(suggestions, key=lambda s: s["score"], reverse=True)
         prototypes = _goal_prototypes(learner) if learner else []
+        bb = env.get("blackboard", {}) or {}
+        goal_weight = bb.get("goal_weight", 0.7) if isinstance(bb, dict) else 0.7
+        min_overlap = bb.get("goal_min_overlap", 8) if isinstance(bb, dict) else 8
         diag = []
         for cand in sorted_suggestions[:3]:
             move = cand["move"]
             uci = move.uci() if hasattr(move, "uci") else str(move)
             goal_dist = None
             mate_feature = None
+            goal_term = None
             try:
                 b2 = board.copy(stack=False)
                 b2.push(move)
@@ -493,7 +523,9 @@ def choose_move_with_graph(board: chess.Board, logger: RunLogger, move_no: int,
                 if features is not None and len(features) > 12:
                     mate_feature = float(features[12])
                 if learner:
-                    goal_dist = _goal_distance(learner, prototypes, features)
+                    goal_dist = _goal_distance(learner, prototypes, features, min_overlap=min_overlap)
+                    if goal_dist is not None:
+                        goal_term = float(goal_weight * (-goal_dist))
             except Exception:
                 pass
             diag.append({
@@ -501,6 +533,7 @@ def choose_move_with_graph(board: chess.Board, logger: RunLogger, move_no: int,
                 "score": float(cand["score"]),
                 "actuator": cand.get("actuator"),
                 "goal_dist": goal_dist,
+                "goal_term": goal_term,
                 "mate_feature": mate_feature,
             })
 

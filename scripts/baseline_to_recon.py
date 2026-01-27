@@ -60,6 +60,8 @@ def compile_baseline_to_topology(
             "goal_normalize": bool(getattr(learner, "normalize_goals", True)),
             "goal_weight": 0.7,
             "goal_lookahead": "max",
+            "goal_min_overlap": 8,
+            "goal_handoff_threshold": 0.2,
         }
     }
     
@@ -98,6 +100,8 @@ def create_root_node(topology: Dict, goal_bank: Dict | None = None):
             "goal_normalize": topology.get("meta", {}).get("goal_normalize", True),
             "goal_weight": topology.get("meta", {}).get("goal_weight", 0.7),
             "goal_lookahead": topology.get("meta", {}).get("goal_lookahead", "max"),
+            "goal_min_overlap": topology.get("meta", {}).get("goal_min_overlap", 8),
+            "goal_handoff_threshold": topology.get("meta", {}).get("goal_handoff_threshold", 0.2),
             "description": "KRK entry point with feature extraction"
         }
     }
@@ -381,9 +385,9 @@ def build_goal_bank(learner: BaselineLearner, label: str = "mate_in_1") -> Dict[
 
     Returns a dict with:
       - label
-      - sensor_ids
-      - vectors
-      - counts
+      - goals: list of {values: {sensor_id: value}, count}
+      - sensor_specs: map of sensor_id -> spec
+      - goal_eps: merge threshold used in training
     """
     goals = [g for g in learner.goal_memories if g.label == label]
     if not goals:
@@ -402,8 +406,6 @@ def build_goal_bank(learner: BaselineLearner, label: str = "mate_in_1") -> Dict[
         return None
 
     sensor_map = {s.id: s for s in learner.sensors}
-    vectors = []
-    counts = []
     sensor_specs: Dict[str, Any] = {}
     for sid in sensor_ids:
         sensor = sensor_map.get(sid)
@@ -414,21 +416,26 @@ def build_goal_bank(learner: BaselineLearner, label: str = "mate_in_1") -> Dict[
             "feature_mask_keys": get_feature_keys_from_mask(sensor.sensor_spec.feature_mask),
             "readout_params": sensor.sensor_spec.readout_params,
         }
+
+    goals_payload = []
     for g in goals:
         if getattr(g, "sensor_ids", None) != sensor_ids:
             continue
-        vectors.append(g.s0.tolist())
-        counts.append(int(getattr(g, "count", 1)))
+        values = {f"sensor_{sid}": float(val) for sid, val in zip(sensor_ids, g.s0.tolist())}
+        goals_payload.append({
+            "values": values,
+            "count": int(getattr(g, "count", 1)),
+        })
 
-    if not vectors:
+    if not goals_payload:
         return None
 
     return {
         "label": label,
         "sensor_ids": list(sensor_ids),
-        "vectors": vectors,
-        "counts": counts,
+        "goals": goals_payload,
         "sensor_specs": sensor_specs,
+        "goal_eps": float(getattr(learner, "goal_eps", 0.15)),
     }
 
 
