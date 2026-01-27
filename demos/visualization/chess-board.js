@@ -9,6 +9,8 @@ class ChessBoard {
         this.bindingColors = {};
         this.bindingPalette = ['#0ea5e9', '#f97316', '#22c55e', '#a855f7', '#ef4444', '#14b8a6'];
         this.showBindings = true;
+        this.bindingLimit = 4;
+        this.bindingFilter = [];
     }
 
     init() {
@@ -130,6 +132,25 @@ class ChessBoard {
         }
     }
 
+    setBindingLimit(limit) {
+        if (Number.isNaN(limit)) return;
+        this.bindingLimit = Number(limit);
+        if (this.lastEnv) {
+            this.render(this.lastEnv);
+        }
+    }
+
+    setBindingFilter(filterText) {
+        const tokens = String(filterText || '')
+            .split(',')
+            .map((t) => t.trim())
+            .filter((t) => t.length > 0);
+        this.bindingFilter = tokens;
+        if (this.lastEnv) {
+            this.render(this.lastEnv);
+        }
+    }
+
     colorForNamespace(namespace) {
         if (!namespace) return '#64748b';
         if (!this.bindingColors[namespace]) {
@@ -155,12 +176,37 @@ class ChessBoard {
         if (!bindingPayload || typeof bindingPayload !== 'object') {
             return mapping;
         }
+        const bindingInstances = [];
         Object.entries(bindingPayload).forEach(([namespace, instances]) => {
             if (!Array.isArray(instances)) return;
             instances.forEach((instance) => {
                 if (!instance || !Array.isArray(instance.items)) return;
                 const feature = instance.feature || instance.id || namespace;
                 const terminalId = instance.id || instance.terminal_id || instance.node || feature;
+                bindingInstances.push({
+                    namespace,
+                    instance,
+                    feature,
+                    terminalId,
+                    size: instance.items.length || 0,
+                });
+            });
+        });
+
+        let filtered = bindingInstances;
+        if (this.bindingFilter && this.bindingFilter.length) {
+            const filterSet = new Set(this.bindingFilter);
+            filtered = filtered.filter((entry) => filterSet.has(entry.terminalId));
+        }
+
+        if (this.bindingLimit && this.bindingLimit > 0) {
+            filtered = filtered
+                .slice()
+                .sort((a, b) => b.size - a.size)
+                .slice(0, this.bindingLimit);
+        }
+
+        filtered.forEach(({ namespace, instance, feature, terminalId }) => {
                 const colorKey = `${namespace}:${terminalId}`;
                 const color = this.colorForKey(colorKey);
                 instance.items.forEach((item) => {
@@ -174,7 +220,6 @@ class ChessBoard {
                     mapping[square].push({ namespace, feature, color, terminalId });
                 });
             });
-        });
         return mapping;
     }
 

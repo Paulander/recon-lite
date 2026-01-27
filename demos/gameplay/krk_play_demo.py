@@ -118,15 +118,15 @@ def _update_binding_table(table: BindingTable, board: chess.Board) -> dict:
 
     with table.begin_tick("krk/core/kings") as session:
         if our_king is not None:
-            session.reserve(BindingInstance("our_king", {_square_token(our_king)}))
+            session.reserve(BindingInstance("our_king", {_square_token(our_king)}, node_id="our_king"))
         if enemy_king is not None:
-            session.reserve(BindingInstance("enemy_king", {_square_token(enemy_king)}))
+            session.reserve(BindingInstance("enemy_king", {_square_token(enemy_king)}, node_id="enemy_king"))
 
     with table.begin_tick("krk/p1/drive") as session:
         if rook_sq is not None:
-            session.reserve(BindingInstance("rook_anchor", {_square_token(rook_sq)}))
+            session.reserve(BindingInstance("rook_anchor", {_square_token(rook_sq)}, node_id="rook_anchor"))
         if enemy_king is not None:
-            session.reserve(BindingInstance("target_enemy", {_square_token(enemy_king)}))
+            session.reserve(BindingInstance("target_enemy", {_square_token(enemy_king)}, node_id="target_enemy"))
 
     with table.begin_tick("krk/p2/shrink") as session:
         if enemy_king is not None:
@@ -134,14 +134,140 @@ def _update_binding_table(table: BindingTable, board: chess.Board) -> dict:
                 fence = enemy_nearest_edge_info(board, enemy_king)
                 line_tokens = _line_tokens(fence["axis"], fence["target_line"])
                 if line_tokens:
-                    session.reserve(BindingInstance("target_fence", set(line_tokens)))
+                    session.reserve(BindingInstance("target_fence", set(line_tokens), node_id="target_fence"))
             except Exception:
                 pass
             corner_tokens = _box_corner_tokens(enemy_king)
             if corner_tokens:
-                session.reserve(BindingInstance("box_corners", set(corner_tokens)))
+                session.reserve(BindingInstance("box_corners", set(corner_tokens), node_id="box_corners"))
 
     return table.snapshot()
+
+
+def _nearest_edge_lines(square: chess.Square) -> list[tuple[str, int]]:
+    file = chess.square_file(square)
+    rank = chess.square_rank(square)
+    distances = {
+        ("file", 0): file,
+        ("file", 7): 7 - file,
+        ("rank", 0): rank,
+        ("rank", 7): 7 - rank,
+    }
+    min_dist = min(distances.values())
+    return [edge for edge, dist in distances.items() if dist == min_dist]
+
+
+def _feature_token_map(board: chess.Board) -> dict[str, list[str]]:
+    tokens: dict[str, list[str]] = {}
+    wk = board.king(chess.WHITE)
+    bk = board.king(chess.BLACK)
+    rook_sq = _find_our_rook_sq(board)
+
+    def add(key: str, items: list[str]) -> None:
+        if items:
+            tokens[key] = items
+
+    # Feature 0: box area -> box corners from enemy king
+    if bk is not None:
+        add("feature_0", _box_corner_tokens(bk))
+
+    # Feature 1: king distance -> both kings
+    king_tokens = []
+    if wk is not None:
+        king_tokens.append(_square_token(wk))
+    if bk is not None:
+        king_tokens.append(_square_token(bk))
+    add("feature_1", [t for t in king_tokens if t])
+
+    # Feature 2/3: our king file/rank
+    if wk is not None:
+        add("feature_2", [_square_token(wk)])
+        add("feature_3", [_square_token(wk)])
+
+    # Feature 4/5: enemy king file/rank
+    if bk is not None:
+        add("feature_4", [_square_token(bk)])
+        add("feature_5", [_square_token(bk)])
+
+    # Feature 6/7: rook file/rank
+    if rook_sq is not None:
+        add("feature_6", [_square_token(rook_sq)])
+        add("feature_7", [_square_token(rook_sq)])
+
+    # Feature 8: opposition -> both kings
+    add("feature_8", [t for t in king_tokens if t])
+
+    # Feature 9: our king edge distance -> nearest edge line(s)
+    if wk is not None:
+        line_tokens = []
+        for axis, target_line in _nearest_edge_lines(wk):
+            line_tokens.extend(_line_tokens(axis, target_line))
+        add("feature_9", line_tokens)
+
+    # Feature 10: enemy king edge distance -> nearest edge line(s)
+    if bk is not None:
+        line_tokens = []
+        for axis, target_line in _nearest_edge_lines(bk):
+            line_tokens.extend(_line_tokens(axis, target_line))
+        add("feature_10", line_tokens)
+
+    # Feature 11: is_check
+    if bk is not None:
+        add("feature_11", [_square_token(bk)])
+
+    # Feature 12: can_deliver_mate
+    if bk is not None:
+        items = [_square_token(bk)]
+        if rook_sq is not None:
+            items.append(_square_token(rook_sq))
+        add("feature_12", [t for t in items if t])
+
+    # Feature 13: is_checkmate
+    if bk is not None:
+        add("feature_13", [_square_token(bk)])
+
+    # Feature 14: side_to_move -> no board binding
+
+    return tokens
+
+
+def _sensor_binding_payload(
+    board: chess.Board,
+    graph: Graph,
+    *,
+    active_states: set[NodeState] | None = None,
+    max_sensors: int | None = 50,
+) -> dict[str, list[dict]]:
+    if graph is None:
+        return {}
+    active = active_states or {NodeState.REQUESTED, NodeState.TRUE, NodeState.CONFIRMED}
+    feature_tokens = _feature_token_map(board)
+    instances = []
+    for node_id, node in graph.nodes.items():
+        if not node_id.startswith("sensor_"):
+            continue
+        if node.state not in active:
+            continue
+        meta = node.meta or {}
+        mask_keys = meta.get("feature_mask_keys") or []
+        items: set[str] = set()
+        for key in mask_keys:
+            items.update(feature_tokens.get(key, []))
+        if not items:
+            continue
+        instances.append(BindingInstance(node_id, items, node_id=node_id).to_dict())
+    if max_sensors is not None and len(instances) > max_sensors:
+        instances = instances[:max_sensors]
+    return {"krk/sensors": instances} if instances else {}
+
+
+def _merge_binding_payloads(base: dict, extra: dict) -> dict:
+    if not base and not extra:
+        return {}
+    merged = dict(base) if base else {}
+    for ns, instances in (extra or {}).items():
+        merged[ns] = instances
+    return merged
 
 
 def _hash_file(path: Path) -> str:
@@ -268,7 +394,8 @@ def choose_move_with_graph(board: chess.Board, logger: RunLogger, move_no: int,
     env = {"board": board, "chosen_move": None}
     if binding_table is None:
         binding_table = BindingTable()
-    env["binding"] = _update_binding_table(binding_table, board)
+    base_binding = _update_binding_table(binding_table, board)
+    env["binding"] = base_binding
 
     g = build_graph_from_topology(topology_path) if topology_path else build_krk_graph()
     eng = ReConEngine(g)
@@ -291,12 +418,23 @@ def choose_move_with_graph(board: chess.Board, logger: RunLogger, move_no: int,
     while ticks < max_ticks and env.get("chosen_move") is None:
         ticks += 1
         now_req = eng.step(env)
+        env["binding"] = _merge_binding_payloads(
+            base_binding,
+            _sensor_binding_payload(board, g)
+        )
 
         if log_every_tick or ticks % 10 == 0:
             logger.snapshot(
                 engine=eng,
                 note=f"Eval tick {ticks} (move {move_no})",
-                env={"fen": board.fen(), "move_number": move_no, "evaluation_tick": ticks, "binding": env.get("binding")},
+                env={
+                    "fen": board.fen(),
+                    "move_number": move_no,
+                    "evaluation_tick": ticks,
+                    "binding": env.get("binding"),
+                    "suggested_actuator": env.get("suggested_actuator"),
+                    "suggested_move": env.get("suggested_move"),
+                },
                 thoughts="Phase sequencing with Phase-0 first. Waiting for terminal to set env['chosen_move'].",
                 new_requests=list(now_req.keys()) if now_req else []
             )
@@ -305,7 +443,15 @@ def choose_move_with_graph(board: chess.Board, logger: RunLogger, move_no: int,
         logger.snapshot(
             engine=eng,
             note=f"Decision at tick {ticks} (move {move_no})",
-            env={"fen": board.fen(), "move_number": move_no, "evaluation_tick": ticks, "chosen_move": env.get("chosen_move"), "binding": env.get("binding")},
+            env={
+                "fen": board.fen(),
+                "move_number": move_no,
+                "evaluation_tick": ticks,
+                "chosen_move": env.get("chosen_move"),
+                "binding": env.get("binding"),
+                "suggested_actuator": env.get("suggested_actuator"),
+                "suggested_move": env.get("suggested_move"),
+            },
             thoughts="Decision made; capturing final node states.",
             new_requests=[]
         )
@@ -316,7 +462,15 @@ def choose_move_with_graph(board: chess.Board, logger: RunLogger, move_no: int,
             logger.snapshot(
                 engine=eng,
                 note=f"Post-decision linger tick {i+1}/{linger} (move {move_no})",
-                env={"fen": board.fen(), "move_number": move_no, "evaluation_tick": ticks, "chosen_move": env.get("chosen_move"), "binding": env.get("binding")},
+                env={
+                    "fen": board.fen(),
+                    "move_number": move_no,
+                    "evaluation_tick": ticks,
+                    "chosen_move": env.get("chosen_move"),
+                    "binding": env.get("binding"),
+                    "suggested_actuator": env.get("suggested_actuator"),
+                    "suggested_move": env.get("suggested_move"),
+                },
                 thoughts="Linger after choice to visualize downstream phase activation.",
                 new_requests=list(now_req.keys()) if now_req else []
             )

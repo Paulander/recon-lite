@@ -20,6 +20,7 @@ import chess
 class BindingInstance:
     feature_id: str
     items: FrozenSet[str]
+    node_id: Optional[str] = None
 
     def __post_init__(self):
         if not self.feature_id:
@@ -29,7 +30,14 @@ class BindingInstance:
         object.__setattr__(self, "items", frozenset(self.items))
 
     def to_dict(self) -> Dict[str, object]:
-        return {"feature": self.feature_id, "items": sorted(self.items)}
+        payload: Dict[str, object] = {
+            "feature": self.feature_id,
+            "items": sorted(self.items),
+        }
+        if self.node_id:
+            payload["id"] = self.node_id
+            payload["terminal_id"] = self.node_id
+        return payload
 
 
 class _NamespaceSession:

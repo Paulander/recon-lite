@@ -37,6 +37,18 @@ class NetworkVisualization {
         this.edgeWBase = {};        // baseline weights (w_base) from consolidation
         this.edgeWBaseInitial = {}; // initial w_base for drift calculation
         this.showWBaseMode = 'combined'; // 'combined' | 'baseline' | 'delta'
+        this.bindingHighlights = new Map();
+        this.actuatorHighlights = new Set();
+        this.bindingLimit = 4;
+        this.bindingFilter = [];
+        this.bindingBadgeList = [];
+        this.showBindings = true;
+        this.collapseTriplets = false;
+        this.collapsedTripletLegs = new Set();
+        this.lastPositions = null;
+        this.lastLayout = null;
+        this.tripletLegs = [];
+        this.hierSpacingFactor = 1;
     }
 
     normalizeId(id) {
@@ -231,7 +243,7 @@ class NetworkVisualization {
         };
     }
 
-    static computeHierLayout(width, height, nodeIds, edgeList, smallNodes = false) {
+    static computeHierLayout(width, height, nodeIds, edgeList, smallNodes = false, spacingFactor = 1) {
         const radius = smallNodes ? 10 : 18;
         const marginX = 80;
         const marginY = 80;
@@ -308,6 +320,50 @@ class NetworkVisualization {
                 y: marginY + pos.y * levelSpacing
             };
         });
+
+        // Cluster leg triplets (precond/act/postcond) under their parent leg
+        const childrenMap = children;
+        const shiftSubtree = (nodeId, dx) => {
+            if (!scaledPositions[nodeId]) return;
+            scaledPositions[nodeId].x += dx;
+            const kids = childrenMap.get(nodeId) || [];
+            kids.forEach((kid) => shiftSubtree(kid, dx));
+        };
+
+        const tripletSpacing = Math.max(24, radius * 2.2);
+        const tripletOffsets = [-tripletSpacing, 0, tripletSpacing];
+        nodes.forEach((id) => {
+            const legMatch = /^leg_(\d+)$/.exec(id);
+            if (!legMatch) return;
+            const suffix = legMatch[1];
+            const precond = `precond_${suffix}`;
+            const act = `act_script_${suffix}`;
+            const post = `postcond_${suffix}`;
+            if (!(precond in scaledPositions) || !(act in scaledPositions) || !(post in scaledPositions)) return;
+            const parentPos = scaledPositions[id];
+            if (!parentPos) return;
+            const triplet = [precond, act, post];
+            triplet.forEach((nodeId, idx) => {
+                const targetX = parentPos.x + tripletOffsets[idx];
+                const current = scaledPositions[nodeId]?.x;
+                if (current === undefined) return;
+                const dx = targetX - current;
+                shiftSubtree(nodeId, dx);
+            });
+        });
+
+        const safeSpacing = Number.isFinite(spacingFactor) ? Math.max(0.5, spacingFactor) : 1;
+        if (safeSpacing !== 1) {
+            const centerX = marginX + usableW / 2;
+            Object.entries(scaledPositions).forEach(([id, pos]) => {
+                const depth = depthMap[id] || 0;
+                const t = maxDepth > 0 ? 1 - depth / maxDepth : 1;
+                const spread = 1 + (safeSpacing - 1) * t;
+                pos.x = centerX + (pos.x - centerX) * spread;
+            });
+        }
+
+        scaledPositions.__origin_x = marginX;
 
         return {
             positions: scaledPositions,
@@ -564,6 +620,24 @@ class NetworkVisualization {
         });
         this.canvas.style.cursor = 'grab';
 
+        this.canvas.addEventListener('click', (e) => {
+            if (!this.collapseTriplets) return;
+            const nodeId = this.findNodeAt(e.clientX, e.clientY);
+            if (!nodeId || !/^leg_\\d+$/.test(nodeId)) return;
+            if (this.collapsedTripletLegs.size === 0 && this.tripletLegs && this.tripletLegs.length) {
+                this.tripletLegs.forEach((leg) => {
+                    if (leg !== nodeId) {
+                        this.collapsedTripletLegs.add(leg);
+                    }
+                });
+            } else if (this.collapsedTripletLegs.has(nodeId)) {
+                this.collapsedTripletLegs.delete(nodeId);
+            } else {
+                this.collapsedTripletLegs.add(nodeId);
+            }
+            this.draw();
+        });
+
         // Draw initial network
         this.draw();
     }
@@ -599,6 +673,206 @@ class NetworkVisualization {
             return this.terminalNodes.has(nodeId);
         }
         return NetworkVisualization.sensorNodes.has(nodeId);
+    }
+
+    computeBindingHighlights(bindingPayload) {
+        const highlights = new Map();
+        this.bindingBadgeList = [];
+        if (!bindingPayload || typeof bindingPayload !== 'object') {
+            return highlights;
+        }
+        const palette = ['#0ea5e9', '#f97316', '#22c55e', '#a855f7', '#ef4444', '#14b8a6'];
+        const colorCache = new Map();
+        const colorFor = (key) => {
+            if (!colorCache.has(key)) {
+                const idx = colorCache.size % palette.length;
+                colorCache.set(key, palette[idx]);
+            }
+            return colorCache.get(key);
+        };
+        const bindingInstances = [];
+        Object.entries(bindingPayload).forEach(([namespace, instances]) => {
+            if (!Array.isArray(instances)) return;
+            instances.forEach((instance) => {
+                if (!instance || typeof instance !== 'object') return;
+                const rawId = instance.id || instance.terminal_id || instance.node;
+                if (!rawId) return;
+                bindingInstances.push({
+                    namespace,
+                    instance,
+                    rawId,
+                    size: Array.isArray(instance.items) ? instance.items.length : 0,
+                });
+            });
+        });
+
+        let filtered = bindingInstances;
+        if (this.bindingFilter && this.bindingFilter.length) {
+            const filterSet = new Set(this.bindingFilter);
+            filtered = filtered.filter((entry) => filterSet.has(entry.rawId));
+        }
+        if (this.bindingLimit && this.bindingLimit > 0) {
+            filtered = filtered
+                .slice()
+                .sort((a, b) => b.size - a.size)
+                .slice(0, this.bindingLimit);
+        }
+
+        const formatLabel = (raw) => {
+            if (!raw) return 'bind';
+            const sensorMatch = /^sensor_(\d+)$/.exec(raw);
+            if (sensorMatch) return `s${sensorMatch[1]}`.slice(0, 6);
+            const actMatch = /^actuator_(\d+)$/.exec(raw);
+            if (actMatch) return `a${actMatch[1]}`.slice(0, 6);
+            return raw.replace(/[^a-zA-Z0-9_]/g, '').slice(0, 6) || 'bind';
+        };
+
+        filtered.forEach(({ namespace, instance, rawId }) => {
+                const nodeId = this.normalizeId(rawId);
+                const feature = instance.feature || rawId || namespace;
+                const label = formatLabel(rawId || feature || namespace);
+                const color = colorFor(`${namespace}:${rawId}`);
+                this.bindingBadgeList.push({ label, color, title: `${namespace} | ${feature}`, nodeId });
+                if (!highlights.has(nodeId)) {
+                    highlights.set(nodeId, []);
+                }
+                highlights.get(nodeId).push({ label, color, title: `${namespace} | ${feature}` });
+            });
+        return highlights;
+    }
+
+    computeActuatorHighlights(env) {
+        const highlights = new Set();
+        if (!env || typeof env !== 'object') return highlights;
+        const candidates = [
+            env.suggested_actuator,
+            env.chosen_actuator,
+            env.selected_actuator,
+            env.actuator,
+        ];
+        if (env.policy && typeof env.policy === 'object') {
+            candidates.push(env.policy.suggested_actuator, env.policy.chosen_actuator);
+        }
+        candidates.filter(Boolean).forEach((id) => {
+            highlights.add(this.normalizeId(id));
+        });
+        return highlights;
+    }
+
+    setBindingLimit(limit) {
+        if (Number.isNaN(limit)) return;
+        this.bindingLimit = Number(limit);
+        this.draw();
+    }
+
+    setBindingFilter(filterText) {
+        const tokens = String(filterText || '')
+            .split(',')
+            .map((t) => t.trim())
+            .filter((t) => t.length > 0);
+        this.bindingFilter = tokens;
+        this.draw();
+    }
+
+    setShowBindings(value) {
+        this.showBindings = Boolean(value);
+        this.draw();
+    }
+
+    setCollapseTriplets(value) {
+        this.collapseTriplets = Boolean(value);
+        if (!this.collapseTriplets) {
+            this.collapsedTripletLegs.clear();
+        }
+        this.draw();
+    }
+
+    setHierSpacingFactor(value) {
+        if (Number.isNaN(value)) return;
+        this.hierSpacingFactor = Math.max(0.5, Number(value));
+        this.draw();
+    }
+
+    buildTripletMap(nodeIds) {
+        const triplets = new Map();
+        if (!Array.isArray(nodeIds)) return triplets;
+        nodeIds.forEach((id) => {
+            const legMatch = /^leg_(\\d+)$/.exec(id);
+            if (!legMatch) return;
+            const suffix = legMatch[1];
+            const precond = `precond_${suffix}`;
+            const act = `act_script_${suffix}`;
+            const post = `postcond_${suffix}`;
+            triplets.set(id, { precond, act, post });
+        });
+        return triplets;
+    }
+
+    buildChildrenMap(edgeList) {
+        const children = new Map();
+        edgeList.forEach((edge) => {
+            const { src, dst, type } = edge;
+            if (type !== 'SUB') return;
+            if (!children.has(src)) children.set(src, []);
+            children.get(src).push(dst);
+        });
+        return children;
+    }
+
+    drawBindingBadges(layout) {
+        if (!this.bindingBadgeList || !this.bindingBadgeList.length) return;
+        const startX = (layout && layout.positions && layout.positions.__origin_x) || 40;
+        let x = startX + 20;
+        let y = 26;
+        this.ctx.save();
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+        this.bindingBadgeList.slice(0, 4).forEach((tag, idx) => {
+            const text = tag.label || 'bind';
+            this.ctx.font = '12px Segoe UI, Arial';
+            const metrics = this.ctx.measureText(text);
+            const padX = 6;
+            const padY = 4;
+            const w = metrics.width + padX * 2;
+            const h = 18;
+            this.ctx.fillStyle = tag.color || '#0ea5e9';
+            this.ctx.strokeStyle = 'rgba(15,23,42,0.2)';
+            this.ctx.lineWidth = 1;
+            this.ctx.beginPath();
+            if (typeof this.ctx.roundRect === 'function') {
+                this.ctx.roundRect(x, y, w, h, 6);
+            } else {
+                this.ctx.rect(x, y, w, h);
+            }
+            this.ctx.fill();
+            this.ctx.stroke();
+            this.ctx.fillStyle = '#ffffff';
+            this.ctx.textAlign = 'left';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.fillText(text, x + padX, y + h / 2);
+            x += w + 8;
+            if (idx === 3) {
+                y += 24;
+                x = startX + 20;
+            }
+        });
+        this.ctx.restore();
+    }
+
+    findNodeAt(clientX, clientY) {
+        if (!this.lastPositions || !this.lastLayout) return null;
+        const rect = this.canvas.getBoundingClientRect();
+        const x = (clientX - rect.left - this.panX) / this.zoom;
+        const y = (clientY - rect.top - this.panY) / this.zoom;
+        const radius = (this.lastLayout && this.lastLayout.radius) ? this.lastLayout.radius : 18;
+        let hit = null;
+        Object.entries(this.lastPositions).forEach(([id, pos]) => {
+            const dx = x - pos.x;
+            const dy = y - pos.y;
+            if (Math.sqrt(dx * dx + dy * dy) <= radius + 4) {
+                hit = id;
+            }
+        });
+        return hit;
     }
 
     setShowOnlyActive(value) {
@@ -849,6 +1123,42 @@ class NetworkVisualization {
             if (!hiddenNodes.has(dst)) presentNodes.add(dst);
         });
 
+        // Draw composite triplet nodes (collapsed)
+        if (compositeNodes && compositeNodes.length) {
+            compositeNodes.forEach((node) => {
+                const { pos, state } = node;
+                if (!pos) return;
+                const fill = NetworkVisualization.stateColors[state] || NetworkVisualization.stateColors['INACTIVE'];
+                const border = NetworkVisualization.stateBorderColors[state] || '#607d8b';
+                const radius = (layout.radius || 18) * 0.9;
+
+                this.ctx.fillStyle = fill;
+                this.ctx.strokeStyle = border;
+                this.ctx.lineWidth = 2;
+
+                // Hexagon shape
+                this.ctx.beginPath();
+                for (let i = 0; i < 6; i++) {
+                    const angle = (Math.PI / 3) * i - Math.PI / 2;
+                    const x = pos.x + radius * Math.cos(angle);
+                    const y = pos.y + radius * Math.sin(angle);
+                    if (i === 0) this.ctx.moveTo(x, y);
+                    else this.ctx.lineTo(x, y);
+                }
+                this.ctx.closePath();
+                this.ctx.fill();
+                this.ctx.stroke();
+
+                if (this.showLabels && node.label) {
+                    this.ctx.font = '11px Segoe UI, Arial';
+                    this.ctx.fillStyle = NetworkVisualization.textColorFor(fill);
+                    this.ctx.textAlign = 'center';
+                    this.ctx.textBaseline = 'top';
+                    this.ctx.fillText(node.label, pos.x, pos.y + radius + 4);
+                }
+            });
+        }
+
         // Draw nodes
         presentNodes.forEach((nodeId) => {
             if (hiddenNodes.has(nodeId)) return;
@@ -883,10 +1193,15 @@ class NetworkVisualization {
             }
 
             // Transition glow for nodes that changed state this frame
-            if (this.transitionSet.has(nodeId)) {
+            if (this.transitionSet.has(nodeId) || this.actuatorHighlights.has(nodeId)) {
                 this.ctx.save();
-                this.ctx.shadowColor = 'rgba(255,255,255,0.8)';
-                this.ctx.shadowBlur = 12;
+                if (this.actuatorHighlights.has(nodeId)) {
+                    this.ctx.shadowColor = 'rgba(236,72,153,0.9)';
+                    this.ctx.shadowBlur = 16;
+                } else {
+                    this.ctx.shadowColor = 'rgba(255,255,255,0.8)';
+                    this.ctx.shadowBlur = 12;
+                }
                 this.ctx.beginPath();
                 if (this.isTerminal(nodeId)) {
                     this.ctx.moveTo(pos.x, pos.y - (radius + 4));
@@ -897,10 +1212,57 @@ class NetworkVisualization {
                 } else {
                     this.ctx.arc(pos.x, pos.y, radius + 4, 0, 2 * Math.PI);
                 }
-                this.ctx.lineWidth = 2;
-                this.ctx.strokeStyle = '#ffffff';
+                this.ctx.lineWidth = this.actuatorHighlights.has(nodeId) ? 3 : 2;
+                this.ctx.strokeStyle = this.actuatorHighlights.has(nodeId) ? '#ec4899' : '#ffffff';
                 this.ctx.stroke();
                 this.ctx.restore();
+            }
+
+            if (this.bindingHighlights.has(nodeId)) {
+                const tags = this.bindingHighlights.get(nodeId) || [];
+                const highlightColor = tags[0]?.color || '#0ea5e9';
+                this.ctx.save();
+                this.ctx.strokeStyle = highlightColor;
+                this.ctx.lineWidth = 3;
+                this.ctx.beginPath();
+                if (this.isTerminal(nodeId)) {
+                    this.ctx.moveTo(pos.x, pos.y - (radius + 6));
+                    this.ctx.lineTo(pos.x + (radius + 6), pos.y);
+                    this.ctx.lineTo(pos.x, pos.y + (radius + 6));
+                    this.ctx.lineTo(pos.x - (radius + 6), pos.y);
+                    this.ctx.closePath();
+                } else {
+                    this.ctx.arc(pos.x, pos.y, radius + 6, 0, 2 * Math.PI);
+                }
+                this.ctx.stroke();
+                this.ctx.restore();
+                const tagY = pos.y - radius - 10;
+                tags.slice(0, 2).forEach((tag, idx) => {
+                    const text = tag.label || 'bind';
+                    this.ctx.font = '11px Segoe UI, Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.textBaseline = 'middle';
+                    const metrics = this.ctx.measureText(text);
+                    const padX = 4;
+                    const padY = 2;
+                    const w = metrics.width + padX * 2;
+                    const h = 14;
+                    const x = pos.x + (idx * (w + 4)) - (tags.length > 1 ? w / 2 : 0);
+                    const y = tagY - idx * 16;
+                    this.ctx.fillStyle = tag.color || '#0ea5e9';
+                    this.ctx.strokeStyle = 'rgba(15,23,42,0.2)';
+                    this.ctx.lineWidth = 1;
+                    this.ctx.beginPath();
+                    if (typeof this.ctx.roundRect === 'function') {
+                        this.ctx.roundRect(x - w / 2, y - h / 2, w, h, 6);
+                    } else {
+                        this.ctx.rect(x - w / 2, y - h / 2, w, h);
+                    }
+                    this.ctx.fill();
+                    this.ctx.stroke();
+                    this.ctx.fillStyle = '#ffffff';
+                    this.ctx.fillText(text, x, y + 0.5);
+                });
             }
 
             // Label (with contrasting backdrop for readability)
@@ -931,6 +1293,11 @@ class NetworkVisualization {
             this.ctx.fillStyle = labelColor;
             this.ctx.fillText(label, pos.x, labelY);
         });
+
+        // Draw binding badges (even if binding ids do not map to nodes)
+        if (this.showBindings) {
+            this.drawBindingBadges(layout);
+        }
     }
     draw(frame = null, newReqSet = new Set()) {
         let drawFrame = frame;
@@ -960,6 +1327,15 @@ class NetworkVisualization {
             drawFrame = NetworkVisualization.cloneDeep(this.lastFrame);
             nodesState = this.normalizeNodes(drawFrame.nodes || {});
         }
+
+        const envPayload = drawFrame && typeof drawFrame.env === 'object' ? drawFrame.env : {};
+        if (this.showBindings) {
+            this.bindingHighlights = this.computeBindingHighlights(envPayload.binding);
+        } else {
+            this.bindingHighlights = new Map();
+            this.bindingBadgeList = [];
+        }
+        this.actuatorHighlights = this.computeActuatorHighlights(envPayload);
 
         if (this.templateNodeIds && this.templateNodeIds.length) {
             this.templateNodeIds.forEach((id) => {
@@ -1104,9 +1480,72 @@ class NetworkVisualization {
             ? this.templateNodeIds
             : Object.keys(nodesState);
         const layout = this.layoutMode === 'hier' && edgeList.length
-            ? NetworkVisualization.computeHierLayout(canvas.width, canvas.height, layoutNodeIds, edgeList, this.smallNodes)
+            ? NetworkVisualization.computeHierLayout(canvas.width, canvas.height, layoutNodeIds, edgeList, this.smallNodes, this.hierSpacingFactor)
             : NetworkVisualization.computeLayout(canvas.width, canvas.height, layoutNodeIds, this.smallNodes);
         const positions = layout.positions;
+        this.lastPositions = positions;
+        this.lastLayout = layout;
+
+        const tripletMap = this.buildTripletMap(layoutNodeIds);
+        this.tripletLegs = Array.from(tripletMap.keys());
+        const hiddenTripletNodes = new Set();
+        const compositeNodes = [];
+
+        if (this.collapseTriplets && tripletMap.size) {
+            const legsToCollapse = this.collapsedTripletLegs.size
+                ? this.collapsedTripletLegs
+                : new Set(this.tripletLegs);
+            const childrenMap = this.buildChildrenMap(edgeList);
+            const collectDescendants = (start) => {
+                const stack = [start];
+                const visited = new Set();
+                while (stack.length) {
+                    const node = stack.pop();
+                    if (visited.has(node)) continue;
+                    visited.add(node);
+                    const kids = childrenMap.get(node) || [];
+                    kids.forEach((kid) => stack.push(kid));
+                }
+                return visited;
+            };
+            const aggregateState = (states) => {
+                const order = ['FAILED', 'CONFIRMED', 'ACTIVE', 'REQUESTED', 'WAITING', 'TRUE', 'INACTIVE'];
+                for (const state of order) {
+                    if (states.includes(state)) return state;
+                }
+                return 'INACTIVE';
+            };
+            legsToCollapse.forEach((legId) => {
+                const triplet = tripletMap.get(legId);
+                if (!triplet) return;
+                const nodes = [triplet.precond, triplet.act, triplet.post];
+                const tripletPositions = nodes.map((n) => positions[n]).filter(Boolean);
+                const parentPos = positions[legId];
+                const pos = tripletPositions.length
+                    ? {
+                        x: tripletPositions.reduce((acc, p) => acc + p.x, 0) / tripletPositions.length,
+                        y: tripletPositions.reduce((acc, p) => acc + p.y, 0) / tripletPositions.length,
+                    }
+                    : parentPos
+                        ? { x: parentPos.x, y: parentPos.y + (layout.radius * 2.6) }
+                        : null;
+                if (pos) {
+                    const states = nodes.map((n) => nodesState[n]).filter(Boolean);
+                    const state = aggregateState(states);
+                    compositeNodes.push({ id: `triplet_${legId}`, label: `Triplet ${legId.replace('leg_', '')}`, state, pos });
+                }
+                nodes.forEach((nodeId) => {
+                    collectDescendants(nodeId).forEach((n) => hiddenTripletNodes.add(n));
+                });
+            });
+        }
+
+        if (hiddenTripletNodes.size) {
+            nodesState = Object.fromEntries(
+                Object.entries(nodesState).filter(([id]) => !hiddenTripletNodes.has(id))
+            );
+            edgesToDraw = edgesToDraw.filter(([src, dst]) => !hiddenTripletNodes.has(src) && !hiddenTripletNodes.has(dst));
+        }
 
         if (this.showOnlyActive && activeNodes.size > 0) {
             edgesToDraw = edgesToDraw.filter(([src, dst]) => activeNodes.has(src) && activeNodes.has(dst));
@@ -1181,6 +1620,42 @@ class NetworkVisualization {
         const presentNodes = new Set();
         Object.keys(nodesState).forEach((id) => presentNodes.add(id));
         edgesToDraw.forEach(([src, dst]) => { presentNodes.add(src); presentNodes.add(dst); });
+
+        // Draw composite triplet nodes (collapsed)
+        if (compositeNodes && compositeNodes.length) {
+            compositeNodes.forEach((node) => {
+                const { pos, state } = node;
+                if (!pos) return;
+                const fill = NetworkVisualization.stateColors[state] || NetworkVisualization.stateColors['INACTIVE'];
+                const border = NetworkVisualization.stateBorderColors[state] || '#607d8b';
+                const radius = layout.radius * 0.9;
+
+                this.ctx.fillStyle = fill;
+                this.ctx.strokeStyle = border;
+                this.ctx.lineWidth = layout.baseStrokeWidth;
+
+                // Hexagon shape
+                this.ctx.beginPath();
+                for (let i = 0; i < 6; i++) {
+                    const angle = (Math.PI / 3) * i - Math.PI / 2;
+                    const x = pos.x + radius * Math.cos(angle);
+                    const y = pos.y + radius * Math.sin(angle);
+                    if (i === 0) this.ctx.moveTo(x, y);
+                    else this.ctx.lineTo(x, y);
+                }
+                this.ctx.closePath();
+                this.ctx.fill();
+                this.ctx.stroke();
+
+                if (this.showLabels && node.label) {
+                    this.ctx.font = `${layout.labelFontSize}px Segoe UI, Arial`;
+                    this.ctx.fillStyle = NetworkVisualization.textColorFor(fill);
+                    this.ctx.textAlign = 'center';
+                    this.ctx.textBaseline = 'top';
+                    this.ctx.fillText(node.label, pos.x, pos.y + radius + 4);
+                }
+            });
+        }
 
         // Draw nodes
         presentNodes.forEach((nodeId) => {
@@ -1266,6 +1741,57 @@ class NetworkVisualization {
                 this.ctx.restore();
             }
 
+            if (this.actuatorHighlights.has(nodeId)) {
+                this.ctx.save();
+                this.ctx.shadowColor = 'rgba(236,72,153,0.9)';
+                this.ctx.shadowBlur = layout.glowBlur;
+                this.ctx.beginPath();
+                if (this.isTerminal(nodeId)) {
+                    this.ctx.moveTo(pos.x, pos.y - (radius + layout.glowRadiusOffset));
+                    this.ctx.lineTo(pos.x + (radius + layout.glowRadiusOffset), pos.y);
+                    this.ctx.lineTo(pos.x, pos.y + (radius + layout.glowRadiusOffset));
+                    this.ctx.lineTo(pos.x - (radius + layout.glowRadiusOffset), pos.y);
+                    this.ctx.closePath();
+                } else {
+                    this.ctx.arc(pos.x, pos.y, radius + layout.glowRadiusOffset, 0, 2 * Math.PI);
+                }
+                this.ctx.lineWidth = layout.glowLineWidth;
+                this.ctx.strokeStyle = '#ec4899';
+                this.ctx.stroke();
+                this.ctx.restore();
+            }
+
+            if (this.bindingHighlights.has(nodeId)) {
+                const tags = this.bindingHighlights.get(nodeId) || [];
+                const tagY = pos.y - radius - 10;
+                tags.slice(0, 2).forEach((tag, idx) => {
+                    const text = tag.label || 'bind';
+                    this.ctx.font = '11px Segoe UI, Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.textBaseline = 'middle';
+                    const metrics = this.ctx.measureText(text);
+                    const padX = 4;
+                    const padY = 2;
+                    const w = metrics.width + padX * 2;
+                    const h = 14;
+                    const x = pos.x + (idx * (w + 4)) - (tags.length > 1 ? w / 2 : 0);
+                    const y = tagY - idx * 16;
+                    this.ctx.fillStyle = tag.color || '#0ea5e9';
+                    this.ctx.strokeStyle = 'rgba(15,23,42,0.2)';
+                    this.ctx.lineWidth = 1;
+                    this.ctx.beginPath();
+                    if (typeof this.ctx.roundRect === 'function') {
+                        this.ctx.roundRect(x - w / 2, y - h / 2, w, h, 6);
+                    } else {
+                        this.ctx.rect(x - w / 2, y - h / 2, w, h);
+                    }
+                    this.ctx.fill();
+                    this.ctx.stroke();
+                    this.ctx.fillStyle = '#ffffff';
+                    this.ctx.fillText(text, x, y + 0.5);
+                });
+            }
+
             // Label
             if (this.showLabels) {
                 const label = NetworkVisualization.formatLabel(nodeId);
@@ -1298,6 +1824,9 @@ class NetworkVisualization {
                 });
             }
         });
+
+        // Draw binding badges (even if binding ids do not map to nodes)
+        this.drawBindingBadges(layout);
 
         this.ctx.restore();
     }

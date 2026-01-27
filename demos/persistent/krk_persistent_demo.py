@@ -304,15 +304,15 @@ def _update_binding_table(table: BindingTable, board: chess.Board) -> dict:
 
     with table.begin_tick("krk/core/kings") as session:
         if our_king is not None:
-            session.reserve(BindingInstance("our_king", {_square_token(our_king)}))
+            session.reserve(BindingInstance("our_king", {_square_token(our_king)}, node_id="our_king"))
         if enemy_king is not None:
-            session.reserve(BindingInstance("enemy_king", {_square_token(enemy_king)}))
+            session.reserve(BindingInstance("enemy_king", {_square_token(enemy_king)}, node_id="enemy_king"))
 
     with table.begin_tick("krk/p1/drive") as session:
         if rook_sq is not None:
-            session.reserve(BindingInstance("rook_anchor", {_square_token(rook_sq)}))
+            session.reserve(BindingInstance("rook_anchor", {_square_token(rook_sq)}, node_id="rook_anchor"))
         if enemy_king is not None:
-            session.reserve(BindingInstance("target_enemy", {_square_token(enemy_king)}))
+            session.reserve(BindingInstance("target_enemy", {_square_token(enemy_king)}, node_id="target_enemy"))
 
     with table.begin_tick("krk/p2/shrink") as session:
         if enemy_king is not None:
@@ -320,12 +320,12 @@ def _update_binding_table(table: BindingTable, board: chess.Board) -> dict:
                 fence = enemy_nearest_edge_info(board, enemy_king)
                 line_tokens = _line_tokens(fence["axis"], fence["target_line"])
                 if line_tokens:
-                    session.reserve(BindingInstance("target_fence", set(line_tokens)))
+                    session.reserve(BindingInstance("target_fence", set(line_tokens), node_id="target_fence"))
             except Exception:
                 pass
             corner_tokens = _box_corner_tokens(enemy_king)
             if corner_tokens:
-                session.reserve(BindingInstance("box_corners", set(corner_tokens)))
+                session.reserve(BindingInstance("box_corners", set(corner_tokens), node_id="box_corners"))
 
     return table.snapshot()
 
