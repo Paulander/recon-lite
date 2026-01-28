@@ -625,3 +625,8 @@ For detailed training logs and experimental results, see:
 - **Pack Template Design**: `notes/pack_template_design.md` - Design rationale and article constraints
 
 Latest significant run: `snapshots/evolution/krk_curriculum/curriculum_summary.json`
+- KRK chain (Stage 0/1) now uses goal prototypes keyed by `sensor_id` with overlap gating (min overlap default 8) to avoid rot as sensors spawn/prune.
+- `baseline_to_recon.py` exports goal bank as `{values:{sensor_id: value}, count}` plus `sensor_specs`, `goal_eps`, and `goal_min_overlap` metadata for stable comparisons.
+- `krk_baseline_nodes.py` computes `goal_distance_now`, `goal_overlap_now`, and `goal_ready` each tick and uses A+C gating: when `goal_ready` and mate possible, Stage‑0 gets a strong boost and higher stages are suppressed.
+- `krk_play_demo.py` logs goal distance/overlap/ready and includes goal‑term diagnostics for top candidate moves.
+- `test_krk_entry.py` now runs via `ReConEngine`, requests the root, and handles UCI string moves so runtime tests match modern predicate signatures.
