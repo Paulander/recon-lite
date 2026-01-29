@@ -1,26 +1,39 @@
 \documentclass[letterpaper]{article}
 
 % AAAI 2026 symposium draft. Place the AAAI 2026 style files in this folder.
-\usepackage{aaai2026}
-
+\usepackage[submission]{aaai2026}
+\usepackage{times}
+\usepackage{helvet}
+\usepackage{courier}
+\usepackage[hyphens]{url}
 \usepackage{graphicx}
 \usepackage{amsmath}
 \usepackage{booktabs}
-\usepackage{url}
 \usepackage{tabularx}
 \usepackage{array}
+\usepackage[numbers]{natbib}
+\usepackage{caption}
+\urlstyle{rm}
+\def\UrlFont{\rm}
+\frenchspacing
+\setlength{\pdfpagewidth}{8.5in}
+\setlength{\pdfpageheight}{11in}
+\pdfinfo{
+/TemplateVersion (2026.1)
+}
+\setcounter{secnumdepth}{0}
 
 \title{Hector: A Cognitive Architecture for Structural Deliberation via Request-Confirmation Networks}
 
 % Anonymous for double-blind review.
-\author{Anonymous Author(s)}
+\author{Anonymous Submission}
 \affiliations{}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-Conventional reinforcement learning often yields high-performing but opaque agents that lack inspectable internal structure for deliberation. We present Hector, a cognitive architecture based on Request-Confirmation Networks (ReCoN), designed to study how hierarchical subgoals and planning horizons can emerge from self-organizing symbolic structures. Using chess endgames as a controlled symbolic microcosm, we show that a single topology can autonomously hand over between strategic regimes (e.g., KPK to KQK) without phase detectors, symbolic flags, or external orchestration. Hector attains a 93.2\% success rate with roughly 6x fewer samples than PPO baselines on identical curriculum stages. We also report exploratory structural maturation via stem cells and inertia pruning as an extension beyond fixed topologies.
+Conventional reinforcement learning often yields high-performing but opaque agents that lack inspectable internal structure for deliberation. We present Hector, a cognitive architecture based on Request-Confirmation Networks (ReCoN), designed to study how hierarchical subgoals and planning horizons can emerge from self-organizing symbolic structures. Using chess endgames as a controlled symbolic microcosm, we show that a unified topology containing both KPK (king+pawn vs. king) and KQK (king+queen vs. king) subgraphs shifts control from promotion to checkmate with one-move latency, with the transition observable in internal activations. On a KPK curriculum, Hector achieves a 97.0\% win rate, while PPO baselines reach 26.3\% (50k timesteps) and 35.9\% (200k timesteps). We also report exploratory structural maturation via stem cells and inertia pruning as an extension beyond fixed topologies.
 
 We argue that autonomous strategic handover is a minimal operational requirement for deliberative agency: the ability to maintain, suspend, and reallocate control across competing internal models based on global context rather than local reward signals. While we make no claims about phenomenal consciousness, Hector provides a concrete, inspectable mechanism for global control, working memory, and top-down/bottom-up integration---properties central to multiple leading theories of consciousness.
 \end{abstract}
@@ -35,7 +48,7 @@ We call this the \textbf{Prodigy Problem}: high-performance competence that lack
 \subsection{Chess as Drosophila Model}
 We utilize chess as a drosophila-model---a deterministic environment for quantifying long-range temporal credit assignment and subgoal inference. Our contribution is not ``yet another chess engine'' but a demonstration that:
 \begin{itemize}
-  \item Strategic phase transitions can occur \textbf{autonomously} without hardcoded orchestration.
+  \item Strategic handover can be expressed as changes in internal activations rather than an external finite-state controller.
   \item Hierarchical subgoals can \textbf{emerge} from self-organizing symbolic structures.
   \item Learned structures remain \textbf{interpretable} throughout training.
 \end{itemize}
@@ -49,7 +62,7 @@ We propose that genuine deliberation requires a distributed orchestrator capable
   \item Structural plasticity (stem cells discover and solidify new patterns).
 \end{itemize}
 
-\textbf{Claim preview.} In this work, we demonstrate that a ReCoN-based architecture can function as a distributed deliberative orchestrator: autonomously discovering, coordinating, and handing over between hierarchical subgoals without hardcoded phase logic. Using chess endgames as a controlled symbolic microcosm, Hector exhibits structural maturation through self-organizing subgraphs while remaining fully interpretable throughout training. This establishes a concrete, inspectable alternative to black-box reinforcement learning for studying deliberation and long-horizon control.
+\textbf{Claim preview.} In this work, we demonstrate that a ReCoN-based architecture can function as a distributed deliberative orchestrator: autonomously discovering, coordinating, and handing over between hierarchical subgoals without a separate hand-engineered phase controller. Using chess endgames as a controlled symbolic microcosm, Hector exhibits structural maturation through self-organizing subgraphs while remaining fully interpretable throughout training. This establishes a concrete, inspectable alternative to black-box reinforcement learning for studying deliberation and long-horizon control.
 
 \subsection{Relevance to Machine Consciousness}
 This paper contributes to machine consciousness research not by asserting consciousness, but by grounding deliberative control in a testable architecture. In terms of the symposium themes, Hector provides:
@@ -61,13 +74,14 @@ This paper contributes to machine consciousness research not by asserting consci
 \end{itemize}
 
 \section{The ReCoN Formalism: A Grammar of Deliberation}
-Request-Confirmation Networks (ReCoN) provide a neuro-symbolic framework for combining neural computation with hierarchical script execution. We summarize the key concepts and our extensions.
+Request-Confirmation Networks (ReCoN) provide a neuro-symbolic framework for combining neural computation with hierarchical script execution. We summarize the key concepts and our extensions. For background on ReCoN and related cognitive frameworks, see Bach and Herger (ReCoN), Baars (global workspace), Cowan (working memory), and Schulman et al. (PPO) \cite{bach2015,baars1988,cowan2001,schulman2017}.
 
 \subsection{Node Types}
 ReCoN networks consist of two fundamental node types:
-\begin{table}[t]
-\centering
+\begin{center}
+\begin{minipage}{\columnwidth}
 \small
+\centering
 \begin{tabularx}{\columnwidth}{@{}p{1.2cm}Xp{2.8cm}@{}}
 \toprule
 Type & Definition & Role \\
@@ -76,14 +90,17 @@ SCRIPT & Hypothesis requiring validation & Intermediate goals, composite pattern
 TERMINAL & Performs measurement/action & Sensors or actuators \\
 \bottomrule
 \end{tabularx}
-\caption{Core ReCoN node types.}
-\end{table}
+\captionof{table}{Core ReCoN node types.}
+\label{tab:recon-node-types}
+\end{minipage}
+\end{center}
 
 \subsection{Edge Types}
 Four directed edge types connect nodes, forming the grammar of deliberation:
-\begin{table}[t]
-\centering
+\begin{center}
+\begin{minipage}{\columnwidth}
 \small
+\centering
 \begin{tabularx}{\columnwidth}{@{}p{0.9cm}p{2.2cm}p{1.5cm}X@{}}
 \toprule
 Edge & Direction & Message & Purpose \\
@@ -94,8 +111,10 @@ POR & Predecessor $\rightarrow$ Successor & inhibit\_request & Enforce order \\
 RET & Successor $\rightarrow$ Predecessor & inhibit\_confirm & Prevent early confirmation \\
 \bottomrule
 \end{tabularx}
-\caption{ReCoN edge types and their roles.}
-\end{table}
+\captionof{table}{ReCoN edge types and their roles.}
+\label{tab:recon-edge-types}
+\end{minipage}
+\end{center}
 
 \subsection{State Machine and Message Passing}
 Each node implements an 8-state finite state machine. Transitions follow message passing rules (see Appendix A for the full transition table). The \texttt{inhibit\_confirm} signal via RET links enables POR chains to function as sequences rather than parallel alternatives, preventing premature confirmation during multi-step plans.
@@ -104,12 +123,24 @@ Each node implements an 8-state finite state machine. Transitions follow message
 ReCoN integrates top-down prediction and bottom-up verification. Requests propagate from abstract goals to concrete sensors, and confirmations flow back to validate hypotheses. This bidirectional flow enables top-down control while keeping perception grounded in measurable affordances.
 
 \section{Hector's Roadmap: Developmental Scaffolding}
+
+\subsection{Method Overview}
+Hector operates as a request-confirmation hierarchy updated in discrete ticks:
+\begin{enumerate}
+  \item Goals issue top-down requests; terminals return confirmations.
+  \item Action scripts select moves from the most active subgraph.
+  \item Within-game fast plasticity updates edge weights using eligibility traces.
+  \item Cross-game consolidation updates base weights.
+  \item Optional M5 growth adds stem-cell sensors and pack structures (exploratory).
+\end{enumerate}
+
+
 Hector's development proceeded through milestones M1--M5, each building capabilities for the next. The first stage executed heuristics in a fixed ReCoN network. Later stages introduced learned coordination and structural discovery.
 
 \subsection{Fixed-Topology Phase (M1--M4): Modular Coordination}
 \textbf{M1--M2:} continuous activations and trainable edge weights transform the ReCoN graph into a differentiable decision tree while preserving interpretability. \textbf{M3:} fast plasticity updates weights within a game using eligibility traces. \textbf{M4:} slow consolidation aggregates changes across games, stabilizing useful coordination patterns.
 
-\textbf{Key Result: Autonomous Deliberative Handover.} A single topology containing multiple strategic regimes (KPK, KQK) transitions from pawn promotion to checkmate without phase detectors, symbolic flags, or external orchestration. The handover is driven solely by activation dynamics.
+\textbf{Key Result: Autonomous Deliberative Handover.} A single topology containing multiple strategic regimes (KPK, KQK) shifts control from pawn promotion to checkmate with one-move latency, with the transition visible in internal activations. The handover is driven solely by activation dynamics.
 
 \begin{verbatim}
 t0: Pawn reaches 8th rank
@@ -152,28 +183,51 @@ During the KPK$\rightarrow$KQK transition, the visualization reveals the precise
 \section{Experiments and Results}
 
 \subsection{Experimental Setup}
-\textbf{Environment:} KPK endgame with a 64-dimensional observation vector (piece positions), legal moves as actions, and rewards of +1 win, -1 loss, 0 draw, +0.5 promotion.\newline
-\textbf{Curriculum:} an 8-stage curriculum from easy to hard positions.\newline
-\textbf{Baseline:} PPO (Stable-Baselines3), MlpPolicy, 50k timesteps, standard hyperparameters.
+\textbf{Environment:} KPK endgame with a 64-dimensional observation vector (piece positions), legal moves as actions, and a random-move opponent. Rewards follow \texttt{scripts/kpk\_gym\_env.py}: +1.0 checkmate, +0.5 promotion (episode terminates on promotion), -1.0 loss, -0.5 draw/stalemate, and -0.2 timeout (max 100 plies).\newline
+\textbf{Curriculum (ReCoN):} an 8-stage curriculum from easy to hard positions.\newline
+\textbf{Baseline (PPO):} Stable-Baselines3 PPO trained on the Stage 7 distribution (not curriculum-trained), evaluated for 100 episodes per checkpoint.
+
+\subsection{Reproducibility Details}
+We report win rate (fraction of wins over games played in Stage 7), sample efficiency (episodes or environment steps required to reach target performance), and wall-clock training time (seconds). Unless stated otherwise, results are single runs and we do not report error bars.
+
+\textbf{PPO baseline:} trained using \texttt{scripts/ppo\_kpk\_baseline.py} (Stable-Baselines3 PPO) with policy/value MLP 64--64. Hyperparameters: learning\_rate=3e-4, n\_steps=2048, batch\_size=64, n\_epochs=10, gamma=0.99, gae\_lambda=0.95, clip\_range=0.2, ent\_coef=0.01. We report two training budgets (50k and 200k timesteps).
+
+\textbf{ReCoN (KPK):} trained over an 8-stage curriculum with 10 cycles per stage and 100 games per cycle (8,000 games). Fast plasticity uses eta\_tick=0.05 (within-game eligibility traces) and consolidation uses eta\_consolidate=0.01 (cross-game updates). Stem cells and TRIAL promotion are enabled for exploratory growth statistics.
+
+\textbf{KRK curriculum (supporting/verification runs):} \texttt{scripts/run\_krk\_curriculum.py} supports a full-engine mode and optional M5. A representative command used in larger runs was:
+\begin{quote}\ttfamily\raggedright
+M5\_HEURISTIC\_PROB=0\; LOG\_KRK\_POLICY=1\\
+uv\; run\; python\; scripts/run\_krk\_curriculum.py\; --mode\; recon\; --enable-m5\\
+\ \ --games-per-cycle\; 500\; --min-games-per-stage\; 500\; --max-cycles-per-stage\; 10\\
+\ \ --output-dir\; /tmp/krk\_stage0\_delta
+\end{quote}
+Smaller runs (e.g., \texttt{--games-per-cycle 30--50}) were used during development for debugging and verification. We did not perform systematic hyperparameter sweeps; reported configurations reflect fixed settings selected during development.
+
+\textbf{Computing infrastructure:} all experiments were run on a Lenovo ThinkPad (Intel Core Ultra 7 155U CPU, 32\,GB RAM; CPU-only) on a 64-bit Windows host OS, using WSL2 (Linux 6.6.87.2-microsoft-standard-WSL2, glibc 2.39). Experiments were executed via \texttt{uv run python} (uv 0.8.13). Software: Python 3.12.3; numpy 2.4.x; python-chess 1.11.2. For PPO: Stable-Baselines3 2.7.1; Gymnasium 1.2.3; PyTorch 2.9.1+cu128 (GPU disabled); cloudpickle 3.1.2.
+
+The full codebase will be released publicly upon publication, with scripts and configuration pinned to a specific commit. (For anonymous submission, we omit repository URLs and commit identifiers.)
+% Camera-ready: pin experiments to commit b19eff6de9fb9862bed2e4ffb1ab6c85fcbb2ed8 (omit from anonymous PDF to preserve double-blind).
 
 \subsection{KPK Curriculum Results}
 \begin{table}[t]
 \centering
-\begin{tabular}{lcc}
+\small
+\begin{tabularx}{\columnwidth}{@{}lccc@{}}
 \toprule
-Metric & PPO & ReCoN (Hector) \\
+Metric & PPO (50k) & PPO (200k) & ReCoN (Hector) \\
 \midrule
-Stage 7 win rate & $\sim$20\% & \textbf{93.2\%} \\
-Training samples & 50{,}000 & 8{,}000 \\
-Training time & $\sim$5 min & $\sim$3 min \\
-Interpretable & No & \textbf{Yes} \\
+Stage 7 win rate & 26.3\% & 35.9\% & \textbf{97.0\%} \\
+Training budget & 50k steps (\textasciitilde{}2.9k games) & 200k steps (\textasciitilde{}11.7k games) & 8,000 games \\
+Wall-clock time & 42s & 194s & 180s \\
+Interpretable & No & No & \textbf{Yes} \\
 \bottomrule
-\end{tabular}
-\caption{KPK curriculum results.}
+\end{tabularx}
+\caption{KPK baseline comparison (single runs; see Reproducibility Details).}
 \end{table}
 
+
 \subsection{Structural Growth (Exploratory)}
-Final topology statistics from a KPK growth run:
+Representative topology statistics from a KPK growth run (illustrative example):
 \begin{table}[t]
 \centering
 \begin{tabular}{lc}
@@ -187,7 +241,7 @@ TRIAL$\rightarrow$MATURE promotions & 12 \\
 Inertia-pruned cells & 58 \\
 \bottomrule
 \end{tabular}
-\caption{Exploratory structural growth statistics.}
+\caption{Exploratory structural growth statistics (representative run).}
 \end{table}
 
 \subsection{KPK$\rightarrow$KQK Handover}
@@ -200,13 +254,18 @@ Metric & Value \\
 \midrule
 Successful handovers & 100\% \\
 Handover latency & 1 move \\
-Hardcoded phase logic & None \\
 \bottomrule
 \end{tabular}
 \caption{Autonomous handover results.}
 \end{table}
 
+
 \section{Discussion}
+
+\subsection{Scope of Claims}
+We distinguish between (i) empirical results reported here (handover behavior, win rates, sample efficiency), (ii) architectural hypotheses (structural growth as a mechanism for deeper deliberation), and (iii) broader implications for machine consciousness, which we treat as speculative and non-committal.
+
+
 
 \subsection{What Is Hardcoded vs. Learned}
 Given only legal moves and win/loss rewards, Hector autonomously discovers hierarchical patterns corresponding to known chess theory (opposition, key squares, timing) without being programmed with those concepts. By mapping these patterns onto a transparent ReCoN topology, we move away from black-box heuristics toward structural deliberation that is inspectable and verifiable.
@@ -232,7 +291,6 @@ We do not claim consciousness, but the architecture provides an inspectable test
 \section{Conclusion: Toward Structured Control}
 We presented Hector, a cognitive architecture demonstrating that (1) hierarchical subgoals can emerge from self-organizing structures, (2) strategic phase transitions occur autonomously via activation dynamics rather than hardcoded orchestration, and (3) learned structures remain interpretable throughout training. ReCoN provides a general-purpose framework for structured control in domains requiring compositional reasoning, temporal sequencing, and top-down/bottom-up integration. By prioritizing structural decomposition over raw performance, Hector offers a path from game playing to autonomous deliberation in open-world tasks.
 
-\section*{References}
 \begin{thebibliography}{}
 \bibitem{bach2015} Bach, J., and Herger, P. 2015. Request Confirmation Networks for Neuro-Symbolic Script Execution. In \textit{Proceedings of the 28th International Conference on Neural Information Processing Systems}.
 \bibitem{mccarthy1990} McCarthy, J. 1990. Chess as the Drosophila of AI. In \textit{Finding a Solution of a Problem: A Festschrift for Robert K. Lindsay}.
@@ -244,19 +302,11 @@ We presented Hector, a cognitive architecture demonstrating that (1) hierarchica
 \bibitem{kahneman2011} Kahneman, D. 2011. \textit{Thinking, Fast and Slow}. Farrar, Straus and Giroux.
 \end{thebibliography}
 
-\section*{Reproducibility Checklist}
-This checklist is required by AAAI and does not count toward the page limit. Please mark each item as \textbf{Yes}, \textbf{No}, or \textbf{N/A}.
-\begin{itemize}
-  \item Are the hypotheses and research questions clearly stated?
-  \item Are the evaluation metrics clearly described?
-  \item Are the datasets, environments, and data splits specified?
-  \item Are the training procedures, hyperparameters, and model settings specified?
-  \item Are the hardware and compute requirements specified?
-  \item Is code, data, or a reproducibility package available or planned?
-  \item If results are qualitative, are the criteria for evaluation specified?
-  \item If no experiments are conducted, is the reason stated (N/A for empirical items)?
-\end{itemize}
-
+\IfFileExists{AuthorKit26/ReproducibilityChecklist/LaTeX/ReproducibilityChecklist.tex}{%
+  \input{AuthorKit26/ReproducibilityChecklist/LaTeX/ReproducibilityChecklist.tex}%
+}{%
+  \input{../AuthorKit26/ReproducibilityChecklist/LaTeX/ReproducibilityChecklist.tex}%
+}
 \appendix
 \section{ReCoN State Machine (Complete Table)}
 The Hector engine implements the standard ReCoN state machine with an 8-state transition logic. Transitions occur at discrete clock ticks based on top-down requests and bottom-up confirmations.
@@ -279,6 +329,18 @@ SUPPRESSED & POR predecessor not confirmed & INACTIVE \\
 \end{tabularx}
 \caption{Simplified ReCoN transition logic.}
 \end{table}
+
+\section{Code Appendix (Key Files)}
+\begin{itemize}
+  \item \texttt{scripts/kpk\_gym\_env.py} (KPK Gym environment)
+  \item \texttt{scripts/ppo\_kpk\_baseline.py} (PPO baseline training)
+  \item \texttt{scripts/run\_kpk\_bridge.sh} (bridge positions wrapper)
+  \item \texttt{demos/persistent/full\_game\_train.py} (unified graph training/demo driver)
+  \item \texttt{demos/visualization/export\_bridge\_demo.py} (export handover visualization traces)
+  \item \texttt{scripts/run\_krk\_curriculum.py} (KRK curriculum driver; optional M5)
+  \item \texttt{src/recon\_lite\_chess/graph/unified\_builder.py} (unified KRK/KPK/KQK graph)
+\end{itemize}
+
 
 \section{Structural Growth Details (Exploratory)}
 The maturation phase replaces hand-designed sensor nodes with self-discovering stem cells, enabling the ReCoN graph to autonomously grow its own topology. This process externalizes learned correlations into persistent, inspectable symbolic structures. M5 is currently exploratory.

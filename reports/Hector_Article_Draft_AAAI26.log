@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2025.11.20)  28 JAN 2026 10:14
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2025.11.20)  28 JAN 2026 13:14
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -49,13 +49,26 @@ Package xcolor Info: Model `HSB' substituted by `hsb' on input line 1371.
 Package xcolor Info: Model `Gray' substituted by `gray' on input line 1372.
 Package xcolor Info: Model `wave' substituted by `hsb' on input line 1373.
 ))
-(/usr/share/texlive/texmf-dist/tex/latex/graphics/graphicx.sty
-Package: graphicx 2021/09/16 v1.2d Enhanced LaTeX Graphics (DPC,SPQR)
+(/usr/share/texlive/texmf-dist/tex/latex/psnfss/times.sty
+Package: times 2020/03/25 PSNFSS-v9.3 (SPQR) 
+)
+(/usr/share/texlive/texmf-dist/tex/latex/psnfss/helvet.sty
+Package: helvet 2020/03/25 PSNFSS-v9.3 (WaS) 
 
 (/usr/share/texlive/texmf-dist/tex/latex/graphics/keyval.sty
 Package: keyval 2022/05/29 v1.15 key=value parser (DPC)
 \KV@toks@=\toks17
+))
+(/usr/share/texlive/texmf-dist/tex/latex/psnfss/courier.sty
+Package: courier 2020/03/25 PSNFSS-v9.3 (WaS) 
 )
+(/usr/share/texlive/texmf-dist/tex/latex/url/url.sty
+\Urlmuskip=\muskip16
+Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
+)
+(/usr/share/texlive/texmf-dist/tex/latex/graphics/graphicx.sty
+Package: graphicx 2021/09/16 v1.2d Enhanced LaTeX Graphics (DPC,SPQR)
+
 (/usr/share/texlive/texmf-dist/tex/latex/graphics/graphics.sty
 Package: graphics 2022/03/10 v1.4e Standard LaTeX Graphics (DPC,SPQR)
 
@@ -117,7 +130,7 @@ LaTeX Info: Redefining \smash on input line 940.
 LaTeX Info: Redefining \relbar on input line 970.
 LaTeX Info: Redefining \Relbar on input line 971.
 \c@MaxMatrixCols=\count267
-\dotsspace@=\muskip16
+\dotsspace@=\muskip17
 \c@parentequation=\count268
 \dspbrk@lvl=\count269
 \tag@help=\toks19
@@ -158,10 +171,6 @@ Package: booktabs 2020/01/12 v1.61803398 Publication quality tables
 \@lastruleclass=\count276
 \@thisrulewidth=\dimen164
 )
-(/usr/share/texlive/texmf-dist/tex/latex/url/url.sty
-\Urlmuskip=\muskip17
-Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
-)
 (/usr/share/texlive/texmf-dist/tex/latex/tools/tabularx.sty
 Package: tabularx 2023/07/08 v2.11c `tabularx' package (DPC)
 
@@ -183,41 +192,72 @@ Package: array 2023/10/16 v2.5g Tabular extension package (FMi)
 \TX@cols=\count277
 \TX@ftn=\toks24
 )
+(/usr/share/texlive/texmf-dist/tex/latex/natbib/natbib.sty
+Package: natbib 2010/09/13 8.31b (PWD, AO)
+\bibhang=\skip56
+\bibsep=\skip57
+LaTeX Info: Redefining \cite on input line 694.
+\c@NAT@ctr=\count278
+)
+(/usr/share/texlive/texmf-dist/tex/latex/caption/caption.sty
+Package: caption 2023/08/05 v3.6o Customizing captions (AR)
+
+(/usr/share/texlive/texmf-dist/tex/latex/caption/caption3.sty
+Package: caption3 2023/07/31 v2.4d caption3 kernel (AR)
+\caption@tempdima=\dimen172
+\captionmargin=\dimen173
+\caption@leftmargin=\dimen174
+\caption@rightmargin=\dimen175
+\caption@width=\dimen176
+\caption@indent=\dimen177
+\caption@parindent=\dimen178
+\caption@hangindent=\dimen179
+Package caption Info: Standard document class detected.
+)
+\c@caption@flags=\count279
+\c@continuedfloat=\count280
+)
+LaTeX Font Info:    Trying to load font information for OT1+ptm on input line 3
+2.
+
+(/usr/share/texlive/texmf-dist/tex/latex/psnfss/ot1ptm.fd
+File: ot1ptm.fd 2001/06/04 font definitions for OT1/ptm.
+)
 (/usr/share/texlive/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def
 File: l3backend-pdftex.def 2024-01-04 L3 backend support: PDF output (pdfTeX)
-\l__color_backend_stack_int=\count278
+\l__color_backend_stack_int=\count281
 \l__pdf_internal_box=\box55
 )
 (./Hector_Article_Draft_AAAI26.aux)
 \openout1 = `Hector_Article_Draft_AAAI26.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 19.
-LaTeX Font Info:    ... okay on input line 19.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 19.
-LaTeX Font Info:    ... okay on input line 19.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 19.
-LaTeX Font Info:    ... okay on input line 19.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 19.
-LaTeX Font Info:    ... okay on input line 19.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 19.
-LaTeX Font Info:    ... okay on input line 19.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 19.
-LaTeX Font Info:    ... okay on input line 19.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 19.
-LaTeX Font Info:    ... okay on input line 19.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 32.
+LaTeX Font Info:    ... okay on input line 32.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 32.
+LaTeX Font Info:    ... okay on input line 32.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 32.
+LaTeX Font Info:    ... okay on input line 32.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 32.
+LaTeX Font Info:    ... okay on input line 32.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 32.
+LaTeX Font Info:    ... okay on input line 32.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 32.
+LaTeX Font Info:    ... okay on input line 32.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 32.
+LaTeX Font Info:    ... okay on input line 32.
 
 (/usr/share/texlive/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count279
-\scratchdimen=\dimen172
+\scratchcounter=\count282
+\scratchdimen=\dimen180
 \scratchbox=\box56
-\nofMPsegments=\count280
-\nofMParguments=\count281
+\nofMPsegments=\count283
+\nofMParguments=\count284
 \everyMPshowfont=\toks25
-\MPscratchCnt=\count282
-\MPscratchDim=\dimen173
-\MPnumerator=\count283
-\makeMPintoPDFobject=\count284
+\MPscratchCnt=\count285
+\MPscratchDim=\dimen181
+\MPnumerator=\count286
+\makeMPintoPDFobject=\count287
 \everyMPtoPDFconversion=\toks26
 ) (/usr/share/texlive/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
 Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
@@ -228,192 +268,341 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
-\c@eqfn=\count285
+Package caption Info: Begin \AtBeginDocument code.
+Package caption Info: End \AtBeginDocument code.
+\c@eqfn=\count288
 \titlearea=\box57
-\actualheight=\skip56
+\actualheight=\skip58
 
-Underfull \hbox (badness 1275) in paragraph at lines 31--32
-\OT1/cmr/m/n/10 Modern deep re-in-force-ment learn-ing has pro-duced
+Underfull \hbox (badness 3078) in paragraph at lines 36--37
+[]\OT1/ptm/m/n/9 Conventional re-in-force-ment learn-ing of-ten yields high-
  []
 
-
-Underfull \hbox (badness 4060) in paragraph at lines 33--34
-[]\OT1/cmr/m/n/10 We call this the \OT1/cmr/bx/n/10 Prodigy Prob-lem\OT1/cmr/m/
-n/10 : high-
+LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 5
+1.
+(/usr/share/texlive/texmf-dist/tex/latex/psnfss/ts1ptm.fd
+File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
+)
+Underfull \hbox (badness 2384) in paragraph at lines 53--54
+[]\OT1/ptm/m/n/10 Learned struc-tures re-main \OT1/ptm/b/n/10 in-ter-pretable \
+OT1/ptm/m/n/10 through-out
  []
 
-
-Underfull \hbox (badness 10000) in paragraph at lines 38--39
-[]\OT1/cmr/m/n/10 Strategic phase tran-si-tions can oc-cur \OT1/cmr/bx/n/10 au-
-
- []
-
-
-Underfull \hbox (badness 5607) in paragraph at lines 39--40
-[]\OT1/cmr/m/n/10 Hierarchical sub-goals can \OT1/cmr/bx/n/10 emerge \OT1/cmr/m
-/n/10 from self-
- []
-
-
-Underfull \hbox (badness 3098) in paragraph at lines 48--49
-[]\OT1/cmr/m/n/10 Temporal se-quenc-ing (POR/RET links en-force
- []
-
-
-Underfull \hbox (badness 1237) in paragraph at lines 52--53
-\OT1/cmr/m/n/10 ment learn-ing for study-ing de-lib-er-a-tion and long-
- []
-
-[1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}
+[1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}{/usr/share/texlive/texmf-
+dist/fonts/enc/dvips/base/8r.enc}
 
 
 
 ]
-Overfull \hbox (0.79817pt too wide) in paragraph at lines 78--78
-[]|\OT1/cmr/m/n/9 SCRIPT| 
+Underfull \hbox (badness 1990) in paragraph at lines 92--92
+[]|\OT1/ptm/m/n/9 Hypothesis re-quir-ing val-i-
  []
 
 
-Overfull \hbox (17.10912pt too wide) in paragraph at lines 78--78
-[]|\OT1/cmr/m/n/9 TERMINAL| 
+Underfull \hbox (badness 10000) in paragraph at lines 92--92
+[]|\OT1/ptm/m/n/9 Intermediate goals,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 78--78
-[]|\OT1/cmr/m/n/9 Performs mea-sure-
+Overfull \hbox (12.03546pt too wide) in paragraph at lines 92--92
+[]|\OT1/ptm/m/n/9 TERMINAL| 
  []
 
 
-Underfull \hbox (badness 3557) in paragraph at lines 78--78
-[]|\OT1/cmr/m/n/9 Sensors or ac-tu-a-
+Underfull \hbox (badness 10000) in paragraph at lines 92--92
+[]|\OT1/ptm/m/n/9 Performs mea-sure-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 96--96
-[]|\OT1/cmr/m/n/9 Request sub-goal
+Underfull \hbox (badness 10000) in paragraph at lines 113--113
+[]|\OT1/ptm/m/n/9 Request sub-goal
  []
 
 
-Overfull \hbox (9.50108pt too wide) in paragraph at lines 96--96
-[]|\OT1/cmr/m/n/9 wait/confirm| 
+Overfull \hbox (3.22926pt too wide) in paragraph at lines 113--113
+[]|\OT1/ptm/m/n/9 wait/confirm| 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 96--96
-[]|\OT1/cmr/m/n/9 Report
+Underfull \hbox (badness 10000) in paragraph at lines 113--113
+[]|\OT1/ptm/m/n/9 Report
  []
 
 
-Overfull \hbox (16.48657pt too wide) in paragraph at lines 96--96
-[]|\OT1/cmr/m/n/9 inhibit[]request| 
+Underfull \hbox (badness 10000) in paragraph at lines 113--113
+[]|\OT1/ptm/m/n/9 Predecessor $\OMS/cmsy/m/n/9 !$
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 96--96
-[]|\OT1/cmr/m/n/9 Successor $\OMS/cmsy/m/n/9 !$
+Overfull \hbox (10.06017pt too wide) in paragraph at lines 113--113
+[]|\OT1/ptm/m/n/9 inhibit[]request| 
  []
 
 
-Overfull \hbox (17.71297pt too wide) in paragraph at lines 96--96
-[]|\OT1/cmr/m/n/9 inhibit[]confirm| 
+Underfull \hbox (badness 10000) in paragraph at lines 113--113
+[]|\OT1/ptm/m/n/9 Successor $\OMS/cmsy/m/n/9 !$
  []
 
 
-Underfull \hbox (badness 1975) in paragraph at lines 124--125
-\OT1/cmr/m/n/10 We em-pha-size that the em-pir-i-cal con-tri-bu-tion of
+Overfull \hbox (12.06726pt too wide) in paragraph at lines 113--113
+[]|\OT1/ptm/m/n/9 inhibit[]confirm| 
  []
 
-[2]
-<bindings.png, id=17, 1076.52188pt x 478.03593pt>
+LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 1
+20.
+(/usr/share/texlive/texmf-dist/tex/latex/psnfss/ot1pcr.fd
+File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
+) [2]
+<bindings.png, id=13, 1076.52188pt x 478.03593pt>
 File: bindings.png Graphic file (type png)
 <use bindings.png>
-Package pdftex.def Info: bindings.png  used on input line 131.
+Package pdftex.def Info: bindings.png  used on input line 162.
 (pdftex.def)             Requested size: 227.42392pt x 100.98863pt.
-<closeup_kpk.png, id=19, 1708.13156pt x 500.62032pt>
+<closeup_kpk.png, id=15, 1708.13156pt x 500.62032pt>
 File: closeup_kpk.png Graphic file (type png)
 <use closeup_kpk.png>
-Package pdftex.def Info: closeup_kpk.png  used on input line 142.
+Package pdftex.def Info: closeup_kpk.png  used on input line 173.
 (pdftex.def)             Requested size: 227.42392pt x 66.64888pt.
-<closeup_kqk.png, id=20, 1711.1428pt x 547.2947pt>
+<closeup_kqk.png, id=16, 1711.1428pt x 547.2947pt>
 File: closeup_kqk.png Graphic file (type png)
 <use closeup_kqk.png>
-Package pdftex.def Info: closeup_kqk.png  used on input line 148.
+Package pdftex.def Info: closeup_kqk.png  used on input line 179.
 (pdftex.def)             Requested size: 227.42392pt x 72.7375pt.
- [3 <./bindings.png> <./closeup_kpk.png> <./closeup_kqk.png>]
-Underfull \hbox (badness 2922) in paragraph at lines 239--240
-\OT1/cmr/m/n/10 rosym-bolic AI: The 3rd Wave. \OT1/cmr/m/it/10 arXiv preprint
+
+Underfull \hbox (badness 2035) in paragraph at lines 186--189
+\OT1/ptm/m/n/10 ser-va-tion vec-tor (piece po-si-tions), le-gal moves as ac-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 279--279
-[]|\OT1/cmr/m/n/9 Current
+Underfull \hbox (badness 2846) in paragraph at lines 186--189
+\OT1/ptm/m/n/10 tions, and a random-move op-po-nent. Re-wards fol-low
  []
 
 
-Overfull \hbox (4.2052pt too wide) in paragraph at lines 279--279
-[]|\OT1/cmr/m/n/9 INACTIVE| 
+Underfull \hbox (badness 10000) in paragraph at lines 193--194
+[]\OT1/ptm/b/n/10 PPO base-line: \OT1/ptm/m/n/10 trained us-ing
  []
 
 
-Overfull \hbox (7.49142pt too wide) in paragraph at lines 279--279
-[]|\OT1/cmr/m/n/9 REQUESTED| 
+Underfull \hbox (badness 3078) in paragraph at lines 193--194
+\OT1/pcr/m/n/10 scripts/ppo[]kpk[]baseline.py \OT1/ptm/m/n/10 (Stable-Baselines
+3
  []
 
 
-Overfull \hbox (16.02734pt too wide) in paragraph at lines 279--279
-[]|\OT1/cmr/m/n/9 REQUESTED| 
+Underfull \hbox (badness 8170) in paragraph at lines 193--194
+\OT1/ptm/m/n/10 PPO) with pol-icy/value MLP 64--64. Hy-per-pa-ram-e-
  []
 
 
-Overfull \hbox (7.6178pt too wide) in paragraph at lines 279--279
-[]|\OT1/cmr/m/n/9 CONFIRMED| 
+Underfull \hbox (badness 10000) in paragraph at lines 193--194
+\OT1/ptm/m/n/10 ters: learn-ing[]rate=3e-4, n[]steps=2048, batch[]size=64,
  []
 
 
-Overfull \hbox (18.72453pt too wide) in paragraph at lines 279--279
-[]|\OT1/cmr/m/n/9 SUPPRESSED| 
+Underfull \hbox (badness 10000) in paragraph at lines 193--194
+\OT1/ptm/m/n/10 n[]epochs=10, gamma=0.99, gae[]lambda=0.95,
  []
 
 
-Underfull \hbox (badness 3942) in paragraph at lines 279--279
-[]|\OT1/cmr/m/n/9 POR pre-de-ces-sor not con-
+Underfull \hbox (badness 3179) in paragraph at lines 193--194
+\OT1/ptm/m/n/10 clip[]range=0.2, ent[]coef=0.01. We re-port two train-ing
  []
 
-[4]
-Underfull \hbox (badness 2671) in paragraph at lines 299--300
-\OT1/cmr/m/n/10 Consistently coac-tive stem cells are hoisted into
+
+Underfull \hbox (badness 10000) in paragraph at lines 197--198
+[]\OT1/ptm/b/n/10 KRK cur-ricu-lum (sup-port-ing/verification runs):
  []
 
-[5
+
+Underfull \hbox (badness 4454) in paragraph at lines 204--205
+\OT1/ptm/m/n/10 Smaller runs (e.g., \OT1/pcr/m/n/10 --games-per-cycle 30--50\OT
+1/ptm/m/n/10 )
+ []
+
+
+Overfull \hbox (95.45702pt too wide) in alignment at lines 224--224
+[][][][] 
+ []
+
+[3 <./bindings.png> <./closeup_kpk.png> <./closeup_kqk.png>] [4]
+(../AuthorKit26/ReproducibilityChecklist/LaTeX/ReproducibilityChecklist.tex
+\c@checksubsection=\count289
+\c@checkitem=\count290
+LaTeX Font Info:    Trying to load font information for OMS+pcr on input line 5
+9.
+
+(/usr/share/texlive/texmf-dist/tex/latex/psnfss/omspcr.fd
+File: omspcr.fd 
+)
+LaTeX Font Info:    Font shape `OMS/pcr/m/n' in size <10> not available
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 59.
+
+Underfull \hbox (badness 10000) in paragraph at lines 77--78
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 79--81
+\OT1/ptm/m/n/10 You can \OT1/pcr/m/n/10 \input \OT1/ptm/m/n/10 this .tex file r
+ight be-fore
+ []
+
+
+Underfull \hbox (badness 5711) in paragraph at lines 95--98
+[]\OT1/ptm/m/n/10 Does this pa-per make the-o-ret-i-cal con-tri-bu-tions?
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 104--106
+[]\OT1/ptm/m/n/10 Proofs of all novel claims are in-cluded
+ []
+
+
+Underfull \hbox (badness 7415) in paragraph at lines 123--125
+[]\OT1/ptm/m/n/10 A mo-ti-va-tion is given for why the ex-per-i-
+ []
+
+
+Underfull \hbox (badness 4120) in paragraph at lines 123--125
+\OT1/ptm/m/n/10 ments are con-ducted on the se-lected datasets
+ []
+
+
+Underfull \hbox (badness 1024) in paragraph at lines 129--131
+\OT1/ptm/m/n/10 ten-tially in-clud-ing au-thors' own pre-vi-ously pub-
+ []
+
+
+Underfull \hbox (badness 7540) in paragraph at lines 131--133
+[]\OT1/ptm/m/n/10 All datasets drawn from the ex-ist-ing lit-er-a-
+ []
+
+
+Underfull \hbox (badness 7486) in paragraph at lines 131--133
+\OT1/ptm/m/n/10 ture (po-ten-tially in-clud-ing au-thors' own pre-
+ []
+
+
+Underfull \hbox (badness 3323) in paragraph at lines 131--133
+\OT1/ptm/m/n/10 vi-ously pub-lished work) are pub-licly avail-able
+ []
+
+[5]
+Underfull \hbox (badness 2027) in paragraph at lines 149--151
+\OT1/ptm/m/n/10 a-lyz-ing the ex-per-i-ments will be made pub-licly
+ []
+
+
+Underfull \hbox (badness 2521) in paragraph at lines 154--156
+\OT1/ptm/m/n/10 method used for set-ting seeds is de-scribed in
+ []
+
+
+Underfull \hbox (badness 1688) in paragraph at lines 154--156
+\OT1/ptm/m/n/10 a way suf-fi-cient to al-low repli-ca-tion of re-sults
+ []
+
+
+Underfull \hbox (badness 4072) in paragraph at lines 156--158
+[]\OT1/ptm/m/n/10 This pa-per spec-i-fies the com-put-ing in-fras-truc-
+ []
+
+
+Underfull \hbox (badness 2495) in paragraph at lines 156--158
+\OT1/ptm/m/n/10 soft-ware), in-clud-ing GPU/CPU mod-els; amount
+ []
+
+
+Underfull \hbox (badness 2368) in paragraph at lines 156--158
+\OT1/ptm/m/n/10 of mem-ory; op-er-at-ing sys-tem; names and ver-
+ []
+
+
+Underfull \hbox (badness 6380) in paragraph at lines 162--164
+[]\OT1/ptm/m/n/10 Analysis of ex-per-i-ments goes be-yond single-
+ []
+
+)
+Underfull \hbox (badness 10000) in paragraph at lines 329--329
+[]|\OT1/ptm/m/n/9 Current
+ []
+
+
+Overfull \hbox (1.19165pt too wide) in paragraph at lines 329--329
+[]|\OT1/ptm/m/n/9 REQUESTED| 
+ []
+
+
+Overfull \hbox (9.72757pt too wide) in paragraph at lines 329--329
+[]|\OT1/ptm/m/n/9 REQUESTED| 
+ []
+
+
+Overfull \hbox (1.7855pt too wide) in paragraph at lines 329--329
+[]|\OT1/ptm/m/n/9 CONFIRMED| 
+ []
+
+
+Overfull \hbox (12.33739pt too wide) in paragraph at lines 329--329
+[]|\OT1/ptm/m/n/9 SUPPRESSED| 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 338--339
+[]\OT1/pcr/m/n/10 demos/persistent/full[]game[]train.py
+ []
+
+
+Overfull \hbox (21.80563pt too wide) in paragraph at lines 339--340
+[]\OT1/pcr/m/n/10 demos/visualization/export[]bridge[]demo.py
+ []
+
+
+Overfull \hbox (43.40564pt too wide) in paragraph at lines 341--342
+[]\OT1/pcr/m/n/10 src/recon[]lite[]chess/graph/unified[]builder.py
+ []
+
+
+Overfull \hbox (6.60562pt too wide) in paragraph at lines 352--352
+[]\OT1/pcr/m/n/10 EXPLORING -> CANDIDATE -> TRIAL -> MATURE[] 
+ []
+
+
+Overfull \hbox (30.60562pt too wide) in paragraph at lines 352--352
+[]                         \OT1/pcr/m/n/10 -> DEMOTED (XP <= 0)[] 
+ []
+
+[6] [7
 
 ] (./Hector_Article_Draft_AAAI26.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-01-22>
  ***********
+
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
  ) 
 Here is how much of TeX's memory you used:
- 2901 strings out of 476182
- 43486 string characters out of 5795594
+ 4827 strings out of 476182
+ 78538 string characters out of 5795594
  1945975 words of memory out of 5000000
- 24889 multiletter control sequences out of 15000+600000
- 566085 words of font info for 64 fonts, out of 8000000 for 9000
+ 26772 multiletter control sequences out of 15000+600000
+ 578407 words of font info for 76 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 57i,12n,65p,876b,268s stack positions out of 10000i,1000n,20000p,200000b,200000s
- </home/paulander/.texlive2023/texmf-var/fonts/pk/ljfour/jknappen/ec/tcrm1000
-.600pk> </home/paulander/.texlive2023/texmf-var/fonts/pk/ljfour/jknappen/ec/tcr
-m0900.600pk></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx1
-0.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb>
-</usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/s
-hare/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb></usr/share/tex
-live/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texlive/t
-exmf-dist/fonts/type1/public/amsfonts/cm/cmsy9.pfb></usr/share/texlive/texmf-di
-st/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/share/texlive/texmf-dist/fon
-ts/type1/public/amsfonts/cm/cmtt10.pfb>
-Output written on Hector_Article_Draft_AAAI26.pdf (5 pages, 1067743 bytes).
+ 57i,11n,65p,956b,338s stack positions out of 10000i,1000n,20000p,200000b,200000s
+</usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></us
+r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy9.pfb></usr/share
+/texlive/texmf-dist/fonts/type1/urw/courier/ucrr8a.pfb></usr/share/texlive/texm
+f-dist/fonts/type1/urw/times/utmb8a.pfb></usr/share/texlive/texmf-dist/fonts/ty
+pe1/urw/times/utmr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/u
+tmri8a.pfb>
+Output written on Hector_Article_Draft_AAAI26.pdf (7 pages, 1024786 bytes).
 PDF statistics:
- 77 PDF objects out of 1000 (max. 8388607)
- 45 compressed objects within 1 object stream
+ 66 PDF objects out of 1000 (max. 8388607)
+ 38 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  16 words of extra memory for PDF output out of 10000 (max. 10000000)
 
