@@ -13,6 +13,10 @@ from typing import Dict, List, Any
 
 import chess
 import numpy as np
+try:
+    import torch
+except ImportError:
+    torch = None
 
 from recon_lite.learning.baseline import (
     BaselineLearner, Terminal, TerminalRole,
@@ -63,17 +67,25 @@ def goal_distance(current: Dict[int, float], goal: Dict[int, float]) -> float:
     return float(np.linalg.norm(diffs))
 
 
-def compute_sensor_vector_by_ids(learner: BaselineLearner, v: np.ndarray, sensor_ids: List[int]) -> np.ndarray:
-    """Compute sensor vector in a fixed, stable sensor-id order."""
-    sensor_map = {s.id: s for s in learner.sensors}
-    vals = []
+def compute_sensor_vectors_batch(learner: BaselineLearner, v_batch: Any, sensor_ids: List[int]) -> Any:
+    """Compute sensor vectors for a batch of feature vectors in a fixed id order."""
+    outputs = learner.batch_apply_sensors(v_batch)
+    
+    # results[i] = [s_id_0_output, s_id_1_output, ...]
+    matrices = []
     for sid in sensor_ids:
-        sensor = sensor_map.get(sid)
-        if sensor is None:
-            vals.append(0.0)
-            continue
-        vals.append(apply_sensor(sensor, v))
-    return np.array(vals, dtype=np.float32)
+        if sid in outputs:
+            matrices.append(outputs[sid])
+        else:
+            # Fallback for unknown IDs (shouldn't happen)
+            if learner.backend.use_torch:
+                matrices.append(torch.zeros(outputs[next(iter(outputs))].shape[0]).to(learner.backend.device))
+            else:
+                matrices.append(np.zeros(len(next(iter(outputs.values())))))
+    
+    if learner.backend.use_torch:
+        return torch.stack(matrices, dim=1)
+    return np.stack(matrices, axis=1)
 
 
 def label_transitions_by_goal(
@@ -86,41 +98,82 @@ def label_transitions_by_goal(
     opponent_mode: str = "max",
 ) -> List[TransitionData]:
     """Label transitions as positive if they move closer to any goal memory.
-
-    If lookahead_black=True, evaluate distance after one black reply.
-    opponent_mode="max" uses worst-case (robust) distance across replies.
+    
+    Optimized: Batches all boards (v1 and v2) for a single GPU pass.
     """
-    transitions = []
     teacher = KRKTeacher()
     v0 = teacher.features(board)
-
-    s0 = compute_sensor_vector_by_ids(learner, v0, sensor_ids)
-    d0 = min((np.linalg.norm(s0 - g) for g in goal_vectors), default=float("inf"))
-
-    for move in board.legal_moves:
+    
+    # 1. Collect all board feature vectors for current move alternatives
+    moves = list(board.legal_moves)
+    v1_list = []
+    v2_map = {} # move_idx -> list of v2s
+    
+    all_v_to_compute = [v0]
+    
+    for i, move in enumerate(moves):
         b1 = board.copy()
         b1.push(move)
         v1 = teacher.features(b1)
+        v1_list.append(v1)
+        all_v_to_compute.append(v1)
+        
         if lookahead_black:
-            d1_candidates = []
+            v2_list = []
             for reply in b1.legal_moves:
                 b2 = b1.copy()
                 b2.push(reply)
                 v2 = teacher.features(b2)
-                s2 = compute_sensor_vector_by_ids(learner, v2, sensor_ids)
-                d2 = min((np.linalg.norm(s2 - g) for g in goal_vectors), default=float("inf"))
-                d1_candidates.append(d2)
-            if d1_candidates:
+                v2_list.append(v2)
+                all_v_to_compute.append(v2)
+            v2_map[i] = v2_list
+
+    # 2. GPU Batch Compute for all vectors
+    all_v_batch = np.stack(all_v_to_compute)
+    s_vectors = compute_sensor_vectors_batch(learner, all_v_batch, sensor_ids)
+    
+    # Bring to CPU for distance logic (which is branching)
+    if learner.backend.use_torch:
+        s_vectors = s_vectors.detach().cpu().numpy()
+        goal_vectors_np = [g if isinstance(g, np.ndarray) else g.detach().cpu().numpy() for g in goal_vectors]
+    else:
+        goal_vectors_np = goal_vectors
+
+    # 3. Distance scoring
+    def get_min_dist(s_vec):
+        if not goal_vectors_np: return float("inf")
+        dists = [np.linalg.norm(s_vec - g) for g in goal_vectors_np]
+        return min(dists)
+
+    cursor = 0
+    s0 = s_vectors[cursor]
+    d0 = get_min_dist(s0)
+    cursor += 1
+    
+    transitions = []
+    for i, move in enumerate(moves):
+        s1 = s_vectors[cursor]
+        v1 = all_v_to_compute[cursor]
+        cursor += 1
+        
+        if lookahead_black:
+            replies = v2_map.get(i, [])
+            if replies:
+                d1_candidates = []
+                for _ in range(len(replies)):
+                    s2 = s_vectors[cursor]
+                    d1_candidates.append(get_min_dist(s2))
+                    cursor += 1
                 d1 = max(d1_candidates) if opponent_mode == "max" else min(d1_candidates)
             else:
-                s1 = compute_sensor_vector_by_ids(learner, v1, sensor_ids)
-                d1 = min((np.linalg.norm(s1 - g) for g in goal_vectors), default=float("inf"))
+                d1 = get_min_dist(s1)
         else:
-            s1 = compute_sensor_vector_by_ids(learner, v1, sensor_ids)
-            d1 = min((np.linalg.norm(s1 - g) for g in goal_vectors), default=float("inf"))
+            d1 = get_min_dist(s1)
+            
         reward = d0 - d1
         label = 1 if reward > eps else 0
         transitions.append(TransitionData(v0=v0, v1=v1, label=label, action=move, reward=reward))
+        
     return transitions
 
 
@@ -133,33 +186,62 @@ def update_learner_from_transitions(
     top_k: int,
 ) -> Dict[str, Any]:
     """Shared update logic for sensors/actuators."""
-    sensor_deltas_pos = {s.id: [] for s in learner.sensors}
-    sensor_deltas_neg = {s.id: [] for s in learner.sensors}
+    if not transitions:
+        return {"newly_promoted": [], "pruned_count": 0, "newly_created_actuators": 0}
 
-    for trans in transitions:
-        # Use dense reward if provided; fallback to 1.0 for positive labels
-        if trans.label == 1:
-            weight = min(max(trans.reward, 0.0), 1.0) if trans.reward > 0 else 1.0
+    # Prepare batches
+    v0_batch = [t.v0 for t in transitions]
+    v1_batch = [t.v1 for t in transitions]
+    labels = np.array([t.label for t in transitions])
+    
+    # Compute weights from dense rewards
+    weights = []
+    for t in transitions:
+        if t.label == 1:
+            w = min(max(t.reward, 0.0), 1.0) if t.reward > 0 else 1.0
         else:
-            weight = min(max(-trans.reward, 0.0), 1.0) if trans.reward < 0 else 1.0
-        for sensor in learner.sensors:
-            t0 = apply_sensor(sensor, trans.v0)
-            t1 = apply_sensor(sensor, trans.v1)
-            delta_t = (t1 - t0) * weight
-            if trans.label == 1:
-                sensor_deltas_pos[sensor.id].append(delta_t)
-            else:
-                sensor_deltas_neg[sensor.id].append(delta_t)
+            w = min(max(-t.reward, 0.0), 1.0) if t.reward < 0 else 1.0
+        weights.append(w)
+    weights = learner.backend.array(weights, dtype=torch.float32 if learner.backend.use_torch else np.float32)
+
+    # Batch apply all sensors
+    outputs0 = learner.batch_apply_sensors(v0_batch)
+    outputs1 = learner.batch_apply_sensors(v1_batch)
+
+    # Prepare masks/weights on correct device
+    if learner.backend.use_torch:
+        labels_t = torch.as_tensor(labels).to(learner.backend.device)
+        pos_mask = (labels_t == 1)
+        neg_mask = (labels_t == 0)
+        weights_t = torch.as_tensor(weights).to(learner.backend.device)
+    else:
+        pos_mask = (labels == 1)
+        neg_mask = (labels == 0)
+        weights_t = np.array(weights)
 
     # Update sensor XP
     for sensor in learner.sensors:
-        xp = compute_sensor_xp(sensor, sensor_deltas_pos[sensor.id], sensor_deltas_neg[sensor.id])
+        # Apply weights to deltas
+        delta_t_raw = outputs1[sensor.id] - outputs0[sensor.id]
+        delta_t_weighted = delta_t_raw * weights_t
+        
+        delta_pos = delta_t_weighted[pos_mask]
+        delta_neg = delta_t_weighted[neg_mask]
+        
+        xp = compute_sensor_xp(
+            sensor,
+            delta_pos,
+            delta_neg,
+            backend=learner.backend
+        )
         sensor.xp = xp
-        sensor.activations += len(sensor_deltas_pos[sensor.id]) + len(sensor_deltas_neg[sensor.id])
+        sensor.activations += len(transitions)
         sensor.cycles_alive += 1
-        if len(sensor_deltas_pos[sensor.id]) > 0:
+        
+        # Track good/bad hits for stats
+        if delta_pos.shape[0] > 0:
             sensor.good_hits += 1
-        if len(sensor_deltas_neg[sensor.id]) > 0:
+        if delta_neg.shape[0] > 0:
             sensor.bad_hits += 1
 
     # Promote/prune
@@ -182,7 +264,13 @@ def update_learner_from_transitions(
     if len(mature_sensors) >= 3:
         positive_trans = [t for t in transitions if t.label == 1]
         if positive_trans:
-            actuator_specs = extract_actuator_patterns(positive_trans, mature_sensors, eps=0.1, top_k=top_k)
+            actuator_specs = extract_actuator_patterns(
+                positive_trans,
+                mature_sensors,
+                eps=0.1,
+                top_k=top_k,
+                backend=learner.backend
+            )
             for spec in actuator_specs:
                 existing = find_similar_actuator(
                     learner.actuators,
@@ -225,12 +313,12 @@ def update_learner_from_transitions(
         "newly_created_actuators": newly_created_actuators,
     }
 
-
 def main() -> None:
     parser = argparse.ArgumentParser(description="Stage-0/1 chained baseline training for KRK")
+    parser.add_argument("--load-learner", type=Path, help="Path to existing learner pickle to start from")
     parser.add_argument("--stage0-cycles", type=int, default=50)
     parser.add_argument("--stage1-cycles", type=int, default=50)
-    parser.add_argument("--samples-per-cycle", type=int, default=50)
+    parser.add_argument("--samples-per-cycle", type=int, default=100)
     parser.add_argument("--initial-sensors", type=int, default=20)
     parser.add_argument("--spawn-interval", type=int, default=10)
     parser.add_argument("--sensors-per-spawn", type=int, default=5)
@@ -243,62 +331,80 @@ def main() -> None:
     parser.add_argument("--max-actuators-total", type=int, default=0)
     parser.add_argument("--delta-eps", type=float, default=0.22)
     parser.add_argument("--top-k", type=int, default=3)
+    parser.add_argument("--device", type=str, default="auto", help="Device (cpu, cuda, auto, numpy)")
+    parser.add_argument("--batch-size", type=int, default=256, help="Batch size for sensor application")
     args = parser.parse_args()
 
     teacher = KRKTeacher()
-    learner = BaselineLearner(
-        feature_dim=teacher.feature_dim,
-        stage=0,
-        goal_eps=args.goal_eps,
-        max_goals=args.max_goals,
-    )
-
-    for _ in range(args.initial_sensors):
-        learner.sensors.append(learner.spawn_sensor())
+    
+    if args.load_learner and args.load_learner.exists():
+        print(f"Loading existing learner from: {args.load_learner}")
+        with open(args.load_learner, 'rb') as f:
+            learner = pickle.load(f)
+        # Update device if requested
+        if args.device != learner.device:
+            from recon_lite.learning.baseline import ComputeBackend
+            learner.device = args.device
+            learner.backend = ComputeBackend(device=args.device)
+        print(f"  Loaded {len(learner.sensors)} sensors, {len(learner.actuators)} actuators")
+    else:
+        learner = BaselineLearner(
+            feature_dim=teacher.feature_dim,
+            stage=0,
+            goal_eps=args.goal_eps,
+            max_goals=args.max_goals,
+            device=args.device,
+        )
+        for _ in range(args.initial_sensors):
+            learner.sensors.append(learner.spawn_sensor())
+        print(f"Created new learner on {args.device}")
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
-    print("=" * 70)
-    print("Stage 0: Mate-in-1")
-    print("=" * 70)
     goal_sensor_ids: List[int] | None = None
 
-    for cycle in range(args.stage0_cycles):
-        transitions = []
-        for _ in range(args.samples_per_cycle):
-            b0 = generate_krk_mate_in_1_position()
-            transitions.extend(teacher.label_transitions(b0))
-            # Store goal prototypes only after enough mature sensors
-            if len(learner.get_mature_sensors()) >= args.min_mature_for_goals:
-                if goal_sensor_ids is None:
-                    goal_sensor_ids = [s.id for s in learner.get_mature_sensors()]
-                v0 = teacher.features(b0)
-                s0 = compute_sensor_vector_by_ids(learner, v0, goal_sensor_ids)
-                learner.add_goal_memory(
-                    s0,
-                    label="mate_in_1",
-                    sensor_ids=goal_sensor_ids,
-                    goal_eps=args.goal_eps,
-                    max_goals=args.max_goals,
-                )
+    if learner.stage == 0 and args.stage0_cycles > 0:
+        print("=" * 70)
+        print("Stage 0: Mate-in-1")
+        print("=" * 70)
+        
+        for cycle in range(args.stage0_cycles):
+            transitions = []
+            for _ in range(args.samples_per_cycle):
+                b0 = generate_krk_mate_in_1_position()
+                transitions.extend(teacher.label_transitions(b0))
+                # Store goal prototypes only after enough mature sensors
+                if len(learner.get_mature_sensors()) >= args.min_mature_for_goals:
+                    if goal_sensor_ids is None:
+                        goal_sensor_ids = [s.id for s in learner.get_mature_sensors()]
+                    v0 = teacher.features(b0)
+                    # compute_sensor_vectors_batch returns [Batch, Sensors], we only need first row
+                    s0 = compute_sensor_vectors_batch(learner, v0[None, :], goal_sensor_ids)[0]
+                    learner.add_goal_memory(
+                        s0,
+                        label="mate_in_1",
+                        sensor_ids=goal_sensor_ids,
+                    )
 
-        stats = update_learner_from_transitions(
-            learner,
-            transitions,
-            max_actuators_per_stage=args.max_actuators_per_stage,
-            max_actuators_total=args.max_actuators_total,
-            delta_eps=args.delta_eps,
-            top_k=args.top_k,
-        )
+            stats = update_learner_from_transitions(
+                learner,
+                transitions,
+                max_actuators_per_stage=args.max_actuators_per_stage,
+                max_actuators_total=args.max_actuators_total,
+                delta_eps=args.delta_eps,
+                top_k=args.top_k,
+            )
 
-        if cycle % 10 == 0 or stats["newly_promoted"] or stats["newly_created_actuators"]:
-            mature = len(learner.get_mature_sensors())
-            print(f"Cycle {cycle:3d}: sensors={len(learner.sensors)} (mature={mature}) "
-                  f"actuators={len(learner.actuators)} goal_prototypes={len(learner.goal_memories)}")
+            if cycle % 10 == 0 or stats["newly_promoted"] or stats["newly_created_actuators"]:
+                mature = len(learner.get_mature_sensors())
+                print(f"Cycle {cycle:3d}: sensors={len(learner.sensors)} (mature={mature}) "
+                      f"actuators={len(learner.actuators)} goal_prototypes={len(learner.goal_memories)}")
 
-        if cycle % args.spawn_interval == 0 and cycle > 0:
-            for _ in range(args.sensors_per_spawn):
-                learner.sensors.append(learner.spawn_sensor())
+            if cycle % args.spawn_interval == 0 and cycle > 0:
+                for _ in range(args.sensors_per_spawn):
+                    learner.sensors.append(learner.spawn_sensor())
+    else:
+        print(f"Skipping Stage 0 (Learner stage: {learner.stage}, Cycles requested: {args.stage0_cycles})")
 
     print("=" * 70)
     print("Stage 1: Backchain to Mate-in-1 goals")

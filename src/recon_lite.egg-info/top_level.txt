@@ -1,1 +1,2 @@
 recon_lite
+recon_lite_chess

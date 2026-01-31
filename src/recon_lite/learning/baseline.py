@@ -16,8 +16,93 @@ Design principles:
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
 import numpy as np
+
+try:
+    import torch
+except ImportError:
+    torch = None
+
+
+# ============================================================================
+# Compute Backend Abstraction
+# ============================================================================
+
+class ComputeBackend:
+    """
+    Abstraction layer for tensor/array operations.
+    Supports both NumPy (CPU) and PyTorch (CPU/GPU).
+    """
+    def __init__(self, device: str = "cpu"):
+        self.device = device
+        self.use_torch = (torch is not None) and (device != "numpy")
+        if self.use_torch and device == "auto":
+            self.device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    def array(self, data: Any, dtype: Any = None) -> Any:
+        if self.use_torch:
+            if isinstance(data, (list, tuple)) and len(data) > 0 and isinstance(data[0], np.ndarray):
+                data = np.stack(data)
+            return torch.as_tensor(data, dtype=dtype).to(self.device)
+        return np.array(data, dtype=dtype)
+
+    def mean(self, x: Any, axis: Optional[int] = None) -> Any:
+        if self.use_torch:
+            if not isinstance(x, torch.Tensor): x = self.array(x)
+            return torch.mean(x, dim=axis) if axis is not None else torch.mean(x)
+        return np.mean(x, axis=axis)
+
+    def std(self, x: Any, axis: Optional[int] = None, ddof: int = 0) -> Any:
+        if self.use_torch:
+            if not isinstance(x, torch.Tensor): x = self.array(x)
+            return torch.std(x, dim=axis, correction=ddof) if axis is not None else torch.std(x, correction=ddof)
+        return np.std(x, axis=axis, ddof=ddof)
+
+    def sum(self, x: Any, axis: Optional[int] = None) -> Any:
+        if self.use_torch:
+            if not isinstance(x, torch.Tensor): x = self.array(x)
+            return torch.sum(x, dim=axis) if axis is not None else torch.sum(x)
+        return np.sum(x, axis=axis)
+
+    def min(self, x: Any, axis: Optional[int] = None) -> Any:
+        if self.use_torch:
+            if not isinstance(x, torch.Tensor): x = self.array(x)
+            return torch.min(x, dim=axis)[0] if axis is not None else torch.min(x)
+        return np.min(x, axis=axis)
+
+    def max(self, x: Any, axis: Optional[int] = None) -> Any:
+        if self.use_torch:
+            if not isinstance(x, torch.Tensor): x = self.array(x)
+            return torch.max(x, dim=axis)[0] if axis is not None else torch.max(x)
+        return np.max(x, axis=axis)
+
+    def abs(self, x: Any) -> Any:
+        if self.use_torch:
+            if not isinstance(x, torch.Tensor): x = self.array(x)
+            return torch.abs(x)
+        return np.abs(x)
+
+    def where(self, condition: Any, x: Any, y: Any) -> Any:
+        if self.use_torch:
+            if not isinstance(condition, torch.Tensor): condition = torch.tensor(condition).to(self.device)
+            if not isinstance(x, torch.Tensor): x = self.array(x)
+            if not isinstance(y, torch.Tensor): y = self.array(y)
+            return torch.where(condition, x, y)
+        return np.where(condition, x, y)
+
+    def to_numpy(self, x: Any) -> np.ndarray:
+        if self.use_torch:
+            if isinstance(x, torch.Tensor):
+                return x.detach().cpu().numpy()
+        return np.asarray(x)
+
+    def cast_float(self, x: Any) -> float:
+        if self.use_torch:
+            if isinstance(x, torch.Tensor):
+                return x.item()
+        return float(x)
+
 
 
 # ============================================================================
@@ -177,67 +262,102 @@ class GoalMemory:
 # Sensor Readout Functions (Environment-Agnostic)
 # ============================================================================
 
-def apply_sensor(sensor: Terminal, v: np.ndarray) -> float:
+def apply_sensor(sensor: Terminal, v: Union[np.ndarray, Any], backend: Optional[ComputeBackend] = None) -> Union[float, Any]:
     """
-    Apply sensor readout to feature vector.
-    
-    All readout types are generic; domain-specific logic (e.g., "distance to edge")
-    should be computed in the teacher's features() method, not here.
+    Apply sensor readout to feature vector. Supports batched input if backend is provided.
     
     Args:
         sensor: Terminal with role=SENSOR
-        v: Full feature vector from environment
+        v: Full feature vector (1D) or batch of vectors (2D)
+        backend: Optional ComputeBackend for tensor operations
     
     Returns:
-        Scalar output of sensor
-    
-    Raises:
-        ValueError: If sensor is not a SENSOR terminal
+        Scalar output or vector of outputs (if batched)
     """
     if sensor.role != TerminalRole.SENSOR:
         raise ValueError(f"Cannot apply_sensor to {sensor.role} terminal")
     
     spec = sensor.sensor_spec
-    sub_v = v[spec.feature_mask]
     
-    if spec.readout_type == "identity":
-        # Single feature, return as-is
-        if len(sub_v) != 1:
-            raise ValueError(f"identity readout requires exactly 1 feature, got {len(sub_v)}")
-        return float(sub_v[0])
-    
-    elif spec.readout_type == "sum":
-        return float(np.sum(sub_v))
-    
-    elif spec.readout_type == "mean":
-        return float(np.mean(sub_v))
-    
-    elif spec.readout_type == "min":
-        return float(np.min(sub_v))
-    
-    elif spec.readout_type == "max":
-        return float(np.max(sub_v))
-    
-    elif spec.readout_type == "threshold":
-        threshold = spec.readout_params.get("threshold", 0.5)
-        return 1.0 if np.mean(sub_v) > threshold else 0.0
-    
-    elif spec.readout_type == "bucketize":
-        bins = spec.readout_params.get("bins", [0.0, 0.5, 1.0])
-        val = np.mean(sub_v)
-        return float(np.digitize(val, bins))
-    
+    if backend:
+        # Vectorized/Tensor path
+        if not isinstance(v, (np.ndarray, torch.Tensor if torch else type(None))):
+            v = backend.array(v)
+            
+        if v.ndim == 1:
+            sub_v = v[spec.feature_mask]
+        else:
+            sub_v = v[:, spec.feature_mask]
+            
+        if spec.readout_type == "identity":
+            return sub_v if v.ndim == 1 else sub_v.squeeze(-1)
+        
+        elif spec.readout_type == "sum":
+            return backend.sum(sub_v, axis=-1 if v.ndim > 1 else None)
+        
+        elif spec.readout_type == "mean":
+            return backend.mean(sub_v, axis=-1 if v.ndim > 1 else None)
+        
+        elif spec.readout_type == "min":
+            return backend.min(sub_v, axis=-1 if v.ndim > 1 else None)
+        
+        elif spec.readout_type == "max":
+            return backend.max(sub_v, axis=-1 if v.ndim > 1 else None)
+        
+        elif spec.readout_type == "threshold":
+            threshold = spec.readout_params.get("threshold", 0.5)
+            means = backend.mean(sub_v, axis=-1 if v.ndim > 1 else None)
+            return backend.where(means > threshold, backend.array(1.0), backend.array(0.0))
+        
+        elif spec.readout_type == "bucketize":
+            # Digitization is slow but consistent
+            val = backend.mean(sub_v, axis=-1 if v.ndim > 1 else None)
+            bins = spec.readout_params.get("bins", [0.0, 0.5, 1.0])
+            # For simplicity in batching, use numpy for bucketize if needed or implement torch searchsorted
+            if backend.use_torch:
+                bins_t = torch.tensor(bins).to(backend.device)
+                return torch.bucketize(val, bins_t).float()
+            return backend.array(np.digitize(backend.to_numpy(val), bins))
+        else:
+            raise ValueError(f"Unknown readout_type: {spec.readout_type}")
+
     else:
-        raise ValueError(f"Unknown readout_type: {spec.readout_type}")
-
-
-# ============================================================================
-# Sensor XP Metric (Explicit Formula)
-# ============================================================================
+        # Original NumPy path (Legacy/Standard)
+        sub_v = v[spec.feature_mask]
+        
+        if spec.readout_type == "identity":
+            if len(sub_v) != 1:
+                raise ValueError(f"identity readout requires exactly 1 feature, got {len(sub_v)}")
+            return float(sub_v[0])
+        
+        elif spec.readout_type == "sum":
+            return float(np.sum(sub_v))
+        
+        elif spec.readout_type == "mean":
+            return float(np.mean(sub_v))
+        
+        elif spec.readout_type == "min":
+            return float(np.min(sub_v))
+        
+        elif spec.readout_type == "max":
+            return float(np.max(sub_v))
+        
+        elif spec.readout_type == "threshold":
+            threshold = spec.readout_params.get("threshold", 0.5)
+            return 1.0 if np.mean(sub_v) > threshold else 0.0
+        
+        elif spec.readout_type == "bucketize":
+            bins = spec.readout_params.get("bins", [0.0, 0.5, 1.0])
+            val = np.mean(sub_v)
+            return float(np.digitize(val, bins))
+        
+        else:
+            raise ValueError(f"Unknown readout_type: {spec.readout_type}")
 
 def compute_sensor_xp(sensor: Terminal, 
-                      delta_pos: List[float], 
-                      delta_neg: List[float]) -> float:
+                      delta_pos: Union[List[float], Any], 
+                      delta_neg: Union[List[float], Any],
+                      backend: Optional[ComputeBackend] = None) -> float:
     """
     Compute sensor XP based on stability and separation.
     
@@ -246,28 +366,54 @@ def compute_sensor_xp(sensor: Terminal,
         separation = |mean(delta_pos) - mean(delta_neg)| / (std_pos + std_neg + eps)
         xp = 0.6 * stability + 0.4 * separation
     
-    Intuition:
-    - Stability: prefer sensors with consistent Δt on positive transitions
-    - Separation: prefer sensors that behave differently on pos vs neg
-    
     Args:
-        sensor: Terminal (for metadata, not used in computation)
-        delta_pos: List of Δt values on positive transitions
-        delta_neg: List of Δt values on negative transitions
+        sensor: Terminal (for metadata)
+        delta_pos: List or Tensor of Δt values on positive transitions
+        delta_neg: List or Tensor of Δt values on negative transitions
+        backend: Optional ComputeBackend
     
     Returns:
-        XP score in [0, 1] range (approximately)
+        XP score in [0, 1] range
     """
+    if backend:
+        # Vectorized path
+        if backend.use_torch:
+            if not isinstance(delta_pos, torch.Tensor):
+                delta_pos = backend.array(delta_pos, dtype=torch.float32)
+            if not isinstance(delta_neg, torch.Tensor):
+                delta_neg = backend.array(delta_neg, dtype=torch.float32)
+        else:
+            delta_pos = np.asarray(delta_pos, dtype=np.float32)
+            delta_neg = np.asarray(delta_neg, dtype=np.float32)
+            
+        if delta_pos.shape[0] == 0:
+            return 0.0
+        
+        mean_pos = backend.mean(delta_pos)
+        # Standard deviation
+        std_pos = backend.std(delta_pos) if delta_pos.shape[0] > 1 else backend.array(0.0)
+            
+        stability = 1.0 / (1.0 + std_pos)
+        
+        if delta_neg.shape[0] > 0:
+            mean_neg = backend.mean(delta_neg)
+            std_neg = backend.std(delta_neg) if delta_neg.shape[0] > 1 else backend.array(0.0)
+            separation = backend.abs(mean_pos - mean_neg) / (std_pos + std_neg + 1e-6)
+        else:
+            separation = backend.array(0.0)
+            
+        xp = 0.6 * stability + 0.4 * separation
+        return backend.cast_float(xp)
+    
+    # Original fallback
     if len(delta_pos) == 0:
         return 0.0
     
     mean_pos = np.mean(delta_pos)
     std_pos = np.std(delta_pos) if len(delta_pos) > 1 else 0.0
     
-    # Stability: prefer low variance on positives
     stability = 1.0 / (1.0 + std_pos)
     
-    # Separation: prefer different behavior on pos vs neg
     if len(delta_neg) > 0:
         mean_neg = np.mean(delta_neg)
         std_neg = np.std(delta_neg) if len(delta_neg) > 1 else 0.0
@@ -275,7 +421,6 @@ def compute_sensor_xp(sensor: Terminal,
     else:
         separation = 0.0
     
-    # Weighted combination (60% stability, 40% separation)
     xp = 0.6 * stability + 0.4 * separation
     return float(xp)
 
@@ -318,7 +463,8 @@ class TransitionData:
 def extract_actuator_patterns(positive_transitions: List[TransitionData],
                               mature_sensors: List[Terminal],
                               eps: float = 0.1,
-                              top_k: int = 3) -> List[ActuatorSpec]:
+                              top_k: int = 3,
+                              backend: Optional[ComputeBackend] = None) -> List[ActuatorSpec]:
     """
     Extract sparse Δs patterns from positive transitions.
     
@@ -342,48 +488,116 @@ def extract_actuator_patterns(positive_transitions: List[TransitionData],
     if len(mature_sensors) == 0:
         return []
     
-    pattern_map = {}  # key: (indices_tuple, quant_bins_tuple) -> list of raw deltas
+    pattern_map = {}  # key: (sensor_ids, quant_bins) -> list of raw deltas
     
-    for trans in positive_transitions:
-        # Compute Δs using mature sensors
-        s0 = np.array([apply_sensor(s, trans.v0) for s in mature_sensors])
-        s1 = np.array([apply_sensor(s, trans.v1) for s in mature_sensors])
-        delta_s = s1 - s0
+    if backend:
+        # Vectorized path
+        v0_batch = [trans.v0 for trans in positive_transitions]
+        v1_batch = [trans.v1 for trans in positive_transitions]
         
-        # Pick significant indices
-        significant = np.where(np.abs(delta_s) > eps)[0]
-        if len(significant) == 0:
-            continue
+        # Ensure vectors are on the right device
+        v0_t = backend.array(v0_batch, dtype=torch.float32 if backend.use_torch else np.float32)
+        v1_t = backend.array(v1_batch, dtype=torch.float32 if backend.use_torch else np.float32)
         
-        # Keep top-K by magnitude
-        if len(significant) > top_k:
-            top_indices = np.argsort(np.abs(delta_s[significant]))[-top_k:]
-            significant = significant[top_indices]
+        # Compute Δs for all mature sensors at once
+        # Map sensor_id -> outputs (batch)
+        s0_outputs = {s.id: apply_sensor(s, v0_t, backend=backend) for s in mature_sensors}
+        s1_outputs = {s.id: apply_sensor(s, v1_t, backend=backend) for s in mature_sensors}
         
-        # Quantize for pattern key (per-sensor type)
-        quant_bins = tuple(
-            quantize_delta(mature_sensors[i], float(delta_s[i]), eps=eps)
-            for i in significant
-        )
+        # Convert to a matrix (num_transitions x num_sensors)
+        deltas = []
+        for s in mature_sensors:
+            deltas.append(s1_outputs[s.id] - s0_outputs[s.id])
         
-        # Create pattern key
-        key = (tuple(sorted(significant)), quant_bins)
-        
-        # Accumulate raw deltas for this pattern
-        if key not in pattern_map:
-            pattern_map[key] = []
-        pattern_map[key].append(delta_s[significant])
+        # Stack into (num_sensors, num_transitions) then transpose to (num_transitions, num_sensors)
+        if backend.use_torch:
+            # Shift to CPU once for the iteration loop (much faster than individual items)
+            delta_s_matrix = torch.stack(deltas).t().detach().cpu().numpy()
+        else:
+            delta_s_matrix = np.stack(deltas).T
+            
+        # Iterate over transitions in the matrix
+        for i, trans in enumerate(positive_transitions):
+            delta_s = delta_s_matrix[i]
+            
+            # Significant indices
+            abs_delta = np.abs(delta_s)
+            significant = np.where(abs_delta > eps)[0]
+                
+            if len(significant) == 0:
+                continue
+                
+            if len(significant) > top_k:
+                top_indices = np.argsort(abs_delta[significant])[-top_k:]
+                significant = significant[top_indices]
+                
+            # Quantize for pattern key
+            sig_indices = significant.tolist()
+            sig_deltas = delta_s[significant].tolist()
+                
+            quant_bins = tuple(
+                quantize_delta(mature_sensors[idx], float(delta), eps=eps)
+                for idx, delta in zip(sig_indices, sig_deltas)
+            )
+            
+            # Key uses sensor IDs
+            key_sensor_ids = tuple(sorted([mature_sensors[idx].id for idx in sig_indices]))
+            key = (key_sensor_ids, quant_bins)
+            
+            if key not in pattern_map:
+                pattern_map[key] = []
+            
+            # Store delta values in the same order as sorted sensor IDs for merging later
+            # This is slightly complex because of the sorted key. 
+            # Let's simplify and just store the mapping of sensor_id -> delta
+            id_to_delta = {mature_sensors[idx].id: float(delta) for idx, delta in zip(sig_indices, sig_deltas)}
+            ordered_deltas = [id_to_delta[sid] for sid in key_sensor_ids]
+            pattern_map[key].append(ordered_deltas)
+
+    else:
+        # Original item-by-item path
+        for trans in positive_transitions:
+            # Compute Δs using mature sensors
+            s0 = np.array([apply_sensor(s, trans.v0) for s in mature_sensors])
+            s1 = np.array([apply_sensor(s, trans.v1) for s in mature_sensors])
+            delta_s = s1 - s0
+            
+            # Pick significant indices
+            significant = np.where(np.abs(delta_s) > eps)[0]
+            if len(significant) == 0:
+                continue
+            
+            # Keep top-K by magnitude
+            if len(significant) > top_k:
+                top_indices = np.argsort(np.abs(delta_s[significant]))[-top_k:]
+                significant = significant[top_indices]
+            
+            # Quantize for pattern key (per-sensor type)
+            quant_bins = tuple(
+                quantize_delta(mature_sensors[i], float(delta_s[i]), eps=eps)
+                for i in significant
+            )
+            
+            # Create pattern key (using sensor IDs instead of list indices for robustness)
+            sensor_ids = tuple(sorted([mature_sensors[i].id for i in significant]))
+            key = (sensor_ids, quant_bins)
+            
+            # Accumulate raw deltas for this pattern
+            if key not in pattern_map:
+                pattern_map[key] = []
+            
+            # Order deltas by sensor_id
+            id_to_delta = {mature_sensors[i].id: float(delta_s[i]) for i in significant}
+            ordered_deltas = [id_to_delta[sid] for sid in sensor_ids]
+            pattern_map[key].append(ordered_deltas)
     
     # Merge patterns: compute mean goal_delta for each
     actuator_specs = []
-    for (indices, _quant_bins), delta_list in pattern_map.items():
+    for (sensor_ids, _quant_bins), delta_list in pattern_map.items():
         mean_delta = np.mean(delta_list, axis=0)
         
-        # Map indices back to sensor IDs
-        sensor_indices = [mature_sensors[i].id for i in indices]
-        
         spec = ActuatorSpec(
-            sensor_indices=sensor_indices,
+            sensor_indices=list(sensor_ids),
             goal_delta=mean_delta,
             match_mode="l2"
         )
@@ -582,6 +796,7 @@ class BaselineLearner:
         goal_eps: float = 0.15,
         max_goals: int = 100,
         normalize_goals: bool = True,
+        device: str = "cpu",
     ):
         """
         Initialize learner.
@@ -589,9 +804,12 @@ class BaselineLearner:
         Args:
             feature_dim: Dimension of feature vector v
             stage: Training stage (e.g., 0 for KRK bootstrap)
+            device: Device to use ("cpu", "cuda", "auto", "numpy")
         """
         self.feature_dim = feature_dim
         self.stage = stage
+        self.device = device
+        self.backend = ComputeBackend(device=device)
         
         self.sensors: List[Terminal] = []
         self.actuators: List[Terminal] = []
@@ -697,9 +915,28 @@ class BaselineLearner:
         """Get list of mature sensors"""
         return [s for s in self.sensors if s.is_mature]
     
+    def batch_apply_sensors(self, v_batch: Any) -> Dict[int, Any]:
+        """
+        Apply all sensors to a batch of state vectors.
+        
+        Args:
+            v_batch: Batch of feature vectors (N x feature_dim)
+        
+        Returns:
+            Map of sensor_id -> outputs (N,)
+        """
+        # Ensure v_batch is on the correct device if using torch
+        if self.backend.use_torch and not isinstance(v_batch, torch.Tensor):
+            v_batch = self.backend.array(v_batch, dtype=torch.float32)
+        
+        results = {}
+        for sensor in self.sensors:
+            results[sensor.id] = apply_sensor(sensor, v_batch, backend=self.backend)
+        return results
+
     def __repr__(self) -> str:
-        mature_count = len(self.get_mature_sensors())
-        return (f"BaselineLearner(stage={self.stage}, "
-                f"sensors={len(self.sensors)} ({mature_count} mature), "
-                f"actuators={len(self.actuators)}, "
-                f"goals={len(self.goal_memories)})")
+        return (
+            f"BaselineLearner(stage={self.stage}, sensors={len(self.sensors)}, "
+            f"actuators={len(self.actuators)}, goals={len(self.goal_memories)}, "
+            f"device={self.device})"
+        )

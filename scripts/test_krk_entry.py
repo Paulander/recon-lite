@@ -5,6 +5,7 @@ Loads the compiled topology and tests it on KRK mate-in-1 positions.
 """
 
 import sys
+import argparse
 from pathlib import Path
 import chess
 
@@ -16,10 +17,8 @@ from recon_lite_chess.graph.builder import build_graph_from_topology
 from recon_lite_chess.baseline_teacher import generate_krk_mate_in_1_position, KRKTeacher
 
 
-def load_krk_entry_topology():
+def load_krk_entry_topology(topology_path: Path):
     """Load the compiled KRK_entry topology"""
-    topology_path = Path("topologies/krk_entry_topology.json")
-    
     print(f"Loading topology: {topology_path}")
     
     # Use builder to create graph from topology
@@ -180,15 +179,22 @@ def print_results(stats: dict):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="KRK_entry Runtime Execution Test")
+    parser.add_argument("--topology", type=Path, default=Path("topologies/krk_entry_topology.json"),
+                        help="Path to topology JSON")
+    parser.add_argument("--samples", type=int, default=100,
+                        help="Number of positions to test")
+    args = parser.parse_args()
+
     print("=" * 70)
     print("KRK_entry Runtime Execution Test")
     print("=" * 70)
     
     # Load topology
-    graph = load_krk_entry_topology()
+    graph = load_krk_entry_topology(args.topology)
     
     # Run evaluation
-    stats = run_evaluation(graph, num_positions=100)
+    stats = run_evaluation(graph, num_positions=args.samples)
     
     # Print results
     print_results(stats)

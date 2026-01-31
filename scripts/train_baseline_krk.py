@@ -17,6 +17,10 @@ import pickle
 from pathlib import Path
 from typing import Dict, List
 import numpy as np
+try:
+    import torch
+except ImportError:
+    torch = None
 
 from recon_lite.learning.baseline import (
     BaselineLearner, Terminal, TerminalRole, ActuatorSpec,
@@ -47,6 +51,8 @@ class TrainingConfig:
         goal_eps: float = 0.15,
         max_goals: int = 100,
         min_mature_for_goals: int = 8,
+        device: str = "cpu",
+        batch_size: int = 256,
     ):
         self.samples_per_cycle = samples_per_cycle
         self.max_cycles = max_cycles
@@ -58,6 +64,8 @@ class TrainingConfig:
         self.goal_eps = goal_eps
         self.max_goals = max_goals
         self.min_mature_for_goals = min_mature_for_goals
+        self.device = device
+        self.batch_size = batch_size
         self.max_actuators_per_stage: int = 30
         self.max_actuators_total: int = 0
         self.delta_eps: float = 0.22
@@ -90,11 +98,14 @@ def train_baseline_krk(config: TrainingConfig) -> Dict:
         stage=0,
         goal_eps=config.goal_eps,
         max_goals=config.max_goals,
+        device=config.device,
     )
     
     print(f"\nInitialization:")
     print(f"  Feature dimension: {teacher.feature_dim}")
     print(f"  Initial sensors: {config.initial_sensors}")
+    print(f"  Device: {config.device}")
+    print(f"  Batch size: {config.batch_size}")
     
     # Spawn initial sensors
     for _ in range(config.initial_sensors):
@@ -132,43 +143,80 @@ def train_baseline_krk(config: TrainingConfig) -> Dict:
         
         positive_count = sum(1 for t in all_transitions if t.label == 1)
         negative_count = len(all_transitions) - positive_count
+    
+    # Create output directory
+    config.output_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Training statistics
+    stats = {
+        "cycles": [],
+        "sensor_counts": [],
+        "mature_sensor_counts": [],
+        "actuator_counts": [],
+        "goal_memory_counts": [],
+        "avg_sensor_xp": [],
+    }
+    
+    # Main training loop
+    print(f"\nStarting training for {config.max_cycles} cycles...")
+    print("-" * 70)
+    
+    for cycle in range(config.max_cycles):
+        # ====================================================================
+        # 1. Generate labeled transitions
+        # ====================================================================
+        all_transitions = []
+        for _ in range(config.samples_per_cycle):
+            x0 = generate_krk_mate_in_1_position()
+            transitions = teacher.label_transitions(x0)
+            all_transitions.extend(transitions)
+        
+        positive_count = sum(1 for t in all_transitions if t.label == 1)
+        negative_count = len(all_transitions) - positive_count
         
         # ====================================================================
         # 2. Compute Δt for ALL sensors (candidate + mature)
         # ====================================================================
-        sensor_deltas_pos = {s.id: [] for s in learner.sensors}
-        sensor_deltas_neg = {s.id: [] for s in learner.sensors}
+        v0_batch = [t.v0 for t in all_transitions]
+        v1_batch = [t.v1 for t in all_transitions]
+        labels = np.array([t.label for t in all_transitions])
         
-        for trans in all_transitions:
-            for sensor in learner.sensors:
-                from recon_lite.learning.baseline import apply_sensor
-                
-                t0 = apply_sensor(sensor, trans.v0)
-                t1 = apply_sensor(sensor, trans.v1)
-                delta_t = t1 - t0
-                
-                if trans.label == 1:
-                    sensor_deltas_pos[sensor.id].append(delta_t)
-                else:
-                    sensor_deltas_neg[sensor.id].append(delta_t)
+        # Batch apply sensors (returns dict of sensor_id -> outputs_batch)
+        outputs0 = learner.batch_apply_sensors(v0_batch)
+        outputs1 = learner.batch_apply_sensors(v1_batch)
+        
+        # Prepare masks on correct device
+        if learner.backend.use_torch:
+            labels_t = torch.as_tensor(labels).to(learner.backend.device)
+            pos_mask = (labels_t == 1)
+            neg_mask = (labels_t == 0)
+        else:
+            pos_mask = (labels == 1)
+            neg_mask = (labels == 0)
         
         # ====================================================================
         # 3. Update sensor XP using explicit formula
         # ====================================================================
         for sensor in learner.sensors:
+            delta_t_batch = outputs1[sensor.id] - outputs0[sensor.id]
+            
+            delta_pos = delta_t_batch[pos_mask]
+            delta_neg = delta_t_batch[neg_mask]
+            
             xp = compute_sensor_xp(
                 sensor,
-                sensor_deltas_pos[sensor.id],
-                sensor_deltas_neg[sensor.id]
+                delta_pos,
+                delta_neg,
+                backend=learner.backend
             )
             sensor.xp = xp
-            sensor.activations += len(sensor_deltas_pos[sensor.id]) + len(sensor_deltas_neg[sensor.id])
+            sensor.activations += len(all_transitions)
             sensor.cycles_alive += 1
             
-            # Track good/bad hits for stats
-            if len(sensor_deltas_pos[sensor.id]) > 0:
+            # Track good/bad hits for stats (approximate with mask sum)
+            if delta_pos.shape[0] > 0:
                 sensor.good_hits += 1
-            if len(sensor_deltas_neg[sensor.id]) > 0:
+            if delta_neg.shape[0] > 0:
                 sensor.bad_hits += 1
         
         # ====================================================================
@@ -203,8 +251,9 @@ def train_baseline_krk(config: TrainingConfig) -> Dict:
                 actuator_specs = extract_actuator_patterns(
                     positive_trans,
                     mature_sensors,
-                    eps=0.1,
-                    top_k=config.top_k
+                    eps=config.delta_eps,
+                    top_k=config.top_k,
+                    backend=learner.backend
                 )
                 
                 # Create/update actuator terminals
@@ -262,21 +311,34 @@ def train_baseline_krk(config: TrainingConfig) -> Dict:
                     if key not in start_positions:
                         start_positions[key] = trans.v0
             
-            # Create goal memories
-            for v0 in start_positions.values():
-                from recon_lite.learning.baseline import apply_sensor
-                s0 = np.array([apply_sensor(s, v0) for s in mature_sensors])
+            # Create goal memories in batch
+            v0_list = list(start_positions.values())
+            if v0_list:
+                # Use numpy stack for faster conversion to tensor
+                v0_batch = np.stack(v0_list)
+                outputs = learner.batch_apply_sensors(v0_batch)
                 
-                # Check if this is a new goal
-                initial_goal_count = len(learner.goal_memories)
-                added = learner.add_goal_memory(
-                    s0,
-                    label="mate_in_1",
-                    goal_eps=config.goal_eps,
-                    max_goals=config.max_goals,
-                )
-                if added is not None and len(learner.goal_memories) > initial_goal_count:
-                    newly_created_goals += 1
+                # Gather all mature sensor outputs into a matrix (num_positions x num_mature_sensors)
+                # and bring to CPU once to avoid thousands of tiny transfers
+                matrices = []
+                for s in mature_sensors:
+                    matrices.append(outputs[s.id])
+                
+                if learner.backend.use_torch:
+                    s0_matrix = torch.stack(matrices, dim=1).detach().cpu().numpy()
+                else:
+                    s0_matrix = np.stack(matrices, axis=1)
+                
+                for i in range(len(v0_list)):
+                    s0 = s0_matrix[i]
+                    
+                    added = learner.add_goal_memory(
+                        s0,
+                        label="mate_in_1",
+                        sensor_ids=[s.id for s in mature_sensors],
+                    )
+                    if added is not None:
+                        newly_created_goals += 1
         
         # ====================================================================
         # 8. Spawn new sensors periodically
@@ -444,6 +506,8 @@ def main():
     parser.add_argument("--save-learner", type=Path, default=None,
                        help="Optional path to save BaselineLearner pickle")
     
+    parser.add_argument("--device", type=str, default="cpu", help="Device (cpu, cuda, auto, numpy)")
+    parser.add_argument("--batch-size", type=int, default=256, help="Batch size for sensor application")
     args = parser.parse_args()
     
     config = TrainingConfig(
@@ -457,6 +521,8 @@ def main():
         goal_eps=args.goal_eps,
         max_goals=args.max_goals,
         min_mature_for_goals=args.min_mature_for_goals,
+        device=args.device,
+        batch_size=args.batch_size,
     )
     config.max_actuators_per_stage = args.max_actuators_per_stage
     config.max_actuators_total = args.max_actuators_total
