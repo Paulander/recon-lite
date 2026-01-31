@@ -24,6 +24,7 @@ from recon_lite.learning.baseline import (
     extract_actuator_patterns, find_similar_actuator, enforce_actuator_cap,
     enforce_actuator_cap_total,
     TransitionData, apply_sensor,
+    SensorSpec,
 )
 from recon_lite_chess.baseline_teacher import KRKTeacher, generate_krk_mate_in_1_position
 
@@ -56,6 +57,40 @@ def collect_goal_memories(learner: BaselineLearner, v0: np.ndarray) -> Dict[int,
     for s in mature:
         goal[s.id] = apply_sensor(s, v0)
     return goal
+
+
+def get_goal_feature_index(teacher: KRKTeacher) -> int:
+    """Return the goal feature index (is_checkmate) from the teacher if available."""
+    return int(getattr(teacher, "goal_feature_index", 13))
+
+
+def seed_goal_sensor(learner: BaselineLearner, goal_feature_idx: int) -> None:
+    """Seed a sensor that reads only the goal bit (generic goal template)."""
+    mask = np.zeros(learner.feature_dim, dtype=bool)
+    if 0 <= goal_feature_idx < learner.feature_dim:
+        mask[goal_feature_idx] = True
+    spec = SensorSpec(feature_mask=mask, readout_type="identity")
+    sensor = Terminal(
+        id=learner._next_sensor_id,
+        stage=learner.stage,
+        role=TerminalRole.SENSOR,
+        sensor_spec=spec,
+    )
+    learner._next_sensor_id += 1
+    learner.sensors.append(sensor)
+
+
+def goal_signal_sensor_ids(learner: BaselineLearner, goal_feature_idx: int) -> List[int]:
+    """Return sensor IDs that include the goal feature in their mask."""
+    ids: List[int] = []
+    for s in learner.sensors:
+        spec = s.sensor_spec
+        if spec is None:
+            continue
+        mask = spec.feature_mask
+        if mask is not None and len(mask) > goal_feature_idx and bool(mask[goal_feature_idx]):
+            ids.append(s.id)
+    return ids
 
 
 def goal_distance(current: Dict[int, float], goal: Dict[int, float]) -> float:
@@ -184,6 +219,7 @@ def update_learner_from_transitions(
     max_actuators_total: int,
     delta_eps: float,
     top_k: int,
+    goal_sensor_ids: List[int] | None = None,
 ) -> Dict[str, Any]:
     """Shared update logic for sensors/actuators."""
     if not transitions:
@@ -269,7 +305,8 @@ def update_learner_from_transitions(
                 mature_sensors,
                 eps=0.1,
                 top_k=top_k,
-                backend=learner.backend
+                backend=learner.backend,
+                goal_sensor_ids=goal_sensor_ids,
             )
             for spec in actuator_specs:
                 existing = find_similar_actuator(
@@ -333,6 +370,12 @@ def main() -> None:
     parser.add_argument("--top-k", type=int, default=3)
     parser.add_argument("--device", type=str, default="auto", help="Device (cpu, cuda, auto, numpy)")
     parser.add_argument("--batch-size", type=int, default=256, help="Batch size for sensor application")
+    parser.add_argument("--goal-feature-idx", type=int, default=13,
+                        help="Index of the goal feature bit (e.g. is_checkmate)")
+    parser.add_argument("--seed-goal-sensor", action="store_true", default=True,
+                        help="Seed a goal sensor template (on by default)")
+    parser.add_argument("--no-seed-goal-sensor", action="store_false", dest="seed_goal_sensor",
+                        help="Disable seeding the goal sensor template")
     args = parser.parse_args()
 
     teacher = KRKTeacher()
@@ -358,6 +401,12 @@ def main() -> None:
         for _ in range(args.initial_sensors):
             learner.sensors.append(learner.spawn_sensor())
         print(f"Created new learner on {args.device}")
+
+    goal_feature_idx = args.goal_feature_idx or get_goal_feature_index(teacher)
+    if args.seed_goal_sensor:
+        # Seed if not already present
+        if not goal_signal_sensor_ids(learner, goal_feature_idx):
+            seed_goal_sensor(learner, goal_feature_idx)
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -393,6 +442,7 @@ def main() -> None:
                 max_actuators_total=args.max_actuators_total,
                 delta_eps=args.delta_eps,
                 top_k=args.top_k,
+                goal_sensor_ids=goal_signal_sensor_ids(learner, goal_feature_idx),
             )
 
             if cycle % 10 == 0 or stats["newly_promoted"] or stats["newly_created_actuators"]:
@@ -439,6 +489,7 @@ def main() -> None:
             max_actuators_total=args.max_actuators_total,
             delta_eps=args.delta_eps,
             top_k=args.top_k,
+            goal_sensor_ids=goal_signal_sensor_ids(learner, goal_feature_idx),
         )
 
         if cycle % 10 == 0 or stats["newly_promoted"] or stats["newly_created_actuators"]:

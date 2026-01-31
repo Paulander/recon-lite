@@ -71,6 +71,55 @@ class TrainingConfig:
         self.delta_eps: float = 0.22
         self.top_k: int = 3
         self.save_learner_path: Path | None = None
+        self.goal_feature_idx: int = 13
+        self.seed_goal_sensor: bool = True
+
+
+def get_goal_feature_index(teacher: KRKTeacher) -> int:
+    """Return the goal feature index (is_checkmate) from the teacher if available."""
+    return int(getattr(teacher, "goal_feature_index", 13))
+
+
+def seed_goal_sensor(learner: BaselineLearner, goal_feature_idx: int) -> None:
+    """Seed a sensor that reads only the goal bit (generic goal template)."""
+    mask = np.zeros(learner.feature_dim, dtype=bool)
+    if 0 <= goal_feature_idx < learner.feature_dim:
+        mask[goal_feature_idx] = True
+    spec = SensorSpec(feature_mask=mask, readout_type="identity")
+    sensor = Terminal(
+        id=learner._next_sensor_id,
+        stage=learner.stage,
+        role=TerminalRole.SENSOR,
+        sensor_spec=spec,
+    )
+    learner._next_sensor_id += 1
+    learner.sensors.append(sensor)
+
+
+def goal_signal_sensor_ids(learner: BaselineLearner, goal_feature_idx: int) -> List[int]:
+    """Return sensor IDs that include the goal feature in their mask."""
+    ids: List[int] = []
+    for s in learner.sensors:
+        spec = s.sensor_spec
+        if spec is None:
+            continue
+        mask = spec.feature_mask
+        if mask is not None and len(mask) > goal_feature_idx and bool(mask[goal_feature_idx]):
+            ids.append(s.id)
+    return ids
+
+
+def compute_sensor_vector_by_ids(learner: BaselineLearner, v: np.ndarray, sensor_ids: List[int]) -> np.ndarray:
+    """Compute sensor vector in a fixed, stable sensor-id order."""
+    sensor_map = {s.id: s for s in learner.sensors}
+    vals = []
+    for sid in sensor_ids:
+        sensor = sensor_map.get(sid)
+        if sensor is None:
+            vals.append(0.0)
+            continue
+        vals.append(apply_sensor(sensor, v))
+    return np.array(vals, dtype=np.float32)
 
 
 # ============================================================================
@@ -100,6 +149,10 @@ def train_baseline_krk(config: TrainingConfig) -> Dict:
         max_goals=config.max_goals,
         device=config.device,
     )
+    goal_feature_idx = config.goal_feature_idx or get_goal_feature_index(teacher)
+    if config.seed_goal_sensor:
+        if not goal_signal_sensor_ids(learner, goal_feature_idx):
+            seed_goal_sensor(learner, goal_feature_idx)
     
     print(f"\nInitialization:")
     print(f"  Feature dimension: {teacher.feature_dim}")
@@ -130,6 +183,7 @@ def train_baseline_krk(config: TrainingConfig) -> Dict:
     # Main training loop
     print(f"\nStarting training for {config.max_cycles} cycles...")
     print("-" * 70)
+    goal_basis_sensor_ids: List[int] | None = None
     
     for cycle in range(config.max_cycles):
         # ====================================================================
@@ -253,7 +307,8 @@ def train_baseline_krk(config: TrainingConfig) -> Dict:
                     mature_sensors,
                     eps=config.delta_eps,
                     top_k=config.top_k,
-                    backend=learner.backend
+                    backend=learner.backend,
+                    goal_sensor_ids=goal_signal_sensor_ids(learner, goal_feature_idx),
                 )
                 
                 # Create/update actuator terminals
@@ -312,6 +367,8 @@ def train_baseline_krk(config: TrainingConfig) -> Dict:
                         start_positions[key] = trans.v0
             
             # Create goal memories in batch
+            if goal_basis_sensor_ids is None:
+                goal_basis_sensor_ids = [s.id for s in mature_sensors]
             v0_list = list(start_positions.values())
             if v0_list:
                 # Use numpy stack for faster conversion to tensor
@@ -321,8 +378,8 @@ def train_baseline_krk(config: TrainingConfig) -> Dict:
                 # Gather all mature sensor outputs into a matrix (num_positions x num_mature_sensors)
                 # and bring to CPU once to avoid thousands of tiny transfers
                 matrices = []
-                for s in mature_sensors:
-                    matrices.append(outputs[s.id])
+                for sid in goal_basis_sensor_ids:
+                    matrices.append(outputs[sid])
                 
                 if learner.backend.use_torch:
                     s0_matrix = torch.stack(matrices, dim=1).detach().cpu().numpy()
@@ -335,7 +392,7 @@ def train_baseline_krk(config: TrainingConfig) -> Dict:
                     added = learner.add_goal_memory(
                         s0,
                         label="mate_in_1",
-                        sensor_ids=[s.id for s in mature_sensors],
+                        sensor_ids=goal_basis_sensor_ids,
                     )
                     if added is not None:
                         newly_created_goals += 1
@@ -503,6 +560,12 @@ def main():
                        help="Delta merge threshold for actuator similarity")
     parser.add_argument("--top-k", type=int, default=3,
                        help="Top-K sensor deltas to keep per actuator pattern")
+    parser.add_argument("--goal-feature-idx", type=int, default=13,
+                       help="Index of the goal feature bit (e.g. is_checkmate)")
+    parser.add_argument("--seed-goal-sensor", action="store_true", default=True,
+                       help="Seed a goal sensor template (on by default)")
+    parser.add_argument("--no-seed-goal-sensor", action="store_false", dest="seed_goal_sensor",
+                       help="Disable seeding the goal sensor template")
     parser.add_argument("--save-learner", type=Path, default=None,
                        help="Optional path to save BaselineLearner pickle")
     
@@ -528,6 +591,8 @@ def main():
     config.max_actuators_total = args.max_actuators_total
     config.delta_eps = args.delta_eps
     config.top_k = args.top_k
+    config.goal_feature_idx = args.goal_feature_idx
+    config.seed_goal_sensor = args.seed_goal_sensor
     if args.save_learner:
         config.save_learner_path = args.save_learner
     

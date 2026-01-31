@@ -464,7 +464,8 @@ def extract_actuator_patterns(positive_transitions: List[TransitionData],
                               mature_sensors: List[Terminal],
                               eps: float = 0.1,
                               top_k: int = 3,
-                              backend: Optional[ComputeBackend] = None) -> List[ActuatorSpec]:
+                              backend: Optional[ComputeBackend] = None,
+                              goal_sensor_ids: Optional[List[int]] = None) -> List[ActuatorSpec]:
     """
     Extract sparse Δs patterns from positive transitions.
     
@@ -488,6 +489,14 @@ def extract_actuator_patterns(positive_transitions: List[TransitionData],
     if len(mature_sensors) == 0:
         return []
     
+    # Build index mapping for goal sensor IDs (if provided)
+    goal_indices = set()
+    if goal_sensor_ids:
+        sensor_id_to_idx = {s.id: i for i, s in enumerate(mature_sensors)}
+        for gid in goal_sensor_ids:
+            if gid in sensor_id_to_idx:
+                goal_indices.add(sensor_id_to_idx[gid])
+
     pattern_map = {}  # key: (sensor_ids, quant_bins) -> list of raw deltas
     
     if backend:
@@ -523,13 +532,29 @@ def extract_actuator_patterns(positive_transitions: List[TransitionData],
             # Significant indices
             abs_delta = np.abs(delta_s)
             significant = np.where(abs_delta > eps)[0]
+
+            # Goal-dimension retention: force goal indices when they change
+            if goal_indices:
+                for gi in goal_indices:
+                    if abs_delta[gi] > 1e-6:
+                        significant = np.append(significant, gi)
+                if significant.size > 0:
+                    significant = np.unique(significant)
                 
             if len(significant) == 0:
                 continue
                 
             if len(significant) > top_k:
-                top_indices = np.argsort(abs_delta[significant])[-top_k:]
-                significant = significant[top_indices]
+                # Preserve goal indices first, then fill remaining with largest deltas
+                goal_in_sig = [i for i in significant if i in goal_indices]
+                non_goal = [i for i in significant if i not in goal_indices]
+                remaining = top_k - len(goal_in_sig)
+                if remaining > 0 and non_goal:
+                    non_goal_arr = np.array(non_goal)
+                    top_ng = non_goal_arr[np.argsort(abs_delta[non_goal_arr])[-remaining:]]
+                    significant = np.array(sorted(goal_in_sig + list(top_ng)))
+                else:
+                    significant = np.array(sorted(goal_in_sig[:top_k]))
                 
             # Quantize for pattern key
             sig_indices = significant.tolist()
@@ -564,13 +589,28 @@ def extract_actuator_patterns(positive_transitions: List[TransitionData],
             
             # Pick significant indices
             significant = np.where(np.abs(delta_s) > eps)[0]
+
+            # Goal-dimension retention: force goal indices when they change
+            if goal_indices:
+                for gi in goal_indices:
+                    if np.abs(delta_s[gi]) > 1e-6:
+                        significant = np.append(significant, gi)
+                if significant.size > 0:
+                    significant = np.unique(significant)
             if len(significant) == 0:
                 continue
             
             # Keep top-K by magnitude
             if len(significant) > top_k:
-                top_indices = np.argsort(np.abs(delta_s[significant]))[-top_k:]
-                significant = significant[top_indices]
+                goal_in_sig = [i for i in significant if i in goal_indices]
+                non_goal = [i for i in significant if i not in goal_indices]
+                remaining = top_k - len(goal_in_sig)
+                if remaining > 0 and non_goal:
+                    non_goal_arr = np.array(non_goal)
+                    top_ng = non_goal_arr[np.argsort(np.abs(delta_s[non_goal_arr]))[-remaining:]]
+                    significant = np.array(sorted(goal_in_sig + list(top_ng)))
+                else:
+                    significant = np.array(sorted(goal_in_sig[:top_k]))
             
             # Quantize for pattern key (per-sensor type)
             quant_bins = tuple(
