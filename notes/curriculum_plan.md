@@ -83,6 +83,8 @@ Key requirements:
 - Goal prototypes stored as dicts keyed by **sensor_id**.
 - Similarity computed on overlap; require minimum overlap size.
 - No boolean affordance terminal required (avoid “hard rules”).
+- **Runtime scoring must include goal similarity**, not just training-time extraction.
+  (We need logs showing chosen move’s goal_sim vs best candidate.)
 
 ---
 
@@ -112,7 +114,8 @@ Only hoist upward if they prove transferable across legs/stages.
 ---
 
 ## 6) Immediate next tasks
-1. Verify Stage‑0/Stage‑1 stability (goal similarity logs + win‑rate).
+1. Verify Stage‑0/Stage‑1 stability **and runtime chaining**
+   (goal similarity logs, overlap counts, chosen vs best candidate).
 2. Add SUR/RET in compiled topology (done in baseline_to_recon.py).
 3. Define Stage‑2 FEN generator constraints + validation script.
 4. Implement composite pool + hoist policy (AND/LAG).
