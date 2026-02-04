@@ -7783,8 +7783,20 @@
     },
     {
       "src": "krk_hub",
+      "dst": "krk_entry",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "krk_hub",
       "dst": "leg_0",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_0",
+      "dst": "krk_hub",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -7795,8 +7807,20 @@
     },
     {
       "src": "precond_0",
+      "dst": "leg_0",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_0",
       "dst": "sensor_2",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_2",
+      "dst": "precond_0",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -7806,15 +7830,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15",
+      "dst": "precond_0",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_0",
       "dst": "sensor_22",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_22",
+      "dst": "precond_0",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_0",
       "dst": "act_script_0",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_0",
+      "dst": "leg_0",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -7824,9 +7866,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_0",
+      "dst": "act_script_0",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_0",
       "dst": "postcond_0",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_0",
+      "dst": "leg_0",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -7837,8 +7891,20 @@
     },
     {
       "src": "act_script_0",
+      "dst": "precond_0",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_0",
       "dst": "postcond_0",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_0",
+      "dst": "act_script_0",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -7848,15 +7914,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_2_post_0",
+      "dst": "postcond_0",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_0",
       "dst": "sensor_15_post_0",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_15_post_0",
+      "dst": "postcond_0",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_0",
       "dst": "sensor_22_post_0",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_22_post_0",
+      "dst": "postcond_0",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -7867,8 +7951,20 @@
     },
     {
       "src": "leg_1",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_1",
       "dst": "precond_1",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_1",
+      "dst": "leg_1",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -7878,9 +7974,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_2",
+      "dst": "precond_1",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_1",
       "dst": "sensor_15",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_15",
+      "dst": "precond_1",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -7890,9 +7998,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_22",
+      "dst": "precond_1",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_1",
       "dst": "act_script_1",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_1",
+      "dst": "leg_1",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -7902,9 +8022,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_1",
+      "dst": "act_script_1",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_1",
       "dst": "postcond_1",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_1",
+      "dst": "leg_1",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -7915,8 +8047,20 @@
     },
     {
       "src": "act_script_1",
+      "dst": "precond_1",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_1",
       "dst": "postcond_1",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_1",
+      "dst": "act_script_1",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -7926,15 +8070,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_2_post_1",
+      "dst": "postcond_1",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_1",
       "dst": "sensor_15_post_1",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_15_post_1",
+      "dst": "postcond_1",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_1",
       "dst": "sensor_22_post_1",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_22_post_1",
+      "dst": "postcond_1",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -7945,8 +8107,20 @@
     },
     {
       "src": "leg_2",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_2",
       "dst": "precond_2",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_2",
+      "dst": "leg_2",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -7956,9 +8130,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15",
+      "dst": "precond_2",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_2",
       "dst": "sensor_22",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_22",
+      "dst": "precond_2",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -7968,9 +8154,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_30",
+      "dst": "precond_2",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_2",
       "dst": "act_script_2",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_2",
+      "dst": "leg_2",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -7980,9 +8178,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_2",
+      "dst": "act_script_2",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_2",
       "dst": "postcond_2",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_2",
+      "dst": "leg_2",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -7993,8 +8203,20 @@
     },
     {
       "src": "act_script_2",
+      "dst": "precond_2",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_2",
       "dst": "postcond_2",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_2",
+      "dst": "act_script_2",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -8004,15 +8226,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15_post_2",
+      "dst": "postcond_2",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_2",
       "dst": "sensor_22_post_2",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_22_post_2",
+      "dst": "postcond_2",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_2",
       "dst": "sensor_30_post_2",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_30_post_2",
+      "dst": "postcond_2",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8023,8 +8263,20 @@
     },
     {
       "src": "leg_3",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_3",
       "dst": "precond_3",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_3",
+      "dst": "leg_3",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8034,9 +8286,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15",
+      "dst": "precond_3",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_3",
       "dst": "sensor_20",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_20",
+      "dst": "precond_3",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8046,9 +8310,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_22",
+      "dst": "precond_3",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_3",
       "dst": "act_script_3",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_3",
+      "dst": "leg_3",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8058,9 +8334,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_3",
+      "dst": "act_script_3",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_3",
       "dst": "postcond_3",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_3",
+      "dst": "leg_3",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8071,8 +8359,20 @@
     },
     {
       "src": "act_script_3",
+      "dst": "precond_3",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_3",
       "dst": "postcond_3",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_3",
+      "dst": "act_script_3",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -8082,15 +8382,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15_post_3",
+      "dst": "postcond_3",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_3",
       "dst": "sensor_20_post_3",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_20_post_3",
+      "dst": "postcond_3",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_3",
       "dst": "sensor_22_post_3",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_22_post_3",
+      "dst": "postcond_3",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8101,8 +8419,20 @@
     },
     {
       "src": "leg_4",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_4",
       "dst": "precond_4",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_4",
+      "dst": "leg_4",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8112,9 +8442,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_2",
+      "dst": "precond_4",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_4",
       "dst": "sensor_22",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_22",
+      "dst": "precond_4",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8124,9 +8466,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_37",
+      "dst": "precond_4",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_4",
       "dst": "act_script_4",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_4",
+      "dst": "leg_4",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8136,9 +8490,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_4",
+      "dst": "act_script_4",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_4",
       "dst": "postcond_4",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_4",
+      "dst": "leg_4",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8149,8 +8515,20 @@
     },
     {
       "src": "act_script_4",
+      "dst": "precond_4",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_4",
       "dst": "postcond_4",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_4",
+      "dst": "act_script_4",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -8160,15 +8538,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_2_post_4",
+      "dst": "postcond_4",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_4",
       "dst": "sensor_22_post_4",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_22_post_4",
+      "dst": "postcond_4",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_4",
       "dst": "sensor_37_post_4",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_37_post_4",
+      "dst": "postcond_4",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8179,8 +8575,20 @@
     },
     {
       "src": "leg_5",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_5",
       "dst": "precond_5",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_5",
+      "dst": "leg_5",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8190,9 +8598,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_20",
+      "dst": "precond_5",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_5",
       "dst": "sensor_22",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_22",
+      "dst": "precond_5",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8202,9 +8622,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_37",
+      "dst": "precond_5",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_5",
       "dst": "act_script_5",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_5",
+      "dst": "leg_5",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8214,9 +8646,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_5",
+      "dst": "act_script_5",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_5",
       "dst": "postcond_5",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_5",
+      "dst": "leg_5",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8227,8 +8671,20 @@
     },
     {
       "src": "act_script_5",
+      "dst": "precond_5",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_5",
       "dst": "postcond_5",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_5",
+      "dst": "act_script_5",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -8238,15 +8694,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_20_post_5",
+      "dst": "postcond_5",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_5",
       "dst": "sensor_22_post_5",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_22_post_5",
+      "dst": "postcond_5",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_5",
       "dst": "sensor_37_post_5",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_37_post_5",
+      "dst": "postcond_5",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8257,8 +8731,20 @@
     },
     {
       "src": "leg_6",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_6",
       "dst": "precond_6",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_6",
+      "dst": "leg_6",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8268,9 +8754,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15",
+      "dst": "precond_6",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_6",
       "dst": "sensor_22",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_22",
+      "dst": "precond_6",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8280,9 +8778,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_37",
+      "dst": "precond_6",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_6",
       "dst": "act_script_6",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_6",
+      "dst": "leg_6",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8292,9 +8802,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_6",
+      "dst": "act_script_6",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_6",
       "dst": "postcond_6",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_6",
+      "dst": "leg_6",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8305,8 +8827,20 @@
     },
     {
       "src": "act_script_6",
+      "dst": "precond_6",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_6",
       "dst": "postcond_6",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_6",
+      "dst": "act_script_6",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -8316,15 +8850,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15_post_6",
+      "dst": "postcond_6",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_6",
       "dst": "sensor_22_post_6",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_22_post_6",
+      "dst": "postcond_6",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_6",
       "dst": "sensor_37_post_6",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_37_post_6",
+      "dst": "postcond_6",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8335,8 +8887,20 @@
     },
     {
       "src": "leg_7",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_7",
       "dst": "precond_7",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_7",
+      "dst": "leg_7",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8346,9 +8910,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_22",
+      "dst": "precond_7",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_7",
       "dst": "sensor_30",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_30",
+      "dst": "precond_7",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8358,9 +8934,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_37",
+      "dst": "precond_7",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_7",
       "dst": "act_script_7",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_7",
+      "dst": "leg_7",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8370,9 +8958,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_7",
+      "dst": "act_script_7",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_7",
       "dst": "postcond_7",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_7",
+      "dst": "leg_7",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8383,8 +8983,20 @@
     },
     {
       "src": "act_script_7",
+      "dst": "precond_7",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_7",
       "dst": "postcond_7",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_7",
+      "dst": "act_script_7",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -8394,15 +9006,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_22_post_7",
+      "dst": "postcond_7",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_7",
       "dst": "sensor_30_post_7",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_30_post_7",
+      "dst": "postcond_7",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_7",
       "dst": "sensor_37_post_7",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_37_post_7",
+      "dst": "postcond_7",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8413,8 +9043,20 @@
     },
     {
       "src": "leg_8",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_8",
       "dst": "precond_8",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_8",
+      "dst": "leg_8",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8424,9 +9066,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15",
+      "dst": "precond_8",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_8",
       "dst": "sensor_22",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_22",
+      "dst": "precond_8",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8436,9 +9090,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_29",
+      "dst": "precond_8",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_8",
       "dst": "act_script_8",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_8",
+      "dst": "leg_8",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8448,9 +9114,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_8",
+      "dst": "act_script_8",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_8",
       "dst": "postcond_8",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_8",
+      "dst": "leg_8",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8461,8 +9139,20 @@
     },
     {
       "src": "act_script_8",
+      "dst": "precond_8",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_8",
       "dst": "postcond_8",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_8",
+      "dst": "act_script_8",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -8472,15 +9162,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15_post_8",
+      "dst": "postcond_8",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_8",
       "dst": "sensor_22_post_8",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_22_post_8",
+      "dst": "postcond_8",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_8",
       "dst": "sensor_29_post_8",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_29_post_8",
+      "dst": "postcond_8",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8491,8 +9199,20 @@
     },
     {
       "src": "leg_9",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_9",
       "dst": "precond_9",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_9",
+      "dst": "leg_9",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8502,9 +9222,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15",
+      "dst": "precond_9",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_9",
       "dst": "sensor_22",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_22",
+      "dst": "precond_9",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8514,9 +9246,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_54",
+      "dst": "precond_9",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_9",
       "dst": "act_script_9",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_9",
+      "dst": "leg_9",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8526,9 +9270,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_9",
+      "dst": "act_script_9",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_9",
       "dst": "postcond_9",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_9",
+      "dst": "leg_9",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8539,8 +9295,20 @@
     },
     {
       "src": "act_script_9",
+      "dst": "precond_9",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_9",
       "dst": "postcond_9",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_9",
+      "dst": "act_script_9",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -8550,15 +9318,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15_post_9",
+      "dst": "postcond_9",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_9",
       "dst": "sensor_22_post_9",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_22_post_9",
+      "dst": "postcond_9",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_9",
       "dst": "sensor_54_post_9",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_54_post_9",
+      "dst": "postcond_9",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8569,8 +9355,20 @@
     },
     {
       "src": "leg_10",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_10",
       "dst": "precond_10",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_10",
+      "dst": "leg_10",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8580,9 +9378,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_20",
+      "dst": "precond_10",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_10",
       "dst": "sensor_22",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_22",
+      "dst": "precond_10",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8592,9 +9402,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_29",
+      "dst": "precond_10",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_10",
       "dst": "act_script_10",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_10",
+      "dst": "leg_10",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8604,9 +9426,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_10",
+      "dst": "act_script_10",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_10",
       "dst": "postcond_10",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_10",
+      "dst": "leg_10",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8617,8 +9451,20 @@
     },
     {
       "src": "act_script_10",
+      "dst": "precond_10",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_10",
       "dst": "postcond_10",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_10",
+      "dst": "act_script_10",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -8628,15 +9474,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_20_post_10",
+      "dst": "postcond_10",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_10",
       "dst": "sensor_22_post_10",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_22_post_10",
+      "dst": "postcond_10",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_10",
       "dst": "sensor_29_post_10",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_29_post_10",
+      "dst": "postcond_10",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8647,8 +9511,20 @@
     },
     {
       "src": "leg_11",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_11",
       "dst": "precond_11",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_11",
+      "dst": "leg_11",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8658,9 +9534,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15",
+      "dst": "precond_11",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_11",
       "dst": "sensor_22",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_22",
+      "dst": "precond_11",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8670,9 +9558,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_54",
+      "dst": "precond_11",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_11",
       "dst": "act_script_11",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_11",
+      "dst": "leg_11",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8682,9 +9582,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_11",
+      "dst": "act_script_11",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_11",
       "dst": "postcond_11",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_11",
+      "dst": "leg_11",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8695,8 +9607,20 @@
     },
     {
       "src": "act_script_11",
+      "dst": "precond_11",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_11",
       "dst": "postcond_11",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_11",
+      "dst": "act_script_11",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -8706,15 +9630,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15_post_11",
+      "dst": "postcond_11",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_11",
       "dst": "sensor_22_post_11",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_22_post_11",
+      "dst": "postcond_11",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_11",
       "dst": "sensor_54_post_11",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_54_post_11",
+      "dst": "postcond_11",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8725,8 +9667,20 @@
     },
     {
       "src": "leg_12",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_12",
       "dst": "precond_12",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_12",
+      "dst": "leg_12",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8736,9 +9690,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15",
+      "dst": "precond_12",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_12",
       "dst": "sensor_37",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_37",
+      "dst": "precond_12",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8748,9 +9714,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_29",
+      "dst": "precond_12",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_12",
       "dst": "act_script_12",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_12",
+      "dst": "leg_12",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8760,9 +9738,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_12",
+      "dst": "act_script_12",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_12",
       "dst": "postcond_12",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_12",
+      "dst": "leg_12",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8773,8 +9763,20 @@
     },
     {
       "src": "act_script_12",
+      "dst": "precond_12",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_12",
       "dst": "postcond_12",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_12",
+      "dst": "act_script_12",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -8784,15 +9786,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15_post_12",
+      "dst": "postcond_12",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_12",
       "dst": "sensor_37_post_12",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_37_post_12",
+      "dst": "postcond_12",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_12",
       "dst": "sensor_29_post_12",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_29_post_12",
+      "dst": "postcond_12",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8803,8 +9823,20 @@
     },
     {
       "src": "leg_13",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_13",
       "dst": "precond_13",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_13",
+      "dst": "leg_13",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8814,9 +9846,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_22",
+      "dst": "precond_13",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_13",
       "dst": "sensor_37",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_37",
+      "dst": "precond_13",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8826,9 +9870,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_29",
+      "dst": "precond_13",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_13",
       "dst": "act_script_13",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_13",
+      "dst": "leg_13",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8838,9 +9894,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_13",
+      "dst": "act_script_13",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_13",
       "dst": "postcond_13",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_13",
+      "dst": "leg_13",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8851,8 +9919,20 @@
     },
     {
       "src": "act_script_13",
+      "dst": "precond_13",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_13",
       "dst": "postcond_13",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_13",
+      "dst": "act_script_13",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -8862,15 +9942,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_22_post_13",
+      "dst": "postcond_13",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_13",
       "dst": "sensor_37_post_13",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_37_post_13",
+      "dst": "postcond_13",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_13",
       "dst": "sensor_29_post_13",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_29_post_13",
+      "dst": "postcond_13",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8881,8 +9979,20 @@
     },
     {
       "src": "leg_14",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_14",
       "dst": "precond_14",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_14",
+      "dst": "leg_14",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8892,9 +10002,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_22",
+      "dst": "precond_14",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_14",
       "dst": "sensor_30",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_30",
+      "dst": "precond_14",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8904,9 +10026,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_29",
+      "dst": "precond_14",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_14",
       "dst": "act_script_14",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_14",
+      "dst": "leg_14",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8916,9 +10050,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_14",
+      "dst": "act_script_14",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_14",
       "dst": "postcond_14",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_14",
+      "dst": "leg_14",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8929,8 +10075,20 @@
     },
     {
       "src": "act_script_14",
+      "dst": "precond_14",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_14",
       "dst": "postcond_14",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_14",
+      "dst": "act_script_14",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -8940,15 +10098,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_22_post_14",
+      "dst": "postcond_14",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_14",
       "dst": "sensor_30_post_14",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_30_post_14",
+      "dst": "postcond_14",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_14",
       "dst": "sensor_29_post_14",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_29_post_14",
+      "dst": "postcond_14",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8959,8 +10135,20 @@
     },
     {
       "src": "leg_15",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_15",
       "dst": "precond_15",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_15",
+      "dst": "leg_15",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8970,9 +10158,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_37",
+      "dst": "precond_15",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_15",
       "dst": "sensor_54",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_54",
+      "dst": "precond_15",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8982,9 +10182,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_29",
+      "dst": "precond_15",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_15",
       "dst": "act_script_15",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_15",
+      "dst": "leg_15",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -8994,9 +10206,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_15",
+      "dst": "act_script_15",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_15",
       "dst": "postcond_15",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_15",
+      "dst": "leg_15",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9007,8 +10231,20 @@
     },
     {
       "src": "act_script_15",
+      "dst": "precond_15",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_15",
       "dst": "postcond_15",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_15",
+      "dst": "act_script_15",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -9018,15 +10254,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_37_post_15",
+      "dst": "postcond_15",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_15",
       "dst": "sensor_54_post_15",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_54_post_15",
+      "dst": "postcond_15",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_15",
       "dst": "sensor_29_post_15",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_29_post_15",
+      "dst": "postcond_15",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9037,8 +10291,20 @@
     },
     {
       "src": "leg_16",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_16",
       "dst": "precond_16",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_16",
+      "dst": "leg_16",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9048,9 +10314,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_22",
+      "dst": "precond_16",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_16",
       "dst": "sensor_37",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_37",
+      "dst": "precond_16",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9060,9 +10338,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_54",
+      "dst": "precond_16",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_16",
       "dst": "act_script_16",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_16",
+      "dst": "leg_16",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9072,9 +10362,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_16",
+      "dst": "act_script_16",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_16",
       "dst": "postcond_16",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_16",
+      "dst": "leg_16",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9085,8 +10387,20 @@
     },
     {
       "src": "act_script_16",
+      "dst": "precond_16",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_16",
       "dst": "postcond_16",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_16",
+      "dst": "act_script_16",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -9096,15 +10410,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_22_post_16",
+      "dst": "postcond_16",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_16",
       "dst": "sensor_37_post_16",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_37_post_16",
+      "dst": "postcond_16",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_16",
       "dst": "sensor_54_post_16",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_54_post_16",
+      "dst": "postcond_16",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9115,8 +10447,20 @@
     },
     {
       "src": "leg_17",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_17",
       "dst": "precond_17",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_17",
+      "dst": "leg_17",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9126,9 +10470,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_2",
+      "dst": "precond_17",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_17",
       "dst": "sensor_22",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_22",
+      "dst": "precond_17",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9138,9 +10494,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_54",
+      "dst": "precond_17",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_17",
       "dst": "act_script_17",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_17",
+      "dst": "leg_17",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9150,9 +10518,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_17",
+      "dst": "act_script_17",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_17",
       "dst": "postcond_17",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_17",
+      "dst": "leg_17",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9163,8 +10543,20 @@
     },
     {
       "src": "act_script_17",
+      "dst": "precond_17",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_17",
       "dst": "postcond_17",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_17",
+      "dst": "act_script_17",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -9174,15 +10566,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_2_post_17",
+      "dst": "postcond_17",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_17",
       "dst": "sensor_22_post_17",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_22_post_17",
+      "dst": "postcond_17",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_17",
       "dst": "sensor_54_post_17",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_54_post_17",
+      "dst": "postcond_17",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9193,8 +10603,20 @@
     },
     {
       "src": "leg_18",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_18",
       "dst": "precond_18",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_18",
+      "dst": "leg_18",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9204,9 +10626,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_22",
+      "dst": "precond_18",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_18",
       "dst": "sensor_54",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_54",
+      "dst": "precond_18",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9216,9 +10650,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_29",
+      "dst": "precond_18",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_18",
       "dst": "act_script_18",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_18",
+      "dst": "leg_18",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9228,9 +10674,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_18",
+      "dst": "act_script_18",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_18",
       "dst": "postcond_18",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_18",
+      "dst": "leg_18",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9241,8 +10699,20 @@
     },
     {
       "src": "act_script_18",
+      "dst": "precond_18",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_18",
       "dst": "postcond_18",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_18",
+      "dst": "act_script_18",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -9252,15 +10722,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_22_post_18",
+      "dst": "postcond_18",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_18",
       "dst": "sensor_54_post_18",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_54_post_18",
+      "dst": "postcond_18",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_18",
       "dst": "sensor_29_post_18",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_29_post_18",
+      "dst": "postcond_18",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9271,8 +10759,20 @@
     },
     {
       "src": "leg_19",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_19",
       "dst": "precond_19",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_19",
+      "dst": "leg_19",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9282,9 +10782,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_22",
+      "dst": "precond_19",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_19",
       "dst": "sensor_54",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_54",
+      "dst": "precond_19",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9294,9 +10806,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_29",
+      "dst": "precond_19",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_19",
       "dst": "act_script_19",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_19",
+      "dst": "leg_19",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9306,9 +10830,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_19",
+      "dst": "act_script_19",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_19",
       "dst": "postcond_19",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_19",
+      "dst": "leg_19",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9319,8 +10855,20 @@
     },
     {
       "src": "act_script_19",
+      "dst": "precond_19",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_19",
       "dst": "postcond_19",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_19",
+      "dst": "act_script_19",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -9330,15 +10878,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_22_post_19",
+      "dst": "postcond_19",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_19",
       "dst": "sensor_54_post_19",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_54_post_19",
+      "dst": "postcond_19",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_19",
       "dst": "sensor_29_post_19",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_29_post_19",
+      "dst": "postcond_19",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9349,8 +10915,20 @@
     },
     {
       "src": "leg_20",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_20",
       "dst": "precond_20",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_20",
+      "dst": "leg_20",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9360,9 +10938,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_2",
+      "dst": "precond_20",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_20",
       "dst": "sensor_22",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_22",
+      "dst": "precond_20",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9372,9 +10962,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_54",
+      "dst": "precond_20",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_20",
       "dst": "act_script_20",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_20",
+      "dst": "leg_20",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9384,9 +10986,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_20",
+      "dst": "act_script_20",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_20",
       "dst": "postcond_20",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_20",
+      "dst": "leg_20",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9397,8 +11011,20 @@
     },
     {
       "src": "act_script_20",
+      "dst": "precond_20",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_20",
       "dst": "postcond_20",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_20",
+      "dst": "act_script_20",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -9408,15 +11034,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_2_post_20",
+      "dst": "postcond_20",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_20",
       "dst": "sensor_22_post_20",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_22_post_20",
+      "dst": "postcond_20",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_20",
       "dst": "sensor_54_post_20",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_54_post_20",
+      "dst": "postcond_20",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9427,8 +11071,20 @@
     },
     {
       "src": "leg_21",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_21",
       "dst": "precond_21",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_21",
+      "dst": "leg_21",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9438,9 +11094,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_29",
+      "dst": "precond_21",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_21",
       "dst": "sensor_33",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_33",
+      "dst": "precond_21",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9450,9 +11118,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_34",
+      "dst": "precond_21",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_21",
       "dst": "act_script_21",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_21",
+      "dst": "leg_21",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9462,9 +11142,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_21",
+      "dst": "act_script_21",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_21",
       "dst": "postcond_21",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_21",
+      "dst": "leg_21",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9475,8 +11167,20 @@
     },
     {
       "src": "act_script_21",
+      "dst": "precond_21",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_21",
       "dst": "postcond_21",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_21",
+      "dst": "act_script_21",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -9486,15 +11190,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_29_post_21",
+      "dst": "postcond_21",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_21",
       "dst": "sensor_33_post_21",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_33_post_21",
+      "dst": "postcond_21",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_21",
       "dst": "sensor_34_post_21",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_34_post_21",
+      "dst": "postcond_21",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9505,8 +11227,20 @@
     },
     {
       "src": "leg_22",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_22",
       "dst": "precond_22",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_22",
+      "dst": "leg_22",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9516,9 +11250,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_22",
+      "dst": "precond_22",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_22",
       "dst": "sensor_33",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_33",
+      "dst": "precond_22",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9528,9 +11274,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_34",
+      "dst": "precond_22",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_22",
       "dst": "act_script_22",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_22",
+      "dst": "leg_22",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9540,9 +11298,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_22",
+      "dst": "act_script_22",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_22",
       "dst": "postcond_22",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_22",
+      "dst": "leg_22",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9553,8 +11323,20 @@
     },
     {
       "src": "act_script_22",
+      "dst": "precond_22",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_22",
       "dst": "postcond_22",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_22",
+      "dst": "act_script_22",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -9564,15 +11346,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_22_post_22",
+      "dst": "postcond_22",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_22",
       "dst": "sensor_33_post_22",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_33_post_22",
+      "dst": "postcond_22",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_22",
       "dst": "sensor_34_post_22",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_34_post_22",
+      "dst": "postcond_22",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9583,8 +11383,20 @@
     },
     {
       "src": "leg_23",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_23",
       "dst": "precond_23",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_23",
+      "dst": "leg_23",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9594,9 +11406,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_30",
+      "dst": "precond_23",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_23",
       "dst": "sensor_29",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_29",
+      "dst": "precond_23",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9606,9 +11430,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_33",
+      "dst": "precond_23",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_23",
       "dst": "act_script_23",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_23",
+      "dst": "leg_23",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9618,9 +11454,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_23",
+      "dst": "act_script_23",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_23",
       "dst": "postcond_23",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_23",
+      "dst": "leg_23",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9631,8 +11479,20 @@
     },
     {
       "src": "act_script_23",
+      "dst": "precond_23",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_23",
       "dst": "postcond_23",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_23",
+      "dst": "act_script_23",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -9642,15 +11502,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_30_post_23",
+      "dst": "postcond_23",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_23",
       "dst": "sensor_29_post_23",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_29_post_23",
+      "dst": "postcond_23",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_23",
       "dst": "sensor_33_post_23",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_33_post_23",
+      "dst": "postcond_23",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9661,8 +11539,20 @@
     },
     {
       "src": "leg_24",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_24",
       "dst": "precond_24",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_24",
+      "dst": "leg_24",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9672,9 +11562,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_54",
+      "dst": "precond_24",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_24",
       "dst": "sensor_33",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_33",
+      "dst": "precond_24",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9684,9 +11586,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_34",
+      "dst": "precond_24",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_24",
       "dst": "act_script_24",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_24",
+      "dst": "leg_24",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9696,9 +11610,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_24",
+      "dst": "act_script_24",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_24",
       "dst": "postcond_24",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_24",
+      "dst": "leg_24",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9709,8 +11635,20 @@
     },
     {
       "src": "act_script_24",
+      "dst": "precond_24",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_24",
       "dst": "postcond_24",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_24",
+      "dst": "act_script_24",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -9720,15 +11658,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_54_post_24",
+      "dst": "postcond_24",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_24",
       "dst": "sensor_33_post_24",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_33_post_24",
+      "dst": "postcond_24",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_24",
       "dst": "sensor_34_post_24",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_34_post_24",
+      "dst": "postcond_24",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9739,8 +11695,20 @@
     },
     {
       "src": "leg_25",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_25",
       "dst": "precond_25",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_25",
+      "dst": "leg_25",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9750,9 +11718,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_20",
+      "dst": "precond_25",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_25",
       "dst": "sensor_33",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_33",
+      "dst": "precond_25",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9762,9 +11742,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_34",
+      "dst": "precond_25",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_25",
       "dst": "act_script_25",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_25",
+      "dst": "leg_25",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9774,9 +11766,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_25",
+      "dst": "act_script_25",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_25",
       "dst": "postcond_25",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_25",
+      "dst": "leg_25",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9787,8 +11791,20 @@
     },
     {
       "src": "act_script_25",
+      "dst": "precond_25",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_25",
       "dst": "postcond_25",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_25",
+      "dst": "act_script_25",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -9798,15 +11814,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_20_post_25",
+      "dst": "postcond_25",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_25",
       "dst": "sensor_33_post_25",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_33_post_25",
+      "dst": "postcond_25",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_25",
       "dst": "sensor_34_post_25",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_34_post_25",
+      "dst": "postcond_25",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9817,8 +11851,20 @@
     },
     {
       "src": "leg_26",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_26",
       "dst": "precond_26",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_26",
+      "dst": "leg_26",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9828,9 +11874,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15",
+      "dst": "precond_26",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_26",
       "dst": "sensor_22",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_22",
+      "dst": "precond_26",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9840,9 +11898,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_33",
+      "dst": "precond_26",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_26",
       "dst": "act_script_26",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_26",
+      "dst": "leg_26",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9852,9 +11922,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_26",
+      "dst": "act_script_26",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_26",
       "dst": "postcond_26",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_26",
+      "dst": "leg_26",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9865,8 +11947,20 @@
     },
     {
       "src": "act_script_26",
+      "dst": "precond_26",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_26",
       "dst": "postcond_26",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_26",
+      "dst": "act_script_26",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -9876,15 +11970,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15_post_26",
+      "dst": "postcond_26",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_26",
       "dst": "sensor_22_post_26",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_22_post_26",
+      "dst": "postcond_26",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_26",
       "dst": "sensor_33_post_26",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_33_post_26",
+      "dst": "postcond_26",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9895,8 +12007,20 @@
     },
     {
       "src": "leg_28",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_28",
       "dst": "precond_28",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_28",
+      "dst": "leg_28",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9906,9 +12030,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_22",
+      "dst": "precond_28",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_28",
       "dst": "sensor_29",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_29",
+      "dst": "precond_28",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9918,9 +12054,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_33",
+      "dst": "precond_28",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_28",
       "dst": "act_script_28",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_28",
+      "dst": "leg_28",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9930,9 +12078,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_28",
+      "dst": "act_script_28",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_28",
       "dst": "postcond_28",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_28",
+      "dst": "leg_28",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9943,8 +12103,20 @@
     },
     {
       "src": "act_script_28",
+      "dst": "precond_28",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_28",
       "dst": "postcond_28",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_28",
+      "dst": "act_script_28",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -9954,15 +12126,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_22_post_28",
+      "dst": "postcond_28",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_28",
       "dst": "sensor_29_post_28",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_29_post_28",
+      "dst": "postcond_28",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_28",
       "dst": "sensor_33_post_28",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_33_post_28",
+      "dst": "postcond_28",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9973,8 +12163,20 @@
     },
     {
       "src": "leg_29",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_29",
       "dst": "precond_29",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_29",
+      "dst": "leg_29",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9984,9 +12186,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_37",
+      "dst": "precond_29",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_29",
       "dst": "sensor_33",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_33",
+      "dst": "precond_29",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -9996,9 +12210,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_34",
+      "dst": "precond_29",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_29",
       "dst": "act_script_29",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_29",
+      "dst": "leg_29",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10008,9 +12234,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_29",
+      "dst": "act_script_29",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_29",
       "dst": "postcond_29",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_29",
+      "dst": "leg_29",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10021,8 +12259,20 @@
     },
     {
       "src": "act_script_29",
+      "dst": "precond_29",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_29",
       "dst": "postcond_29",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_29",
+      "dst": "act_script_29",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -10032,15 +12282,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_37_post_29",
+      "dst": "postcond_29",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_29",
       "dst": "sensor_33_post_29",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_33_post_29",
+      "dst": "postcond_29",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_29",
       "dst": "sensor_34_post_29",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_34_post_29",
+      "dst": "postcond_29",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10051,8 +12319,20 @@
     },
     {
       "src": "leg_32",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_32",
       "dst": "precond_32",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_32",
+      "dst": "leg_32",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10062,9 +12342,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15",
+      "dst": "precond_32",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_32",
       "dst": "sensor_33",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_33",
+      "dst": "precond_32",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10074,9 +12366,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_34",
+      "dst": "precond_32",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_32",
       "dst": "act_script_32",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_32",
+      "dst": "leg_32",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10086,9 +12390,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_32",
+      "dst": "act_script_32",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_32",
       "dst": "postcond_32",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_32",
+      "dst": "leg_32",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10099,8 +12415,20 @@
     },
     {
       "src": "act_script_32",
+      "dst": "precond_32",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_32",
       "dst": "postcond_32",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_32",
+      "dst": "act_script_32",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -10110,15 +12438,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15_post_32",
+      "dst": "postcond_32",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_32",
       "dst": "sensor_33_post_32",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_33_post_32",
+      "dst": "postcond_32",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_32",
       "dst": "sensor_34_post_32",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_34_post_32",
+      "dst": "postcond_32",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10129,8 +12475,20 @@
     },
     {
       "src": "leg_76",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_76",
       "dst": "precond_76",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_76",
+      "dst": "leg_76",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10140,9 +12498,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15",
+      "dst": "precond_76",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_76",
       "dst": "sensor_54",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_54",
+      "dst": "precond_76",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10152,9 +12522,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_37",
+      "dst": "precond_76",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_76",
       "dst": "act_script_76",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_76",
+      "dst": "leg_76",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10164,9 +12546,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_76",
+      "dst": "act_script_76",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_76",
       "dst": "postcond_76",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_76",
+      "dst": "leg_76",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10177,8 +12571,20 @@
     },
     {
       "src": "act_script_76",
+      "dst": "precond_76",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_76",
       "dst": "postcond_76",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_76",
+      "dst": "act_script_76",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -10188,15 +12594,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15_post_76",
+      "dst": "postcond_76",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_76",
       "dst": "sensor_54_post_76",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_54_post_76",
+      "dst": "postcond_76",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_76",
       "dst": "sensor_37_post_76",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_37_post_76",
+      "dst": "postcond_76",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10207,8 +12631,20 @@
     },
     {
       "src": "leg_80",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_80",
       "dst": "precond_80",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_80",
+      "dst": "leg_80",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10218,9 +12654,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15",
+      "dst": "precond_80",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_80",
       "dst": "sensor_54",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_54",
+      "dst": "precond_80",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10230,9 +12678,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_34",
+      "dst": "precond_80",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_80",
       "dst": "act_script_80",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_80",
+      "dst": "leg_80",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10242,9 +12702,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_80",
+      "dst": "act_script_80",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_80",
       "dst": "postcond_80",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_80",
+      "dst": "leg_80",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10255,8 +12727,20 @@
     },
     {
       "src": "act_script_80",
+      "dst": "precond_80",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_80",
       "dst": "postcond_80",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_80",
+      "dst": "act_script_80",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -10266,15 +12750,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15_post_80",
+      "dst": "postcond_80",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_80",
       "dst": "sensor_54_post_80",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_54_post_80",
+      "dst": "postcond_80",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_80",
       "dst": "sensor_34_post_80",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_34_post_80",
+      "dst": "postcond_80",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10285,8 +12787,20 @@
     },
     {
       "src": "leg_93",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_93",
       "dst": "precond_93",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_93",
+      "dst": "leg_93",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10296,9 +12810,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15",
+      "dst": "precond_93",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_93",
       "dst": "sensor_54",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_54",
+      "dst": "precond_93",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10308,9 +12834,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_37",
+      "dst": "precond_93",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_93",
       "dst": "act_script_93",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_93",
+      "dst": "leg_93",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10320,9 +12858,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_93",
+      "dst": "act_script_93",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_93",
       "dst": "postcond_93",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_93",
+      "dst": "leg_93",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10333,8 +12883,20 @@
     },
     {
       "src": "act_script_93",
+      "dst": "precond_93",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_93",
       "dst": "postcond_93",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_93",
+      "dst": "act_script_93",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -10344,15 +12906,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15_post_93",
+      "dst": "postcond_93",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_93",
       "dst": "sensor_54_post_93",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_54_post_93",
+      "dst": "postcond_93",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_93",
       "dst": "sensor_37_post_93",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_37_post_93",
+      "dst": "postcond_93",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10363,8 +12943,20 @@
     },
     {
       "src": "leg_95",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_95",
       "dst": "precond_95",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_95",
+      "dst": "leg_95",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10374,9 +12966,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15",
+      "dst": "precond_95",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_95",
       "dst": "sensor_20",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_20",
+      "dst": "precond_95",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10386,9 +12990,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_34",
+      "dst": "precond_95",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_95",
       "dst": "act_script_95",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_95",
+      "dst": "leg_95",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10398,9 +13014,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_95",
+      "dst": "act_script_95",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_95",
       "dst": "postcond_95",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_95",
+      "dst": "leg_95",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10411,8 +13039,20 @@
     },
     {
       "src": "act_script_95",
+      "dst": "precond_95",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_95",
       "dst": "postcond_95",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_95",
+      "dst": "act_script_95",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -10422,15 +13062,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15_post_95",
+      "dst": "postcond_95",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_95",
       "dst": "sensor_20_post_95",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_20_post_95",
+      "dst": "postcond_95",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_95",
       "dst": "sensor_34_post_95",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_34_post_95",
+      "dst": "postcond_95",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10441,8 +13099,20 @@
     },
     {
       "src": "leg_122",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_122",
       "dst": "precond_122",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_122",
+      "dst": "leg_122",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10452,9 +13122,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_1",
+      "dst": "precond_122",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_122",
       "dst": "sensor_11",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_11",
+      "dst": "precond_122",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10464,9 +13146,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_54",
+      "dst": "precond_122",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_122",
       "dst": "act_script_122",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_122",
+      "dst": "leg_122",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10476,9 +13170,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_122",
+      "dst": "act_script_122",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_122",
       "dst": "postcond_122",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_122",
+      "dst": "leg_122",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10489,8 +13195,20 @@
     },
     {
       "src": "act_script_122",
+      "dst": "precond_122",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_122",
       "dst": "postcond_122",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_122",
+      "dst": "act_script_122",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -10500,15 +13218,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_1_post_122",
+      "dst": "postcond_122",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_122",
       "dst": "sensor_11_post_122",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_11_post_122",
+      "dst": "postcond_122",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_122",
       "dst": "sensor_54_post_122",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_54_post_122",
+      "dst": "postcond_122",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10519,8 +13255,20 @@
     },
     {
       "src": "leg_123",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_123",
       "dst": "precond_123",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_123",
+      "dst": "leg_123",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10530,9 +13278,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_7",
+      "dst": "precond_123",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_123",
       "dst": "sensor_11",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_11",
+      "dst": "precond_123",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10542,9 +13302,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_54",
+      "dst": "precond_123",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_123",
       "dst": "act_script_123",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_123",
+      "dst": "leg_123",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10554,9 +13326,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_123",
+      "dst": "act_script_123",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_123",
       "dst": "postcond_123",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_123",
+      "dst": "leg_123",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10567,8 +13351,20 @@
     },
     {
       "src": "act_script_123",
+      "dst": "precond_123",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_123",
       "dst": "postcond_123",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_123",
+      "dst": "act_script_123",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -10578,15 +13374,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_7_post_123",
+      "dst": "postcond_123",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_123",
       "dst": "sensor_11_post_123",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_11_post_123",
+      "dst": "postcond_123",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_123",
       "dst": "sensor_54_post_123",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_54_post_123",
+      "dst": "postcond_123",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10597,8 +13411,20 @@
     },
     {
       "src": "leg_125",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_125",
       "dst": "precond_125",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_125",
+      "dst": "leg_125",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10608,9 +13434,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11",
+      "dst": "precond_125",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_125",
       "dst": "sensor_15",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_15",
+      "dst": "precond_125",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10620,9 +13458,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_54",
+      "dst": "precond_125",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_125",
       "dst": "act_script_125",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_125",
+      "dst": "leg_125",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10632,9 +13482,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_125",
+      "dst": "act_script_125",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_125",
       "dst": "postcond_125",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_125",
+      "dst": "leg_125",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10645,8 +13507,20 @@
     },
     {
       "src": "act_script_125",
+      "dst": "precond_125",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_125",
       "dst": "postcond_125",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_125",
+      "dst": "act_script_125",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -10656,15 +13530,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11_post_125",
+      "dst": "postcond_125",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_125",
       "dst": "sensor_15_post_125",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_15_post_125",
+      "dst": "postcond_125",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_125",
       "dst": "sensor_54_post_125",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_54_post_125",
+      "dst": "postcond_125",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10675,8 +13567,20 @@
     },
     {
       "src": "leg_126",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_126",
       "dst": "precond_126",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_126",
+      "dst": "leg_126",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10686,9 +13590,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11",
+      "dst": "precond_126",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_126",
       "dst": "sensor_54",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_54",
+      "dst": "precond_126",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10698,9 +13614,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_29",
+      "dst": "precond_126",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_126",
       "dst": "act_script_126",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_126",
+      "dst": "leg_126",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10710,9 +13638,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_126",
+      "dst": "act_script_126",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_126",
       "dst": "postcond_126",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_126",
+      "dst": "leg_126",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10723,8 +13663,20 @@
     },
     {
       "src": "act_script_126",
+      "dst": "precond_126",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_126",
       "dst": "postcond_126",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_126",
+      "dst": "act_script_126",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -10734,15 +13686,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11_post_126",
+      "dst": "postcond_126",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_126",
       "dst": "sensor_54_post_126",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_54_post_126",
+      "dst": "postcond_126",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_126",
       "dst": "sensor_29_post_126",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_29_post_126",
+      "dst": "postcond_126",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10753,8 +13723,20 @@
     },
     {
       "src": "leg_129",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_129",
       "dst": "precond_129",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_129",
+      "dst": "leg_129",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10764,9 +13746,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11",
+      "dst": "precond_129",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_129",
       "dst": "sensor_15",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_15",
+      "dst": "precond_129",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10776,9 +13770,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_37",
+      "dst": "precond_129",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_129",
       "dst": "act_script_129",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_129",
+      "dst": "leg_129",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10788,9 +13794,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_129",
+      "dst": "act_script_129",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_129",
       "dst": "postcond_129",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_129",
+      "dst": "leg_129",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10801,8 +13819,20 @@
     },
     {
       "src": "act_script_129",
+      "dst": "precond_129",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_129",
       "dst": "postcond_129",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_129",
+      "dst": "act_script_129",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -10812,15 +13842,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11_post_129",
+      "dst": "postcond_129",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_129",
       "dst": "sensor_15_post_129",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_15_post_129",
+      "dst": "postcond_129",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_129",
       "dst": "sensor_37_post_129",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_37_post_129",
+      "dst": "postcond_129",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10831,8 +13879,20 @@
     },
     {
       "src": "leg_130",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_130",
       "dst": "precond_130",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_130",
+      "dst": "leg_130",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10842,9 +13902,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11",
+      "dst": "precond_130",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_130",
       "dst": "sensor_54",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_54",
+      "dst": "precond_130",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10854,9 +13926,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_37",
+      "dst": "precond_130",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_130",
       "dst": "act_script_130",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_130",
+      "dst": "leg_130",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10866,9 +13950,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_130",
+      "dst": "act_script_130",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_130",
       "dst": "postcond_130",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_130",
+      "dst": "leg_130",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10879,8 +13975,20 @@
     },
     {
       "src": "act_script_130",
+      "dst": "precond_130",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_130",
       "dst": "postcond_130",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_130",
+      "dst": "act_script_130",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -10890,15 +13998,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11_post_130",
+      "dst": "postcond_130",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_130",
       "dst": "sensor_54_post_130",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_54_post_130",
+      "dst": "postcond_130",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_130",
       "dst": "sensor_37_post_130",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_37_post_130",
+      "dst": "postcond_130",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10909,8 +14035,20 @@
     },
     {
       "src": "leg_131",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_131",
       "dst": "precond_131",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_131",
+      "dst": "leg_131",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10920,9 +14058,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11",
+      "dst": "precond_131",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_131",
       "dst": "sensor_15",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_15",
+      "dst": "precond_131",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10932,9 +14082,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_37",
+      "dst": "precond_131",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_131",
       "dst": "act_script_131",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_131",
+      "dst": "leg_131",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10944,9 +14106,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_131",
+      "dst": "act_script_131",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_131",
       "dst": "postcond_131",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_131",
+      "dst": "leg_131",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10957,8 +14131,20 @@
     },
     {
       "src": "act_script_131",
+      "dst": "precond_131",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_131",
       "dst": "postcond_131",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_131",
+      "dst": "act_script_131",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -10968,15 +14154,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11_post_131",
+      "dst": "postcond_131",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_131",
       "dst": "sensor_15_post_131",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_15_post_131",
+      "dst": "postcond_131",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_131",
       "dst": "sensor_37_post_131",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_37_post_131",
+      "dst": "postcond_131",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10987,8 +14191,20 @@
     },
     {
       "src": "leg_132",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_132",
       "dst": "precond_132",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_132",
+      "dst": "leg_132",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -10998,9 +14214,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11",
+      "dst": "precond_132",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_132",
       "dst": "sensor_15",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_15",
+      "dst": "precond_132",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11010,9 +14238,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_34",
+      "dst": "precond_132",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_132",
       "dst": "act_script_132",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_132",
+      "dst": "leg_132",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11022,9 +14262,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_132",
+      "dst": "act_script_132",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_132",
       "dst": "postcond_132",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_132",
+      "dst": "leg_132",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11035,8 +14287,20 @@
     },
     {
       "src": "act_script_132",
+      "dst": "precond_132",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_132",
       "dst": "postcond_132",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_132",
+      "dst": "act_script_132",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -11046,15 +14310,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11_post_132",
+      "dst": "postcond_132",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_132",
       "dst": "sensor_15_post_132",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_15_post_132",
+      "dst": "postcond_132",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_132",
       "dst": "sensor_34_post_132",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_34_post_132",
+      "dst": "postcond_132",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11065,8 +14347,20 @@
     },
     {
       "src": "leg_133",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_133",
       "dst": "precond_133",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_133",
+      "dst": "leg_133",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11076,9 +14370,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11",
+      "dst": "precond_133",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_133",
       "dst": "sensor_54",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_54",
+      "dst": "precond_133",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11088,9 +14394,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_37",
+      "dst": "precond_133",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_133",
       "dst": "act_script_133",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_133",
+      "dst": "leg_133",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11100,9 +14418,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_133",
+      "dst": "act_script_133",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_133",
       "dst": "postcond_133",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_133",
+      "dst": "leg_133",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11113,8 +14443,20 @@
     },
     {
       "src": "act_script_133",
+      "dst": "precond_133",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_133",
       "dst": "postcond_133",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_133",
+      "dst": "act_script_133",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -11124,15 +14466,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11_post_133",
+      "dst": "postcond_133",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_133",
       "dst": "sensor_54_post_133",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_54_post_133",
+      "dst": "postcond_133",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_133",
       "dst": "sensor_37_post_133",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_37_post_133",
+      "dst": "postcond_133",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11143,8 +14503,20 @@
     },
     {
       "src": "leg_134",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_134",
       "dst": "precond_134",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_134",
+      "dst": "leg_134",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11154,9 +14526,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11",
+      "dst": "precond_134",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_134",
       "dst": "sensor_34",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_34",
+      "dst": "precond_134",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11166,9 +14550,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_54",
+      "dst": "precond_134",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_134",
       "dst": "act_script_134",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_134",
+      "dst": "leg_134",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11178,9 +14574,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_134",
+      "dst": "act_script_134",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_134",
       "dst": "postcond_134",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_134",
+      "dst": "leg_134",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11191,8 +14599,20 @@
     },
     {
       "src": "act_script_134",
+      "dst": "precond_134",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_134",
       "dst": "postcond_134",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_134",
+      "dst": "act_script_134",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -11202,15 +14622,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11_post_134",
+      "dst": "postcond_134",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_134",
       "dst": "sensor_34_post_134",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_34_post_134",
+      "dst": "postcond_134",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_134",
       "dst": "sensor_54_post_134",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_54_post_134",
+      "dst": "postcond_134",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11221,8 +14659,20 @@
     },
     {
       "src": "leg_137",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_137",
       "dst": "precond_137",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_137",
+      "dst": "leg_137",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11232,9 +14682,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11",
+      "dst": "precond_137",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_137",
       "dst": "sensor_15",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_15",
+      "dst": "precond_137",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11244,9 +14706,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_54",
+      "dst": "precond_137",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_137",
       "dst": "act_script_137",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_137",
+      "dst": "leg_137",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11256,9 +14730,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_137",
+      "dst": "act_script_137",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_137",
       "dst": "postcond_137",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_137",
+      "dst": "leg_137",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11269,8 +14755,20 @@
     },
     {
       "src": "act_script_137",
+      "dst": "precond_137",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_137",
       "dst": "postcond_137",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_137",
+      "dst": "act_script_137",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -11280,15 +14778,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11_post_137",
+      "dst": "postcond_137",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_137",
       "dst": "sensor_15_post_137",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_15_post_137",
+      "dst": "postcond_137",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_137",
       "dst": "sensor_54_post_137",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_54_post_137",
+      "dst": "postcond_137",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11299,8 +14815,20 @@
     },
     {
       "src": "leg_140",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_140",
       "dst": "precond_140",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_140",
+      "dst": "leg_140",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11310,9 +14838,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11",
+      "dst": "precond_140",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_140",
       "dst": "sensor_20",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_20",
+      "dst": "precond_140",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11322,9 +14862,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_54",
+      "dst": "precond_140",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_140",
       "dst": "act_script_140",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_140",
+      "dst": "leg_140",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11334,9 +14886,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_140",
+      "dst": "act_script_140",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_140",
       "dst": "postcond_140",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_140",
+      "dst": "leg_140",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11347,8 +14911,20 @@
     },
     {
       "src": "act_script_140",
+      "dst": "precond_140",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_140",
       "dst": "postcond_140",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_140",
+      "dst": "act_script_140",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -11358,15 +14934,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11_post_140",
+      "dst": "postcond_140",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_140",
       "dst": "sensor_20_post_140",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_20_post_140",
+      "dst": "postcond_140",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_140",
       "dst": "sensor_54_post_140",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_54_post_140",
+      "dst": "postcond_140",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11377,8 +14971,20 @@
     },
     {
       "src": "leg_141",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_141",
       "dst": "precond_141",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_141",
+      "dst": "leg_141",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11388,9 +14994,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11",
+      "dst": "precond_141",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_141",
       "dst": "sensor_15",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_15",
+      "dst": "precond_141",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11400,9 +15018,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_54",
+      "dst": "precond_141",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_141",
       "dst": "act_script_141",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_141",
+      "dst": "leg_141",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11412,9 +15042,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_141",
+      "dst": "act_script_141",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_141",
       "dst": "postcond_141",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_141",
+      "dst": "leg_141",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11425,8 +15067,20 @@
     },
     {
       "src": "act_script_141",
+      "dst": "precond_141",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_141",
       "dst": "postcond_141",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_141",
+      "dst": "act_script_141",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -11436,15 +15090,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11_post_141",
+      "dst": "postcond_141",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_141",
       "dst": "sensor_15_post_141",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_15_post_141",
+      "dst": "postcond_141",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_141",
       "dst": "sensor_54_post_141",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_54_post_141",
+      "dst": "postcond_141",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11455,8 +15127,20 @@
     },
     {
       "src": "leg_151",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_151",
       "dst": "precond_151",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_151",
+      "dst": "leg_151",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11466,9 +15150,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15",
+      "dst": "precond_151",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_151",
       "dst": "sensor_54",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_54",
+      "dst": "precond_151",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11478,9 +15174,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_34",
+      "dst": "precond_151",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_151",
       "dst": "act_script_151",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_151",
+      "dst": "leg_151",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11490,9 +15198,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_151",
+      "dst": "act_script_151",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_151",
       "dst": "postcond_151",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_151",
+      "dst": "leg_151",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11503,8 +15223,20 @@
     },
     {
       "src": "act_script_151",
+      "dst": "precond_151",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_151",
       "dst": "postcond_151",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_151",
+      "dst": "act_script_151",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -11514,15 +15246,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15_post_151",
+      "dst": "postcond_151",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_151",
       "dst": "sensor_54_post_151",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_54_post_151",
+      "dst": "postcond_151",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_151",
       "dst": "sensor_34_post_151",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_34_post_151",
+      "dst": "postcond_151",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11533,8 +15283,20 @@
     },
     {
       "src": "leg_156",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_156",
       "dst": "precond_156",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_156",
+      "dst": "leg_156",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11544,9 +15306,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11",
+      "dst": "precond_156",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_156",
       "dst": "sensor_54",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_54",
+      "dst": "precond_156",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11556,9 +15330,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_34",
+      "dst": "precond_156",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_156",
       "dst": "act_script_156",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_156",
+      "dst": "leg_156",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11568,9 +15354,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_156",
+      "dst": "act_script_156",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_156",
       "dst": "postcond_156",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_156",
+      "dst": "leg_156",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11581,8 +15379,20 @@
     },
     {
       "src": "act_script_156",
+      "dst": "precond_156",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_156",
       "dst": "postcond_156",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_156",
+      "dst": "act_script_156",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -11592,15 +15402,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11_post_156",
+      "dst": "postcond_156",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_156",
       "dst": "sensor_54_post_156",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_54_post_156",
+      "dst": "postcond_156",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_156",
       "dst": "sensor_34_post_156",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_34_post_156",
+      "dst": "postcond_156",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11611,8 +15439,20 @@
     },
     {
       "src": "leg_166",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_166",
       "dst": "precond_166",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_166",
+      "dst": "leg_166",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11622,9 +15462,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11",
+      "dst": "precond_166",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_166",
       "dst": "sensor_15",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_15",
+      "dst": "precond_166",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11634,9 +15486,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_34",
+      "dst": "precond_166",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_166",
       "dst": "act_script_166",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_166",
+      "dst": "leg_166",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11646,9 +15510,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_166",
+      "dst": "act_script_166",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_166",
       "dst": "postcond_166",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_166",
+      "dst": "leg_166",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11659,8 +15535,20 @@
     },
     {
       "src": "act_script_166",
+      "dst": "precond_166",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_166",
       "dst": "postcond_166",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_166",
+      "dst": "act_script_166",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -11670,15 +15558,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11_post_166",
+      "dst": "postcond_166",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_166",
       "dst": "sensor_15_post_166",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_15_post_166",
+      "dst": "postcond_166",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_166",
       "dst": "sensor_34_post_166",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_34_post_166",
+      "dst": "postcond_166",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11689,8 +15595,20 @@
     },
     {
       "src": "leg_170",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_170",
       "dst": "precond_170",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_170",
+      "dst": "leg_170",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11700,9 +15618,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11",
+      "dst": "precond_170",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_170",
       "dst": "sensor_54",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_54",
+      "dst": "precond_170",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11712,9 +15642,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_29",
+      "dst": "precond_170",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_170",
       "dst": "act_script_170",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_170",
+      "dst": "leg_170",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11724,9 +15666,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_170",
+      "dst": "act_script_170",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_170",
       "dst": "postcond_170",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_170",
+      "dst": "leg_170",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11737,8 +15691,20 @@
     },
     {
       "src": "act_script_170",
+      "dst": "precond_170",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_170",
       "dst": "postcond_170",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_170",
+      "dst": "act_script_170",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -11748,15 +15714,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11_post_170",
+      "dst": "postcond_170",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_170",
       "dst": "sensor_54_post_170",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_54_post_170",
+      "dst": "postcond_170",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_170",
       "dst": "sensor_29_post_170",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_29_post_170",
+      "dst": "postcond_170",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11767,8 +15751,20 @@
     },
     {
       "src": "leg_189",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_189",
       "dst": "precond_189",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_189",
+      "dst": "leg_189",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11778,9 +15774,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11",
+      "dst": "precond_189",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_189",
       "dst": "sensor_54",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_54",
+      "dst": "precond_189",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11790,9 +15798,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_29",
+      "dst": "precond_189",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_189",
       "dst": "act_script_189",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_189",
+      "dst": "leg_189",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11802,9 +15822,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_189",
+      "dst": "act_script_189",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_189",
       "dst": "postcond_189",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_189",
+      "dst": "leg_189",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11815,8 +15847,20 @@
     },
     {
       "src": "act_script_189",
+      "dst": "precond_189",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_189",
       "dst": "postcond_189",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_189",
+      "dst": "act_script_189",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -11826,15 +15870,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11_post_189",
+      "dst": "postcond_189",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_189",
       "dst": "sensor_54_post_189",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_54_post_189",
+      "dst": "postcond_189",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_189",
       "dst": "sensor_29_post_189",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_29_post_189",
+      "dst": "postcond_189",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11845,8 +15907,20 @@
     },
     {
       "src": "leg_204",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_204",
       "dst": "precond_204",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_204",
+      "dst": "leg_204",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11856,9 +15930,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11",
+      "dst": "precond_204",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_204",
       "dst": "sensor_38",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_38",
+      "dst": "precond_204",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11868,9 +15954,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_54",
+      "dst": "precond_204",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_204",
       "dst": "act_script_204",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_204",
+      "dst": "leg_204",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11880,9 +15978,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_204",
+      "dst": "act_script_204",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_204",
       "dst": "postcond_204",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_204",
+      "dst": "leg_204",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11893,8 +16003,20 @@
     },
     {
       "src": "act_script_204",
+      "dst": "precond_204",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_204",
       "dst": "postcond_204",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_204",
+      "dst": "act_script_204",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -11904,15 +16026,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11_post_204",
+      "dst": "postcond_204",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_204",
       "dst": "sensor_38_post_204",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_38_post_204",
+      "dst": "postcond_204",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_204",
       "dst": "sensor_54_post_204",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_54_post_204",
+      "dst": "postcond_204",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11923,8 +16063,20 @@
     },
     {
       "src": "leg_227",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_227",
       "dst": "precond_227",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_227",
+      "dst": "leg_227",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11934,9 +16086,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_38",
+      "dst": "precond_227",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_227",
       "dst": "sensor_54",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_54",
+      "dst": "precond_227",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11946,9 +16110,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_29",
+      "dst": "precond_227",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_227",
       "dst": "act_script_227",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_227",
+      "dst": "leg_227",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11958,9 +16134,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_227",
+      "dst": "act_script_227",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_227",
       "dst": "postcond_227",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_227",
+      "dst": "leg_227",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -11971,8 +16159,20 @@
     },
     {
       "src": "act_script_227",
+      "dst": "precond_227",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_227",
       "dst": "postcond_227",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_227",
+      "dst": "act_script_227",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -11982,15 +16182,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_38_post_227",
+      "dst": "postcond_227",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_227",
       "dst": "sensor_54_post_227",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_54_post_227",
+      "dst": "postcond_227",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_227",
       "dst": "sensor_29_post_227",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_29_post_227",
+      "dst": "postcond_227",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -12001,8 +16219,20 @@
     },
     {
       "src": "leg_243",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_243",
       "dst": "precond_243",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_243",
+      "dst": "leg_243",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -12012,9 +16242,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11",
+      "dst": "precond_243",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_243",
       "dst": "sensor_54",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_54",
+      "dst": "precond_243",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -12024,9 +16266,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_37",
+      "dst": "precond_243",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_243",
       "dst": "act_script_243",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_243",
+      "dst": "leg_243",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -12036,9 +16290,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_243",
+      "dst": "act_script_243",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_243",
       "dst": "postcond_243",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_243",
+      "dst": "leg_243",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -12049,8 +16315,20 @@
     },
     {
       "src": "act_script_243",
+      "dst": "precond_243",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_243",
       "dst": "postcond_243",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_243",
+      "dst": "act_script_243",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -12060,15 +16338,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11_post_243",
+      "dst": "postcond_243",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_243",
       "dst": "sensor_54_post_243",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_54_post_243",
+      "dst": "postcond_243",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_243",
       "dst": "sensor_37_post_243",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_37_post_243",
+      "dst": "postcond_243",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -12079,8 +16375,20 @@
     },
     {
       "src": "leg_331",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_331",
       "dst": "precond_331",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_331",
+      "dst": "leg_331",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -12090,9 +16398,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_0",
+      "dst": "precond_331",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_331",
       "dst": "sensor_11",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_11",
+      "dst": "precond_331",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -12102,9 +16422,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_54",
+      "dst": "precond_331",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_331",
       "dst": "act_script_331",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_331",
+      "dst": "leg_331",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -12114,9 +16446,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_331",
+      "dst": "act_script_331",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_331",
       "dst": "postcond_331",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_331",
+      "dst": "leg_331",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -12127,8 +16471,20 @@
     },
     {
       "src": "act_script_331",
+      "dst": "precond_331",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_331",
       "dst": "postcond_331",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_331",
+      "dst": "act_script_331",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -12138,15 +16494,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_0_post_331",
+      "dst": "postcond_331",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_331",
       "dst": "sensor_11_post_331",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_11_post_331",
+      "dst": "postcond_331",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_331",
       "dst": "sensor_54_post_331",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_54_post_331",
+      "dst": "postcond_331",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -12157,8 +16531,20 @@
     },
     {
       "src": "leg_416",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_416",
       "dst": "precond_416",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_416",
+      "dst": "leg_416",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -12168,9 +16554,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11",
+      "dst": "precond_416",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_416",
       "dst": "sensor_29",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_29",
+      "dst": "precond_416",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -12180,9 +16578,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_44",
+      "dst": "precond_416",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_416",
       "dst": "act_script_416",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_416",
+      "dst": "leg_416",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -12192,9 +16602,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_416",
+      "dst": "act_script_416",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_416",
       "dst": "postcond_416",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_416",
+      "dst": "leg_416",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -12205,8 +16627,20 @@
     },
     {
       "src": "act_script_416",
+      "dst": "precond_416",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_416",
       "dst": "postcond_416",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_416",
+      "dst": "act_script_416",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -12216,15 +16650,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11_post_416",
+      "dst": "postcond_416",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_416",
       "dst": "sensor_29_post_416",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_29_post_416",
+      "dst": "postcond_416",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_416",
       "dst": "sensor_44_post_416",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_44_post_416",
+      "dst": "postcond_416",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -12235,8 +16687,20 @@
     },
     {
       "src": "leg_469",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_469",
       "dst": "precond_469",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_469",
+      "dst": "leg_469",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -12246,9 +16710,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15",
+      "dst": "precond_469",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_469",
       "dst": "sensor_34",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_34",
+      "dst": "precond_469",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -12258,9 +16734,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_44",
+      "dst": "precond_469",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_469",
       "dst": "act_script_469",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_469",
+      "dst": "leg_469",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -12270,9 +16758,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_469",
+      "dst": "act_script_469",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_469",
       "dst": "postcond_469",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_469",
+      "dst": "leg_469",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -12283,8 +16783,20 @@
     },
     {
       "src": "act_script_469",
+      "dst": "precond_469",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_469",
       "dst": "postcond_469",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_469",
+      "dst": "act_script_469",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -12294,15 +16806,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_15_post_469",
+      "dst": "postcond_469",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_469",
       "dst": "sensor_34_post_469",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_34_post_469",
+      "dst": "postcond_469",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_469",
       "dst": "sensor_44_post_469",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_44_post_469",
+      "dst": "postcond_469",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -12313,8 +16843,20 @@
     },
     {
       "src": "leg_587",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_587",
       "dst": "precond_587",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_587",
+      "dst": "leg_587",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -12324,9 +16866,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11",
+      "dst": "precond_587",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_587",
       "dst": "sensor_37",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_37",
+      "dst": "precond_587",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -12336,9 +16890,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_44",
+      "dst": "precond_587",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_587",
       "dst": "act_script_587",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_587",
+      "dst": "leg_587",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -12348,9 +16914,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_587",
+      "dst": "act_script_587",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_587",
       "dst": "postcond_587",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_587",
+      "dst": "leg_587",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -12361,8 +16939,20 @@
     },
     {
       "src": "act_script_587",
+      "dst": "precond_587",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_587",
       "dst": "postcond_587",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_587",
+      "dst": "act_script_587",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -12372,15 +16962,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_11_post_587",
+      "dst": "postcond_587",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_587",
       "dst": "sensor_37_post_587",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_37_post_587",
+      "dst": "postcond_587",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_587",
       "dst": "sensor_44_post_587",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_44_post_587",
+      "dst": "postcond_587",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -12391,8 +16999,20 @@
     },
     {
       "src": "leg_794",
+      "dst": "krk_hub",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
+      "src": "leg_794",
       "dst": "precond_794",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "precond_794",
+      "dst": "leg_794",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -12402,9 +17022,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_37",
+      "dst": "precond_794",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "precond_794",
       "dst": "sensor_44",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_44",
+      "dst": "precond_794",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -12414,9 +17046,21 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_49",
+      "dst": "precond_794",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_794",
       "dst": "act_script_794",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_794",
+      "dst": "leg_794",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -12426,9 +17070,21 @@
       "weight": 1.0
     },
     {
+      "src": "actuator_794",
+      "dst": "act_script_794",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "leg_794",
       "dst": "postcond_794",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_794",
+      "dst": "leg_794",
+      "type": "SUR",
       "weight": 1.0
     },
     {
@@ -12439,8 +17095,20 @@
     },
     {
       "src": "act_script_794",
+      "dst": "precond_794",
+      "type": "RET",
+      "weight": 1.0
+    },
+    {
+      "src": "act_script_794",
       "dst": "postcond_794",
       "type": "POR",
+      "weight": 1.0
+    },
+    {
+      "src": "postcond_794",
+      "dst": "act_script_794",
+      "type": "RET",
       "weight": 1.0
     },
     {
@@ -12450,15 +17118,33 @@
       "weight": 1.0
     },
     {
+      "src": "sensor_37_post_794",
+      "dst": "postcond_794",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_794",
       "dst": "sensor_44_post_794",
       "type": "SUB",
       "weight": 1.0
     },
     {
+      "src": "sensor_44_post_794",
+      "dst": "postcond_794",
+      "type": "SUR",
+      "weight": 1.0
+    },
+    {
       "src": "postcond_794",
       "dst": "sensor_49_post_794",
       "type": "SUB",
+      "weight": 1.0
+    },
+    {
+      "src": "sensor_49_post_794",
+      "dst": "postcond_794",
+      "type": "SUR",
       "weight": 1.0
     }
   ],

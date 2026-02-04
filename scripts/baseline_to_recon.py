@@ -128,6 +128,13 @@ def create_hub_node(topology: Dict):
         "type": "SUB",
         "weight": 1.0
     })
+    # SUR confirmation: Hub → Root
+    topology["edges"].append({
+        "src": "krk_hub",
+        "dst": "krk_entry",
+        "type": "SUR",
+        "weight": 1.0
+    })
     
     print("Created hub: krk_hub")
 
@@ -176,6 +183,13 @@ def create_leg_micro_script(
         "type": "SUB",
         "weight": 1.0
     })
+    # SUR confirmation: Leg → Hub
+    topology["edges"].append({
+        "src": leg_id,
+        "dst": "krk_hub",
+        "type": "SUR",
+        "weight": 1.0
+    })
     
     # Part 1: Precondition gate
     topology["nodes"][precond_id] = {
@@ -192,6 +206,13 @@ def create_leg_micro_script(
         "src": leg_id,
         "dst": precond_id,
         "type": "SUB",
+        "weight": 1.0
+    })
+    # SUR confirmation: Precond → Leg
+    topology["edges"].append({
+        "src": precond_id,
+        "dst": leg_id,
+        "type": "SUR",
         "weight": 1.0
     })
     
@@ -216,6 +237,13 @@ def create_leg_micro_script(
                 "type": "SUB",
                 "weight": 1.0
             })
+            # SUR confirmation: sensor → precond
+            topology["edges"].append({
+                "src": sensor_id,
+                "dst": precond_id,
+                "type": "SUR",
+                "weight": 1.0
+            })
     
     # Part 2: Actuator script wrapper (SCRIPT)
     topology["nodes"][act_script_id] = {
@@ -233,6 +261,13 @@ def create_leg_micro_script(
         "type": "SUB",
         "weight": 1.0
     })
+    # SUR confirmation: act_script → leg
+    topology["edges"].append({
+        "src": act_script_id,
+        "dst": leg_id,
+        "type": "SUR",
+        "weight": 1.0
+    })
     
     # Actuator terminal (SUB under actuator script)
     create_actuator_terminal(topology, actuator_id, actuator, sensors)
@@ -241,6 +276,13 @@ def create_leg_micro_script(
         "src": act_script_id,
         "dst": actuator_id,
         "type": "SUB",
+        "weight": 1.0
+    })
+    # SUR confirmation: actuator → act_script
+    topology["edges"].append({
+        "src": actuator_id,
+        "dst": act_script_id,
+        "type": "SUR",
         "weight": 1.0
     })
     
@@ -261,6 +303,13 @@ def create_leg_micro_script(
         "type": "SUB",
         "weight": 1.0
     })
+    # SUR confirmation: postcond → leg
+    topology["edges"].append({
+        "src": postcond_id,
+        "dst": leg_id,
+        "type": "SUR",
+        "weight": 1.0
+    })
     
     # POR sequencing between scripts only
     topology["edges"].append({
@@ -269,11 +318,25 @@ def create_leg_micro_script(
         "type": "POR",
         "weight": 1.0
     })
+    # RET (temporal return): Act → Precond
+    topology["edges"].append({
+        "src": act_script_id,
+        "dst": precond_id,
+        "type": "RET",
+        "weight": 1.0
+    })
     
     topology["edges"].append({
         "src": act_script_id,
         "dst": postcond_id,
         "type": "POR",
+        "weight": 1.0
+    })
+    # RET (temporal return): Postcond → Act
+    topology["edges"].append({
+        "src": postcond_id,
+        "dst": act_script_id,
+        "type": "RET",
         "weight": 1.0
     })
     
@@ -293,6 +356,13 @@ def create_leg_micro_script(
                 "src": postcond_id,
                 "dst": sensor_post_id,
                 "type": "SUB",
+                "weight": 1.0
+            })
+            # SUR confirmation: sensor_post → postcond
+            topology["edges"].append({
+                "src": sensor_post_id,
+                "dst": postcond_id,
+                "type": "SUR",
                 "weight": 1.0
             })
     

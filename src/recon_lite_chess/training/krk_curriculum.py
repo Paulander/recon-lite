@@ -177,17 +177,55 @@ STAGE_1_MATE_IN_2 = KRKStage(
 
 
 # ============================================================================
-# Stage 2: Edge_Trapped_Tempo (4 Positions)
-# Critical: Teach waiting moves for opposition
+# Stage 2 (Planned): Edge‑Trap Conversion (split into 2A/2B/2C)
+# NOTE: Planned stages below are scaffolded and not yet wired into CURRICULUM_STAGES.
+# Add validated FENs (5–10 per category, White to move) before activating.
 # ============================================================================
 
+STAGE_2A_EDGE_TRAP_CLOSE = KRKStage(
+    stage_id=2,
+    name="Edge_Trap_Close",
+    description="Enemy king trapped at edge; our king close and between enemy and rook",
+    distance_to_mate="1-2 moves",
+    key_lesson="Convert edge‑trap to mate‑in‑2 with correct geometry",
+    target_win_rate=0.95,
+    positions=[
+        # TODO: add 5–10 validated FENs (White to move)
+    ],
+)
+
+STAGE_2B_EDGE_TRAP_ENEMY_BETWEEN = KRKStage(
+    stage_id=3,
+    name="Edge_Trap_Enemy_Between",
+    description="Enemy king trapped at edge; enemy between our king and rook",
+    distance_to_mate="1-3 moves",
+    key_lesson="Tempo/waiting moves to avoid rook capture",
+    target_win_rate=0.90,
+    positions=[
+        # TODO: add 5–10 validated FENs (White to move)
+    ],
+)
+
+STAGE_2C_EDGE_TRAP_WRONG_TEMPO = KRKStage(
+    stage_id=4,
+    name="Edge_Trap_Wrong_Tempo",
+    description="Edge‑trap with wrong tempo at knight distance",
+    distance_to_mate="2-3 moves",
+    key_lesson="Fix tempo before conversion",
+    target_win_rate=0.90,
+    positions=[
+        # TODO: add 5–10 validated FENs (White to move)
+    ],
+)
+
+# Legacy Stage 2 (kept for backward compatibility until new Stage‑2A/B/C are populated)
 STAGE_2_EDGE_TRAPPED_TEMPO = KRKStage(
     stage_id=2,
     name="Edge_Trapped_Tempo",
-    description="Opposition timing at edge",
+    description="Opposition timing at edge (legacy)",
     distance_to_mate="1-2 moves",
     key_lesson="Waiting moves / tempo",
-    target_win_rate=0.95,  # Raised from 0.85 to ensure mastery
+    target_win_rate=0.95,
     positions=[
         # a) Our turn, direct approach wins
         KRKStagePosition(
@@ -214,12 +252,12 @@ STAGE_2_EDGE_TRAPPED_TEMPO = KRKStage(
             description="AVOID stalemate! Kb6 then Ra8#",
             failure_condition="stalemate",
         ),
-    ]
+    ],
 )
 
 
 # ============================================================================
-# Stage 2.1: Edge_Fence_Knight (NEW - Knight Distance Already Achieved)
+# Stage 2.1: Edge_Fence_Knight (Legacy)
 # Opponent king on edge (rank 8), rook holding fence (rank 7),
 # our king at knight distance on rank 6 - optimal finishing position
 # ============================================================================
@@ -267,7 +305,7 @@ STAGE_2_1_EDGE_FENCE_KNIGHT = KRKStage(
 
 
 # ============================================================================
-# Stage 2.2: Edge_Fence_Approach (NEW - Repositioning Needed)
+# Stage 2.2: Edge_Fence_Approach (Legacy)
 # Same setup but our king NOT at knight distance - must reposition
 # Harder because requires finding approach path
 # ============================================================================
@@ -789,6 +827,9 @@ KRK_STAGES: List[KRKStage] = [
     STAGE_0_MATE_IN_1,           # Stage 0: Mate in 1 (98% win rate)
     STAGE_2_EDGE_TRAPPED_TEMPO,  # Stage 1: SWAPPED - Easy opposition finishes
     STAGE_1_MATE_IN_2,           # Stage 2: SWAPPED - Harder approach patterns
+
+    # NOTE: Planned Stage‑2A/2B/2C (Edge_Trap_Close / Enemy_Between / Wrong_Tempo)
+    # are scaffolded above but not yet activated here until FENs are added/validated.
     
     # PHASE 1.5: Edge Fence - optimal finishing patterns (NEW)
     STAGE_2_1_EDGE_FENCE_KNIGHT,   # Stage 3: Knight distance (optimal finish)
