@@ -123,6 +123,6 @@ Only hoist upward if they prove transferable across legs/stages.
 ---
 
 ## 7) Open questions
-- Minimum overlap threshold for goal similarity (current: 8).
+- Minimum overlap threshold for goal similarity (current: 8, now **weighted by sensor XP**).
 - Whether to cap max composites per stage or per leg.
 - How to visualize composites distinctly in the UI.

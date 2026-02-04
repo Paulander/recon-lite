@@ -192,10 +192,17 @@ def create_sensor_terminal(node_id=None):
         
         # Cache output + spec for actuators
         blackboard["sensor_outputs"][node.nid] = output
+        weight = None
+        if "baseline_xp" in node.meta:
+            try:
+                weight = 1.0 + max(0.0, float(node.meta.get("baseline_xp", 0.0)))
+            except Exception:
+                weight = None
         blackboard["sensor_specs"][node.nid] = {
             "readout_type": readout_type,
             "feature_mask_keys": feature_mask_keys,
             "readout_params": readout_params,
+            "weight": weight,
         }
         
         # Store in node state
@@ -265,7 +272,7 @@ def create_actuator_terminal(node_id=None):
         goal_normalize = blackboard.get("goal_normalize", True)
         goal_weight = float(blackboard.get("goal_weight", 0.7))
         goal_lookahead = blackboard.get("goal_lookahead", "max")
-        min_goal_overlap = int(blackboard.get("goal_min_overlap", 8))
+        min_goal_overlap = float(blackboard.get("goal_min_overlap", 8))
         goal_entries = []
         if goal_bank and stage > 0:
             if isinstance(goal_bank, dict) and goal_bank.get("label") == goal_label:
@@ -336,14 +343,22 @@ def create_actuator_terminal(node_id=None):
                     def _dist(entry):
                         gvals = entry.get("values", {})
                         keys = set(s_goal.keys()) & set(gvals.keys())
-                        if len(keys) < min_goal_overlap:
+                        if not keys:
+                            return None
+                        weights = np.array([
+                            _goal_weight_for_sensor(k, goal_bank, merged_specs)
+                            for k in keys
+                        ], dtype=np.float32)
+                        weight_sum = float(np.sum(weights))
+                        if weight_sum < min_goal_overlap:
                             return None
                         vec_cur = np.array([s_goal[k] for k in keys], dtype=np.float32)
                         vec_goal = np.array([gvals[k] for k in keys], dtype=np.float32)
                         if goal_normalize:
-                            vec_cur = vec_cur / (np.linalg.norm(vec_cur) + 1e-6)
-                            vec_goal = vec_goal / (np.linalg.norm(vec_goal) + 1e-6)
-                        return float(np.linalg.norm(vec_cur - vec_goal))
+                            vec_cur = vec_cur / (np.sqrt(np.sum(weights * (vec_cur ** 2))) + 1e-6)
+                            vec_goal = vec_goal / (np.sqrt(np.sum(weights * (vec_goal ** 2))) + 1e-6)
+                        diff = vec_cur - vec_goal
+                        return float(np.sqrt(np.sum(weights * (diff ** 2))))
 
                     best = None
                     for entry in goal_entries:
@@ -470,8 +485,8 @@ def _goal_distance_from_features(
     features: np.ndarray,
     goal_bank: Dict[str, Any] | None,
     normalize: bool = True,
-    min_overlap: int = 8,
-) -> tuple[float | None, int]:
+    min_overlap: float = 8,
+) -> tuple[float | None, float]:
     """Compute min distance to goal prototypes in stable sensor-id space."""
     if not goal_bank or not isinstance(goal_bank, dict):
         return None, 0
@@ -490,23 +505,54 @@ def _goal_distance_from_features(
         return None, 0
 
     best = None
-    best_overlap = 0
+    best_overlap = 0.0
     for entry in goals:
         gvals = entry.get("values", {})
         keys = set(current.keys()) & set(gvals.keys())
-        if len(keys) < min_overlap:
+        if not keys:
+            continue
+        weights = np.array([
+            _goal_weight_for_sensor(k, goal_bank, sensor_specs)
+            for k in keys
+        ], dtype=np.float32)
+        weight_sum = float(np.sum(weights))
+        if weight_sum < min_overlap:
             continue
         vec_cur = np.array([current[k] for k in keys], dtype=np.float32)
         vec_goal = np.array([gvals[k] for k in keys], dtype=np.float32)
         if normalize:
-            vec_cur = vec_cur / (np.linalg.norm(vec_cur) + 1e-6)
-            vec_goal = vec_goal / (np.linalg.norm(vec_goal) + 1e-6)
-        dist = float(np.linalg.norm(vec_cur - vec_goal))
+            vec_cur = vec_cur / (np.sqrt(np.sum(weights * (vec_cur ** 2))) + 1e-6)
+            vec_goal = vec_goal / (np.sqrt(np.sum(weights * (vec_goal ** 2))) + 1e-6)
+        diff = vec_cur - vec_goal
+        dist = float(np.sqrt(np.sum(weights * (diff ** 2))))
         if best is None or dist < best:
             best = dist
-            best_overlap = len(keys)
+            best_overlap = weight_sum
 
     return best, best_overlap
+
+
+def _goal_weight_for_sensor(
+    sensor_id: str,
+    goal_bank: Dict[str, Any] | None,
+    sensor_specs: Dict[str, Any],
+) -> float:
+    """Resolve a stable weight for a sensor id (XP-weighted if available)."""
+    if isinstance(goal_bank, dict):
+        weight_map = goal_bank.get("sensor_weights", {}) or {}
+        if sensor_id in weight_map:
+            try:
+                return float(weight_map[sensor_id])
+            except Exception:
+                pass
+    spec = sensor_specs.get(sensor_id, {}) or {}
+    for key in ("weight", "xp"):
+        if key in spec and spec[key] is not None:
+            try:
+                return 1.0 + max(0.0, float(spec[key]))
+            except Exception:
+                continue
+    return 1.0
 
 
 def cosine_similarity(a: list, b: list) -> float:

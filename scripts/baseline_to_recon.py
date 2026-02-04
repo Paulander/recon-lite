@@ -477,15 +477,19 @@ def build_goal_bank(learner: BaselineLearner, label: str = "mate_in_1") -> Dict[
 
     sensor_map = {s.id: s for s in learner.sensors}
     sensor_specs: Dict[str, Any] = {}
+    sensor_weights: Dict[str, float] = {}
     for sid in sensor_ids:
         sensor = sensor_map.get(sid)
         if sensor is None:
             continue
+        weight = 1.0 + max(0.0, float(sensor.xp))
         sensor_specs[f"sensor_{sid}"] = {
             "readout_type": sensor.sensor_spec.readout_type,
             "feature_mask_keys": get_feature_keys_from_mask(sensor.sensor_spec.feature_mask),
             "readout_params": sensor.sensor_spec.readout_params,
+            "weight": weight,
         }
+        sensor_weights[f"sensor_{sid}"] = weight
 
     goals_payload = []
     for g in goals:
@@ -505,6 +509,7 @@ def build_goal_bank(learner: BaselineLearner, label: str = "mate_in_1") -> Dict[
         "sensor_ids": list(sensor_ids),
         "goals": goals_payload,
         "sensor_specs": sensor_specs,
+        "sensor_weights": sensor_weights,
         "goal_eps": float(getattr(learner, "goal_eps", 0.15)),
     }
 
