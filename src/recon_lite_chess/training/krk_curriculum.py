@@ -190,7 +190,66 @@ STAGE_2A_EDGE_TRAP_CLOSE = KRKStage(
     key_lesson="Convert edge‑trap to mate‑in‑2 with correct geometry",
     target_win_rate=0.95,
     positions=[
-        # TODO: add 5–10 validated FENs (White to move)
+        # 2A‑1: W:Kc4 Rb8 | B:Ka2
+        KRKStagePosition(
+            fen="1R6/8/8/8/2K5/8/k7/8 w - - 0 1",
+            optimal_moves=2,
+            description="Edge‑trap close; king inside, no immediate mate.",
+        ),
+        # 2A‑2: W:Kf3 Rf2 | B:Kd1
+        KRKStagePosition(
+            fen="8/8/8/8/8/5K2/5R2/3k4 w - - 0 1",
+            optimal_moves=2,
+            description="Bottom edge trap with rook fence; approach conversion.",
+        ),
+        # 2A‑3: W:Kf3 Rg2 | B:Kd1
+        KRKStagePosition(
+            fen="8/8/8/8/8/5K2/6R1/3k4 w - - 0 1",
+            optimal_moves=2,
+            description="Bottom edge trap; rook on g2, king close.",
+        ),
+        # 2A‑4: W:Kc3 Rb2 | B:Kc1
+        KRKStagePosition(
+            fen="8/8/8/8/8/2K5/1R6/2k5 w - - 0 1",
+            optimal_moves=2,
+            description="Corner‑adjacent trap; king inside, rook fence.",
+        ),
+        # 2A‑5: W:Ke3 Re2 | B:Kc1
+        KRKStagePosition(
+            fen="8/8/8/8/8/4K3/4R3/2k5 w - - 0 1",
+            optimal_moves=2,
+            description="Edge trap with rook fence on 2nd rank.",
+        ),
+        # 2A‑6: W:Kc5 Rb4 | B:Ka7
+        KRKStagePosition(
+            fen="8/k7/8/2K5/1R6/8/8/8 w - - 0 1",
+            optimal_moves=2,
+            description="Edge trap (top edge), king inside, rook fence.",
+        ),
+        # 2A‑7: W:Kf5 Rg2 | B:Kh7
+        KRKStagePosition(
+            fen="8/7k/8/5K2/8/8/6R1/8 w - - 0 1",
+            optimal_moves=2,
+            description="Side edge trap; king inside, rook fence on g2.",
+        ),
+        # 2A‑8: W:Kc8 Rb5 | B:Ka6
+        KRKStagePosition(
+            fen="2K5/8/k7/1R6/8/8/8/8 w - - 0 1",
+            optimal_moves=2,
+            description="Edge trap with king near corner; rook fence on b5.",
+        ),
+        # 2A‑9: W:Kd6 Rc7 | B:Kb8
+        KRKStagePosition(
+            fen="1k6/2R5/3K4/8/8/8/8/8 w - - 0 1",
+            optimal_moves=2,
+            description="Classic edge trap; king close, rook on 7th.",
+        ),
+        # 2A‑10: W:Kd3 Rf2 | B:Kb1
+        KRKStagePosition(
+            fen="8/8/8/8/8/3K4/5R2/1k6 w - - 0 1",
+            optimal_moves=2,
+            description="Bottom edge trap; king inside, rook fence on f2.",
+        ),
     ],
 )
 
@@ -202,7 +261,66 @@ STAGE_2B_EDGE_TRAP_ENEMY_BETWEEN = KRKStage(
     key_lesson="Tempo/waiting moves to avoid rook capture",
     target_win_rate=0.90,
     positions=[
-        # TODO: add 5–10 validated FENs (White to move)
+        # 2B‑1: W:Kf1 Rb2 | B:Kd1
+        KRKStagePosition(
+            fen="8/8/8/8/8/8/1R6/3k1K2 w - - 0 1",
+            optimal_moves=3,
+            description="Enemy between king/rook; tempo needed.",
+        ),
+        # 2B‑2: W:Kf8 Rg4 | B:Kh7
+        KRKStagePosition(
+            fen="5K2/7k/8/8/6R1/8/8/8 w - - 0 1",
+            optimal_moves=3,
+            description="Side edge trap; enemy between, rook fence on g4.",
+        ),
+        # 2B‑3: W:Kf6 Ra7 | B:Ke8
+        KRKStagePosition(
+            fen="4k3/R7/5K2/8/8/8/8/8 w - - 0 1",
+            optimal_moves=3,
+            description="Top edge trap; enemy between king and rook.",
+        ),
+        # 2B‑4: W:Kg5 Rg2 | B:Kh3
+        KRKStagePosition(
+            fen="8/8/8/6K1/8/7k/6R1/8 w - - 0 1",
+            optimal_moves=3,
+            description="Side edge trap; waiting move likely.",
+        ),
+        # 2B‑5: W:Kf6 Rg4 | B:Kh5
+        KRKStagePosition(
+            fen="8/8/5K2/7k/6R1/8/8/8 w - - 0 1",
+            optimal_moves=3,
+            description="Enemy between; avoid rook capture.",
+        ),
+        # 2B‑6: W:Kb2 Rf2 | B:Kd1
+        KRKStagePosition(
+            fen="8/8/8/8/8/8/1K3R2/3k4 w - - 0 1",
+            optimal_moves=3,
+            description="Bottom edge trap; enemy between.",
+        ),
+        # 2B‑7: W:Kc1 Rb5 | B:Ka2
+        KRKStagePosition(
+            fen="8/8/8/1R6/8/8/k7/2K5 w - - 0 1",
+            optimal_moves=3,
+            description="Left edge trap; enemy between king and rook.",
+        ),
+        # 2B‑8: W:Kc1 Rb3 | B:Ka2
+        KRKStagePosition(
+            fen="8/8/8/8/8/1R6/k7/2K5 w - - 0 1",
+            optimal_moves=3,
+            description="Left edge trap; waiting move likely.",
+        ),
+        # 2B‑9: W:Kd7 Rh7 | B:Kf8
+        KRKStagePosition(
+            fen="5k2/3K3R/8/8/8/8/8/8 w - - 0 1",
+            optimal_moves=3,
+            description="Top edge trap; enemy between.",
+        ),
+        # 2B‑10: W:Ka8 Re7 | B:Kc8
+        KRKStagePosition(
+            fen="K1k5/4R3/8/8/8/8/8/8 w - - 0 1",
+            optimal_moves=3,
+            description="Top edge trap; enemy between (rook on 7th).",
+        ),
     ],
 )
 
@@ -214,7 +332,66 @@ STAGE_2C_EDGE_TRAP_WRONG_TEMPO = KRKStage(
     key_lesson="Fix tempo before conversion",
     target_win_rate=0.90,
     positions=[
-        # TODO: add 5–10 validated FENs (White to move)
+        # 2C‑1: W:Kf7 Rg7 | B:Kh8
+        KRKStagePosition(
+            fen="7k/5KR1/8/8/8/8/8/8 w - - 0 1",
+            optimal_moves=3,
+            description="Knight distance; wrong tempo at edge.",
+        ),
+        # 2C‑2: W:Ke3 Rd2 | B:Kf1
+        KRKStagePosition(
+            fen="8/8/8/8/8/4K3/3R4/5k2 w - - 0 1",
+            optimal_moves=3,
+            description="Bottom edge; tempo fix required.",
+        ),
+        # 2C‑3: W:Kb8 Rb7 | B:Ka6
+        KRKStagePosition(
+            fen="1K6/1R6/k7/8/8/8/8/8 w - - 0 1",
+            optimal_moves=3,
+            description="Corner edge; knight distance mismatch.",
+        ),
+        # 2C‑4: W:Kc7 Rb8 | B:Ka6
+        KRKStagePosition(
+            fen="1R6/2K5/k7/8/8/8/8/8 w - - 0 1",
+            optimal_moves=3,
+            description="Corner edge; wrong tempo at knight distance.",
+        ),
+        # 2C‑5: W:Kf6 Re7 | B:Kg8
+        KRKStagePosition(
+            fen="6k1/4R3/5K2/8/8/8/8/8 w - - 0 1",
+            optimal_moves=3,
+            description="Side edge; fix tempo before conversion.",
+        ),
+        # 2C‑6: W:Kb7 Rb8 | B:Ka5
+        KRKStagePosition(
+            fen="1R6/1K6/8/k7/8/8/8/8 w - - 0 1",
+            optimal_moves=3,
+            description="Edge trap with wrong tempo (left edge).",
+        ),
+        # 2C‑7: W:Kd2 Ra2 | B:Kf1
+        KRKStagePosition(
+            fen="8/8/8/8/8/8/R2K4/5k2 w - - 0 1",
+            optimal_moves=3,
+            description="Bottom edge; knight distance mismatch.",
+        ),
+        # 2C‑8: W:Kc7 Re7 | B:Ka8
+        KRKStagePosition(
+            fen="k7/2K1R3/8/8/8/8/8/8 w - - 0 1",
+            optimal_moves=3,
+            description="Top edge; wrong tempo at knight distance.",
+        ),
+        # 2C‑9: W:Kf6 Rg1 | B:Kh7
+        KRKStagePosition(
+            fen="8/7k/5K2/8/8/8/8/6R1 w - - 0 1",
+            optimal_moves=3,
+            description="Side edge; rook on g1, tempo fix required.",
+        ),
+        # 2C‑10: W:Kc5 Rb3 | B:Ka6
+        KRKStagePosition(
+            fen="8/8/k7/2K5/8/1R6/8/8 w - - 0 1",
+            optimal_moves=3,
+            description="Edge trap; knight distance mismatch.",
+        ),
     ],
 )
 
