@@ -16,6 +16,12 @@ ReCoN growth (no hand‑coded tactics beyond base features + top‑level success
 
 ---
 
+## Progress (checkpoint)
+- **Stage‑0 seed**: 100% mate‑in‑1 on 100 samples (corner‑balanced; no aliasing).
+- **Stage‑1 evaluator**: added `scripts/test_stage1_backchain.py` to verify goal‑bank backchaining.
+
+---
+
 ## 1) Stage map (high‑level)
 
 We will start with a minimal set of stages and expand once chaining is stable.
@@ -119,6 +125,7 @@ Only hoist upward if they prove transferable across legs/stages.
 2. Add SUR/RET in compiled topology (done in baseline_to_recon.py).
 3. Define Stage‑2 FEN generator constraints + validation script.
 4. Implement composite pool + hoist policy (AND/LAG).
+5. Run Stage‑1 evaluator on compiled topology (new).
 
 ---
 
