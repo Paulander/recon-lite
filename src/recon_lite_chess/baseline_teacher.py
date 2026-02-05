@@ -240,7 +240,7 @@ class KRKTeacher:
 # Position Generation
 # ============================================================================
 
-def generate_krk_mate_in_1_position() -> chess.Board:
+def generate_krk_mate_in_1_position(target_corner: int | None = None) -> chess.Board:
     """
     Generate a random legal KRK position where white can deliver mate in 1.
 
@@ -269,6 +269,9 @@ def generate_krk_mate_in_1_position() -> chess.Board:
         if not board.is_valid():
             continue
         if board.is_check():
+            continue
+
+        if target_corner is not None and bk != target_corner:
             continue
 
         # Check if any legal move is checkmate

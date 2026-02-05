@@ -7,6 +7,7 @@ Loads the compiled topology and tests it on KRK mate-in-1 positions.
 import sys
 import argparse
 from pathlib import Path
+from collections import Counter
 import chess
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -114,13 +115,35 @@ def run_evaluation(graph: Graph, num_positions: int = 100):
         "no_move": 0,
         "wrong_move": 0,
         "confidences": [],
+        "region_total": Counter(),
+        "region_fail": Counter(),
+        "corner_fail": Counter(),
     }
 
     engine = ReConEngine(graph)
     
+    def classify_enemy_king(board: chess.Board):
+        enemy_king = board.king(chess.BLACK)
+        if enemy_king is None:
+            return ("missing", None)
+        file_idx = chess.square_file(enemy_king)
+        rank_idx = chess.square_rank(enemy_king)
+        on_file = file_idx in (0, 7)
+        on_rank = rank_idx in (0, 7)
+        if on_file and on_rank:
+            return ("corner", enemy_king)
+        if on_file:
+            return ("edge_file", file_idx)
+        if on_rank:
+            return ("edge_rank", rank_idx)
+        return ("interior", None)
+
     for i in range(num_positions):
         # Generate position
         board = generate_krk_mate_in_1_position()
+
+        region, detail = classify_enemy_king(board)
+        stats["region_total"][region] += 1
         
         # Test
         move, confidence, is_mate = test_single_position(graph, engine, board)
@@ -129,12 +152,18 @@ def run_evaluation(graph: Graph, num_positions: int = 100):
         
         if move is None:
             stats["no_move"] += 1
+            stats["region_fail"][region] += 1
+            if region == "corner":
+                stats["corner_fail"][detail] += 1
         elif is_mate:
             stats["mate_found"] += 1
             stats["confidences"].append(confidence)
         else:
             stats["wrong_move"] += 1
             stats["confidences"].append(confidence)
+            stats["region_fail"][region] += 1
+            if region == "corner":
+                stats["corner_fail"][detail] += 1
         
         # Progress
         if (i + 1) % 10 == 0:
@@ -170,6 +199,19 @@ def print_results(stats: dict):
         print(f"  Max:  {np.max(confidences):.3f}")
     
     print("\n" + "=" * 70)
+    if stats.get("region_total"):
+        print("Failure breakdown by enemy king region:")
+        for region in ("corner", "edge_file", "edge_rank", "interior", "missing"):
+            region_total = stats["region_total"].get(region, 0)
+            fails = stats["region_fail"].get(region, 0)
+            if region_total:
+                rate = fails / region_total * 100
+                print(f"  {region:10s}: {fails:3d}/{region_total:3d} failures ({rate:4.1f}%)")
+        if stats.get("corner_fail"):
+            if stats["corner_fail"]:
+                print("Corner failures by square:")
+                for sq, count in stats["corner_fail"].most_common():
+                    print(f"  {chess.square_name(sq)}: {count}")
     
     if mate_found / total >= 0.9:
         print("✓ SUCCESS: Win rate >= 90%")

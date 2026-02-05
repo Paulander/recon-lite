@@ -454,6 +454,11 @@ def play_krk_game_recon(
         plasticity_state = init_plasticity_state(graph)
         # print(f"[PLASTICITY] Initialized {len(plasticity_state)} edge states")
     
+    # Resolve root id for compiled baseline topology vs legacy KRK graph
+    root_id = "krk_root"
+    if "krk_entry" in graph.nodes:
+        root_id = "krk_entry"
+
     # Sentinel for KRK positions
     def krk_sentinel(env: Dict[str, Any]) -> bool:
         b = env.get("board")
@@ -467,7 +472,7 @@ def play_krk_game_recon(
     
     # Lock the subgraph with enough room for deep POR propagation
     try:
-        engine.lock_subgraph("krk_root", krk_sentinel, max_internal_ticks=30, min_internal_ticks=10)
+        engine.lock_subgraph(root_id, krk_sentinel, max_internal_ticks=30, min_internal_ticks=10)
     except ValueError:
         # Subgraph might already be locked or not exist
         pass
@@ -487,6 +492,11 @@ def play_krk_game_recon(
             break
         
         # Build environment
+        # Reset baseline blackboard each move if using compiled baseline topology
+        if root_id == "krk_entry":
+            root_node = graph.nodes.get(root_id)
+            if root_node and "blackboard" in root_node.meta:
+                root_node.meta["blackboard"].clear()
         env = {"board": board}
         env.setdefault("krk", {})["actuator_proposals"] = []
         # Pass stem_manager for arbiter access (Phase B deep wiring)
@@ -547,6 +557,10 @@ def play_krk_game_recon(
             krk_data = env.get("krk_root", {})
             policy = krk_data.get("policy", {})
             found_move = policy.get("suggested_move")
+            if not found_move:
+                found_move = env.get("krk", {}).get("policy", {}).get("suggested_move")
+            if not found_move:
+                found_move = env.get("suggested_move")
             if found_move:
                 suggested_move = found_move  # Capture the move
                 active_nodes_at_move = active if active else last_active_nodes
@@ -1929,4 +1943,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

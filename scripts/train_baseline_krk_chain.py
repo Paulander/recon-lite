@@ -48,6 +48,16 @@ def generate_random_krk_position() -> chess.Board:
         return board
 
 
+def enemy_corner_bucket(board: chess.Board) -> int | None:
+    """Return enemy king square if in a corner, else None."""
+    bk = board.king(chess.BLACK)
+    if bk is None:
+        return None
+    if bk in (chess.A1, chess.A8, chess.H1, chess.H8):
+        return bk
+    return None
+
+
 def collect_goal_memories(learner: BaselineLearner, v0: np.ndarray) -> Dict[int, float] | None:
     """Build a sparse goal memory keyed by sensor id."""
     mature = learner.get_mature_sensors()
@@ -376,6 +386,8 @@ def main() -> None:
                         help="Seed a goal sensor template (on by default)")
     parser.add_argument("--no-seed-goal-sensor", action="store_false", dest="seed_goal_sensor",
                         help="Disable seeding the goal sensor template")
+    parser.add_argument("--stage0-balance-corners", action="store_true", default=False,
+                        help="Balance Stage 0 samples across corners for mate-in-1 positions")
     args = parser.parse_args()
 
     teacher = KRKTeacher()
@@ -419,8 +431,26 @@ def main() -> None:
         
         for cycle in range(args.stage0_cycles):
             transitions = []
+            corner_targets = []
+            if args.stage0_balance_corners:
+                per_corner = max(1, args.samples_per_cycle // 4)
+                corner_targets = (
+                    [chess.A1] * per_corner
+                    + [chess.A8] * per_corner
+                    + [chess.H1] * per_corner
+                    + [chess.H8] * per_corner
+                )
+                random.shuffle(corner_targets)
             for _ in range(args.samples_per_cycle):
-                b0 = generate_krk_mate_in_1_position()
+                b0 = None
+                if corner_targets:
+                    target = corner_targets.pop()
+                    try:
+                        b0 = generate_krk_mate_in_1_position(target_corner=target)
+                    except RuntimeError:
+                        b0 = None
+                if b0 is None:
+                    b0 = generate_krk_mate_in_1_position()
                 transitions.extend(teacher.label_transitions(b0))
                 # Store goal prototypes only after enough mature sensors
                 if len(learner.get_mature_sensors()) >= args.min_mature_for_goals:
