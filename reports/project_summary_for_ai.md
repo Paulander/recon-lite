@@ -635,21 +635,27 @@ Latest significant run: `snapshots/evolution/krk_curriculum/curriculum_summary.j
 - **Stage‑0 seed (mate‑in‑1) now 100%** after adding corner-balanced sampling in `scripts/train_baseline_krk_chain.py` (`--stage0-balance-corners`). This eliminated corner failures seen earlier.
 - Typical strong seed run: `--stage0-cycles 100 --stage1-cycles 0 --samples-per-cycle 100 --stage0-balance-corners --max-actuators-per-stage 60 --delta-eps 0.15 --top-k 5` → compiled topology ~457 nodes / 1498 edges, **100/100 mates** on `scripts/test_krk_entry.py`.
 - **Stage‑1 backchain evaluator added:** `scripts/test_stage1_backchain.py` evaluates whether chosen moves improve distance to Stage‑0 goal prototypes (with optional black lookahead). Uses weighted-overlap goal similarity (XP‑weighted, overlap gated).
-- **Stage‑1 currently weak:** recent eval (100 samples) showed `Improved ~21%`, `Optimal ~19%`, `Worsened ~69%`, avg reward slightly negative. Indicates Stage‑1 backchaining is not working yet.
+- **Stage‑1 metric alignment patch applied:** `scripts/train_baseline_krk_chain.py::label_transitions_by_goal` now uses XP‑weighted normalized goal distance (runtime-aligned) instead of raw L2.
+- **Evaluator stage isolation patch applied:** `scripts/test_stage1_backchain.py` now supports `--stage-filter`; `src/recon_lite_chess/krk_baseline_nodes.py` honors `blackboard["stage_filter"]` for actuator selection.
+- Quick post‑patch check (30 samples) looked better, but larger run remains weak:
+  - `30 samples`: `Improved 50%`, `Optimal 70%`, `Avg reward +0.0245`
+  - `100 samples` (`--stage-filter 1`): `Improved 27%`, `Optimal 32%`, `Worsened 63%`, `Avg reward -0.0120`
+  - Interpretation: metric alignment helped some cases, but Stage‑1 backchaining is still below acceptable quality.
 
 ## Known Issues / Suspected Causes
 - **Goal prototypes too few** (e.g., 4–7 in Stage‑0 logs), likely due to `--goal-eps` too high → weak goal diversity.
-- **Training vs runtime metric mismatch:** Stage‑1 training still uses unweighted L2 in `label_transitions_by_goal`, while runtime uses weighted-overlap similarity. Needs alignment.
+- **Stage‑1 still under target quality:** despite metric alignment, improvement rate is not yet strong enough for robust chaining into later stages.
 - **Stage‑0 dominance:** Stage‑0 actuators may dominate selection during Stage‑1 eval (no stage gating during eval), masking backchain behavior.
 
 ## Immediate Next Steps
-1. **Align metrics:** update Stage‑1 labeling to use the same weighted-overlap similarity as runtime.
-2. **Increase goal diversity:** reduce `--goal-eps` (e.g., 0.08–0.10) and raise `--max-goals`.
-3. **Add Stage‑1 eval options:** stage filter or “Stage‑1 only” mode to avoid Stage‑0 dominance.
-4. Re‑run Stage‑1 evaluator and log improved/optimal/worsened.
+1. **Increase goal diversity:** reduce `--goal-eps` (e.g., 0.08–0.10) and raise `--max-goals`.
+2. **Run larger Stage‑1 eval:** repeat with 100+ samples using `--stage-filter 1`.
+3. **Tune Stage‑1 objective weight:** increase goal shaping contribution for Stage>0 only if needed.
+4. Re‑run Stage‑1 evaluator and log improved/optimal/worsened before engine injection.
 
 ## New/Updated Files
 - `scripts/train_baseline_krk_chain.py`: corner-balanced Stage‑0 sampling (`--stage0-balance-corners`), helper `enemy_corner_bucket`.
 - `src/recon_lite_chess/baseline_teacher.py`: `generate_krk_mate_in_1_position(..., target_corner=...)`.
 - `scripts/test_krk_entry.py`: failure breakdown by enemy king region + bugfix for totals.
-- `scripts/test_stage1_backchain.py`: Stage‑1 backchain evaluator (goal‑distance improvement).
+- `scripts/test_stage1_backchain.py`: Stage‑1 backchain evaluator (goal‑distance improvement) + `--stage-filter`.
+- `src/recon_lite_chess/krk_baseline_nodes.py`: optional `blackboard["stage_filter"]` actuator gating for diagnostics.

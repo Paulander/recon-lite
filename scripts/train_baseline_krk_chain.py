@@ -184,11 +184,31 @@ def label_transitions_by_goal(
     else:
         goal_vectors_np = goal_vectors
 
-    # 3. Distance scoring
+    # 3. Distance scoring (align with runtime: weighted + normalized terminal distance)
+    sensor_by_id = {s.id: s for s in learner.sensors}
+    weights = np.array(
+        [
+            1.0 + max(0.0, float(getattr(sensor_by_id.get(sid), "xp", 0.0)))
+            for sid in sensor_ids
+        ],
+        dtype=np.float32,
+    )
+
+    def weighted_goal_dist(cur: np.ndarray, goal: np.ndarray) -> float:
+        if cur.shape != goal.shape:
+            return float("inf")
+        cur = cur.astype(np.float32, copy=False)
+        goal = goal.astype(np.float32, copy=False)
+        cur = cur / (np.sqrt(np.sum(weights * (cur ** 2))) + 1e-6)
+        goal = goal / (np.sqrt(np.sum(weights * (goal ** 2))) + 1e-6)
+        diff = cur - goal
+        return float(np.sqrt(np.sum(weights * (diff ** 2))))
+
     def get_min_dist(s_vec):
-        if not goal_vectors_np: return float("inf")
-        dists = [np.linalg.norm(s_vec - g) for g in goal_vectors_np]
-        return min(dists)
+        if not goal_vectors_np:
+            return float("inf")
+        dists = [weighted_goal_dist(s_vec, g) for g in goal_vectors_np]
+        return min(dists) if dists else float("inf")
 
     cursor = 0
     s0 = s_vectors[cursor]

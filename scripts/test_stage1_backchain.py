@@ -46,12 +46,19 @@ def generate_random_krk_position(rng: random.Random) -> chess.Board:
         return board
 
 
-def choose_move_with_engine(graph: Graph, engine: ReConEngine, board: chess.Board, max_ticks: int = 200) -> Optional[str]:
+def choose_move_with_engine(
+    graph: Graph,
+    engine: ReConEngine,
+    board: chess.Board,
+    max_ticks: int = 200,
+    stage_filter: Optional[int] = None,
+) -> Optional[str]:
     """Run graph via ReCon engine until a move is suggested."""
     env = {
         "board": board,
         "chosen_move": None,
         "suggested_move": None,
+        "blackboard": {"stage_filter": stage_filter} if stage_filter is not None else {},
     }
 
     engine.reset_states()
@@ -102,6 +109,8 @@ def main():
     parser.add_argument("--no-lookahead-black", action="store_false", dest="lookahead_black")
     parser.add_argument("--exclude-mate-in-1", action="store_true", default=True)
     parser.add_argument("--include-mate-in-1", action="store_false", dest="exclude_mate_in_1")
+    parser.add_argument("--stage-filter", type=int, default=None,
+                        help="If set, only actuators from this stage can propose moves")
     args = parser.parse_args()
 
     rng = random.Random(args.seed)
@@ -168,7 +177,7 @@ def main():
             if reward > best_reward:
                 best_reward = reward
 
-        chosen = choose_move_with_engine(graph, engine, board)
+        chosen = choose_move_with_engine(graph, engine, board, stage_filter=args.stage_filter)
         stats["total"] += 1
 
         if not chosen:

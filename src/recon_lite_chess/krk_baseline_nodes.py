@@ -249,6 +249,16 @@ def create_actuator_terminal(node_id=None):
         targets = node.meta.get("targets", [])
         goal_delta = node.meta.get("goal_delta", {})
         stage = int(node.meta.get("stage", 0))
+
+        # Optional eval/training filter: only allow selected actuator stages.
+        # This is useful for isolating Stage-1 behavior in diagnostics.
+        stage_filter = blackboard.get("stage_filter")
+        if stage_filter is not None:
+            try:
+                if stage != int(stage_filter):
+                    return False, False
+            except Exception:
+                pass
         
         if not targets or not goal_delta:
             return False, False

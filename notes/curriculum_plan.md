@@ -129,6 +129,19 @@ Only hoist upward if they prove transferable across legs/stages.
 
 ---
 
+## 8) Latest progress (2026-02-05)
+- Stage‑0 seed is stable at 100% on recent compiled topology tests.
+- Stage‑1 evaluator is now implemented (`scripts/test_stage1_backchain.py`) and supports `--stage-filter`.
+- Stage‑1 training metric was aligned to runtime objective:
+  - `scripts/train_baseline_krk_chain.py::label_transitions_by_goal` now uses XP‑weighted, normalized terminal distance (instead of raw L2).
+- Post‑patch checks on current learner/topology:
+  - Stage‑1 backchain (30 samples): `Improved 50%`, `Optimal 70%`, `Avg reward +0.0245`.
+  - Stage‑1 backchain (100 samples, stage-filter=1): `Improved 27%`, `Optimal 32%`, `Worsened 63%`, `Avg reward -0.0120`.
+  - Conclusion: Stage‑1 remains under target; 30-sample result was optimistic/noisy.
+  - Stage‑0 regression (50 samples): `100%`.
+
+---
+
 ## 7) Open questions
 - Minimum overlap threshold for goal similarity (current: 8, now **weighted by sensor XP**).
 - Whether to cap max composites per stage or per leg.
