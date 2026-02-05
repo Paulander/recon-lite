@@ -1002,11 +1002,12 @@ STAGE_D3_TEMPO_WAIT = KRKStage(
 KRK_STAGES: List[KRKStage] = [
     # PHASE 1: Endgame basics - recognize checkmate patterns
     STAGE_0_MATE_IN_1,           # Stage 0: Mate in 1 (98% win rate)
-    STAGE_2_EDGE_TRAPPED_TEMPO,  # Stage 1: SWAPPED - Easy opposition finishes
-    STAGE_1_MATE_IN_2,           # Stage 2: SWAPPED - Harder approach patterns
+    STAGE_1_MATE_IN_2,           # Stage 1: Reach Stage-0
 
-    # NOTE: Planned Stage‑2A/2B/2C (Edge_Trap_Close / Enemy_Between / Wrong_Tempo)
-    # are scaffolded above but not yet activated here until FENs are added/validated.
+    # Stage 2A/2B/2C: Edge-trap conversion sub-stages (activated)
+    STAGE_2A_EDGE_TRAP_CLOSE,
+    STAGE_2B_EDGE_TRAP_ENEMY_BETWEEN,
+    STAGE_2C_EDGE_TRAP_WRONG_TEMPO,
     
     # PHASE 1.5: Edge Fence - optimal finishing patterns (NEW)
     STAGE_2_1_EDGE_FENCE_KNIGHT,   # Stage 3: Knight distance (optimal finish)

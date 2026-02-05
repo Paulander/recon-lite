@@ -144,7 +144,14 @@ class SpawnPoint:
         
         return random.random() < self.config.spawn_probability
     
-    def spawn_trial(self, tick: int, available_sensor_ids: List[str]) -> TrialMicroScript:
+    def spawn_trial(
+        self,
+        tick: int,
+        available_sensor_ids: List[str],
+        mature_sensor_ids: Optional[List[str]] = None,
+        exploratory_sensor_ids: Optional[List[str]] = None,
+        mature_ratio: float = 0.7,
+    ) -> TrialMicroScript:
         """
         Spawn a new trial micro-script.
         
@@ -152,10 +159,28 @@ class SpawnPoint:
         """
         trial_id = f"{self.spawn_point_id}_trial_{self.total_spawns}"
         self.total_spawns += 1
-        
+
+        # Select pool: 70% mature, 30% exploratory (fallbacks if empty)
+        pool = available_sensor_ids
+        if mature_sensor_ids is None:
+            mature_sensor_ids = []
+        if exploratory_sensor_ids is None:
+            exploratory_sensor_ids = []
+
+        if mature_sensor_ids or exploratory_sensor_ids:
+            pick_mature = random.random() < mature_ratio
+            if pick_mature and mature_sensor_ids:
+                pool = mature_sensor_ids
+            elif (not pick_mature) and exploratory_sensor_ids:
+                pool = exploratory_sensor_ids
+            elif mature_sensor_ids:
+                pool = mature_sensor_ids
+            elif exploratory_sensor_ids:
+                pool = exploratory_sensor_ids
+
         # Randomly select 1-4 sensors to explore
-        num_sensors = random.randint(1, min(4, max(1, len(available_sensor_ids))))
-        sensor_ids = random.sample(available_sensor_ids, num_sensors)
+        num_sensors = random.randint(1, min(4, max(1, len(pool))))
+        sensor_ids = random.sample(pool, num_sensors)
         sensor_ids.sort()
         
         trial = TrialMicroScript(
@@ -266,6 +291,8 @@ class SpawnPointManager:
         self.spawn_points: Dict[str, SpawnPoint] = {}
         self.tick = 0
         self.sensor_ids: List[str] = []
+        self.mature_sensor_ids: List[str] = []
+        self.exploratory_sensor_ids: List[str] = []
     
     def attach_to_legs(self, graph: Graph, leg_prefix: str = "leg_"):
         """
@@ -275,6 +302,21 @@ class SpawnPointManager:
         self.sensor_ids = sorted(
             [nid for nid in graph.nodes if nid.startswith("sensor_") and "_post" not in nid]
         )
+        self.mature_sensor_ids = []
+        self.exploratory_sensor_ids = []
+        for sid in self.sensor_ids:
+            node = graph.nodes.get(sid)
+            if not node:
+                continue
+            xp = node.meta.get("baseline_xp")
+            try:
+                xp_val = float(xp) if xp is not None else 0.0
+            except Exception:
+                xp_val = 0.0
+            if xp_val >= XP_PROMOTE_THRESHOLD:
+                self.mature_sensor_ids.append(sid)
+            else:
+                self.exploratory_sensor_ids.append(sid)
         for node_id in graph.nodes:
             if node_id.startswith(leg_prefix):
                 spawn_point_id = f"spawn_{node_id}"
@@ -315,7 +357,13 @@ class SpawnPointManager:
         for sp in self.spawn_points.values():
             if sp.should_spawn(v0):
                 if self.sensor_ids:
-                    trial = sp.spawn_trial(self.tick, self.sensor_ids)
+                    trial = sp.spawn_trial(
+                        self.tick,
+                        self.sensor_ids,
+                        mature_sensor_ids=self.mature_sensor_ids,
+                        exploratory_sensor_ids=self.exploratory_sensor_ids,
+                        mature_ratio=0.7,
+                    )
                     print(f"  Spawned trial: {trial.trial_id} exploring sensors {trial.sensor_ids}")
             
             # Update all active trials with this transition
