@@ -53,7 +53,7 @@ def create_krk_entry_root(node_id=None):
                     "goals": [],
                     "sensor_specs": {},
                     "sensor_weights": {},
-                    "goal_eps": float(node.meta.get("goal_eps", 0.15)),
+                    "goal_eps": float(node.meta.get("goal_eps", 0.08)),
                 }
         blackboard["goal_label"] = node.meta.get("goal_label", "mate_in_1")
         blackboard["goal_normalize"] = node.meta.get("goal_normalize", True)

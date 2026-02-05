@@ -655,7 +655,9 @@ Latest significant run: `snapshots/evolution/krk_curriculum/curriculum_summary.j
 
 ## New/Updated Files
 - `scripts/train_baseline_krk_chain.py`: corner-balanced Stage‑0 sampling (`--stage0-balance-corners`), helper `enemy_corner_bucket`.
+- `scripts/train_baseline_krk_chain.py`: Stage‑1 metric aligned (XP-weighted normalized distance), new `--stage1-reward-scale`, defaults now `goal_eps=0.08`, `max_goals=200`.
 - `src/recon_lite_chess/baseline_teacher.py`: `generate_krk_mate_in_1_position(..., target_corner=...)`.
 - `scripts/test_krk_entry.py`: failure breakdown by enemy king region + bugfix for totals.
-- `scripts/test_stage1_backchain.py`: Stage‑1 backchain evaluator (goal‑distance improvement) + `--stage-filter`.
-- `src/recon_lite_chess/krk_baseline_nodes.py`: optional `blackboard["stage_filter"]` actuator gating for diagnostics.
+- `scripts/test_stage1_backchain.py`: Stage‑1 backchain evaluator + `--stage-filter`, `--min-d0`, and quartile distance-bucket diagnostics.
+- `src/recon_lite_chess/krk_baseline_nodes.py`: optional `blackboard["stage_filter"]` actuator gating for diagnostics; runtime goal-bank fallback uses `goal_eps=0.08`.
+- `src/recon_lite/learning/baseline.py`: learner defaults now `goal_eps=0.08`, `max_goals=200`.

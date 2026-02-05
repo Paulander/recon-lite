@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Optional
 
 import chess
+import numpy as np
 
 from recon_lite.engine import ReConEngine
 from recon_lite.graph import Graph, NodeState
@@ -111,6 +112,8 @@ def main():
     parser.add_argument("--include-mate-in-1", action="store_false", dest="exclude_mate_in_1")
     parser.add_argument("--stage-filter", type=int, default=None,
                         help="If set, only actuators from this stage can propose moves")
+    parser.add_argument("--min-d0", type=float, default=0.0,
+                        help="Skip positions with starting goal-distance below this threshold")
     args = parser.parse_args()
 
     rng = random.Random(args.seed)
@@ -133,12 +136,14 @@ def main():
     stats = {
         "total": 0,
         "skipped_mate_in_1": 0,
+        "skipped_min_d0": 0,
         "no_move": 0,
         "improved": 0,
         "optimal": 0,
         "worsened": 0,
         "avg_reward": 0.0,
     }
+    records = []
 
     eval_idx = 0
     for i in range(args.samples):
@@ -150,6 +155,9 @@ def main():
         d0 = goal_distance(teacher, board, goal_bank, args.min_overlap)
         if d0 == float("inf"):
             # If we can't score, skip
+            continue
+        if d0 < args.min_d0:
+            stats["skipped_min_d0"] += 1
             continue
 
         # Evaluate all legal moves for oracle best improvement
@@ -189,11 +197,23 @@ def main():
 
         if chosen_reward > args.eps:
             stats["improved"] += 1
+            outcome = "improved"
         elif chosen_reward < -args.eps:
             stats["worsened"] += 1
+            outcome = "worsened"
+        else:
+            outcome = "flat"
 
         if chosen_reward >= best_reward - args.eps:
             stats["optimal"] += 1
+
+        records.append(
+            {
+                "d0": float(d0),
+                "outcome": outcome,
+                "optimal": bool(chosen_reward >= best_reward - args.eps),
+            }
+        )
 
         eval_idx += 1
         if eval_idx % 10 == 0:
@@ -206,12 +226,55 @@ def main():
     print("-" * 60)
     print(f"Total evaluated: {stats['total']}")
     print(f"Skipped mate-in-1: {stats['skipped_mate_in_1']}")
+    print(f"Skipped by min-d0: {stats['skipped_min_d0']}")
     print(f"No move: {stats['no_move']}")
     if stats["total"]:
         print(f"Improved: {stats['improved']} ({stats['improved']/stats['total']*100:.1f}%)")
         print(f"Optimal:  {stats['optimal']} ({stats['optimal']/stats['total']*100:.1f}%)")
         print(f"Worsened: {stats['worsened']} ({stats['worsened']/stats['total']*100:.1f}%)")
         print(f"Avg reward (d0-d1): {stats['avg_reward']:.4f}")
+
+    if records:
+        d0_vals = np.array([r["d0"] for r in records], dtype=np.float32)
+        q1, q2, q3 = np.quantile(d0_vals, [0.25, 0.50, 0.75]).tolist()
+        buckets = {
+            "near": {"total": 0, "improved": 0, "optimal": 0, "worsened": 0},
+            "mid": {"total": 0, "improved": 0, "optimal": 0, "worsened": 0},
+            "far": {"total": 0, "improved": 0, "optimal": 0, "worsened": 0},
+            "very_far": {"total": 0, "improved": 0, "optimal": 0, "worsened": 0},
+        }
+        for r in records:
+            d0 = r["d0"]
+            if d0 <= q1:
+                b = "near"
+            elif d0 <= q2:
+                b = "mid"
+            elif d0 <= q3:
+                b = "far"
+            else:
+                b = "very_far"
+            buckets[b]["total"] += 1
+            if r["outcome"] == "improved":
+                buckets[b]["improved"] += 1
+            elif r["outcome"] == "worsened":
+                buckets[b]["worsened"] += 1
+            if r["optimal"]:
+                buckets[b]["optimal"] += 1
+
+        print("\nDistance Buckets (by d0 quartiles)")
+        print("-" * 60)
+        print(f"Q1={q1:.4f}, Q2={q2:.4f}, Q3={q3:.4f}")
+        for name in ("near", "mid", "far", "very_far"):
+            row = buckets[name]
+            if row["total"] == 0:
+                continue
+            total = row["total"]
+            print(
+                f"{name:8s}: n={total:3d} "
+                f"improved={row['improved']:3d} ({row['improved']/total*100:5.1f}%) "
+                f"optimal={row['optimal']:3d} ({row['optimal']/total*100:5.1f}%) "
+                f"worsened={row['worsened']:3d} ({row['worsened']/total*100:5.1f}%)"
+            )
 
 
 if __name__ == "__main__":

@@ -103,15 +103,6 @@ def goal_signal_sensor_ids(learner: BaselineLearner, goal_feature_idx: int) -> L
     return ids
 
 
-def goal_distance(current: Dict[int, float], goal: Dict[int, float]) -> float:
-    """L2 distance over shared sensor ids."""
-    keys = set(current.keys()) & set(goal.keys())
-    if not keys:
-        return float("inf")
-    diffs = [(current[k] - goal[k]) for k in keys]
-    return float(np.linalg.norm(diffs))
-
-
 def compute_sensor_vectors_batch(learner: BaselineLearner, v_batch: Any, sensor_ids: List[int]) -> Any:
     """Compute sensor vectors for a batch of feature vectors in a fixed id order."""
     outputs = learner.batch_apply_sensors(v_batch)
@@ -195,6 +186,11 @@ def label_transitions_by_goal(
     )
 
     def weighted_goal_dist(cur: np.ndarray, goal: np.ndarray) -> float:
+        """Runtime-aligned weighted normalized L2 over full sensor vectors.
+
+        No min-overlap gate is required here because training vectors are dense
+        and always computed on the same fixed `sensor_ids` basis.
+        """
         if cur.shape != goal.shape:
             return float("inf")
         cur = cur.astype(np.float32, copy=False)
@@ -391,13 +387,15 @@ def main() -> None:
     parser.add_argument("--sensors-per-spawn", type=int, default=5)
     parser.add_argument("--output-dir", type=Path, default=Path("snapshots/baseline_krk_chain"))
     parser.add_argument("--save-learner", type=Path, default=Path("snapshots/baseline_krk_chain/final_learner.pkl"))
-    parser.add_argument("--goal-eps", type=float, default=0.15)
-    parser.add_argument("--max-goals", type=int, default=100)
+    parser.add_argument("--goal-eps", type=float, default=0.08)
+    parser.add_argument("--max-goals", type=int, default=200)
     parser.add_argument("--min-mature-for-goals", type=int, default=8)
     parser.add_argument("--max-actuators-per-stage", type=int, default=30)
     parser.add_argument("--max-actuators-total", type=int, default=0)
     parser.add_argument("--delta-eps", type=float, default=0.22)
     parser.add_argument("--top-k", type=int, default=3)
+    parser.add_argument("--stage1-reward-scale", type=float, default=1.0,
+                        help="Scale factor applied to Stage-1 dense rewards before XP updates")
     parser.add_argument("--device", type=str, default="auto", help="Device (cpu, cuda, auto, numpy)")
     parser.add_argument("--batch-size", type=int, default=256, help="Batch size for sensor application")
     parser.add_argument("--goal-feature-idx", type=int, default=13,
@@ -521,16 +519,18 @@ def main() -> None:
                 g.s0 for g in learner.goal_memories
                 if g.label == "mate_in_1" and g.s0.shape == (len(goal_sensor_ids),)
             ]
-            transitions.extend(
-                label_transitions_by_goal(
-                    learner,
-                    b0,
-                    goal_vectors,
-                    goal_sensor_ids,
-                    lookahead_black=True,
-                    opponent_mode="max",
-                )
+            stage_transitions = label_transitions_by_goal(
+                learner,
+                b0,
+                goal_vectors,
+                goal_sensor_ids,
+                lookahead_black=True,
+                opponent_mode="max",
             )
+            if args.stage1_reward_scale != 1.0:
+                for t in stage_transitions:
+                    t.reward *= float(args.stage1_reward_scale)
+            transitions.extend(stage_transitions)
 
         stats = update_learner_from_transitions(
             learner,

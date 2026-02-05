@@ -139,6 +139,10 @@ Only hoist upward if they prove transferable across legs/stages.
   - Stage‑1 backchain (100 samples, stage-filter=1): `Improved 27%`, `Optimal 32%`, `Worsened 63%`, `Avg reward -0.0120`.
   - Conclusion: Stage‑1 remains under target; 30-sample result was optimistic/noisy.
   - Stage‑0 regression (50 samples): `100%`.
+- New Stage‑1 improvement pass (implemented):
+  - `goal_eps` default lowered to `0.08` and `max_goals` default raised to `200` (trainer + learner + runtime fallback).
+  - Added `--stage1-reward-scale` to amplify Stage‑1 dense reward during updates without changing labels.
+  - Added Stage‑1 evaluator diagnostics: `--min-d0` and quartile distance-bucket reporting.
 
 ---
 

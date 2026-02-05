@@ -833,8 +833,8 @@ class BaselineLearner:
         self,
         feature_dim: int,
         stage: int = 0,
-        goal_eps: float = 0.15,
-        max_goals: int = 100,
+        goal_eps: float = 0.08,
+        max_goals: int = 200,
         normalize_goals: bool = True,
         device: str = "cpu",
     ):
