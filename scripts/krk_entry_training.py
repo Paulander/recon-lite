@@ -26,13 +26,13 @@ def execute_graph(graph: Graph, env: dict) -> None:
 
     # Root: extract features/cache
     if root and root.predicate:
-        root.predicate(root, graph, env)
+        root.predicate(root, env)
 
     # Sensors: populate outputs
     for nid, node in graph.nodes.items():
         if "sensor" in nid and node.predicate:
             try:
-                node.predicate(node, graph, env)
+                node.predicate(node, env)
             except Exception:
                 continue
 
@@ -40,20 +40,20 @@ def execute_graph(graph: Graph, env: dict) -> None:
     for nid, node in graph.nodes.items():
         if "act" in nid and node.predicate:
             try:
-                node.predicate(node, graph, env)
+                node.predicate(node, env)
             except Exception:
                 continue
 
 
-def select_move(graph: Graph, board: chess.Board) -> chess.Move:
+def select_move(graph: Graph, board: chess.Board) -> tuple[chess.Move | None, dict]:
     """Select a move from the graph; fallback to random legal move."""
     env = {"board": board}
     execute_graph(graph, env)
     move = env.get("suggested_move")
     if move is None:
         legal = list(board.legal_moves)
-        return random.choice(legal) if legal else None
-    return move
+        return (random.choice(legal) if legal else None), env
+    return move, env
 
 
 def run_cycle(graph: Graph, spawn_mgr: SpawnPointManager, stage_id: int, games: int) -> dict:
@@ -61,7 +61,7 @@ def run_cycle(graph: Graph, spawn_mgr: SpawnPointManager, stage_id: int, games: 
     moves = 0
     for _ in range(games):
         board = generate_krk_curriculum_position(stage_id)
-        move = select_move(graph, board)
+        move, env = select_move(graph, board)
         if move is None:
             continue
         moves += 1
@@ -72,7 +72,7 @@ def run_cycle(graph: Graph, spawn_mgr: SpawnPointManager, stage_id: int, games: 
         if is_mate:
             wins += 1
 
-        spawn_mgr.process_position(board, move, is_mate)
+        spawn_mgr.process_position(board, move, is_mate, env=env)
 
     return {
         "games": games,

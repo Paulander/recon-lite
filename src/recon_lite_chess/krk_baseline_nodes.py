@@ -43,14 +43,25 @@ def create_krk_entry_root(node_id=None):
         # Initialize caches
         blackboard.setdefault("sensor_outputs", {})
         blackboard.setdefault("sensor_specs", {})
-        if "goal_bank" not in blackboard and node.meta.get("goal_bank"):
-            blackboard["goal_bank"] = node.meta.get("goal_bank")
-            blackboard["goal_label"] = node.meta.get("goal_label", "mate_in_1")
-            blackboard["goal_normalize"] = node.meta.get("goal_normalize", True)
-            blackboard["goal_weight"] = node.meta.get("goal_weight", 0.7)
-            blackboard["goal_lookahead"] = node.meta.get("goal_lookahead", "max")
-            blackboard["goal_min_overlap"] = node.meta.get("goal_min_overlap", 8)
-            blackboard["goal_handoff_threshold"] = node.meta.get("goal_handoff_threshold", 0.2)
+        # Goal bank: hydrate from node.meta if present, otherwise init empty (online growth)
+        if "goal_bank" not in blackboard:
+            if node.meta.get("goal_bank"):
+                blackboard["goal_bank"] = node.meta.get("goal_bank")
+            else:
+                blackboard["goal_bank"] = {
+                    "label": node.meta.get("goal_label", "mate_in_1"),
+                    "goals": [],
+                    "sensor_specs": {},
+                    "sensor_weights": {},
+                    "goal_eps": float(node.meta.get("goal_eps", 0.15)),
+                }
+        blackboard["goal_label"] = node.meta.get("goal_label", "mate_in_1")
+        blackboard["goal_normalize"] = node.meta.get("goal_normalize", True)
+        blackboard["goal_weight"] = node.meta.get("goal_weight", 0.7)
+        blackboard["goal_lookahead"] = node.meta.get("goal_lookahead", "max")
+        blackboard["goal_min_overlap"] = node.meta.get("goal_min_overlap", 8)
+        blackboard["goal_handoff_threshold"] = node.meta.get("goal_handoff_threshold", 0.2)
+        node.meta["goal_bank"] = blackboard.get("goal_bank")
 
         # Compute current goal distance (for handoff gating) when goal bank exists
         if blackboard.get("goal_bank") and blackboard.get("krk_features") is not None:
@@ -288,10 +299,12 @@ def create_actuator_terminal(node_id=None):
             return False, False
         
         scores = {}
+        move_meta: Dict[Any, Dict[str, Any]] = {}
         for move in legal_moves:
             # Simulate move
             board_copy = board.copy()
             board_copy.push(move)
+            is_mate = board_copy.is_checkmate()
             
             # Get new features
             features_1 = _teacher.features(board_copy)
@@ -386,6 +399,9 @@ def create_actuator_terminal(node_id=None):
 
                 if d1 is not None:
                     score += goal_weight * (-float(d1))
+                move_meta[move] = {"is_mate": is_mate, "goal_dist": d1}
+            else:
+                move_meta[move] = {"is_mate": is_mate, "goal_dist": None}
 
             scores[move] = score
         
@@ -395,6 +411,7 @@ def create_actuator_terminal(node_id=None):
         # Select best move
         best_move = max(scores, key=scores.get)
         best_score = scores[best_move]
+        best_meta = move_meta.get(best_move, {})
         
         # Store suggestions in environment, keep best across actuators
         suggestions = env.setdefault("actuator_suggestions", [])
@@ -408,6 +425,20 @@ def create_actuator_terminal(node_id=None):
         env["suggested_move"] = best["move"].uci()
         env["move_confidence"] = best["score"]
         env["suggested_actuator"] = best["actuator"]
+
+        # Promote goal prototype from pre-move state when best move hits goal basin or checkmate.
+        # This is local/online goal discovery: "if this state leads to a goal, it becomes a goal."
+        if best["actuator"] == node.nid:
+            should_promote = False
+            if best_meta.get("is_mate"):
+                should_promote = True
+            else:
+                d1 = best_meta.get("goal_dist")
+                thresh = float(blackboard.get("goal_handoff_threshold", 0.2))
+                if d1 is not None and d1 <= thresh:
+                    should_promote = True
+            if should_promote:
+                _promote_goal_from_outputs(blackboard)
         
         # Store in node state
         if not hasattr(node, 'state') or node.state is None:
@@ -479,6 +510,91 @@ def _apply_spec_to_features(spec: Dict[str, Any], features: np.ndarray) -> float
         return apply_readout(sub_v, readout_type, readout_params)
     except Exception:
         return None
+
+
+def _goal_distance_from_values(
+    current: Dict[str, float],
+    goal_bank: Dict[str, Any] | None,
+    normalize: bool = True,
+    min_overlap: float = 8,
+) -> tuple[float | None, int | None]:
+    """Compute min distance to goal prototypes using a values dict (sensor_id -> value)."""
+    if not goal_bank or not isinstance(goal_bank, dict):
+        return None, None
+    goals = goal_bank.get("goals", [])
+    if not goals or not current:
+        return None, None
+    sensor_specs = goal_bank.get("sensor_specs", {}) or {}
+
+    best = None
+    best_idx = None
+    for idx, entry in enumerate(goals):
+        gvals = entry.get("values", {})
+        keys = set(current.keys()) & set(gvals.keys())
+        if not keys:
+            continue
+        weights = np.array([
+            _goal_weight_for_sensor(k, goal_bank, sensor_specs)
+            for k in keys
+        ], dtype=np.float32)
+        weight_sum = float(np.sum(weights))
+        if weight_sum < min_overlap:
+            continue
+        vec_cur = np.array([current[k] for k in keys], dtype=np.float32)
+        vec_goal = np.array([gvals[k] for k in keys], dtype=np.float32)
+        if normalize:
+            vec_cur = vec_cur / (np.sqrt(np.sum(weights * (vec_cur ** 2))) + 1e-6)
+            vec_goal = vec_goal / (np.sqrt(np.sum(weights * (vec_goal ** 2))) + 1e-6)
+        diff = vec_cur - vec_goal
+        dist = float(np.sqrt(np.sum(weights * (diff ** 2))))
+        if best is None or dist < best:
+            best = dist
+            best_idx = idx
+    return best, best_idx
+
+
+def _promote_goal_from_outputs(blackboard: Dict[str, Any]) -> None:
+    """Promote current sensor outputs into the goal bank (local, online)."""
+    goal_bank = blackboard.get("goal_bank")
+    if not isinstance(goal_bank, dict):
+        return
+    sensor_outputs = blackboard.get("sensor_outputs", {}) or {}
+    sensor_specs = blackboard.get("sensor_specs", {}) or {}
+    if not sensor_outputs:
+        return
+
+    # Ensure sensor specs/weights are present in goal bank
+    goal_specs = goal_bank.setdefault("sensor_specs", {})
+    goal_weights = goal_bank.setdefault("sensor_weights", {})
+    for sid, spec in sensor_specs.items():
+        if sid not in goal_specs:
+            goal_specs[sid] = spec
+        if sid not in goal_weights:
+            w = spec.get("weight")
+            try:
+                w_val = float(w) if w is not None else 1.0
+            except Exception:
+                w_val = 1.0
+            goal_weights[sid] = w_val
+
+    # Build stable values dict
+    values = {sid: float(val) for sid, val in sensor_outputs.items()}
+
+    # Merge with existing goals if close
+    goal_eps = float(goal_bank.get("goal_eps", 0.15))
+    normalize = bool(blackboard.get("goal_normalize", True))
+    min_overlap = float(blackboard.get("goal_min_overlap", 8))
+    dist, idx = _goal_distance_from_values(values, goal_bank, normalize=normalize, min_overlap=min_overlap)
+    if dist is not None and dist <= goal_eps and idx is not None:
+        entry = goal_bank["goals"][idx]
+        entry["count"] = int(entry.get("count", 1)) + 1
+        return
+
+    # Add new goal entry
+    goal_bank.setdefault("goals", []).append({
+        "values": values,
+        "count": 1,
+    })
 
 
 def _goal_distance_from_features(

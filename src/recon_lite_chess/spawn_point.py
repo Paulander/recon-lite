@@ -19,7 +19,7 @@ import numpy as np
 
 from recon_lite.graph import Node, NodeType, Graph, LinkType
 from recon_lite_chess.baseline_teacher import KRKTeacher
-from recon_lite_chess.krk_baseline_nodes import apply_readout
+from recon_lite_chess.krk_baseline_nodes import apply_readout, _goal_distance_from_features
 
 
 # Global teacher for feature extraction
@@ -38,6 +38,8 @@ class SpawnPointConfig:
     spawn_probability: float = SPAWN_PROBABILITY
     max_trials: int = 5  # Max concurrent trials per spawn point
     trial_lifetime: int = 50  # Prune after this many ticks without improvement
+    stagnation_window: int = 5
+    stagnation_eps: float = 1e-3
 
 
 @dataclass
@@ -126,18 +128,42 @@ class SpawnPoint:
     total_spawns: int = 0
     total_promotions: int = 0
     total_prunes: int = 0
+    goal_distance_history: List[float] = field(default_factory=list)
     
-    def should_spawn(self, features: np.ndarray) -> bool:
+    def _goal_stagnant(self) -> bool:
+        """Check if goal distance hasn't improved in the recent window."""
+        window = self.config.stagnation_window
+        if len(self.goal_distance_history) < window + 1:
+            return False
+        recent = self.goal_distance_history[-window:]
+        prev_best = min(self.goal_distance_history[:-window])
+        return min(recent) >= (prev_best - self.config.stagnation_eps)
+
+    def update_goal_distance(self, dist: Optional[float]) -> None:
+        """Record goal distance for stagnation checks."""
+        if dist is None:
+            return
+        self.goal_distance_history.append(float(dist))
+
+    def should_spawn(self, features: np.ndarray, goal_distance: Optional[float] = None, is_active: bool = True) -> bool:
         """
         Check if we should spawn a new trial.
         
         Triggers on affordance spike: can_deliver_mate=1
         """
+        if not is_active:
+            return False
+
         # Feature 12 is can_deliver_mate
         can_deliver_mate = features[12] > 0.5
         
-        if not can_deliver_mate:
-            return False
+        # If goal distance is tracked, prefer stagnation-based spawning
+        if goal_distance is not None:
+            if not self._goal_stagnant():
+                return False
+        else:
+            if not can_deliver_mate:
+                return False
         
         if len(self.active_trials) >= self.config.max_trials:
             return False
@@ -293,6 +319,7 @@ class SpawnPointManager:
         self.sensor_ids: List[str] = []
         self.mature_sensor_ids: List[str] = []
         self.exploratory_sensor_ids: List[str] = []
+        self.goal_bank: Optional[Dict[str, Any]] = None
     
     def attach_to_legs(self, graph: Graph, leg_prefix: str = "leg_"):
         """
@@ -328,11 +355,35 @@ class SpawnPointManager:
         
         print(f"Attached {len(self.spawn_points)} spawn points to legs")
     
+    def _resolve_active_leg(self, env: Optional[Dict[str, Any]]) -> Optional[str]:
+        if env is None or self.graph is None:
+            return None
+        actuator = env.get("suggested_actuator") or env.get("chosen_actuator")
+        if not actuator:
+            return None
+        cur = actuator
+        while cur:
+            if cur.startswith("leg_"):
+                return cur
+            cur = self.graph.parent_of(cur)
+        return None
+
+    def _get_goal_bank(self) -> Optional[Dict[str, Any]]:
+        if self.goal_bank is not None:
+            return self.goal_bank
+        if self.graph is None:
+            return None
+        root = self.graph.nodes.get("krk_entry")
+        if root:
+            self.goal_bank = root.meta.get("goal_bank")
+        return self.goal_bank
+
     def process_position(
         self,
         board: Any,
         selected_move: Any,
-        resulted_in_checkmate: bool
+        resulted_in_checkmate: bool,
+        env: Optional[Dict[str, Any]] = None,
     ):
         """
         Process a position through all spawn points.
@@ -352,10 +403,22 @@ class SpawnPointManager:
         # Compute terminal outputs (s0, s1)
         s0 = self._compute_terminal_outputs(v0)
         s1 = self._compute_terminal_outputs(v1)
+
+        # Compute goal distance for stagnation checks if goal bank exists
+        goal_bank = self._get_goal_bank()
+        goal_dist = None
+        if goal_bank:
+            goal_dist, _ = _goal_distance_from_features(v1, goal_bank, normalize=True, min_overlap=8)
+
+        active_leg = self._resolve_active_leg(env)
         
         # Check for spawning (on affordance spike)
         for sp in self.spawn_points.values():
-            if sp.should_spawn(v0):
+            is_active = True
+            if active_leg is not None:
+                is_active = (sp.leg_id == active_leg)
+            sp.update_goal_distance(goal_dist)
+            if sp.should_spawn(v0, goal_distance=goal_dist, is_active=is_active):
                 if self.sensor_ids:
                     trial = sp.spawn_trial(
                         self.tick,
