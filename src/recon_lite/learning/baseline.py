@@ -902,7 +902,18 @@ class BaselineLearner:
         cap = max_goals if max_goals is not None else self.max_goals
         do_norm = normalize if normalize is not None else self.normalize_goals
 
-        s = np.array(s0, dtype=np.float32)
+        def _to_numpy(val: Any) -> np.ndarray:
+            if torch is not None and isinstance(val, torch.Tensor):
+                return val.detach().cpu().numpy().astype(np.float32, copy=False)
+            return np.array(val, dtype=np.float32)
+
+        was_tensor = torch is not None and isinstance(s0, torch.Tensor)
+        s0_np = _to_numpy(s0)
+        if was_tensor and not hasattr(self, "_goal_tensor_notice"):
+            # Avoid repeated noise; ensure goal memories stay numpy even with torch backend.
+            print("GoalMemory: converting torch tensors to numpy for stable goal storage")
+            self._goal_tensor_notice = True
+        s = np.array(s0_np, dtype=np.float32)
         if do_norm:
             denom = np.linalg.norm(s) + 1e-6
             s = s / denom
@@ -915,7 +926,7 @@ class BaselineLearner:
                 continue
             if sensor_ids is not None and goal.sensor_ids is not None and goal.sensor_ids != sensor_ids:
                 continue
-            g = goal.s0
+            g = _to_numpy(goal.s0)
             if do_norm:
                 g = g / (np.linalg.norm(g) + 1e-6)
             dist = np.linalg.norm(s - g)
@@ -925,7 +936,8 @@ class BaselineLearner:
 
         # Merge if close enough
         if best is not None and best_dist is not None and best_dist < eps:
-            best.s0 = best.s0 + (s0 - best.s0) / (best.count + 1)
+            best_vec = _to_numpy(best.s0)
+            best.s0 = best_vec + (s0_np - best_vec) / (best.count + 1)
             best.count += 1
             if best.sensor_ids is None and sensor_ids is not None:
                 best.sensor_ids = list(sensor_ids)
@@ -943,7 +955,7 @@ class BaselineLearner:
 
         goal = GoalMemory(
             id=self._next_goal_id,
-            s0=s0,
+            s0=s0_np,
             label=label,
             sensor_ids=list(sensor_ids) if sensor_ids is not None else None,
         )
