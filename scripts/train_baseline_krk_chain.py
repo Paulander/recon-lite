@@ -26,7 +26,7 @@ from recon_lite.learning.baseline import (
     TransitionData, apply_sensor,
     SensorSpec,
 )
-from recon_lite_chess.baseline_teacher import KRKTeacher, generate_krk_mate_in_1_position
+from recon_lite_chess.baseline_teacher import KRKTeacher, generate_krk_mate_in_1_position, can_deliver_mate
 
 
 def generate_random_krk_position() -> chess.Board:
@@ -46,6 +46,46 @@ def generate_random_krk_position() -> chess.Board:
         if board.is_check():
             continue
         return board
+
+
+def is_forced_mate_in_2(board: chess.Board) -> bool:
+    """Return True if side-to-move (white) has a move that forces mate-in-1 next ply."""
+    if board.turn != chess.WHITE:
+        return False
+    if can_deliver_mate(board):
+        # Exclude mate-in-1 from Stage-1 generation.
+        return False
+
+    for move in board.legal_moves:
+        b1 = board.copy()
+        b1.push(move)
+        if b1.is_checkmate():
+            # Still mate-in-1 line, not Stage-1 target.
+            continue
+        replies = list(b1.legal_moves)
+        if not replies:
+            continue
+
+        # Forced: after every black reply, white can mate in 1.
+        forced = True
+        for reply in replies:
+            b2 = b1.copy()
+            b2.push(reply)
+            if not can_deliver_mate(b2):
+                forced = False
+                break
+        if forced:
+            return True
+    return False
+
+
+def generate_stage1_mate_in_2_position(max_tries: int = 5000) -> chess.Board:
+    """Generate a legal KRK position that is forced mate-in-2 for white."""
+    for _ in range(max_tries):
+        b = generate_random_krk_position()
+        if is_forced_mate_in_2(b):
+            return b
+    raise RuntimeError(f"Could not generate forced mate-in-2 after {max_tries} attempts")
 
 
 def enemy_corner_bucket(board: chess.Board) -> int | None:
@@ -406,6 +446,19 @@ def main() -> None:
                         help="Disable seeding the goal sensor template")
     parser.add_argument("--stage0-balance-corners", action="store_true", default=False,
                         help="Balance Stage 0 samples across corners for mate-in-1 positions")
+    parser.add_argument(
+        "--stage1-position-mode",
+        type=str,
+        default="mate_in_2",
+        choices=["mate_in_2", "random", "hybrid"],
+        help="Stage-1 sampling source: forced mate-in-2, random KRK, or hybrid mix",
+    )
+    parser.add_argument(
+        "--stage1-hybrid-random-ratio",
+        type=float,
+        default=0.2,
+        help="When stage1-position-mode=hybrid, probability of sampling random KRK",
+    )
     args = parser.parse_args()
 
     teacher = KRKTeacher()
@@ -513,8 +566,26 @@ def main() -> None:
 
     for cycle in range(args.stage1_cycles):
         transitions = []
+        stage1_gen_fallbacks = 0
         for _ in range(args.samples_per_cycle):
-            b0 = generate_random_krk_position()
+            if args.stage1_position_mode == "random":
+                b0 = generate_random_krk_position()
+            elif args.stage1_position_mode == "hybrid":
+                if random.random() < args.stage1_hybrid_random_ratio:
+                    b0 = generate_random_krk_position()
+                else:
+                    try:
+                        b0 = generate_stage1_mate_in_2_position()
+                    except RuntimeError:
+                        stage1_gen_fallbacks += 1
+                        b0 = generate_random_krk_position()
+            else:
+                # Default: curated Stage-1 should be mate-in-2 and close to Stage-0 basin.
+                try:
+                    b0 = generate_stage1_mate_in_2_position()
+                except RuntimeError:
+                    stage1_gen_fallbacks += 1
+                    b0 = generate_random_krk_position()
             goal_vectors = [
                 g.s0 for g in learner.goal_memories
                 if g.label == "mate_in_1" and g.s0.shape == (len(goal_sensor_ids),)
@@ -546,6 +617,8 @@ def main() -> None:
             mature = len(learner.get_mature_sensors())
             print(f"Cycle {cycle:3d}: sensors={len(learner.sensors)} (mature={mature}) "
                   f"actuators={len(learner.actuators)} goal_prototypes={len(learner.goal_memories)}")
+            if stage1_gen_fallbacks:
+                print(f"  Stage-1 generation fallbacks to random KRK: {stage1_gen_fallbacks}")
 
         if cycle % args.spawn_interval == 0 and cycle > 0:
             for _ in range(args.sensors_per_spawn):
