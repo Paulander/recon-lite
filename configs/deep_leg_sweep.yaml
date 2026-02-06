@@ -1,0 +1,78 @@
+# Weights & Biases Sweep Configuration for Deep-Pressure Plan
+# 
+# Goal: Find the optimal hyperparameters that maximize (win_rate * max_depth)
+# This rewards both winning AND building hierarchical structure.
+#
+# Usage:
+#   wandb sweep configs/deep_leg_sweep.yaml
+#   wandb agent <sweep_id>
+
+program: scripts/run_wandb_sweep_trial.py
+method: bayes
+
+# Primary metric: we want to maximize depth while maintaining win rate
+metric:
+  name: depth_win_score
+  goal: maximize
+
+# Sweep parameters
+parameters:
+  # M5 Forced Hoisting threshold (high win rate)
+  # Range: 0.85-0.98 - when to trigger forced hoisting on success
+  forced_hoist_high_threshold:
+    distribution: uniform
+    min: 0.85
+    max: 0.98
+
+  # Plasticity learning rate
+  # Range: 0.001-0.05 - affects how fast deep-link weights update
+  plasticity_eta:
+    distribution: log_uniform_values
+    min: 0.001
+    max: 0.05
+
+  # Minimum internal ticks (mandatory propagation depth)
+  # Values: 3-7 - ensures signal reaches TRIAL sensors
+  min_internal_ticks:
+    values: [3, 4, 5, 6, 7]
+
+  # Max TRIAL slots (sparsity pressure)
+  # Values: 10-25 - fewer slots = more competition
+  max_trial_slots:
+    values: [10, 15, 20, 25]
+
+  # Inertia prune cycles (how long before pruning idle cells)
+  # Values: 10-30 - shorter = more aggressive pruning
+  inertia_prune_cycles:
+    values: [10, 15, 20, 25, 30]
+
+  # Forced hoist low threshold (crisis mode trigger)
+  # Range: 0.05-0.20 - below this win rate, force hoisting
+  forced_hoist_low_threshold:
+    distribution: uniform
+    min: 0.05
+    max: 0.20
+
+  # Target stage (which curriculum stage to test)
+  # Fixed at 12 for this sweep (Zugzwang)
+  target_stage:
+    value: 12
+
+  # Number of cycles per trial
+  max_cycles:
+    value: 20
+
+  # Games per cycle
+  games_per_cycle:
+    value: 50
+
+# Early termination policy
+early_terminate:
+  type: hyperband
+  min_iter: 5
+  max_iter: 20
+  s: 2
+
+# Run settings
+run_cap: 50  # Maximum number of trials
+

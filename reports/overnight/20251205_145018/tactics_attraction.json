@@ -1,0 +1,568 @@
+{
+  "stats": {
+    "total": 50,
+    "detected": 37,
+    "correct": 4,
+    "detection_rate": 0.74,
+    "accuracy": 0.08,
+    "by_tactic": {
+      "attraction": {
+        "total": 50,
+        "detected": 37,
+        "correct": 4
+      }
+    }
+  },
+  "results": [
+    {
+      "fen": "1rb2rk1/q5P1/4p2p/3p3p/3P1P2/2P5/2QK3P/3R2R1 b - - 0 29",
+      "expected": "f8f7",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "a7d4"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "5rk1/5ppp/1p6/1qp2P1Q/3p3P/6R1/6PK/8 b - - 0 30",
+      "expected": "c5c4",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "2r5/4ppkp/5bp1/1p6/1P6/P3B3/2r2PPP/1R1R2K1 b - - 2 22",
+      "expected": "f6b2",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "c2f2"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "3r2k1/1b3pbR/p2P2P1/3p2N1/2p5/2P2N2/PP6/2K5 b - - 0 28",
+      "expected": "f7g6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "7k/pb1qn2n/1p2R2Q/2p2p2/2Pp4/3B4/PP3PrP/4RK2 b - - 1 27",
+      "expected": "g2g7",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "d7e6",
+        "g2h2",
+        "g2f2",
+        "g2g1"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "r6r/pp2kb2/3p1p1Q/1N1Pp3/3bP3/P2B2P1/1P4PP/7K w - - 6 28",
+      "expected": "h6d2",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "h6h8",
+        "h6f8",
+        "h6f6",
+        "b5a7",
+        "b5d6",
+        "b5d4"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "6r1/1p1bRk2/p2q1n1r/3p4/3Q4/1P1B3P/P1P2PP1/4R1K1 b - - 4 27",
+      "expected": "d6e7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "6k1/2q1pp2/p5pB/2p4n/3pP1Q1/P2P3P/1r4P1/5RK1 b - - 1 30",
+      "expected": "c7g3",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "c7h2",
+        "b2g2"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "r1b4r/ppk2ppp/2p5/3n2B1/2P5/6P1/P1P1B2P/2KR3R b - - 0 16",
+      "expected": "d5c3",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "1r4k1/p5pp/5p2/2Rb4/1P4P1/P2r4/3P3P/3B1RK1 b - - 3 34",
+      "expected": "d3d2",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "b8b4",
+        "d3g3"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "8/7R/B2k4/2pnp3/P7/3KP3/1r6/8 w - - 1 43",
+      "expected": "a6c4",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "h7d7",
+        "h7h6"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "r3k1nr/pp3ppp/1q2b3/8/1n1p4/6P1/PB1QPPBP/R3K1NR w KQkq - 0 13",
+      "expected": "b2d4",
+      "detected": true,
+      "correct": true,
+      "proposed": [
+        "g2b7",
+        "g2c6",
+        "d2d4",
+        "b2d4"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "r5k1/1p3p2/2p1ppp1/3p4/2nP4/1QB2B1P/rPP2PP1/qNKR3R w - - 3 22",
+      "expected": "f3e2",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "f3d5"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "r1b2k2/p2pbP2/1pn3pr/1P5p/2B5/P1B3N1/2P3PP/1K2R3 b - - 0 23",
+      "expected": "c6d8",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "2k4r/ppp1q1p1/3b2p1/3Q4/1P2NPn1/P1P3N1/6P1/R1B2RKr w - - 5 21",
+      "expected": "g3h1",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "q4r1k/5pbp/2Np1np1/3P2B1/pQb5/5B2/P4PPP/4R1K1 b - - 1 23",
+      "expected": "c4d5",
+      "detected": true,
+      "correct": true,
+      "proposed": [
+        "a8c6",
+        "f6d5",
+        "c4d5"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "1r6/6R1/3p4/1P1Rp3/K1r1P3/2k2P2/8/8 w - - 1 45",
+      "expected": "a4a5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "2r4r/pp2q1k1/2pp2p1/5pb1/2P2N2/1P4PP/P1Q3K1/3R1R2 b - - 0 26",
+      "expected": "g5f6",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "h8h3",
+        "e7e4",
+        "e7e2",
+        "g5f4"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "1n3r1k/p5pp/8/7Q/4P3/2NP4/PPPB2qP/R2KRr2 w - - 3 21",
+      "expected": "d2e3",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "h5h7"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "r6k/4q1pp/1n1pBp2/2p1nP2/1p2R2Q/1P5P/r5P1/2B1R1K1 b - - 6 31",
+      "expected": "b6d7",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "e7e6",
+        "e5f3",
+        "a2g2"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "1k2r3/1p3ppp/3p4/2n5/1rPN4/1P3P2/P5PP/2KR1R2 w - - 1 23",
+      "expected": "f1e1",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "d4c6"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "r4rk1/pppbq1pp/1b3p2/3Bp2R/3P4/2P3P1/PP3P1P/R1BQ2K1 b - - 0 16",
+      "expected": "g8h8",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "r3r1k1/pp2qp1p/3b2p1/3p4/3P2n1/1PN5/PBP1BPPP/R2QK2R w KQ - 6 15",
+      "expected": "h2h3",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "r3rk2/pppqn1pQ/6P1/4p1P1/4Pp2/1PP5/P4P2/RNB1K3 b Q - 0 20",
+      "expected": "d7g4",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "e7g6",
+        "d7d2",
+        "d7d1"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "2r2rk1/3b1p1p/3p3P/p2Np1q1/1p2Q3/8/PPP5/1K1R3R b - - 1 23",
+      "expected": "d7f5",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "c8c2",
+        "g5c1"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "r3n3/2q1b1kp/3p2p1/2n2N2/2B1P3/8/1Pp2B2/1NKR3R b - - 1 29",
+      "expected": "g7h8",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "g6f5"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "3r4/1p5p/2kb3R/p4pP1/Prp2P2/K3P1N1/1P6/3R4 w - - 0 34",
+      "expected": "g3f5",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "h6d6",
+        "d1d6"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "2r3k1/6pp/2b5/3R4/3P4/R3P1BP/5P1K/1r6 w - - 3 34",
+      "expected": "a3c3",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "d5d8"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "4r1k1/pp2rp1p/5Rp1/1q6/8/1P4Q1/P4PPP/5RK1 w - - 1 22",
+      "expected": "a2a4",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "f6f7",
+        "f6g6",
+        "g3g6"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "r4rk1/BRp2pp1/3b3p/8/2P2P2/6P1/P6P/3R2K1 w - - 1 23",
+      "expected": "c4c5",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "b7c7",
+        "d1d6"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "6rk/1R3Qp1/6Pp/p6P/8/2PP1p2/K7/3q4 b - - 0 50",
+      "expected": "d1d3",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "d1a4",
+        "d1b3",
+        "d1e2",
+        "d1d2",
+        "d1c2",
+        "d1b1",
+        "d1a1"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "r3r3/2R2pkp/4p1p1/pR4P1/5P2/B1b5/P6P/5K2 b - - 4 28",
+      "expected": "a8c8",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "2kr4/2p2pp1/8/1R2PP1p/6n1/8/4Q1PP/3q2BK w - - 1 28",
+      "expected": "e2b2",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "b5b8",
+        "e2g4"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "6k1/2p1r3/1p1p2p1/p2P1bN1/P1P3PQ/4q2P/5R1K/8 b - - 0 40",
+      "expected": "f5d3",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "f5g4",
+        "e3g5",
+        "e3e5",
+        "e3f4",
+        "e3h3",
+        "e3g3",
+        "e3f2"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "4r1k1/7R/8/p5p1/2PnB3/3P2p1/P7/6K1 w - - 1 38",
+      "expected": "h7h5",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "h7h8",
+        "h7g7",
+        "e4d5"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "rnbqkb1r/pp2pppp/8/4p3/3P2n1/5N2/PP3PPP/RNBQKB1R w KQkq - 0 7",
+      "expected": "d4e5",
+      "detected": true,
+      "correct": true,
+      "proposed": [
+        "f1b5",
+        "d1a4",
+        "d4e5"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "7r/kpQ2p2/r2R3p/4pb2/2N1q3/8/PP3P1P/K1R5 b - - 3 27",
+      "expected": "h8c8",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "a6d6",
+        "a6a2",
+        "e4c4",
+        "e4b1"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "4r1k1/p1p3pp/2Q5/8/1q6/3r3P/PB4P1/2R4K b - - 0 31",
+      "expected": "e8d8",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "e8e1",
+        "b4e1",
+        "d3h3",
+        "d3d1"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "4r3/K1B4R/2kP2p1/P7/8/r5P1/7P/8 w - - 3 41",
+      "expected": "a5a6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "3rkb1r/pb2pppp/5q2/3N4/8/3Q1P2/PPP3PP/2KR1B1R b k - 0 13",
+      "expected": "b7d5",
+      "detected": true,
+      "correct": true,
+      "proposed": [
+        "d8d5",
+        "b7d5",
+        "f6h6",
+        "f6g5",
+        "f6f4",
+        "f6f3",
+        "f6b2"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "r2r2k1/p4pn1/4pBp1/1p6/3P1Q1R/2q4P/6P1/6K1 b - - 3 35",
+      "expected": "d8d5",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "d8d4",
+        "c3d4",
+        "c3h3",
+        "c3e3",
+        "c3e1",
+        "c3c1",
+        "c3a1"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "rn1b1rk1/6p1/3p4/2pPpp1Q/Np1q3P/1P1B4/P4P2/1K1R2R1 b - - 3 23",
+      "expected": "d4h4",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "d8h4",
+        "a8a4",
+        "d4d3",
+        "d4b2",
+        "d4a1"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "1r2r1k1/3nbppp/p1q1p3/3pR2Q/3B4/3B4/PPP2PPP/R5K1 b - - 9 19",
+      "expected": "g7g6",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "b8b2",
+        "d7e5"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "2r5/1p4pp/p3p1k1/n1N5/P7/4P3/1P2K1PP/2R5 w - - 7 26",
+      "expected": "e2d2",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "c5b7",
+        "c5a6"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "1R6/6Q1/2p5/7p/1P4nq/3P3P/2Pk1rP1/5RK1 w - - 1 35",
+      "expected": "b8e8",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "g7h6",
+        "g7g5",
+        "g7c3",
+        "f1f2",
+        "f1d1",
+        "h3g4"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "6rk/1R5p/p1p5/5P2/P3PNn1/1P4Pp/1P1r3P/5RK1 w - - 1 30",
+      "expected": "b7c7",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "b7h7",
+        "f4g6"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "r2q1r1k/p1p3pp/5p2/1bbN1P1Q/5R2/1B4B1/PPP3PP/7K b - - 2 21",
+      "expected": "b5e8",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "d8d5"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "r3r1k1/pp3p2/6R1/3Q4/2pb1PK1/P1P1q1P1/6P1/7R b - - 0 27",
+      "expected": "d4g7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "5rk1/pR3ppp/5q2/2p1p3/2P5/2QPPBPb/P4P1P/6K1 w - - 1 23",
+      "expected": "f3g2",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "b7f7",
+        "c3e5"
+      ],
+      "tactic": "attraction"
+    },
+    {
+      "fen": "3q2k1/1p4pp/p1p5/3pN1p1/1P1Pn1P1/4P2P/7B/5RK1 b - - 0 31",
+      "expected": "d8b6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "attraction"
+    }
+  ]
+}

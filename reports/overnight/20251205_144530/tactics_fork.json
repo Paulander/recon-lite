@@ -1,0 +1,599 @@
+{
+  "stats": {
+    "total": 50,
+    "detected": 39,
+    "correct": 5,
+    "detection_rate": 0.78,
+    "accuracy": 0.1,
+    "by_tactic": {
+      "fork": {
+        "total": 50,
+        "detected": 39,
+        "correct": 5
+      }
+    }
+  },
+  "results": [
+    {
+      "fen": "r3brk1/5pp1/p1nqpn1p/P2pN3/2pP4/2P1PN2/5PPP/RB1QK2R b KQ - 4 16",
+      "expected": "c6e5",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "d6a3",
+        "d6b8",
+        "d6b4"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "r3kbnr/ppp1qppp/2n5/3pP3/5B2/4PQ2/PPP2PPP/RN2KB1R w KQkq - 1 7",
+      "expected": "f1b5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "fork"
+    },
+    {
+      "fen": "2r5/pR5p/5p1k/4p3/4r3/B4nPP/PP3P2/1K2R3 w - - 0 27",
+      "expected": "e1e4",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "b7h7",
+        "e1e3",
+        "b7c7",
+        "b7f7"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "r1bqk1nr/1pp2ppp/p1pb4/4p3/3PP3/5N2/PPP2PPP/RNBQ1RK1 b kq - 0 6",
+      "expected": "d8f6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "fork"
+    },
+    {
+      "fen": "rnbqkb1r/pppp2pp/8/4P3/2B5/4p3/PPPP2PP/R1BQK1NR w KQkq - 0 7",
+      "expected": "d1f3",
+      "detected": true,
+      "correct": true,
+      "proposed": [
+        "d1f3"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "1r3k2/5p1p/2p1pp2/P2n4/2r1N3/P4PK1/2R2P1P/2R5 b - - 9 29",
+      "expected": "c4a4",
+      "detected": true,
+      "correct": true,
+      "proposed": [
+        "c4c5",
+        "c4c3",
+        "c4a4"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "2r5/4ppkp/5bp1/1p6/1P6/P3B3/2r2PPP/1R1R2K1 b - - 2 22",
+      "expected": "f6b2",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "c2c1",
+        "c2c3",
+        "c8c3"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "3r2k1/1b3pbR/p2P2P1/3p2N1/2p5/2P2N2/PP6/2K5 b - - 0 28",
+      "expected": "f7g6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "fork"
+    },
+    {
+      "fen": "r1bqk2r/pp3ppp/4p2n/3pP3/1b1P1P2/2N5/PP4PP/R1BQKB1R b KQkq - 2 9",
+      "expected": "h6f5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "fork"
+    },
+    {
+      "fen": "7k/pb1qn2n/1p2R2Q/2p2p2/2Pp4/3B4/PP3PrP/4RK2 b - - 1 27",
+      "expected": "g2g7",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "g2f2",
+        "g2g6",
+        "d7e6"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "3r1rk1/1p2q1pp/5p2/8/1P1n4/6Q1/PPbB1PPP/R2B1RK1 w - - 9 20",
+      "expected": "d1c2",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "g3g7",
+        "g3b3",
+        "g3c7",
+        "g3d6",
+        "g3e5",
+        "g3e3",
+        "g3d3",
+        "g3c3"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "3r4/p5k1/1p1qprnp/1Q1pN1p1/3P1pP1/1PP5/P5PP/4RRK1 b - - 3 29",
+      "expected": "g6e5",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "d6c6",
+        "d6c5",
+        "d6b4",
+        "d6c7"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "6r1/1p1bRk2/p2q1n1r/3p4/3Q4/1P1B3P/P1P2PP1/4R1K1 b - - 4 27",
+      "expected": "d6e7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "fork"
+    },
+    {
+      "fen": "4rrk1/ppp2pp1/7p/3n4/3P3q/1P2p2P/P5P1/R1BQRBK1 w - - 2 23",
+      "expected": "c1b2",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "d1h5"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "r2qkb1r/ppp1pppp/8/3p3Q/3n1P2/3B3P/PPP2PP1/RN2K2R b KQkq - 1 9",
+      "expected": "g7g6",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "d4c2"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "6k1/6pp/1p6/p1n5/4qp2/1P2PN2/P4PPP/3Q2K1 b - - 0 28",
+      "expected": "f4e3",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "e4d5",
+        "e4c2",
+        "e4b1"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "4r1k1/5pp1/2R4p/1p6/8/1PP3QP/2q2PP1/6K1 w - - 0 29",
+      "expected": "c6h6",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "g3g7",
+        "g3d3",
+        "g3b8",
+        "g3e5"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "1r2r1k1/ppp1q1pp/4b3/4P3/1Q1p1P2/8/P5PP/R1BR2K1 w - - 6 19",
+      "expected": "d1d4",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "b4d6",
+        "b4c5",
+        "b4a3",
+        "b4e7",
+        "b4a4",
+        "b4b7",
+        "b4b6",
+        "b4c4"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "5k2/8/4p3/3p2p1/p1pQ2P1/P1P2q2/1PB5/7K w - - 0 42",
+      "expected": "h1h2",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "fork"
+    },
+    {
+      "fen": "4R3/1p4k1/1q1N1bpp/3B4/5p1P/p4P2/3RK1P1/8 w - - 4 42",
+      "expected": "d6e4",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "d6c4"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "r1bq1rk1/pp2bppp/2pp1n2/8/5P2/5N2/PBPPB1PP/RN1Q1RK1 w - - 5 11",
+      "expected": "b1c3",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "fork"
+    },
+    {
+      "fen": "r3r1k1/ppp2ppp/2nn1q2/8/3P4/P1P1P1P1/2Q3BP/R1B1KR2 b Q - 4 16",
+      "expected": "f6e6",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "f6f2",
+        "f6f1",
+        "f6f5",
+        "f6f3"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "5QR1/5p1p/1b3qp1/p6k/P2P4/8/1P2rPPP/5RK1 w - - 7 32",
+      "expected": "g8h8",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "f8c5",
+        "f8h6",
+        "f8e7",
+        "f8d8",
+        "f8d6",
+        "f8g7",
+        "f8f7"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "1n3rk1/r3q1bp/pp2p1p1/2p1NnN1/4QP2/BPP5/P2R2PP/5RK1 b - - 2 21",
+      "expected": "h7h6",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "f5g3",
+        "e7d8",
+        "e7d6",
+        "e7f6",
+        "g7f6"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "1k5r/n2r2pp/5p2/ppN5/5P2/8/2R3PP/1R4K1 b - - 3 28",
+      "expected": "d7c7",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "d7d1"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "1k1r1r2/pp4p1/6q1/2Qp4/5bP1/2P4p/PPN3NP/R4R1K w - - 0 30",
+      "expected": "g2f4",
+      "detected": true,
+      "correct": true,
+      "proposed": [
+        "c5d6",
+        "c5c7",
+        "c5c8",
+        "c5b6",
+        "g2f4",
+        "c5e7",
+        "c5f8",
+        "c5b4",
+        "f1f3",
+        "c5e3"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "2kr4/p1pr1pp1/1p4p1/1PP1P3/3B1PP1/PQ2Pn1P/2KRR3/5q2 w - - 1 30",
+      "expected": "c5b6",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "e2f2",
+        "b3d5",
+        "b3f7"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "r2qkb1r/pp1nppp1/2p2n1p/3p1b2/3P4/BP2PN2/P1P2PPP/RN1QKB1R w KQkq - 2 7",
+      "expected": "c2c4",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "a3e7"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "r6k/6bp/p7/2Q5/8/5P2/4bKPP/8 b - - 2 37",
+      "expected": "e2d3",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "g7d4"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "r4rk1/pppq2b1/2np3p/4p2b/B5p1/2PPQ2P/PP1N1P1B/R3NRK1 w - - 0 21",
+      "expected": "h3g4",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "a4c6",
+        "e3f3",
+        "e3a7",
+        "e3h6",
+        "e3g5",
+        "e3e5",
+        "e3b6"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "5r1k/1pp3p1/7p/pP1N4/P3P3/2PP3P/3BnbPK/R7 w - - 2 27",
+      "expected": "d5c7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "fork"
+    },
+    {
+      "fen": "2r3nr/p5pp/b3kp2/3p4/4p3/BP3P2/P1PN2PP/2KR3R b - - 0 18",
+      "expected": "f6f5",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "c8c2"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "3r1rk1/p1p2pbp/1p4p1/7n/4P3/1P2BP1q/P1B3QP/3R1R1K b - - 6 23",
+      "expected": "h3h4",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "h3h2",
+        "h3g2",
+        "h5g3",
+        "h3f3",
+        "d8d2",
+        "d8d3"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "3r1k2/5p2/Np3P1p/1P2pR2/2p1N3/b1P1n3/P5PP/6K1 w - - 0 32",
+      "expected": "f5e5",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "f5h5"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "r3k1nr/pp3ppp/1q2b3/8/1n1p4/6P1/PB1QPPBP/R3K1NR w KQkq - 0 13",
+      "expected": "b2d4",
+      "detected": true,
+      "correct": true,
+      "proposed": [
+        "d2d4",
+        "b2d4",
+        "d2h6"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "2kr2r1/1p1q3p/p1nb4/2p1p3/2N1R3/3P1QP1/PPP5/R1B3K1 b - - 4 22",
+      "expected": "d8f8",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "g8g3",
+        "d7f5",
+        "d7g4",
+        "d7f7",
+        "c6d4"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "2rr4/4kp2/p3p2q/1p3nNP/3PQP2/P1N5/1P3K2/6R1 b - - 0 34",
+      "expected": "d8d4",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "f5g3",
+        "h6g5",
+        "h6g6"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "6k1/5p1p/B2bp2q/5p2/6rP/1P4P1/1Q3P2/5R1K w - - 3 34",
+      "expected": "f1d1",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "b2g7",
+        "b2d2",
+        "b2d4"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "rn3rk1/p4p1p/1p4p1/2p5/3n2PP/2Q4N/qPP3B1/2KR3R w - - 2 19",
+      "expected": "g2a8",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "g2d5",
+        "c3c4",
+        "c3c5"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "r1b1k2r/ppp2p2/2nppq1p/3P2p1/1bP3P1/2N2N2/PP2PPP1/2RQKB1R b Kkq - 0 11",
+      "expected": "c6e5",
+      "detected": true,
+      "correct": true,
+      "proposed": [
+        "f6c3",
+        "b4c3",
+        "f6d4",
+        "f6f4",
+        "c6e5",
+        "f6f5",
+        "f6f3"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "4k2r/1pb3pp/p4p2/2P1p2b/1PBn4/P3N1P1/3B1P1P/5RK1 w k - 3 23",
+      "expected": "e3d5",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "c4f7",
+        "e3f5"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "8/Q7/7r/8/6K1/1r2k1p1/6P1/8 b - - 2 64",
+      "expected": "e3e2",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "fork"
+    },
+    {
+      "fen": "Q7/8/3B4/2p5/Krkn4/8/8/8 w - - 1 54",
+      "expected": "a4a3",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "fork"
+    },
+    {
+      "fen": "2r1r1k1/pb2qpbp/1p1p1np1/4P3/3B1P2/1P3BP1/PQ1N3P/1R2R1K1 b - - 0 21",
+      "expected": "b7f3",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "c8c2",
+        "c8c1",
+        "b7e4",
+        "e7e5"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "8/p7/2R3p1/4Nnk1/2P4p/7K/Pr6/8 b - - 3 50",
+      "expected": "g5f4",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "b2h2",
+        "b2e2"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "3r2k1/5ppp/b3p3/3q4/3r4/p2PQP1P/3R1NPK/R7 w - - 0 35",
+      "expected": "a1a3",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "e3g5",
+        "e3e5",
+        "e3e4",
+        "e3e6"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "7k/pQ4p1/2p4p/4r3/3r1p1n/6N1/PP2R1PP/6K1 b - - 0 30",
+      "expected": "f4g3",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "e5e7",
+        "e5e3"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "rnbqkb1r/ppp3pp/5n2/3P1p2/4pB2/2N5/PP3PPP/R2QKBNR b KQkq - 0 7",
+      "expected": "f8b4",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "f6d5"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "2r2rk1/1p2b1p1/p2p1n1p/P2qpQ2/8/2P1BP2/1P1N2PP/3R1RK1 b - - 0 21",
+      "expected": "d5a5",
+      "detected": true,
+      "correct": false,
+      "proposed": [
+        "d5f3",
+        "d5d3",
+        "d5e4",
+        "d5d2",
+        "d5b5",
+        "d5d4",
+        "d5b3",
+        "d5c5",
+        "d5a2"
+      ],
+      "tactic": "fork"
+    },
+    {
+      "fen": "6k1/2b3pn/1p5p/2p1N1n1/8/P1BP2PP/2b1NP1K/5B2 w - - 3 37",
+      "expected": "e2f4",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "fork"
+    }
+  ]
+}

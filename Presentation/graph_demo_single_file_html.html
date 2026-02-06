@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ReCoN Graph Demo – Single‑file (robust)</title>
+  <link rel="preconnect" href="https://unpkg.com" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <style>
+    :root {
+      --bg: #0b0f14;    /* dark slate */
+      --fg: #e7eef7;    /* near‑white */
+      --muted: #9fb2c8;
+      --accent: #7aa2f7; /* link-ish */
+      --panel: #0f141b;
+      --panel2: #121923;
+      --edge: #6b7a90;
+      --root: #e11d48;      /* red for root */
+      --script: #3b82f6;    /* blue for scripts */
+      --terminal: #f59e0b;  /* yellow/orange for terminals */
+      --warn: #f59e0b;
+      --error: #ef4444;
+      --ok: #10b981;
+    }
+    html, body { height: 100%; margin: 0; background: var(--bg); color: var(--fg); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans"; }
+    .wrap { display: grid; grid-template-rows: auto 1fr; height: 100%; }
+    header { display:flex; gap:.75rem; flex-wrap:wrap; align-items:center; padding:.8rem 1rem; background:linear-gradient(180deg,var(--panel),var(--panel2)); border-bottom:1px solid #111722; position:sticky; top:0; z-index:3; }
+    header h1 { font-size: 1rem; font-weight: 600; margin: 0; opacity:.9 }
+    header .spacer { flex:1 }
+    select, button, label { background:#0c121a; color:var(--fg); border:1px solid #1c2634; border-radius:10px; padding:.45rem .6rem; font-size:.9rem; }
+    button { cursor:pointer }
+    button:active { transform: translateY(1px) }
+    .hint { color: var(--muted); font-size: .85rem; border:none; }
+    #container { position: relative; }
+    #network { width: 100%; height: calc(100vh - 86px); }
+    .legend { position:absolute; right:.75rem; bottom:.75rem; background:#0d141d; border:1px solid #162235; border-radius:12px; padding:.6rem .8rem; color:var(--muted); font-size:.85rem; z-index:2 }
+    .legend b{ color:var(--fg) }
+    .key { display:flex; gap:.5rem; align-items:center; margin-top:.25rem }
+    .swatch { width:12px; height:12px; border-radius:3px; display:inline-block; }
+    .swatch.root { background:var(--root) }
+    .swatch.script { background:var(--script) }
+    .swatch.terminal { background:var(--terminal) }
+    .status { font-size:.8rem; padding:.2rem .5rem; border-radius:.5rem; }
+    .status.ok { background: rgba(16,185,129,.15); color: var(--ok); border:1px solid rgba(16,185,129,.4); }
+    .status.error { background: rgba(239,68,68,.15); color: var(--error); border:1px solid rgba(239,68,68,.4); }
+    .status.warn { background: rgba(245,158,11,.15); color: var(--warn); border:1px solid rgba(245,158,11,.4); }
+    a, a:visited { color: var(--accent); text-decoration: none; }
+    #errorBanner { position: fixed; inset:auto 1rem 1rem 1rem; z-index:4; display:none; padding:.75rem 1rem; border-radius:12px; border:1px solid #3b1d21; background:#1a0f11; color:#fecaca; }
+  </style>
+  <!-- We will dynamically load vis-network; no inline <script src> to avoid race/CORS issues -->
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>ReCoN Graph Demo</h1>
+    <div class="spacer"></div>
+    <label>Scene:
+      <select id="sceneSelect">
+        <option value="krk_play">KRK — Play (Hierarchy)</option>
+        <option value="krk_persistent_full">KRK — Persistent (Full)</option>
+        <option value="krk_persistent_abstract">KRK — Persistent (Abstract Phases)</option>
+        <option value="krk_persistent_suggestor">KRK — Persistent (Single Suggestor)</option>
+      </select>
+    </label>
+    <button id="sortBtn" title="Auto‑layout top→down">Sort</button>
+    <button id="fitBtn" title="Fit to view">Fit</button>
+    <button id="physicsBtn" title="Toggle physics">Physics: On</button>
+    <label class="hint"><input type="checkbox" id="hoverToggle" checked /> Highlight neighbors</label>
+    <label class="hint"><input type="checkbox" id="porToggle" checked /> Show POR (dashed)</label>
+    <span id="testStatus" class="status ok" style="display:none"></span>
+  </header>
+
+  <div id="container">
+    <div id="network"></div>
+    <canvas id="whiteboard" style="position:absolute; inset:0; z-index:2; pointer-events:none;"></canvas>
+    <div class="legend">
+      <div><b>Legend</b></div>
+      <div class="key"><span class="swatch root"></span> Root hub</div>
+      <div class="key"><span class="swatch script"></span> Script node</div>
+      <div class="key"><span class="swatch terminal"></span> Terminal</div>
+      <div style="margin-top:.25rem">Dashed edges = POR (temporal) links</div>
+      <div style="margin-top:.25rem">Drag to pan, scroll to zoom. Drag a node to <i>pin</i>; double‑click to unpin.</div>
+      <hr style="border:none;border-top:1px solid #162235;margin:.5rem 0"/>
+      <div style="display:flex; gap:.4rem; flex-wrap:wrap">
+        <button id="wbDrawBtn" title="Freehand draw">✏️ Draw</button>
+        <button id="wbTextBtn" title="Add text">🅣 Text</button>
+        <button id="wbClearBtn" title="Clear doodles">🧹 Clear</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="errorBanner"></div>
+
+<script>
+// ===== Robust loader for vis-network (avoids "Script error" on CDN hiccups) =====
+(function() {
+  const LIB_URLS = [
+    'https://unpkg.com/vis-network@9.1.6/standalone/umd/vis-network.min.js',
+    'https://cdn.jsdelivr.net/npm/vis-network@9.1.6/standalone/umd/vis-network.min.js'
+  ];
+  let tried = 0;
+  function failOut(msg) {
+    const el = document.getElementById('errorBanner');
+    el.style.display = 'block';
+    el.textContent = 'Failed to load vis-network: ' + msg + ' — try reloading (Ctrl+R).';
+  }
+  function tryNext() {
+    if (tried >= LIB_URLS.length) { failOut('all CDNs failed'); return; }
+    const url = LIB_URLS[tried++];
+    const s = document.createElement('script');
+    s.src = url; s.async = true; s.crossOrigin = 'anonymous';
+    s.onload = () => { if (window.vis && window.vis.Network) initApp(); else tryNext(); };
+    s.onerror = () => { tryNext(); };
+    document.head.appendChild(s);
+  }
+  if (!(window.vis && window.vis.Network)) {
+    tryNext();
+  } else {
+    initApp();
+  }
+
+  // ===== App init after vis-network is ready =====
+  function initApp() {
+    // --- Helper to make edge with arrows
+    const E = (from, to, extra={}) => ({ from, to, arrows:'to', ...extra });
+
+    // ===== Scenes (KRK graphs) =====
+    const scenes = {
+      // --- Scene 1: KRK Play (simple hierarchy + POR) ---
+      krk_play: {
+        rootId: 'ROOT',
+        nodes: [
+          { id:'ROOT', label:'ROOT', group:'root' },
+          { id:'PHASE0', label:'PHASE0', group:'script' },
+          { id:'PHASE1', label:'PHASE1', group:'script' },
+          { id:'PHASE2', label:'PHASE2', group:'script' },
+          { id:'PHASE3', label:'PHASE3', group:'script' },
+          { id:'PHASE4', label:'PHASE4', group:'script' },
+          { id:'CHOOSE_P0', label:'ESTABLISH_CUT', group:'terminal' },
+          { id:'KING_DRIVE_MOVES', label:'KING_DRIVE_MOVES', group:'terminal' },
+          { id:'BOX_SHRINK_MOVES', label:'BOX_SHRINK_MOVES', group:'terminal' },
+          { id:'OPPOSITION_MOVES', label:'OPPOSITION_MOVES', group:'terminal' },
+          { id:'MATE_MOVES', label:'MATE_MOVES', group:'terminal' },
+        ],
+        edges: [
+          E('ROOT','PHASE0'), E('PHASE0','CHOOSE_P0'),
+          E('ROOT','PHASE1'), E('PHASE1','KING_DRIVE_MOVES'),
+          E('ROOT','PHASE2'), E('PHASE2','BOX_SHRINK_MOVES'),
+          E('ROOT','PHASE3'), E('PHASE3','OPPOSITION_MOVES'),
+          E('ROOT','PHASE4'), E('PHASE4','MATE_MOVES'),
+        ],
+        por: [ E('PHASE0','PHASE1',{ dashes:true }), E('PHASE1','PHASE2',{ dashes:true }), E('PHASE2','PHASE3',{ dashes:true }), E('PHASE3','PHASE4',{ dashes:true }) ]
+      },
+
+      // --- Scene 2: Persistent KRK (full hierarchy, evaluators + waits) ---
+      krk_persistent_full: (() => {
+        const rootId = 'krk_root';
+        const nodes = [
+          { id:'krk_root', label:'krk_root', group:'root' },
+          // phases
+          { id:'phase0_establish_cut', label:'phase0_establish_cut', group:'script' },
+          { id:'phase1_drive_to_edge', label:'phase1_drive_to_edge', group:'script' },
+          { id:'phase2_shrink_box', label:'phase2_shrink_box', group:'script' },
+          { id:'phase3_take_opposition', label:'phase3_take_opposition', group:'script' },
+          { id:'phase4_deliver_mate', label:'phase4_deliver_mate', group:'script' },
+          // root-level sentinels (terminals)
+          { id:'no_progress_watch', label:'no_progress_watch', group:'terminal' },
+          { id:'is_stalemate', label:'is_stalemate', group:'terminal' },
+          { id:'rook_lost', label:'rook_lost', group:'terminal' },
+          // P0 block
+          { id:'p0_check', label:'p0_check', group:'script' },
+          { id:'p0_move', label:'p0_move', group:'script' },
+          { id:'p0_wait', label:'p0_wait', group:'script' },
+          { id:'cut_established', label:'cut_established', group:'terminal' },
+          { id:'choose_phase0', label:'choose_phase0', group:'terminal' },
+          { id:'wait_after_p0', label:'wait_after_p0', group:'terminal' },
+          // P1 block
+          { id:'p1_check', label:'p1_check', group:'script' },
+          { id:'p1_move', label:'p1_move', group:'script' },
+          { id:'p1_wait', label:'p1_wait', group:'script' },
+          { id:'king_at_edge', label:'king_at_edge', group:'terminal' },
+          { id:'king_drive_moves', label:'king_drive_moves', group:'terminal' },
+          { id:'confinement_moves', label:'confinement_moves', group:'terminal' },
+          { id:'barrier_placement_moves', label:'barrier_placement_moves', group:'terminal' },
+          { id:'wait_after_p1', label:'wait_after_p1', group:'terminal' },
+          // P2 block
+          { id:'p2_check', label:'p2_check', group:'script' },
+          { id:'p2_move', label:'p2_move', group:'script' },
+          { id:'p2_wait', label:'p2_wait', group:'script' },
+          { id:'box_can_shrink', label:'box_can_shrink', group:'terminal' },
+          { id:'box_shrink_moves', label:'box_shrink_moves', group:'terminal' },
+          { id:'wait_after_p2', label:'wait_after_p2', group:'terminal' },
+          // P3 block
+          { id:'p3_check', label:'p3_check', group:'script' },
+          { id:'p3_move', label:'p3_move', group:'script' },
+          { id:'p3_wait', label:'p3_wait', group:'script' },
+          { id:'can_take_opposition', label:'can_take_opposition', group:'terminal' },
+          { id:'opposition_moves', label:'opposition_moves', group:'terminal' },
+          { id:'wait_after_p3', label:'wait_after_p3', group:'terminal' },
+          // P4 block
+          { id:'p4_check', label:'p4_check', group:'script' },
+          { id:'p4_move', label:'p4_move', group:'script' },
+          { id:'p4_wait', label:'p4_wait', group:'script' },
+          { id:'can_deliver_mate', label:'can_deliver_mate', group:'terminal' },
+          { id:'mate_moves', label:'mate_moves', group:'terminal' },
+          { id:'wait_after_p4', label:'wait_after_p4', group:'terminal' },
+        ];
+
+        const edges = [
+          // root -> phases
+          E('krk_root','phase0_establish_cut'), E('krk_root','phase1_drive_to_edge'), E('krk_root','phase2_shrink_box'), E('krk_root','phase3_take_opposition'), E('krk_root','phase4_deliver_mate'),
+          // root sentinels
+          E('krk_root','no_progress_watch'), E('krk_root','is_stalemate'), E('krk_root','rook_lost'),
+
+          // P0
+          E('phase0_establish_cut','p0_check'), E('phase0_establish_cut','p0_move'), E('phase0_establish_cut','p0_wait'),
+          E('p0_check','cut_established'), E('p0_move','choose_phase0'), E('p0_wait','wait_after_p0'),
+          // P1
+          E('phase1_drive_to_edge','p1_check'), E('phase1_drive_to_edge','p1_move'), E('phase1_drive_to_edge','p1_wait'),
+          E('p1_check','king_at_edge'), E('p1_move','king_drive_moves'), E('p1_move','confinement_moves'), E('p1_move','barrier_placement_moves'), E('p1_wait','wait_after_p1'),
+          // P2
+          E('phase2_shrink_box','p2_check'), E('phase2_shrink_box','p2_move'), E('phase2_shrink_box','p2_wait'),
+          E('p2_check','box_can_shrink'), E('p2_move','box_shrink_moves'), E('p2_wait','wait_after_p2'),
+          // P3
+          E('phase3_take_opposition','p3_check'), E('phase3_take_opposition','p3_move'), E('phase3_take_opposition','p3_wait'),
+          E('p3_check','can_take_opposition'), E('p3_move','opposition_moves'), E('p3_wait','wait_after_p3'),
+          // P4
+          E('phase4_deliver_mate','p4_check'), E('phase4_deliver_mate','p4_move'), E('phase4_deliver_mate','p4_wait'),
+          E('p4_check','can_deliver_mate'), E('p4_move','mate_moves'), E('p4_wait','wait_after_p4'),
+        ];
+
+        const por = [
+          // phase order
+          E('phase0_establish_cut','phase1_drive_to_edge',{ dashes:true }),
+          E('phase1_drive_to_edge','phase2_shrink_box',{ dashes:true }),
+          E('phase2_shrink_box','phase3_take_opposition',{ dashes:true }),
+          E('phase3_take_opposition','phase4_deliver_mate',{ dashes:true }),
+          // within-phase temporal (check -> move -> wait)
+          E('p0_check','p0_move',{ dashes:true }), E('p0_move','p0_wait',{ dashes:true }),
+          E('p1_check','p1_move',{ dashes:true }), E('p1_move','p1_wait',{ dashes:true }),
+          E('p2_check','p2_move',{ dashes:true }), E('p2_move','p2_wait',{ dashes:true }),
+          E('p3_check','p3_move',{ dashes:true }), E('p3_move','p3_wait',{ dashes:true }),
+          E('p4_check','p4_move',{ dashes:true }), E('p4_move','p4_wait',{ dashes:true }),
+        ];
+
+        return { nodes, edges, por, rootId };
+      })(),
+
+      // --- Scene 3: Persistent KRK (abstracted phases) ---
+      krk_persistent_abstract: (() => {
+        const rootId = 'krk_root';
+        const nodes = [
+          { id:'krk_root', label:'krk_root', group:'root' },
+          { id:'phase0_establish_cut', label:'phase0_establish_cut', group:'script' },
+          { id:'phase1_drive_to_edge', label:'phase1_drive_to_edge', group:'script' },
+          { id:'phase2_shrink_box', label:'phase2_shrink_box', group:'script' },
+          { id:'phase3_take_opposition', label:'phase3_take_opposition', group:'script' },
+          { id:'phase4_deliver_mate', label:'phase4_deliver_mate', group:'script' },
+          // Root-level sentinels
+          { id:'no_progress_watch', label:'no_progress_watch', group:'terminal' },
+          { id:'is_stalemate', label:'is_stalemate', group:'terminal' },
+          { id:'rook_lost', label:'rook_lost', group:'terminal' },
+          // phase terminals (all explicit)
+          { id:'cut_established', label:'cut_established', group:'terminal' },
+          { id:'choose_phase0', label:'choose_phase0', group:'terminal' },
+          { id:'wait_after_p0', label:'wait_after_p0', group:'terminal' },
+
+          { id:'king_at_edge', label:'king_at_edge', group:'terminal' },
+          { id:'king_drive_moves', label:'king_drive_moves', group:'terminal' },
+          { id:'confinement_moves', label:'confinement_moves', group:'terminal' },
+          { id:'barrier_placement_moves', label:'barrier_placement_moves', group:'terminal' },
+          { id:'wait_after_p1', label:'wait_after_p1', group:'terminal' },
+
+          { id:'box_can_shrink', label:'box_can_shrink', group:'terminal' },
+          { id:'box_shrink_moves', label:'box_shrink_moves', group:'terminal' },
+          { id:'wait_after_p2', label:'wait_after_p2', group:'terminal' },
+
+          { id:'can_take_opposition', label:'can_take_opposition', group:'terminal' },
+          { id:'opposition_moves', label:'opposition_moves', group:'terminal' },
+          { id:'wait_after_p3', label:'wait_after_p3', group:'terminal' },
+
+          { id:'can_deliver_mate', label:'can_deliver_mate', group:'terminal' },
+          { id:'mate_moves', label:'mate_moves', group:'terminal' },
+          { id:'wait_after_p4', label:'wait_after_p4', group:'terminal' },
+        ];
+
+        const edges = [
+          // root -> phases + sentinels
+          E('krk_root','phase0_establish_cut'), E('krk_root','phase1_drive_to_edge'), E('krk_root','phase2_shrink_box'), E('krk_root','phase3_take_opposition'), E('krk_root','phase4_deliver_mate'),
+          E('krk_root','no_progress_watch'), E('krk_root','is_stalemate'), E('krk_root','rook_lost'),
+          // phase outputs
+          E('phase0_establish_cut','cut_established'), E('phase0_establish_cut','choose_phase0'), E('phase0_establish_cut','wait_after_p0'),
+          E('phase1_drive_to_edge','king_at_edge'), E('phase1_drive_to_edge','king_drive_moves'), E('phase1_drive_to_edge','confinement_moves'), E('phase1_drive_to_edge','barrier_placement_moves'), E('phase1_drive_to_edge','wait_after_p1'),
+          E('phase2_shrink_box','box_can_shrink'), E('phase2_shrink_box','box_shrink_moves'), E('phase2_shrink_box','wait_after_p2'),
+          E('phase3_take_opposition','can_take_opposition'), E('phase3_take_opposition','opposition_moves'), E('phase3_take_opposition','wait_after_p3'),
+          E('phase4_deliver_mate','can_deliver_mate'), E('phase4_deliver_mate','mate_moves'), E('phase4_deliver_mate','wait_after_p4'),
+        ];
+
+        const por = [
+          E('phase0_establish_cut','phase1_drive_to_edge',{ dashes:true }),
+          E('phase1_drive_to_edge','phase2_shrink_box',{ dashes:true }),
+          E('phase2_shrink_box','phase3_take_opposition',{ dashes:true }),
+          E('phase3_take_opposition','phase4_deliver_mate',{ dashes:true }),
+        ];
+
+        return { nodes, edges, por, rootId };
+      })(),
+
+      // --- Scene 4: Persistent KRK (single suggestor abstraction) ---
+      krk_persistent_suggestor: (() => {
+        const rootId = 'krk_root';
+        const nodes = [
+          { id:'krk_root', label:'krk_root', group:'root' },
+          { id:'suggest_next_move', label:'suggest_next_move', group:'script' },
+          // root-level sentinels unchanged
+          { id:'no_progress_watch', label:'no_progress_watch', group:'terminal' },
+          { id:'is_stalemate', label:'is_stalemate', group:'terminal' },
+          { id:'rook_lost', label:'rook_lost', group:'terminal' },
+          // all operational terminals
+          { id:'cut_established', label:'cut_established', group:'terminal' },
+          { id:'choose_phase0', label:'choose_phase0', group:'terminal' },
+          { id:'wait_after_p0', label:'wait_after_p0', group:'terminal' },
+          { id:'king_at_edge', label:'king_at_edge', group:'terminal' },
+          { id:'king_drive_moves', label:'king_drive_moves', group:'terminal' },
+          { id:'confinement_moves', label:'confinement_moves', group:'terminal' },
+          { id:'barrier_placement_moves', label:'barrier_placement_moves', group:'terminal' },
+          { id:'wait_after_p1', label:'wait_after_p1', group:'terminal' },
+          { id:'box_can_shrink', label:'box_can_shrink', group:'terminal' },
+          { id:'box_shrink_moves', label:'box_shrink_moves', group:'terminal' },
+          { id:'wait_after_p2', label:'wait_after_p2', group:'terminal' },
+          { id:'can_take_opposition', label:'can_take_opposition', group:'terminal' },
+          { id:'opposition_moves', label:'opposition_moves', group:'terminal' },
+          { id:'wait_after_p3', label:'wait_after_p3', group:'terminal' },
+          { id:'can_deliver_mate', label:'can_deliver_mate', group:'terminal' },
+          { id:'mate_moves', label:'mate_moves', group:'terminal' },
+          { id:'wait_after_p4', label:'wait_after_p4', group:'terminal' },
+        ];
+
+        const edges = [
+          E('krk_root','suggest_next_move'),
+          // root-level sentinels (unchanged)
+          E('krk_root','no_progress_watch'), E('krk_root','is_stalemate'), E('krk_root','rook_lost'),
+          // suggestor -> all operational terminals
+          E('suggest_next_move','cut_established'), E('suggest_next_move','choose_phase0'), E('suggest_next_move','wait_after_p0'),
+          E('suggest_next_move','king_at_edge'), E('suggest_next_move','king_drive_moves'), E('suggest_next_move','confinement_moves'), E('suggest_next_move','barrier_placement_moves'), E('suggest_next_move','wait_after_p1'),
+          E('suggest_next_move','box_can_shrink'), E('suggest_next_move','box_shrink_moves'), E('suggest_next_move','wait_after_p2'),
+          E('suggest_next_move','can_take_opposition'), E('suggest_next_move','opposition_moves'), E('suggest_next_move','wait_after_p3'),
+          E('suggest_next_move','can_deliver_mate'), E('suggest_next_move','mate_moves'), E('suggest_next_move','wait_after_p4'),
+        ];
+
+        return { nodes, edges, por: [], rootId };
+      })(),
+    };
+
+    // ===== Theming by group =====
+    // Resolve CSS custom properties to concrete colors for vis-network (canvas can't use var(--x) strings reliably)
+    const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    const COLORS = {
+      root: cssVar('--root') || '#e11d48',
+      script: cssVar('--script') || '#3b82f6',
+      terminal: cssVar('--terminal') || '#f59e0b'
+    };
+
+    const groupStyles = {
+      root:    { color: { background: COLORS.root, border: '#991b1b', highlight: { background: COLORS.root, border:'#fecaca' } }, shape:'box', size:18, font:{ color:'#0b0f14', size:16, face:'ui-sans-serif', strokeWidth: 0 } },
+      script:  { color: { background: COLORS.script, border: '#1d4ed8', highlight: { background: COLORS.script, border:'#bfdbfe' } }, shape:'dot', size:16, font:{ color:'#e7eef7', strokeWidth: 1, strokeColor: '#0b0f14' } },
+      terminal:{ color: { background: COLORS.terminal, border: '#b45309', highlight: { background: COLORS.terminal, border:'#fde68a' } }, shape:'dot', size:14, font:{ color:'var(--fg)', strokeWidth: 1, strokeColor: '#0b0f14' } },
+    };
+
+    // ===== Build network with sane defaults =====
+    const container = document.getElementById('network');
+    let nodes = new vis.DataSet([]);
+    let edges = new vis.DataSet([]);
+    let currentPorIds = [];
+    let physicsEnabled = true; // tracked locally (don’t read internal network.physics)
+
+    const options = {
+      autoResize: true,
+      physics: { enabled: physicsEnabled, solver: 'forceAtlas2Based', stabilization: { iterations: 250 } },
+      interaction: { hover: true, navigationButtons: false, multiselect: false, tooltipDelay: 80 },
+      nodes: {
+        shape: 'dot', size: 16,
+        color: { background: '#132030', border: '#6b7a90', highlight: { background: '#1f406a', border: '#cdd9e5' } },
+        font: { color: '#e7eef7', size: 14, face: 'ui-sans-serif' }
+      },
+      edges: {
+        color: { color: '#4b5b73', highlight: '#cdd9e5', hover: '#cdd9e5' },
+        width: 1.6, smooth: { type: 'dynamic' }, arrows: { to: { enabled: true, scaleFactor: 0.9 } }
+      },
+      layout: { improvedLayout: true }
+    };
+
+    const network = new vis.Network(container, { nodes, edges }, options);
+
+    // ===== Controls =====
+    const sceneSelect = document.getElementById('sceneSelect');
+    const sortBtn = document.getElementById('sortBtn');
+    const fitBtn = document.getElementById('fitBtn');
+    const physicsBtn = document.getElementById('physicsBtn');
+    const hoverToggle = document.getElementById('hoverToggle');
+    const porToggle = document.getElementById('porToggle');
+    const testStatus = document.getElementById('testStatus');
+
+    // --- Self-tests (extended) ---
+    function runSelfTests(scene) {
+      const errors = [];
+      const ids = scene.nodes.map(n => n.id);
+      const set = new Set(ids);
+      if (set.size !== ids.length) errors.push('Duplicate node IDs');
+      // node group validity + non-empty labels
+      const allowed = new Set(['root','script','terminal']);
+      scene.nodes.forEach((n, i) => {
+        if (!allowed.has(n.group)) errors.push(`Node #${i} has invalid group: ${n.group}`);
+        if (!n.label || typeof n.label !== 'string') errors.push(`Node #${i} (${n.id}) has invalid/empty label`);
+      });
+      // edges reference existing nodes
+      scene.edges.forEach((e, i) => {
+        if (!set.has(e.from) || !set.has(e.to)) errors.push(`Edge #${i} references missing node(s): ${e.from}→${e.to}`);
+      });
+      // reachability: each non-root node should have at least one incoming structural edge
+      if (scene.rootId) {
+        const incoming = new Map();
+        scene.nodes.forEach(n => incoming.set(n.id, 0));
+        scene.edges.forEach(e => incoming.set(e.to, (incoming.get(e.to) || 0) + 1));
+        scene.nodes.forEach(n => {
+          if (n.id !== scene.rootId && incoming.get(n.id) === 0) errors.push(`Node ${n.id} has no incoming structural edge`);
+        });
+      }
+      if (scene.rootId && !set.has(scene.rootId)) errors.push(`rootId "${scene.rootId}" not found in nodes`);
+      if (scene.por) {
+        scene.por.forEach((e, i) => { if (!set.has(e.from) || !set.has(e.to)) errors.push(`POR #${i} references missing node(s): ${e.from}→${e.to}`); });
+      }
+      // color resolution test
+      if (!COLORS.root || !COLORS.script || !COLORS.terminal) {
+        errors.push('CSS color variables failed to resolve');
+      }
+      return errors;
+    }
+
+    function showTestStatus(errors) {
+      if (!errors.length) {
+        testStatus.textContent = 'Self‑tests: OK';
+        testStatus.className = 'status ok';
+        testStatus.style.display = 'inline-block';
+      } else {
+        testStatus.textContent = 'Checks failed (' + errors.length + '). Open console.';
+        testStatus.className = 'status error';
+        testStatus.style.display = 'inline-block';
+        console.error('[Self‑tests]', errors);
+      }
+    }
+
+    function loadScene(key) {
+      const s = scenes[key];
+      const errs = runSelfTests(s);
+      showTestStatus(errs);
+
+      nodes.clear();
+      edges.clear();
+      currentPorIds = [];
+      // add nodes with styles + labels
+      const augmented = s.nodes.map(n => {
+        const styled = { ...n, ...groupStyles[n.group] };
+        if (n.id === (s.rootId || 'krk_root')) {
+          styled.label = `${n.label}\nWin game`;
+          styled.title = 'Root goal: Win game';
+        }
+        return styled;
+      });
+      nodes.add(augmented);
+      // add structural edges
+      edges.add(s.edges.map((e,i) => ({ id: `e-${i}-${e.from}-${e.to}`, ...e })));
+      // add POR edges (dashed)
+      if (s.por && s.por.length) {
+        s.por.forEach((e, i) => {
+          const id = `por-${i}-${e.from}-${e.to}`;
+          currentPorIds.push(id);
+          edges.add({ id, ...e, dashes: true });
+        });
+      }
+      // respect POR toggle
+      if (!porToggle.checked && currentPorIds.length) {
+        currentPorIds.forEach(id => edges.update({ id, hidden: true }));
+      }
+      network.fit({ animation: { duration: 400 } });
+    }
+
+    fitBtn.onclick = () => network.fit({ animation: { duration: 300 } });
+    physicsBtn.onclick = () => {
+      physicsEnabled = !physicsEnabled;
+      network.setOptions({ physics: { enabled: physicsEnabled } });
+      physicsBtn.textContent = 'Physics: ' + (physicsEnabled ? 'On' : 'Off');
+    };
+    porToggle.onchange = () => {
+      if (!currentPorIds.length) return;
+      const hide = !porToggle.checked;
+      currentPorIds.forEach(id => edges.update({ id, hidden: hide }));
+    };
+
+    // ===== Sort (hierarchical top→down) =====
+    function computeLevels(rootId) {
+      const level = new Map();
+      if (!rootId || !nodes.get(rootId)) return level;
+      level.set(rootId, 0);
+      const q = [rootId];
+      // consider only structural edges (id starts with 'e-')
+      const es = edges.get().filter(e => typeof e.id === 'string' && e.id.startsWith('e-'));
+      const adj = new Map();
+      es.forEach(e => {
+        if (!adj.has(e.from)) adj.set(e.from, []);
+        adj.get(e.from).push(e.to);
+      });
+      while (q.length) {
+        const u = q.shift();
+        const lu = level.get(u);
+        (adj.get(u) || []).forEach(v => {
+          if (!level.has(v)) { level.set(v, lu + 1); q.push(v); }
+        });
+      }
+      return level;
+    }
+
+    sortBtn.onclick = () => {
+      const s = scenes[sceneSelect.value];
+      const rootId = s.rootId || 'krk_root';
+      const level = computeLevels(rootId);
+
+      // Group node ids by BFS level
+      const groups = {};
+      nodes.getIds().forEach(id => {
+        const lv = level.has(id) ? level.get(id) : 999;
+        (groups[lv] ||= []).push(id);
+      });
+
+      // Layout parameters (pixels)
+      const rect = container.getBoundingClientRect();
+      const TOP = 40;           // top margin
+      const YSTEP = 140;        // vertical spacing between levels
+      const XSTEP = 160;        // horizontal spacing within a level
+
+      const updates = [];
+      Object.keys(groups)
+        .map(Number)
+        .sort((a,b) => a - b)
+        .forEach(lv => {
+          const ids = groups[lv];
+          const n = ids.length;
+          const totalW = (n - 1) * XSTEP;
+          const startX = (rect.width - totalW) / 2;
+          ids.forEach((id, i) => {
+            updates.push({ id, x: startX + i * XSTEP, y: TOP + lv * YSTEP, fixed: false });
+          });
+        });
+
+      if (updates.length) nodes.update(updates);
+
+      // Straight edges and physics off for a clean, structured view
+      network.setOptions({ edges: { smooth: false }, physics: { enabled: false } });
+      physicsEnabled = false;
+      physicsBtn.textContent = 'Physics: Off';
+      network.fit({ animation: { duration: 300 } });
+    };
+
+    // Hover highlight neighborhood
+    function setNeighborhoodHighlight(nodeId) {
+      const allIds = nodes.getIds();
+      const updates = [];
+      if (nodeId === null) {
+        allIds.forEach(id => updates.push({ id, opacity: 1 }));
+        nodes.update(updates);
+        return;
+      }
+      const neigh = network.getConnectedNodes(nodeId);
+      allIds.forEach(id => updates.push({ id, opacity: (id===nodeId || neigh.includes(id)) ? 1 : 0.25 }));
+      nodes.update(updates);
+    }
+
+    function enableHover() {
+      network.on('hoverNode', p => { setNeighborhoodHighlight(p.node); });
+      network.on('blurNode', () => { setNeighborhoodHighlight(null); });
+    }
+    function disableHover() {
+      network.off('hoverNode');
+      network.off('blurNode');
+      setNeighborhoodHighlight(null);
+    }
+    if (hoverToggle.checked) enableHover();
+    hoverToggle.onchange = () => { hoverToggle.checked ? enableHover() : disableHover(); };
+
+    // Drag to pin; double-click to unpin
+    network.on('dragEnd', params => {
+      if (params.nodes && params.nodes.length === 1) {
+        const id = params.nodes[0];
+        // Only auto-pin when physics is ON; in sorted/structured mode (physics off) keep nodes freely draggable
+        if (physicsEnabled) {
+          nodes.update({ id, fixed: { x:true, y:true } });
+        } else {
+          nodes.update({ id, fixed: false });
+        }
+      }
+    });
+
+    network.on('doubleClick', params => {
+      if (params.nodes.length === 1) {
+        const id = params.nodes[0];
+        nodes.update({ id, fixed: false });
+      }
+    });
+
+    // Initial scene
+    loadScene(sceneSelect.value);
+    sceneSelect.onchange = () => loadScene(sceneSelect.value);
+
+    // ===== Whiteboard overlay (draw + text + clear) =====
+    const wb = document.getElementById('whiteboard');
+    const wbCtx = wb.getContext('2d');
+    let wbMode = 'none'; // 'none' | 'draw' | 'text'
+    let drawing = false; let lastX = 0, lastY = 0;
+
+    function resizeWB() {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = container.getBoundingClientRect();
+      wb.width = Math.round(rect.width * dpr);
+      wb.height = Math.round(rect.height * dpr);
+      wb.style.width = rect.width + 'px';
+      wb.style.height = rect.height + 'px';
+      wbCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      wbCtx.lineJoin = 'round';
+      wbCtx.lineCap = 'round';
+      wbCtx.lineWidth = 2.5;
+      wbCtx.strokeStyle = '#e7eef7';
+      wbCtx.fillStyle = '#e7eef7';
+      wbCtx.font = '14px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter';
+    }
+
+    window.addEventListener('resize', resizeWB);
+    resizeWB();
+
+    const wbDrawBtn = document.getElementById('wbDrawBtn');
+    const wbTextBtn = document.getElementById('wbTextBtn');
+    const wbClearBtn = document.getElementById('wbClearBtn');
+
+    function setWbMode(mode) {
+      wbMode = mode;
+      const active = mode !== 'none';
+      wb.style.pointerEvents = active ? 'auto' : 'none';
+      // Freeze camera when annotating
+      network.setOptions({ interaction: { dragView: !active, zoomView: !active } });
+      // toggle button styles
+      [wbDrawBtn, wbTextBtn].forEach(btn => btn && (btn.style.outline = 'none'));
+      if (mode === 'draw') { wbDrawBtn.style.outline = '2px solid var(--accent)'; wbTextBtn.style.outline = 'none'; }
+      if (mode === 'text') { wbTextBtn.style.outline = '2px solid var(--accent)'; wbDrawBtn.style.outline = 'none'; }
+      if (!active) { wbDrawBtn.style.outline = wbTextBtn.style.outline = 'none'; }
+    }
+
+    wbDrawBtn && (wbDrawBtn.onclick = () => setWbMode(wbMode === 'draw' ? 'none' : 'draw'));
+    wbTextBtn && (wbTextBtn.onclick = () => setWbMode(wbMode === 'text' ? 'none' : 'text'));
+    wbClearBtn && (wbClearBtn.onclick = () => { wbCtx.clearRect(0,0,wb.width,wb.height); });
+
+    function getPos(evt) {
+      const rect = wb.getBoundingClientRect();
+      const x = evt.clientX - rect.left; const y = evt.clientY - rect.top;
+      return { x, y };
+    }
+
+    wb.addEventListener('pointerdown', (e) => {
+      if (wbMode === 'draw') {
+        drawing = true; const {x,y} = getPos(e); lastX = x; lastY = y;
+        wbCtx.beginPath(); wbCtx.moveTo(x, y);
+      } else if (wbMode === 'text') {
+        const {x,y} = getPos(e);
+        const t = prompt('Text:');
+        if (t) { wbCtx.fillText(t, x, y); }
+      }
+    });
+    wb.addEventListener('pointermove', (e) => {
+      if (!drawing || wbMode !== 'draw') return;
+      const {x,y} = getPos(e);
+      wbCtx.lineTo(x, y); wbCtx.stroke();
+      lastX = x; lastY = y;
+    });
+    wb.addEventListener('pointerup', () => { drawing = false; });
+    wb.addEventListener('pointerleave', () => { drawing = false; });
+  }
+})();
+</script>
+</body>
+</html>

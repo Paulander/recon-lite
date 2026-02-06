@@ -1,0 +1,834 @@
+"""
+Position Generators for Curriculum Training.
+
+Provides functions to generate training positions for each curriculum phase:
+- Anchor: Random valid KRK/KPK/KQK endgame positions
+- Bridge: Simplified middlegames with material advantage
+- Wilderness: Complex tactical positions from real games
+- Integration: Standard starting position
+"""
+
+from __future__ import annotations
+
+import random
+from dataclasses import dataclass
+from typing import List, Optional, Tuple
+
+import chess
+
+
+# ============================================================================
+# Phase 1: Anchor Position Generators (Endgames)
+# ============================================================================
+
+def generate_krk_position(
+    ensure_winning: bool = True,
+    max_attempts: int = 100,
+) -> chess.Board:
+    """
+    Generate a random valid KRK (King + Rook vs King) position.
+    
+    Args:
+        ensure_winning: If True, ensure White is winning (not stalemate)
+        max_attempts: Maximum attempts to find valid position
+        
+    Returns:
+        A valid KRK position where White can win
+    """
+    for _ in range(max_attempts):
+        board = chess.Board(None)
+        board.clear()
+        
+        # Place kings ensuring they don't attack each other
+        wk_sq = random.choice(chess.SQUARES)
+        
+        # Black king must be at least 2 squares away
+        valid_bk_squares = [
+            sq for sq in chess.SQUARES
+            if chess.square_distance(sq, wk_sq) >= 2
+        ]
+        if not valid_bk_squares:
+            continue
+        bk_sq = random.choice(valid_bk_squares)
+        
+        # Place rook ensuring it's not on king squares
+        valid_rook_squares = [
+            sq for sq in chess.SQUARES
+            if sq not in (wk_sq, bk_sq)
+        ]
+        rook_sq = random.choice(valid_rook_squares)
+        
+        board.set_piece_at(wk_sq, chess.Piece(chess.KING, chess.WHITE))
+        board.set_piece_at(bk_sq, chess.Piece(chess.KING, chess.BLACK))
+        board.set_piece_at(rook_sq, chess.Piece(chess.ROOK, chess.WHITE))
+        
+        # Always white to move for training consistency
+        board.turn = chess.WHITE
+        
+        # Validate position has both kings
+        if board.king(chess.WHITE) is None or board.king(chess.BLACK) is None:
+            continue
+        
+        # Validate position
+        if not board.is_valid():
+            continue
+        
+        if ensure_winning:
+            # Check if rook is immediately capturable by black king
+            if rook_sq in board.attacks(bk_sq):
+                continue
+            
+            # Check if ANY white move creates immediate stalemate for black
+            has_safe_move = False
+            for move in board.legal_moves:
+                board.push(move)
+                is_stale = board.is_stalemate()
+                board.pop()
+                if not is_stale:
+                    has_safe_move = True
+                    break
+            
+            if not has_safe_move:
+                # All white moves lead to stalemate - reject this position
+                continue
+        
+        return board
+    
+    # Fallback to known position
+    return chess.Board("8/8/8/4k3/8/8/8/R3K3 w - - 0 1")
+
+
+def generate_kpk_position(
+    ensure_winning: bool = True,
+    max_attempts: int = 100,
+) -> chess.Board:
+    """
+    Generate a random valid KPK (King + Pawn vs King) position.
+    
+    Avoids theoretical draws where possible.
+    
+    Args:
+        ensure_winning: If True, attempt to generate won positions
+        max_attempts: Maximum attempts
+        
+    Returns:
+        A valid KPK position
+    """
+    for _ in range(max_attempts):
+        board = chess.Board(None)
+        board.clear()
+        
+        # Place pawn (not on rank 1 or 8)
+        # Avoid rook pawns (a/h file) which have many theoretical draws
+        pawn_file = random.randint(1, 6)  # Files b-g only
+        pawn_rank = random.randint(1, 6)  # Ranks 2-7
+        pawn_sq = chess.square(pawn_file, pawn_rank)
+        
+        # White king near the pawn
+        wk_candidates = [
+            sq for sq in chess.SQUARES
+            if chess.square_distance(sq, pawn_sq) <= 3
+            and sq != pawn_sq
+        ]
+        if not wk_candidates:
+            continue
+        wk_sq = random.choice(wk_candidates)
+        
+        # Black king away from pawn but not too far
+        bk_candidates = [
+            sq for sq in chess.SQUARES
+            if chess.square_distance(sq, wk_sq) >= 2
+            and sq not in (pawn_sq, wk_sq)
+        ]
+        if not bk_candidates:
+            continue
+        bk_sq = random.choice(bk_candidates)
+        
+        board.set_piece_at(wk_sq, chess.Piece(chess.KING, chess.WHITE))
+        board.set_piece_at(bk_sq, chess.Piece(chess.KING, chess.BLACK))
+        board.set_piece_at(pawn_sq, chess.Piece(chess.PAWN, chess.WHITE))
+        
+        # Always white to move for training consistency
+        board.turn = chess.WHITE
+        
+        # Validate position has both kings
+        if board.king(chess.WHITE) is None or board.king(chess.BLACK) is None:
+            continue
+        
+        if not board.is_valid():
+            continue
+        
+        if ensure_winning:
+            # Check if ANY white move creates immediate stalemate for black
+            has_safe_move = False
+            for move in board.legal_moves:
+                board.push(move)
+                is_stale = board.is_stalemate()
+                board.pop()
+                if not is_stale:
+                    has_safe_move = True
+                    break
+            
+            if not has_safe_move:
+                # All white moves lead to stalemate - reject this position
+                continue
+        
+        return board
+    
+    # Fallback
+    return chess.Board("8/8/8/8/4k3/8/4P3/4K3 w - - 0 1")
+
+
+def generate_kpk_near_promotion(
+    max_attempts: int = 50,
+    white_to_move: bool = True,
+    allow_rook_pawn: bool = False,
+) -> chess.Board:
+    """
+    Generate a simple KPK position 1-2 plies from promotion.
+    
+    Places the pawn on the 7th (or 2nd) rank with minimal clutter so
+    training can focus on the KPK -> promotion -> KQK handoff.
+    """
+    for _ in range(max_attempts):
+        board = chess.Board(None)
+        board.clear()
+        
+        # Prefer central files to avoid rook-pawn corner draws unless allowed
+        candidate_files = list(range(0, 8)) if allow_rook_pawn else list(range(1, 7))
+        pawn_file = random.choice(candidate_files)
+        pawn_rank = 6 if white_to_move else 1  # 7th for White, 2nd for Black
+        pawn_sq = chess.square(pawn_file, pawn_rank)
+        
+        # Place attacking king behind/near the pawn
+        wk_candidates = [
+            sq for sq in chess.SQUARES
+            if chess.square_distance(sq, pawn_sq) <= 2 and sq != pawn_sq
+        ]
+        if not wk_candidates:
+            continue
+        wk_sq = random.choice(wk_candidates)
+        
+        # Defender king a couple of squares away from promotion square
+        promo_sq = chess.square(pawn_file, pawn_rank + (1 if white_to_move else -1))
+        bk_candidates = [
+            sq for sq in chess.SQUARES
+            if chess.square_distance(sq, promo_sq) >= 2
+            and sq not in (pawn_sq, wk_sq)
+        ]
+        if not bk_candidates:
+            continue
+        bk_sq = random.choice(bk_candidates)
+        
+        board.set_piece_at(wk_sq, chess.Piece(chess.KING, chess.WHITE))
+        board.set_piece_at(bk_sq, chess.Piece(chess.KING, chess.BLACK))
+        board.set_piece_at(pawn_sq, chess.Piece(chess.PAWN, chess.WHITE))
+        board.turn = chess.WHITE if white_to_move else chess.BLACK
+        
+        if not board.is_valid():
+            continue
+        
+        # Avoid immediate stalemate or illegal promotion issues
+        if board.turn != chess.WHITE and board.is_stalemate():
+            continue
+        
+        return board
+    
+    # Fallback: simple near-promotion
+    return chess.Board("8/8/8/3k4/8/8/4P3/4K3 w - - 0 1")
+
+
+def generate_kqk_position(
+    ensure_winning: bool = True,
+    max_attempts: int = 100,
+) -> chess.Board:
+    """
+    Generate a random valid KQK (King + Queen vs King) position.
+    
+    Args:
+        ensure_winning: If True, avoid stalemates
+        max_attempts: Maximum attempts
+        
+    Returns:
+        A valid KQK position where White can win
+    """
+    for _ in range(max_attempts):
+        board = chess.Board(None)
+        board.clear()
+        
+        # Place kings
+        wk_sq = random.choice(chess.SQUARES)
+        valid_bk = [
+            sq for sq in chess.SQUARES
+            if chess.square_distance(sq, wk_sq) >= 2
+        ]
+        if not valid_bk:
+            continue
+        bk_sq = random.choice(valid_bk)
+        
+        # Place queen
+        valid_queen = [
+            sq for sq in chess.SQUARES
+            if sq not in (wk_sq, bk_sq)
+        ]
+        queen_sq = random.choice(valid_queen)
+        
+        board.set_piece_at(wk_sq, chess.Piece(chess.KING, chess.WHITE))
+        board.set_piece_at(bk_sq, chess.Piece(chess.KING, chess.BLACK))
+        board.set_piece_at(queen_sq, chess.Piece(chess.QUEEN, chess.WHITE))
+        
+        # Always white to move for training consistency
+        board.turn = chess.WHITE
+        
+        # Validate position has both kings
+        if board.king(chess.WHITE) is None or board.king(chess.BLACK) is None:
+            continue
+        
+        if not board.is_valid():
+            continue
+        
+        if ensure_winning:
+            # Check if queen is immediately capturable by black king
+            if queen_sq in board.attacks(bk_sq):
+                continue
+            
+            # Check if ANY white move creates immediate stalemate for black
+            has_safe_move = False
+            for move in board.legal_moves:
+                board.push(move)
+                is_stale = board.is_stalemate()
+                board.pop()
+                if not is_stale:
+                    has_safe_move = True
+                    break
+            
+            if not has_safe_move:
+                # All white moves lead to stalemate - reject this position
+                continue
+        
+        return board
+    
+    # Fallback
+    return chess.Board("8/8/8/4k3/8/8/8/Q3K3 w - - 0 1")
+
+
+def generate_anchor_position(
+    endgame_type: Optional[str] = None,
+) -> chess.Board:
+    """
+    Generate an anchor phase position.
+    
+    Args:
+        endgame_type: Specific type ("KRK", "KPK", "KQK") or None for random
+        
+    Returns:
+        A valid endgame position
+    """
+    if endgame_type is None:
+        endgame_type = random.choice(["KRK", "KPK", "KQK"])
+    
+    if endgame_type == "KRK":
+        return generate_krk_position()
+    elif endgame_type == "KPK":
+        return generate_kpk_position()
+    elif endgame_type == "KQK":
+        return generate_kqk_position()
+    else:
+        return generate_krk_position()
+
+
+# ============================================================================
+# KPK Extended Curriculum (8 Stages: Sprinter → Zugzwang)
+# Progressive learning with specific pattern discovery targets
+# ============================================================================
+
+@dataclass
+class KPKStage:
+    """Configuration for a KPK curriculum stage."""
+    name: str
+    description: str
+    # Position constraints
+    pawn_rank_min: int = 1  # 0-7 (0 = rank 1)
+    pawn_rank_max: int = 6
+    opp_king_min_dist: int = 1  # Chebyshev from pawn
+    opp_king_max_dist: int = 7
+    own_king_max_dist: Optional[int] = None
+    force_rook_pawn: bool = False
+    # Position generator function name (optional override)
+    generator: Optional[str] = None
+    # Example FEN for documentation
+    example_fen: str = ""
+
+
+# Extended curriculum with Discovery Bridge stages
+KPK_STAGES: List[KPKStage] = [
+    # Stage 0: The Sprinter - trivial promotion
+    KPKStage(
+        name="sprinter",
+        description="Pawn on 7th, King on 6th, Enemy far. Just push!",
+        pawn_rank_min=6, pawn_rank_max=6,
+        opp_king_min_dist=4, opp_king_max_dist=7,
+        own_king_max_dist=2,
+        example_fen="8/4P3/4K3/8/8/8/8/4k3 w - - 0 1"
+    ),
+    # === DISCOVERY BRIDGE (Baby Steps) ===
+    # Stage 1: Guardian (E-file) - King protects promotion square
+    KPKStage(
+        name="guardian_e",
+        description="WK:e7, P:e6, BK:g8. Learn King protecting promotion.",
+        pawn_rank_min=5, pawn_rank_max=5,
+        opp_king_min_dist=3, opp_king_max_dist=4,
+        own_king_max_dist=1,
+        generator="fixed",  # Use fixed position
+        example_fen="6k1/3K4/4P3/8/8/8/8/8 w - - 0 1"  # King on d7 beside pawn, push e6-e7
+    ),
+    # Stage 2: Guardian (D-file) - Generalization test
+    KPKStage(
+        name="guardian_d",
+        description="WK:d7, P:d6, BK:h8. File generalization.",
+        pawn_rank_min=5, pawn_rank_max=5,
+        opp_king_min_dist=4, opp_king_max_dist=5,
+        own_king_max_dist=1,
+        generator="fixed",
+        example_fen="7k/2K5/3P4/8/8/8/8/8 w - - 0 1"  # King on c7 beside pawn, push d6-d7
+    ),
+    # Stage 3: Step-Aside - King unblocks pawn
+    KPKStage(
+        name="step_aside",
+        description="WK:e6, P:e5, BK:h8. King must step aside.",
+        pawn_rank_min=4, pawn_rank_max=4,
+        opp_king_min_dist=5, opp_king_max_dist=6,
+        own_king_max_dist=1,
+        generator="fixed",
+        example_fen="7k/8/4K3/4P3/8/8/8/8 w - - 0 1"  # Ke6-d7, then push
+    ),
+    # Stage 4: Shouldering - King interference
+    KPKStage(
+        name="shouldering",
+        description="WK:d5, P:d4, BK:f6. Learn King interference.",
+        pawn_rank_min=3, pawn_rank_max=3,
+        opp_king_min_dist=2, opp_king_max_dist=3,
+        own_king_max_dist=1,
+        generator="fixed",
+        example_fen="8/8/5k2/3K4/3P4/8/8/8 w - - 0 1"  # Ke5 shoulders
+    ),
+    # Stage 5: Opposition Lite - First real test
+    KPKStage(
+        name="opposition_lite",
+        description="WK:e4, P:e3, BK:e6. Direct opposition intro.",
+        pawn_rank_min=2, pawn_rank_max=2,
+        opp_king_min_dist=2, opp_king_max_dist=3,
+        own_king_max_dist=1,
+        generator="fixed",
+        example_fen="8/8/4k3/8/4K3/4P3/8/8 w - - 0 1"  # Opposition position
+    ),
+    # === ORIGINAL STAGES (renumbered 6+) ===
+    # Stage 6: The Escort - King support (original Stage 1)
+    KPKStage(
+        name="escort",
+        description="Pawn on 5th/6th. Enemy 3-4 away. Learn King support.",
+        pawn_rank_min=4, pawn_rank_max=5,
+        opp_king_min_dist=3, opp_king_max_dist=4,
+        own_king_max_dist=3,
+        example_fen="8/8/4PK2/8/8/8/4k3/8 w - - 0 1"
+    ),
+    # Stage 2: The Square Rule - racing calculation
+    KPKStage(
+        name="square_rule",
+        description="Pawn on 2nd-4th. Enemy on edge of 'the square'.",
+        pawn_rank_min=1, pawn_rank_max=3,
+        opp_king_min_dist=3, opp_king_max_dist=5,
+        own_king_max_dist=5,
+        example_fen="8/8/8/8/4P3/8/4K3/1k6 w - - 0 1"
+    ),
+    # Stage 3: Frontal Blockade - shouldering
+    KPKStage(
+        name="frontal_blockade",
+        description="Enemy King directly in front of pawn. Learn shouldering.",
+        pawn_rank_min=3, pawn_rank_max=4,
+        opp_king_min_dist=1, opp_king_max_dist=2,
+        own_king_max_dist=2,
+        generator="frontal_blockade",  # Special generator
+        example_fen="8/8/4k3/4P3/4K3/8/8/8 w - - 0 1"
+    ),
+    # Stage 4: Key Squares - direct opposition
+    KPKStage(
+        name="key_squares",
+        description="Pawn on 4th/5th. White King must reach key squares.",
+        pawn_rank_min=3, pawn_rank_max=4,
+        opp_king_min_dist=1, opp_king_max_dist=3,
+        own_king_max_dist=2,
+        example_fen="8/8/4k3/8/4P3/3K4/8/8 w - - 0 1"
+    ),
+    # Stage 5: The Pivot - distant opposition
+    KPKStage(
+        name="pivot",
+        description="Pawn on 2nd/3rd. King far. Learn distant opposition.",
+        pawn_rank_min=1, pawn_rank_max=2,
+        opp_king_min_dist=2, opp_king_max_dist=4,
+        own_king_max_dist=4,
+        example_fen="8/8/8/4k3/8/8/4P3/4K3 w - - 0 1"
+    ),
+    # Stage 6: Corner Trap - rook pawn draws
+    KPKStage(
+        name="corner_trap",
+        description="Rook pawn (a/h file). Learn stalemate patterns.",
+        pawn_rank_min=2, pawn_rank_max=5,
+        opp_king_min_dist=1, opp_king_max_dist=4,
+        force_rook_pawn=True,
+        example_fen="8/8/1K6/P7/8/k7/8/8 w - - 0 1"
+    ),
+    # Stage 7: Zugzwang - triangulation
+    KPKStage(
+        name="zugzwang",
+        description="Corresponding squares. Learn triangulation.",
+        pawn_rank_min=3, pawn_rank_max=5,
+        opp_king_min_dist=1, opp_king_max_dist=2,
+        own_king_max_dist=2,
+        generator="zugzwang",  # Special generator
+        example_fen="8/8/3k4/3P4/3K4/8/8/8 w - - 0 1"
+    ),
+]
+
+
+def _chebyshev(sq1: int, sq2: int) -> int:
+    """Chebyshev (king move) distance between squares."""
+    r1, f1 = chess.square_rank(sq1), chess.square_file(sq1)
+    r2, f2 = chess.square_rank(sq2), chess.square_file(sq2)
+    return max(abs(r1 - r2), abs(f1 - f2))
+
+
+def generate_kpk_curriculum_position(
+    stage: KPKStage,
+    max_attempts: int = 100,
+) -> chess.Board:
+    """
+    Generate a KPK position matching curriculum stage constraints.
+    
+    Args:
+        stage: KPKStage configuration
+        max_attempts: Maximum generation attempts
+        
+    Returns:
+        Valid KPK position matching constraints
+    """
+    # Handle fixed positions (baby-step stages)
+    if stage.generator == "fixed" and stage.example_fen:
+        return chess.Board(stage.example_fen)
+    
+    for _ in range(max_attempts):
+        board = chess.Board(None)
+        board.clear()
+        
+        # Pawn position
+        pawn_rank = random.randint(stage.pawn_rank_min, stage.pawn_rank_max)
+        if stage.force_rook_pawn:
+            pawn_file = random.choice([0, 7])  # a or h
+        else:
+            pawn_file = random.randint(1, 6)  # b-g
+        pawn_sq = chess.square(pawn_file, pawn_rank)
+        
+        # White king
+        wk_candidates = [
+            sq for sq in chess.SQUARES
+            if sq != pawn_sq
+            and (stage.own_king_max_dist is None 
+                 or _chebyshev(sq, pawn_sq) <= stage.own_king_max_dist)
+            and _chebyshev(sq, pawn_sq) <= 5  # Reasonably close
+        ]
+        if not wk_candidates:
+            continue
+        wk_sq = random.choice(wk_candidates)
+        
+        # Black king - within distance constraints
+        bk_candidates = [
+            sq for sq in chess.SQUARES
+            if sq not in (pawn_sq, wk_sq)
+            and _chebyshev(sq, wk_sq) >= 2  # Kings can't be adjacent
+            and stage.opp_king_min_dist <= _chebyshev(sq, pawn_sq) <= stage.opp_king_max_dist
+        ]
+        if not bk_candidates:
+            continue
+        bk_sq = random.choice(bk_candidates)
+        
+        board.set_piece_at(pawn_sq, chess.Piece(chess.PAWN, chess.WHITE))
+        board.set_piece_at(wk_sq, chess.Piece(chess.KING, chess.WHITE))
+        board.set_piece_at(bk_sq, chess.Piece(chess.KING, chess.BLACK))
+        board.turn = chess.WHITE
+        
+        if board.is_valid() and not board.is_game_over() and list(board.legal_moves):
+            return board
+    
+    # Fallback
+    return chess.Board("8/8/8/8/4k3/8/4P3/4K3 w - - 0 1")
+
+
+def generate_kpk_stage_position(stage_index: int) -> chess.Board:
+    """Generate position for a specific curriculum stage by index."""
+    if 0 <= stage_index < len(KPK_STAGES):
+        return generate_kpk_curriculum_position(KPK_STAGES[stage_index])
+    return generate_kpk_curriculum_position(KPK_STAGES[-1])
+
+
+# Convenience functions for each stage
+def generate_kpk_trivial() -> chess.Board:
+    """Stage 1: Pawn on 7th, king far."""
+    return generate_kpk_curriculum_position(KPK_STAGES[0])
+
+def generate_kpk_easy() -> chess.Board:
+    """Stage 2: Pawn on 6th, king far."""
+    return generate_kpk_curriculum_position(KPK_STAGES[1])
+
+def generate_kpk_medium() -> chess.Board:
+    """Stage 3: Opponent getting closer."""
+    return generate_kpk_curriculum_position(KPK_STAGES[2])
+
+def generate_kpk_king_help() -> chess.Board:
+    """Stage 4: Need own king to help."""
+    return generate_kpk_curriculum_position(KPK_STAGES[3])
+
+def generate_kpk_opposition() -> chess.Board:
+    """Stage 5: Close quarters, patterns matter."""
+    return generate_kpk_curriculum_position(KPK_STAGES[4])
+
+def generate_kpk_rook_pawn() -> chess.Board:
+    """Stage 6: Rook pawn positions (many draws)."""
+    return generate_kpk_curriculum_position(KPK_STAGES[5])
+
+
+# ============================================================================
+# Phase 2: Bridge Position Generators (Simplified Middlegame)
+# ============================================================================
+
+def generate_bridge_position(
+    piece_count_range: Tuple[int, int] = (8, 12),
+    material_advantage: float = 3.0,
+) -> chess.Board:
+    """
+    Generate a simplified middlegame position with material advantage.
+    
+    These positions should be winnable but require transition to endgame.
+    
+    Args:
+        piece_count_range: Min/max total pieces (excluding kings)
+        material_advantage: Desired material advantage for White
+        
+    Returns:
+        A bridge position
+    """
+    piece_values = {
+        chess.QUEEN: 9, chess.ROOK: 5, chess.BISHOP: 3,
+        chess.KNIGHT: 3, chess.PAWN: 1,
+    }
+    
+    max_attempts = 50
+    for _ in range(max_attempts):
+        board = chess.Board(None)
+        board.clear()
+        
+        # Place kings first
+        wk_sq = random.choice([chess.E1, chess.G1, chess.C1])
+        bk_sq = random.choice([chess.E8, chess.G8, chess.C8])
+        board.set_piece_at(wk_sq, chess.Piece(chess.KING, chess.WHITE))
+        board.set_piece_at(bk_sq, chess.Piece(chess.KING, chess.BLACK))
+        
+        # Determine piece counts
+        min_pieces, max_pieces = piece_count_range
+        target_pieces = random.randint(min_pieces, max_pieces)
+        
+        # Generate piece lists
+        white_material = 0.0
+        black_material = 0.0
+        placed_squares = {wk_sq, bk_sq}
+        
+        # Add White pieces (more material)
+        white_pieces = []
+        piece_choices = [chess.ROOK, chess.BISHOP, chess.KNIGHT, chess.PAWN, chess.PAWN]
+        
+        for _ in range(target_pieces // 2 + 1):
+            piece_type = random.choice(piece_choices)
+            white_pieces.append(piece_type)
+            white_material += piece_values[piece_type]
+        
+        # Add Black pieces (less material)
+        target_black = white_material - material_advantage
+        black_pieces = []
+        
+        while sum(piece_values[p] for p in black_pieces) < target_black - 2:
+            piece_type = random.choice([chess.ROOK, chess.BISHOP, chess.KNIGHT, chess.PAWN])
+            if sum(piece_values[p] for p in black_pieces) + piece_values[piece_type] <= target_black + 1:
+                black_pieces.append(piece_type)
+        
+        # Place pieces
+        def place_piece(piece_type: chess.PieceType, color: chess.Color) -> bool:
+            # Get valid squares
+            if piece_type == chess.PAWN:
+                if color == chess.WHITE:
+                    ranks = [1, 2, 3, 4, 5]  # Ranks 2-6
+                else:
+                    ranks = [2, 3, 4, 5, 6]  # Ranks 3-7
+            else:
+                ranks = list(range(8))
+            
+            candidates = [
+                sq for sq in chess.SQUARES
+                if sq not in placed_squares
+                and chess.square_rank(sq) in ranks
+            ]
+            
+            if not candidates:
+                return False
+            
+            sq = random.choice(candidates)
+            board.set_piece_at(sq, chess.Piece(piece_type, color))
+            placed_squares.add(sq)
+            return True
+        
+        # Place all pieces
+        for piece_type in white_pieces:
+            place_piece(piece_type, chess.WHITE)
+        for piece_type in black_pieces:
+            place_piece(piece_type, chess.BLACK)
+        
+        board.turn = chess.WHITE
+        
+        if board.is_valid() and not board.is_checkmate() and not board.is_stalemate():
+            return board
+    
+    # Fallback: a simple winning position
+    return chess.Board("r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4")
+
+
+# ============================================================================
+# Phase 3: Wilderness Position Generators (Complex Tactical)
+# ============================================================================
+
+# Sample tactical positions from common openings
+WILDERNESS_POSITIONS = [
+    # Italian Game positions
+    "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4",
+    "r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQ1RK1 w kq - 6 5",
+    # Sicilian positions
+    "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2",
+    "r1bqkb1r/pp2pppp/2np1n2/6B1/3NP3/8/PPP2PPP/RN1QKB1R w KQkq - 0 6",
+    # Queen's Gambit positions
+    "rnbqkb1r/ppp2ppp/4pn2/3p4/2PP4/2N5/PP2PPPP/R1BQKBNR w KQkq - 2 4",
+    "rnbqkb1r/pp3ppp/4pn2/2pp4/2PP4/2N2N2/PP2PPPP/R1BQKB1R w KQkq - 0 5",
+    # Ruy Lopez positions
+    "r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3",
+    "r1bqk2r/2ppbppp/p1n2n2/1p2p3/4P3/1B3N2/PPPP1PPP/RNBQ1RK1 w kq - 0 7",
+    # Complex middlegame
+    "r2qkb1r/pb1n1ppp/1p2pn2/2pp4/2PP4/2N1PN2/PPQ2PPP/R1B1KB1R w KQkq - 0 8",
+    "r1bq1rk1/ppp2ppp/2n2n2/3p4/1bPP4/2N1PN2/PP3PPP/R1BQKB1R w KQ - 4 7",
+]
+
+
+def generate_wilderness_position(
+    randomize_moves: int = 0,
+) -> chess.Board:
+    """
+    Generate a complex tactical position.
+    
+    Args:
+        randomize_moves: Number of random moves to play from base position
+        
+    Returns:
+        A complex position for tactical training
+    """
+    # Start from a known position
+    base_fen = random.choice(WILDERNESS_POSITIONS)
+    board = chess.Board(base_fen)
+    
+    # Optionally play some random moves
+    for _ in range(randomize_moves):
+        legal = list(board.legal_moves)
+        if not legal or board.is_game_over():
+            break
+        board.push(random.choice(legal))
+    
+    return board
+
+
+def generate_wilderness_from_opening(
+    opening_moves: int = 6,
+) -> chess.Board:
+    """
+    Generate a wilderness position by playing opening moves.
+    
+    Args:
+        opening_moves: Number of half-moves to play from start
+        
+    Returns:
+        A position after some opening moves
+    """
+    board = chess.Board()
+    
+    for _ in range(opening_moves):
+        legal = list(board.legal_moves)
+        if not legal:
+            break
+        # Slightly bias toward center moves
+        center_files = {3, 4}  # d and e files
+        center_moves = [m for m in legal if chess.square_file(m.to_square) in center_files]
+        if center_moves and random.random() < 0.6:
+            board.push(random.choice(center_moves))
+        else:
+            board.push(random.choice(legal))
+    
+    return board
+
+
+# ============================================================================
+# Phase 4: Integration Position Generators
+# ============================================================================
+
+def generate_integration_position() -> chess.Board:
+    """
+    Generate a position for full game integration training.
+    
+    Always returns the starting position.
+    
+    Returns:
+        Standard starting position
+    """
+    return chess.Board()
+
+
+# ============================================================================
+# Utility Functions
+# ============================================================================
+
+def validate_position(board: chess.Board) -> bool:
+    """Check if a position is valid for training."""
+    if not board.is_valid():
+        return False
+    if board.is_game_over():
+        return False
+    return True
+
+
+def estimate_theoretical_moves(board: chess.Board) -> int:
+    """
+    Estimate theoretical minimum moves to win.
+    
+    Very rough estimate based on piece count and position.
+    """
+    pieces = board.piece_map()
+    piece_count = len([p for p in pieces.values() if p.piece_type != chess.KING])
+    
+    # KRK: ~16 moves average
+    # KQK: ~10 moves average
+    # KPK: ~20-30 moves (depends heavily on position)
+    
+    if piece_count == 1:
+        piece = next(p for p in pieces.values() if p.piece_type != chess.KING)
+        if piece.piece_type == chess.QUEEN:
+            return 10
+        elif piece.piece_type == chess.ROOK:
+            return 16
+        elif piece.piece_type == chess.PAWN:
+            return 25
+    
+    # More complex positions
+    return 30 + piece_count * 2
+

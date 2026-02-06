@@ -403,37 +403,11 @@ def rook_safe_after(board: chess.Board, move: chess.Move) -> bool:
         # If our king is adjacent too, we will recapture and remain winning -> allow
         return chebyshev(our_k, rook_sq) <= 1
     return True
-    """
-    After our move, the enemy king must not be able to capture our rook on the next move
-    *unless* our king can immediately recapture (i.e., rook square is defended by our king).
-    This captures the common 'don't hang the rook' rule in KRK.
-    """
-    color = board.turn
-    b = board.copy(stack=False)
-    b.push(move)
-    rook_sq = _find_our_rook_square_after(b, color)
-    if rook_sq is None:
-        # Rook should exist; treat as unsafe
-        return False
-
-    enemy_k = b.king(not color)
-    our_k = b.king(color)
-
-    # Robust guards: if something is off with the board, avoid crashes and assume safe
-    if enemy_k is None or our_k is None or rook_sq is None:
-        return True
-
-    # if enemy king adjacent to rook (could capture)
-    if chebyshev(enemy_k, rook_sq) <= 1:
-        # if our king also adjacent → defended, allowed
-        if chebyshev(our_k, rook_sq) <= 1:
-            return True
-        return False
-    return True
 
 # ---------- king progress & stable cut ----------
 
 def our_king_progress(board: chess.Board, move: chess.Move) -> float:
+
     """
     Heuristic: progress if our king reduces Chebyshev distance to the enemy king.
     (Good enough for Phase 0 rendezvous.)

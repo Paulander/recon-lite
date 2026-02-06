@@ -629,3 +629,168 @@ config = EvalConfig(mode=EvalMode.DISTILLED_HYBRID, ...)
 - [x] EvalManager supports DISTILLED and DISTILLED_HYBRID modes
 - [ ] 10,000+ positions collected (user task)
 - [ ] Model achieves >0.85 correlation with Stockfish (depends on training data)
+
+---
+
+## M8 (Implemented 2025-12): Reverse Curriculum & FeatureHub
+
+**Goal**: Enable "Implicit Lookahead" and "Structural Discovery" by implementing continuous affordance signals, global feature hoisting, and a reverse curriculum training strategy that trains backwards from perfect endgames to discover bridge strategies.
+
+### Key Features
+
+#### 1. Continuous Affordance Signals (`src/recon_lite_chess/affordance/`)
+
+Move from binary gates to continuous [0.0, 1.0] "scent" signals that measure distance to applicability:
+
+```python
+from recon_lite_chess.affordance import compute_all_affordances
+
+board = chess.Board("8/8/4k3/8/8/4K3/4R3/8 w - - 0 1")
+affs = compute_all_affordances(board)
+print(affs["krk"].value)  # 0.95 - very close to pure KRK
+print(affs["kpk"].value)  # 0.0 - no pawns present
+```
+
+- **AffordanceSignal**: Contains `subgraph`, `value`, `components`, `is_exact_match`
+- **Sensors**: `compute_krk_affordance()`, `compute_kpk_affordance()`, `compute_kqk_affordance()`
+- **Purpose**: Creates gradient for M3 Bandit to "climb the hill" of a strategy
+
+#### 2. FeatureHub - Global Feature Registry (`src/recon_lite_chess/features/`)
+
+Hoists tactical and geometric sensors from local subgraphs to a global registry:
+
+```python
+from recon_lite_chess.features import create_default_hub
+
+hub = create_default_hub()
+features = hub.compute_all(board)
+
+# 18+ features including:
+# - Tactical: detect_fork, detect_pin, detect_hanging, detect_back_rank
+# - Material: material_balance, material_advantage, piece_count
+# - Positional: king_safety, center_control, color_complex_weakness
+# - Phase: phase_opening, phase_middlegame, phase_endgame
+# - Geometric: opposition_status, affordance_krk, affordance_kpk, affordance_kqk
+```
+
+- **FeatureDefinition**: Declarative feature specs with categories and dependencies
+- **FeatureCategory**: TACTICAL, GEOMETRIC, MATERIAL, POSITIONAL, DYNAMIC, PHASE
+- **Integration**: `wire_feature_sensors_to_graph()` creates terminal nodes from hub features
+
+#### 3. Reverse Curriculum Training (`src/recon_lite_chess/training/`)
+
+Trains backwards from "Anchors" (perfect endgames) to discover "Bridge" strategies:
+
+```python
+from recon_lite_chess.training import CurriculumManager, create_default_curriculum
+
+curriculum = create_default_curriculum()
+# Phase 1: Anchor - KRK/KPK/KQK to 99% win rate
+# Phase 2: Bridge - Simplified middlegame → discover liquidation
+# Phase 3: Wilderness - Full material tactical positions
+# Phase 4: Integration - Full games from starting position
+```
+
+**Position Generators** (`training/generators.py`):
+- `generate_krk_position()`, `generate_kpk_position()`, `generate_kqk_position()`
+- `generate_bridge_position()`, `generate_wilderness_position()`
+
+#### 4. Curriculum Training Script (`scripts/curriculum_training.sh`)
+
+End-to-end training with evaluation and markdown reports:
+
+```bash
+# Quick test (50 games per endgame)
+./scripts/curriculum_training.sh --quick --phase anchor
+
+# Full training (500 games, all phases)
+./scripts/curriculum_training.sh
+
+# With Stockfish evaluation
+./scripts/curriculum_training.sh --engine /usr/games/stockfish --depth 4
+```
+
+**Output**:
+- JSONL traces: `reports/curriculum/{timestamp}/anchor_krk.jsonl`, etc.
+- Markdown report: `reports/curriculum/{timestamp}/training_report.md`
+- Weight checkpoints: `weights/nightly/{endgame}_consol.json`
+
+#### 5. Training Analysis (`scripts/analyze_training.py`)
+
+Generate statistics from JSONL traces:
+
+```bash
+uv run python scripts/analyze_training.py --report-dir reports/curriculum/20251211_130006/ --markdown
+```
+
+**Output format**:
+| Phase | Episodes | W/D/L | Win Rate | Promos | Avg Plies |
+|-------|----------|-------|----------|--------|-----------|
+| anchor_krk | 50 | 45/5/0 | 90.0% | 0 | 13.5 |
+| anchor_kpk | 50 | 40/10/0 | 80.0% | 40 | 7.4 |
+| anchor_kqk | 50 | 35/15/0 | 70.0% | 0 | 18.2 |
+
+#### 6. KQK Endgame Network (`src/recon_lite_chess/scripts/kqk.py`)
+
+New endgame network for King+Queen vs King with stalemate protection:
+
+- **Position detection**: `is_kqk_position()`, `create_random_kqk_board()`
+- **Move strategies**: `can_deliver_queen_mate()`, `get_restriction_moves()`, `can_approach_for_mate()`, `get_waiting_queen_moves()`
+- **Stalemate protection**: All queen moves checked for `is_stalemate()` before selection
+- **Demo**: `demos/persistent/kqk_persistent_demo.py`
+
+#### 7. KPK Promotion Detection
+
+KPK success condition is pawn promotion (not checkmate):
+
+```python
+# In kpk_persistent_demo.py
+def _check_pawn_promoted(board: chess.Board) -> bool:
+    """Check if attacking side promoted a pawn to Queen."""
+    # ...
+
+# Game ends with "1-0" when pawn promotes
+if _check_pawn_promoted(board):
+    game_result = "1-0"
+    result["promoted"] = True
+```
+
+### M8 File Summary
+
+**New modules**:
+- `src/recon_lite_chess/affordance/` - Continuous affordance signals
+- `src/recon_lite_chess/features/` - Global FeatureHub
+- `src/recon_lite_chess/training/` - CurriculumManager and generators
+- `src/recon_lite_chess/scripts/kqk.py` - KQK endgame network
+
+**New scripts**:
+- `scripts/curriculum_training.sh` - End-to-end curriculum training
+- `scripts/analyze_training.py` - Training statistics and reports
+- `scripts/generate_endgame_fens.py` - Position generation
+
+**New demos**:
+- `demos/persistent/kqk_persistent_demo.py` - KQK training demo
+
+**Modified**:
+- `src/recon_lite_chess/graph/subgraph_gates.py` - Uses affordance signals
+- `src/recon_lite/plasticity/bandit.py` - Affordance delta in reward
+- `demos/experiments/extract_motifs.py` - Bridge motif extraction
+
+### M8 Training Results (Quick Mode)
+
+| Endgame | Win Rate | Notes |
+|---------|----------|-------|
+| KRK | 90% | 45 checkmates, 5 stalemates (edge positions) |
+| KPK | 80% | 40 promotions, 10 theoretical draws |
+| KQK | 70%+ | With stalemate protection fixes |
+
+### M8 Acceptance Criteria
+
+- [x] Affordance sensors produce continuous [0,1] signals for KRK/KPK/KQK
+- [x] FeatureHub registers 18+ features across 6 categories
+- [x] CurriculumManager orchestrates 4-phase training
+- [x] Position generators produce valid endgame positions
+- [x] KQK network achieves 70%+ win rate with stalemate protection
+- [x] KPK network detects promotion as success condition
+- [x] Training script produces JSONL traces and markdown reports
+- [x] Analysis script generates statistics from traces

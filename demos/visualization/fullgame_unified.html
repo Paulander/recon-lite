@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReCoN Full Game Unified Visualization</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
+            --accent-red: #f85149;
+            --accent-orange: #d29922;
+            --accent-purple: #a371f7;
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --border: #30363d;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Header */
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--accent-blue);
+        }
+        
+        .header-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        /* Layout Tabs */
+        .layout-tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-tertiary);
+            padding: 4px;
+            border-radius: 6px;
+        }
+        
+        .layout-tabs button {
+            padding: 6px 14px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        
+        .layout-tabs button:hover {
+            color: var(--text-primary);
+            background: rgba(255,255,255,0.05);
+        }
+        
+        .layout-tabs button.active {
+            background: var(--accent-blue);
+            color: white;
+        }
+        
+        /* Main Layout */
+        .main-container {
+            display: grid;
+            grid-template-columns: 360px 1fr 300px;
+            gap: 16px;
+            padding: 16px;
+            height: calc(100vh - 60px);
+        }
+        
+        /* Panels */
+        .panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .panel-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-tertiary);
+            font-weight: 600;
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .panel-content {
+            flex: 1;
+            overflow: auto;
+            padding: 16px;
+        }
+        
+        /* Chess Board */
+        .chess-board {
+            display: grid;
+            grid-template-columns: repeat(8, 40px);
+            grid-template-rows: repeat(8, 40px);
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            margin: 0 auto;
+        }
+        
+        .square {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            position: relative;
+        }
+        
+        .square.light { background: #f0d9b5; }
+        .square.dark { background: #b58863; }
+        
+        /* Square overlays */
+        .square.attacked { box-shadow: inset 0 0 0 2px rgba(248, 81, 73, 0.5); }
+        .square.hanging { box-shadow: inset 0 0 0 3px var(--accent-red); }
+        .square.center { background: linear-gradient(135deg, rgba(88, 166, 255, 0.2), transparent); }
+        .square.king-zone { box-shadow: inset 0 0 8px rgba(163, 113, 247, 0.4); }
+        
+        .square-tag {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            font-size: 8px;
+            padding: 1px 3px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            border-radius: 2px;
+        }
+        
+        /* Move Info */
+        .move-info {
+            text-align: center;
+            margin-top: 16px;
+        }
+        
+        .move-info .ply {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent-blue);
+        }
+        
+        /* Navigation */
+        .nav-controls {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
+        }
+        
+        .nav-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .nav-btn:hover:not(:disabled) {
+            background: var(--accent-blue);
+            color: white;
+        }
+        
+        .nav-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        
+        /* Network Canvas */
+        #network-canvas {
+            width: 100%;
+            height: 100%;
+            background: var(--bg-primary);
+            border-radius: 4px;
+        }
+        
+        /* Toggle Checkboxes */
+        .toggle-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .toggle-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+        
+        .toggle-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--accent-blue);
+        }
+        
+        /* Info Cards */
+        .info-card {
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .info-card h4 {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+        
+        .info-card .value {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        /* Goal Badge */
+        .goal-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .goal-badge.WIN { background: var(--accent-green); color: black; }
+        .goal-badge.DRAW { background: var(--accent-orange); color: black; }
+        .goal-badge.SURVIVE { background: var(--accent-red); color: white; }
+        
+        /* Phase Bar */
+        .phase-bar {
+            display: flex;
+            height: 24px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+        
+        .phase-segment {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            transition: width 0.3s;
+        }
+        
+        .phase-segment.opening { background: var(--accent-green); color: black; }
+        .phase-segment.middlegame { background: var(--accent-orange); color: black; }
+        .phase-segment.endgame { background: var(--accent-red); color: white; }
+        
+        /* Stem Cell List */
+        .stem-cell-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            background: var(--bg-primary);
+            border-radius: 4px;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+        }
+        
+        .stem-cell-state {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .stem-cell-state.EXPLORING { background: var(--accent-blue); }
+        .stem-cell-state.CANDIDATE { background: var(--accent-orange); }
+        .stem-cell-state.SPECIALIZED { background: var(--accent-green); }
+        .stem-cell-state.PRUNED { background: var(--accent-red); }
+        
+        /* File Input */
+        .file-input-wrapper {
+            position: relative;
+        }
+        
+        .file-input-wrapper input[type="file"] {
+            display: none;
+        }
+        
+        .file-input-btn {
+            padding: 8px 16px;
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        
+        .file-input-btn:hover {
+            opacity: 0.9;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-brain"></i> ReCoN Full Game Visualization</h1>
+        <div class="header-controls">
+            <div class="layout-tabs">
+                <button class="active" data-layout="hierarchical"><i class="fas fa-sitemap"></i> Tree</button>
+                <button data-layout="force"><i class="fas fa-project-diagram"></i> Force</button>
+                <button data-layout="clustered"><i class="fas fa-th-large"></i> Panels</button>
+            </div>
+            <div class="file-input-wrapper">
+                <input type="file" id="file-input" accept=".json">
+                <button class="file-input-btn" onclick="document.getElementById('file-input').click()">
+                    <i class="fas fa-folder-open"></i> Load JSON
+                </button>
+            </div>
+            <span id="frame-counter" style="color: var(--text-secondary); font-size: 0.85rem;">Frame 0/0</span>
+        </div>
+    </div>
+    
+    <div class="main-container">
+        <!-- Left Panel: Chess Board -->
+        <div class="panel">
+            <div class="panel-header">
+                <span><i class="fas fa-chess-board"></i> Board</span>
+                <span id="turn-indicator">White to move</span>
+            </div>
+            <div class="panel-content">
+                <div class="chess-board" id="chess-board"></div>
+                <div class="move-info">
+                    <div class="ply">Ply <span id="ply-number">0</span></div>
+                    <div id="last-move" style="color: var(--text-secondary);">-</div>
+                </div>
+                <div class="nav-controls">
+                    <button class="nav-btn" id="first-btn" title="First"><i class="fas fa-fast-backward"></i></button>
+                    <button class="nav-btn" id="prev-btn" title="Previous"><i class="fas fa-step-backward"></i></button>
+                    <button class="nav-btn" id="play-btn" title="Play"><i class="fas fa-play"></i></button>
+                    <button class="nav-btn" id="next-btn" title="Next"><i class="fas fa-step-forward"></i></button>
+                    <button class="nav-btn" id="last-btn" title="Last"><i class="fas fa-fast-forward"></i></button>
+                </div>
+                
+                <!-- Board Overlay Toggles -->
+                <div class="info-card" style="margin-top: 16px;">
+                    <h4>Board Overlays</h4>
+                    <div class="toggle-group">
+                        <label class="toggle-item">
+                            <input type="checkbox" id="toggle-attacks" checked>
+                            <span>Show Attacked Squares</span>
+                        </label>
+                        <label class="toggle-item">
+                            <input type="checkbox" id="toggle-arrows" checked>
+                            <span>Show Tactical Arrows</span>
+                        </label>
+                        <label class="toggle-item">
+                            <input type="checkbox" id="toggle-center">
+                            <span>Highlight Center</span>
+                        </label>
+                        <label class="toggle-item">
+                            <input type="checkbox" id="toggle-king-zones">
+                            <span>King Safety Zones</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Center Panel: Network -->
+        <div class="panel">
+            <div class="panel-header">
+                <span><i class="fas fa-project-diagram"></i> ReCoN Network</span>
+                <div class="toggle-group" style="flex-direction: row; gap: 12px;">
+                    <label class="toggle-item">
+                        <input type="checkbox" id="toggle-labels" checked>
+                        <span>Labels</span>
+                    </label>
+                    <label class="toggle-item">
+                        <input type="checkbox" id="toggle-weights">
+                        <span>Weights</span>
+                    </label>
+                    <label class="toggle-item">
+                        <input type="checkbox" id="toggle-inactive">
+                        <span>Hide Inactive</span>
+                    </label>
+                </div>
+            </div>
+            <div class="panel-content" style="padding: 0;">
+                <canvas id="network-canvas"></canvas>
+            </div>
+        </div>
+        
+        <!-- Right Panel: Info -->
+        <div class="panel">
+            <div class="panel-header">
+                <span><i class="fas fa-info-circle"></i> Game State</span>
+            </div>
+            <div class="panel-content">
+                <!-- Ultimate Goal -->
+                <div class="info-card">
+                    <h4>Ultimate Goal</h4>
+                    <span class="goal-badge WIN" id="goal-badge">WIN</span>
+                </div>
+                
+                <!-- Phase -->
+                <div class="info-card">
+                    <h4>Game Phase</h4>
+                    <div class="phase-bar">
+                        <div class="phase-segment opening" id="phase-opening" style="width: 80%">Opening</div>
+                        <div class="phase-segment middlegame" id="phase-middle" style="width: 15%">Middle</div>
+                        <div class="phase-segment endgame" id="phase-end" style="width: 5%">End</div>
+                    </div>
+                </div>
+                
+                <!-- Material -->
+                <div class="info-card">
+                    <h4>Material</h4>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>White: <strong id="white-material">39</strong></span>
+                        <span id="material-balance" style="color: var(--accent-blue);">+0</span>
+                        <span>Black: <strong id="black-material">39</strong></span>
+                    </div>
+                </div>
+                
+                <!-- Active Plans -->
+                <div class="info-card">
+                    <h4>Active Plans</h4>
+                    <div id="active-plans" style="font-size: 0.85rem; color: var(--text-secondary);">
+                        Loading...
+                    </div>
+                </div>
+                
+                <!-- Stem Cells -->
+                <div class="info-card">
+                    <h4>Stem Cells</h4>
+                    <div id="stem-cells-list">
+                        <div style="color: var(--text-secondary); font-size: 0.85rem;">No stem cells active</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="chess-board.js"></script>
+    <script src="network-layouts.js"></script>
+    <script src="board-overlays.js"></script>
+    <script>
+        // State
+        let frames = [];
+        let currentFrame = 0;
+        let isPlaying = false;
+        let playInterval = null;
+        let currentLayout = 'hierarchical';
+        
+        // UI Elements
+        const frameCounter = document.getElementById('frame-counter');
+        const plyNumber = document.getElementById('ply-number');
+        const lastMove = document.getElementById('last-move');
+        const turnIndicator = document.getElementById('turn-indicator');
+        
+        // Chess pieces Unicode
+        const PIECES = {
+            'K': '♔', 'Q': '♕', 'R': '♖', 'B': '♗', 'N': '♘', 'P': '♙',
+            'k': '♚', 'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞', 'p': '♟'
+        };
+        
+        // Initialize chess board
+        function initBoard() {
+            const board = document.getElementById('chess-board');
+            board.innerHTML = '';
+            
+            for (let rank = 7; rank >= 0; rank--) {
+                for (let file = 0; file < 8; file++) {
+                    const sq = document.createElement('div');
+                    sq.className = 'square ' + ((rank + file) % 2 === 0 ? 'dark' : 'light');
+                    sq.dataset.square = String.fromCharCode(97 + file) + (rank + 1);
+                    board.appendChild(sq);
+                }
+            }
+        }
+        
+        // Parse FEN and render board
+        function renderBoard(fen, boardTags = {}) {
+            const board = document.getElementById('chess-board');
+            const squares = board.querySelectorAll('.square');
+            const parts = fen.split(' ');
+            const position = parts[0];
+            const turn = parts[1] === 'w' ? 'White' : 'Black';
+            
+            turnIndicator.textContent = turn + ' to move';
+            
+            // Clear pieces
+            squares.forEach(sq => {
+                sq.innerHTML = '';
+                sq.className = sq.className.replace(/attacked|hanging|center|king-zone/g, '').trim();
+            });
+            
+            // Place pieces
+            let rank = 7, file = 0;
+            for (const char of position) {
+                if (char === '/') {
+                    rank--;
+                    file = 0;
+                } else if ('12345678'.includes(char)) {
+                    file += parseInt(char);
+                } else {
+                    const sqName = String.fromCharCode(97 + file) + (rank + 1);
+                    const sq = board.querySelector(`[data-square="${sqName}"]`);
+                    if (sq && PIECES[char]) {
+                        sq.innerHTML = PIECES[char];
+                    }
+                    file++;
+                }
+            }
+            
+            // Apply board overlays
+            applyBoardOverlays(boardTags);
+        }
+        
+        // Apply board overlay tags
+        function applyBoardOverlays(tags) {
+            if (!tags) return;
+            
+            const showAttacks = document.getElementById('toggle-attacks').checked;
+            const showCenter = document.getElementById('toggle-center').checked;
+            const showKingZones = document.getElementById('toggle-king-zones').checked;
+            
+            const squares = tags.squares || {};
+            for (const [sqName, sqTags] of Object.entries(squares)) {
+                const sq = document.querySelector(`[data-square="${sqName}"]`);
+                if (!sq) continue;
+                
+                if (showAttacks && (sqTags.includes('attacked_by_white') || sqTags.includes('attacked_by_black'))) {
+                    sq.classList.add('attacked');
+                }
+                if (sqTags.includes('hanging')) {
+                    sq.classList.add('hanging');
+                }
+                if (showCenter && sqTags.includes('center')) {
+                    sq.classList.add('center');
+                }
+                if (showKingZones && (sqTags.includes('white_king_zone') || sqTags.includes('black_king_zone'))) {
+                    sq.classList.add('king-zone');
+                }
+            }
+            
+            // TODO: Draw arrows if toggle is enabled
+        }
+        
+        // Update frame display
+        function updateFrame(index) {
+            if (index < 0 || index >= frames.length) return;
+            
+            currentFrame = index;
+            const frame = frames[index];
+            
+            // Update counter
+            frameCounter.textContent = `Frame ${index + 1}/${frames.length}`;
+            plyNumber.textContent = frame.ply || index;
+            lastMove.textContent = frame.move || '-';
+            
+            // Render board
+            renderBoard(frame.fen, frame.board_tags);
+            
+            // Update game state info
+            updateGameState(frame);
+            
+            // Update network visualization
+            if (typeof renderNetwork === 'function') {
+                renderNetwork(frame, currentLayout);
+            }
+            
+            // Update navigation buttons
+            document.getElementById('prev-btn').disabled = index === 0;
+            document.getElementById('first-btn').disabled = index === 0;
+            document.getElementById('next-btn').disabled = index === frames.length - 1;
+            document.getElementById('last-btn').disabled = index === frames.length - 1;
+        }
+        
+        // Update game state panel
+        function updateGameState(frame) {
+            const env = frame.env || {};
+            
+            // Ultimate goal
+            const goalBadge = document.getElementById('goal-badge');
+            const goal = env.ultimate_goal?.goal || 'WIN';
+            goalBadge.textContent = goal;
+            goalBadge.className = 'goal-badge ' + goal;
+            
+            // Phase
+            const phase = env.phase || {};
+            const openingBar = document.getElementById('phase-opening');
+            const middleBar = document.getElementById('phase-middle');
+            const endBar = document.getElementById('phase-end');
+            
+            openingBar.style.width = ((phase.opening || 0) * 100) + '%';
+            middleBar.style.width = ((phase.middlegame || 0) * 100) + '%';
+            endBar.style.width = ((phase.endgame || 0) * 100) + '%';
+            
+            // Material
+            const material = env.material || {};
+            document.getElementById('white-material').textContent = material.white_material || 39;
+            document.getElementById('black-material').textContent = material.black_material || 39;
+            const balance = (material.white_material || 0) - (material.black_material || 0);
+            const balanceEl = document.getElementById('material-balance');
+            balanceEl.textContent = balance >= 0 ? '+' + balance : balance;
+            balanceEl.style.color = balance > 0 ? 'var(--accent-green)' : balance < 0 ? 'var(--accent-red)' : 'var(--text-secondary)';
+            
+            // Active plans
+            const plansEl = document.getElementById('active-plans');
+            const plans = env.active_plans || [];
+            if (plans.length > 0) {
+                plansEl.innerHTML = plans.map(p => {
+                    const name = Array.isArray(p) ? p[0] : p;
+                    const weight = Array.isArray(p) ? p[1] : 1;
+                    return `<div style="margin: 4px 0;">${name} <span style="color: var(--accent-blue)">(${(weight * 100).toFixed(0)}%)</span></div>`;
+                }).join('');
+            } else {
+                plansEl.innerHTML = '<span style="color: var(--text-secondary)">None active</span>';
+            }
+            
+            // Stem cells
+            const stemEl = document.getElementById('stem-cells-list');
+            const stemCells = frame.stem_cells || [];
+            if (stemCells.length > 0) {
+                stemEl.innerHTML = stemCells.map(cell => `
+                    <div class="stem-cell-item">
+                        <span>${cell.id}</span>
+                        <span class="stem-cell-state ${cell.state}">${cell.state}</span>
+                        <span>${cell.samples} samples</span>
+                    </div>
+                `).join('');
+            } else {
+                stemEl.innerHTML = '<div style="color: var(--text-secondary); font-size: 0.85rem;">No stem cells active</div>';
+            }
+        }
+        
+        // Play/Pause
+        function togglePlay() {
+            const btn = document.getElementById('play-btn');
+            if (isPlaying) {
+                clearInterval(playInterval);
+                isPlaying = false;
+                btn.innerHTML = '<i class="fas fa-play"></i>';
+            } else {
+                isPlaying = true;
+                btn.innerHTML = '<i class="fas fa-pause"></i>';
+                playInterval = setInterval(() => {
+                    if (currentFrame < frames.length - 1) {
+                        updateFrame(currentFrame + 1);
+                    } else {
+                        togglePlay();
+                    }
+                }, 500);
+            }
+        }
+        
+        // Load JSON file
+        function loadFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (Array.isArray(data)) {
+                        frames = data;
+                    } else if (data.frames) {
+                        frames = data.frames;
+                    } else {
+                        frames = [data];
+                    }
+                    currentFrame = 0;
+                    updateFrame(0);
+                } catch (err) {
+                    alert('Failed to parse JSON: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        // Event listeners
+        document.getElementById('file-input').addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                loadFile(e.target.files[0]);
+            }
+        });
+        
+        document.getElementById('first-btn').addEventListener('click', () => updateFrame(0));
+        document.getElementById('prev-btn').addEventListener('click', () => updateFrame(currentFrame - 1));
+        document.getElementById('play-btn').addEventListener('click', togglePlay);
+        document.getElementById('next-btn').addEventListener('click', () => updateFrame(currentFrame + 1));
+        document.getElementById('last-btn').addEventListener('click', () => updateFrame(frames.length - 1));
+        
+        // Layout tabs
+        document.querySelectorAll('.layout-tabs button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.layout-tabs button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentLayout = btn.dataset.layout;
+                if (frames.length > 0) {
+                    updateFrame(currentFrame);
+                }
+            });
+        });
+        
+        // Board overlay toggles
+        ['toggle-attacks', 'toggle-arrows', 'toggle-center', 'toggle-king-zones'].forEach(id => {
+            document.getElementById(id).addEventListener('change', () => {
+                if (frames.length > 0) {
+                    updateFrame(currentFrame);
+                }
+            });
+        });
+        
+        // Initialize
+        initBoard();
+        
+        // Start with default position
+        renderBoard('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+    </script>
+</body>
+</html>
+

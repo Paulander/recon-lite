@@ -1,0 +1,61 @@
+{
+  "version": "0.1",
+  "config": {
+    "eta_consolidate": 0.01,
+    "min_episodes": 10,
+    "outcome_weight": 0.5,
+    "max_base_delta": 0.5,
+    "w_min": 0.1,
+    "w_max": 3.0
+  },
+  "w_base": {
+    "kqk_root->kqk_material_check:SUB": 1.277983,
+    "kqk_root->kqk_stalemate_sensor:SUB": 1.277983,
+    "kqk_root->kqk_phase1_drive:SUB": 1.277983,
+    "kqk_root->kqk_phase2_corner:SUB": 1.0,
+    "kqk_root->kqk_phase3_mate:SUB": 1.0,
+    "kqk_root->kqk_stalemate_gate:SUB": 1.277983,
+    "kqk_root->kqk_move_selector:SUB": 1.277983,
+    "kqk_root->kqk_safe_wait_selector:SUB": 1.277983,
+    "kqk_root->kqk_wait:SUB": 1.0,
+    "kqk_wait->kqk_wait_for_change:SUB": 1.0,
+    "kqk_phase1_drive->kqk_edge_detector:SUB": 1.277983,
+    "kqk_phase1_drive->kqk_restriction_eval:SUB": 1.277983,
+    "kqk_phase1_drive->kqk_drive_moves:SUB": 1.265652,
+    "kqk_phase2_corner->kqk_corner_detector:SUB": 1.0,
+    "kqk_phase2_corner->kqk_approach_moves:SUB": 1.0,
+    "kqk_phase3_mate->kqk_mate_detector:SUB": 1.0,
+    "kqk_phase3_mate->kqk_mate_moves:SUB": 1.0,
+    "kqk_phase1_drive->kqk_phase2_corner:POR": 1.0,
+    "kqk_phase2_corner->kqk_phase3_mate:POR": 1.0,
+    "kqk_phase3_mate->kqk_wait:POR": 1.0
+  },
+  "w_init": {
+    "kqk_root->kqk_material_check:SUB": 1.0,
+    "kqk_root->kqk_stalemate_sensor:SUB": 1.0,
+    "kqk_root->kqk_phase1_drive:SUB": 1.0,
+    "kqk_root->kqk_phase2_corner:SUB": 1.0,
+    "kqk_root->kqk_phase3_mate:SUB": 1.0,
+    "kqk_root->kqk_stalemate_gate:SUB": 1.0,
+    "kqk_root->kqk_move_selector:SUB": 1.0,
+    "kqk_root->kqk_safe_wait_selector:SUB": 1.0,
+    "kqk_root->kqk_wait:SUB": 1.0,
+    "kqk_wait->kqk_wait_for_change:SUB": 1.0,
+    "kqk_phase1_drive->kqk_edge_detector:SUB": 1.0,
+    "kqk_phase1_drive->kqk_restriction_eval:SUB": 1.0,
+    "kqk_phase1_drive->kqk_drive_moves:SUB": 1.0,
+    "kqk_phase2_corner->kqk_corner_detector:SUB": 1.0,
+    "kqk_phase2_corner->kqk_approach_moves:SUB": 1.0,
+    "kqk_phase3_mate->kqk_mate_detector:SUB": 1.0,
+    "kqk_phase3_mate->kqk_mate_moves:SUB": 1.0,
+    "kqk_phase1_drive->kqk_phase2_corner:POR": 1.0,
+    "kqk_phase2_corner->kqk_phase3_mate:POR": 1.0,
+    "kqk_phase3_mate->kqk_wait:POR": 1.0
+  },
+  "consolidation_meta": {
+    "total_episodes": 1400,
+    "episodes_since_apply": 0,
+    "last_apply_time": "2025-12-30T15:06:45.606786",
+    "edges_tracked": 20
+  }
+}

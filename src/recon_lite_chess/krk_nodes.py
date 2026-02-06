@@ -12,11 +12,26 @@ Strategy phases:
 
 from typing import Tuple, Any, Dict, List
 from dataclasses import dataclass
+import random
 import chess
 
 from recon_lite.graph import Node, NodeType, NodeState, LinkType  # LinkType for wire helper
 from .predicates import box_area, move_features
 from .predicates import has_stable_cut
+
+
+def _set_suggested_move(env: Dict[str, Any], mv: str) -> None:
+    """
+    Set move in standard ReCoN interface paths.
+    
+    Engine expects: env["<root>"]["policy"]["suggested_move"]
+    This ensures KRK actuators work with the standard game loop.
+    """
+    env["chosen_move"] = mv  # Legacy path
+    # Standard interface (matches KPK/KQK pattern)
+    env.setdefault("krk_root", {}).setdefault("policy", {})["suggested_move"] = mv
+    # Engine's stripped version (engine.py: _step_subgraph checks env[subgraph_root.replace("_root", "")])
+    env.setdefault("krk", {}).setdefault("policy", {})["suggested_move"] = mv
 
 
 # ===== TERMINAL NODES (Leaf Operations) =====
@@ -67,8 +82,10 @@ class KingAtEdgeDetector(Node):
         f, r = chess.square_file(enemy_king), chess.square_rank(enemy_king)
         at_edge = f in (0, 7) or r in (0, 7)
         if at_edge:
-            return True, True
-        return False, False
+            node.activation.value = 1.0
+        else:
+            node.activation.value = 0.0
+        return True, True
 
 
 @dataclass
@@ -103,9 +120,8 @@ class BoxShrinkEvaluator(Node):
         kd = chess.square_distance(our_king, enemy_king)
         rd = chess.square_distance(our_rook, enemy_king)
         can_shrink = kd >= 2 and rd <= 3
-        if can_shrink:
-            return True, True
-        return False, False
+        node.activation.value = 1.0 if can_shrink else 0.0
+        return True, True
 
 
 @dataclass
@@ -123,7 +139,8 @@ class ConfinementEvaluator(Node):
 
         current_min_side = box_min_side(board)
         confined = current_min_side <= self.target_size
-        return confined, confined
+        node.activation.value = 1.0 if confined else 0.0
+        return True, True
 
 
 @dataclass
@@ -141,7 +158,8 @@ class BarrierReadyEvaluator(Node):
         # Rook is on or adjacent to target fence line
         distance = rook_distance_to_target_fence(board)
         ready = distance <= 1  # On fence (0) or one away (1)
-        return ready, ready
+        node.activation.value = 1.0 if ready else 0.0
+        return True, True
 
 
 @dataclass
@@ -159,9 +177,8 @@ class OppositionEvaluator(Node):
         same_rank = chess.square_rank(ok) == chess.square_rank(ek)
         enemy_at_edge = (chess.square_file(ek) in (0, 7)) or (chess.square_rank(ek) in (0, 7))
         cond = enemy_at_edge and (same_file or same_rank)
-        if cond:
-            return True, True
-        return False, False
+        node.activation.value = 1.0 if cond else 0.0
+        return True, True
 
 
 @dataclass
@@ -178,8 +195,10 @@ class MateDeliverEvaluator(Node):
             is_mate = board.is_checkmate()
             board.pop()
             if is_mate:
+                node.activation.value = 1.0
                 return True, True
-        return False, False
+        node.activation.value = 0.0
+        return True, True
 
 
 @dataclass
@@ -192,8 +211,10 @@ class StalemateDetector(Node):
         if board is None:
             return False, False
         if board.is_stalemate():
-            return True, True
-        return False, False
+            node.activation.value = 1.0
+        else:
+            node.activation.value = 0.0
+        return True, True
 
 
 @dataclass
@@ -210,7 +231,8 @@ class CutEstablishedDetector(Node):
         if board is None:
             return False, False
         ok = has_stable_cut(board)
-        return (True, True) if ok else (False, False)
+        node.activation.value = 1.0 if ok else 0.0
+        return True, True
 
 
 @dataclass
@@ -234,7 +256,8 @@ class RookLostDetector(Node):
             except Exception:
                 pass
         # Always resolve (done=True) to avoid blocking parent confirmation
-        return True, bool(lost)
+        node.activation.value = 1.0 if lost else 0.0
+        return True, True
 
 
 # ===== SCRIPT NODES =====
@@ -280,7 +303,10 @@ class KRKCheckmateRoot(Node):
 
 @dataclass
 class Phase0ChooseMoves(Node):
-    """Terminal that chooses a Phase-0 move and writes env['chosen_move']."""
+    """Leg/actuator that chooses a Phase-0 move and writes env['chosen_move'].
+    
+    Uses TERMINAL type as this is a leaf actuator node (no SUB children).
+    """
     def __init__(self, nid: str):
         super().__init__(nid=nid, ntype=NodeType.TERMINAL, predicate=self._choose)
 
@@ -296,7 +322,7 @@ class Phase0ChooseMoves(Node):
             env["last_reason"] = reason
             return True, True
         if mv:
-            env["chosen_move"] = mv
+            _set_suggested_move(env, mv)
             node.meta["suggested_moves"] = [mv]
             node.meta["phase"] = "phase0"
             try:
@@ -313,6 +339,7 @@ class Phase0ChooseMoves(Node):
 
 @dataclass
 class KingDriveMoves(Node):
+    """Leg/actuator for king drive moves. Uses TERMINAL type (leaf actuator)."""
     def __init__(self, nid: str):
         super().__init__(nid=nid, ntype=NodeType.TERMINAL, predicate=self._gen)
 
@@ -323,7 +350,7 @@ class KingDriveMoves(Node):
             return False, []
         mv = choose_move_phase1(board, env)
         if mv:
-            env["chosen_move"] = mv
+            _set_suggested_move(env, mv)
             node.meta["suggested_moves"] = [mv]
             node.meta["phase"] = "phase1"
             try:
@@ -340,6 +367,7 @@ class KingDriveMoves(Node):
 
 @dataclass
 class BoxShrinkMoves(Node):
+    """Leg/actuator for box shrink moves. Uses TERMINAL type (leaf actuator)."""
     def __init__(self, nid: str):
         super().__init__(nid=nid, ntype=NodeType.TERMINAL, predicate=self._gen)
 
@@ -350,7 +378,7 @@ class BoxShrinkMoves(Node):
             return False, []
         mv = choose_move_phase2(board, env)
         if mv:
-            env["chosen_move"] = mv
+            _set_suggested_move(env, mv)
             node.meta["suggested_moves"] = [mv]
             node.meta["phase"] = "phase2"
             try:
@@ -377,7 +405,7 @@ class OppositionMoves(Node):
             return False, []
         mv = choose_move_phase3(board, env)
         if mv:
-            env["chosen_move"] = mv
+            _set_suggested_move(env, mv)
             node.meta["suggested_moves"] = [mv]
             node.meta["phase"] = "phase3"
             try:
@@ -404,7 +432,7 @@ class MateMoves(Node):
             return False, []
         mv = choose_move_phase4(board, env)
         if mv:
-            env["chosen_move"] = mv
+            _set_suggested_move(env, mv)
             node.meta["suggested_moves"] = [mv]
             node.meta["phase"] = "phase4"
             try:
@@ -432,7 +460,7 @@ class ConfinementMoves(Node):
             return False, []
         mv = choose_confinement_move(board, env)
         if mv:
-            env["chosen_move"] = mv
+            _set_suggested_move(env, mv)
             node.meta["suggested_moves"] = [mv]
             node.meta["phase"] = "phase1"
             try:
@@ -460,7 +488,7 @@ class BarrierPlacementMoves(Node):
             return False, []
         mv = choose_barrier_move(board, env)
         if mv:
-            env["chosen_move"] = mv
+            _set_suggested_move(env, mv)
             node.meta["suggested_moves"] = [mv]
             node.meta["phase"] = "phase1"
             try:
@@ -583,6 +611,344 @@ class RandomLegalMoves(Node):
         return bool(ucis), ucis
 
 
+# ===== LEGS ARCHITECTURE (KPK-style placeholders for stem cell growth) =====
+
+def create_krk_rook_leg(nid: str) -> Node:
+    import os
+    use_maturity_env = os.environ.get("RECON_USE_MATURITY_WEIGHTING", "1") == "1"
+    """
+    Simple placeholder - just finds any legal rook move and proposes it.
+    Activation is basic (0.5 if legal move exists, 0.0 otherwise).
+    The network learns when to prefer rook moves via edge weights and stem cells.
+    
+    Stores proposal in env["krk"]["legs"]["rook"]
+    """
+    def _predicate(node: Node, env: Dict[str, Any]):
+        board = env.get("board")
+        if not board:
+            node.meta["activation"] = 0.0
+            return False, False
+        # Pure exploration: pick a random legal rook move.
+        our_color = board.turn
+        rook_moves = [
+            move for move in board.legal_moves
+            if (piece := board.piece_at(move.from_square))
+            and piece.piece_type == chess.ROOK
+            and piece.color == our_color
+        ]
+        proposal = random.choice(rook_moves).uci() if rook_moves else None
+        
+        # Maturity Calculation
+        max_maturity = 1.0
+        graph = env.get("__graph__")
+        if use_maturity_env and graph:
+            children = graph.children(nid)
+            conf_mat_list = [
+                graph.nodes[cid].meta.get("maturity", 1.0) 
+                for cid in children 
+                if graph.nodes[cid].state == NodeState.CONFIRMED
+            ]
+            
+            # If we require child confirmation, we are purely driven by children.
+            # If not, we have "Backbone Maturity" (1.0) as a base.
+            require_confirm = node.meta.get("require_child_confirm", True)
+            
+            if children:
+                if conf_mat_list:
+                    max_maturity = max(conf_mat_list)
+                    if not require_confirm:
+                        max_maturity = max(max_maturity, 1.0) # Backbone keeps its influence
+                elif require_confirm:
+                    # Muted until children confirm
+                    max_maturity = 0.0
+                else:
+                    # Backbone persists despite noisy children
+                    max_maturity = 1.0
+
+        base_act = 0.2 if proposal else 0.0
+        activation = base_act * (max_maturity ** 4) if proposal else 0.0
+        if graph:
+            children = graph.children(nid)
+            if children:
+                confirmed = [cid for cid in children if graph.nodes[cid].state == NodeState.CONFIRMED]
+                confirm_ratio = len(confirmed) / len(children)
+                if confirm_ratio > 0.0:
+                    activation = base_act * confirm_ratio
+                else:
+                    activation = 0.0 if node.meta.get("require_child_confirm", True) else base_act * 0.2
+        
+        # Store in env for arbiter
+        leg_data = {
+            "activation": activation,
+            "proposal": proposal,
+            "reason": "rook_random",
+        }
+        legs = env.setdefault("krk", {}).setdefault("legs", {})
+        # Store under stable key so arbiter can read it.
+        legs["rook"] = leg_data
+        # Keep legacy key for any diagnostics keyed by node id.
+        legs[nid] = leg_data
+        node.meta["activation"] = activation
+        node.meta["proposal"] = proposal
+
+        return True, True
+    
+    return Node(nid=nid, ntype=NodeType.SCRIPT, predicate=_predicate)
+
+
+def create_krk_king_leg(nid: str) -> Node:
+    import os
+    use_maturity_env = os.environ.get("RECON_USE_MATURITY_WEIGHTING", "1") == "1"
+    """
+    Simple placeholder - just finds any legal king move and proposes it.
+    Activation is basic (0.5 if legal move exists, 0.0 otherwise).
+    The network learns when to prefer king moves via edge weights and stem cells.
+    
+    Stores proposal in env["krk"]["legs"]["king"]
+    """
+    def _predicate(node: Node, env: Dict[str, Any]):
+        board = env.get("board")
+        if not board:
+            node.meta["activation"] = 0.0
+            return False, False
+        # Pure exploration: pick a random legal king move.
+        our_color = board.turn
+        king_moves = [
+            move for move in board.legal_moves
+            if (piece := board.piece_at(move.from_square))
+            and piece.piece_type == chess.KING
+            and piece.color == our_color
+        ]
+        proposal = random.choice(king_moves).uci() if king_moves else None
+        
+        # Maturity-weighted activation:
+        # Scale by (max_child_maturity ^ 4) to suppress trial noise.
+        max_maturity = 1.0
+        graph = env.get("__graph__")
+        if use_maturity_env and graph:
+            children = graph.children(nid)
+            conf_mat_list = [
+                graph.nodes[cid].meta.get("maturity", 1.0) 
+                for cid in children 
+                if graph.nodes[cid].state == NodeState.CONFIRMED
+            ]
+            
+            require_confirm = node.meta.get("require_child_confirm", True)
+            
+            if children:
+                if conf_mat_list:
+                    max_maturity = max(conf_mat_list)
+                    if not require_confirm:
+                        max_maturity = max(max_maturity, 1.0)
+                elif require_confirm:
+                    max_maturity = 0.0
+                else:
+                    max_maturity = 1.0
+
+        base_act = 0.2 if proposal else 0.0
+        activation = base_act * (max_maturity ** 4) if proposal else 0.0
+        if graph:
+            children = graph.children(nid)
+            if children:
+                confirmed = [cid for cid in children if graph.nodes[cid].state == NodeState.CONFIRMED]
+                confirm_ratio = len(confirmed) / len(children)
+                if confirm_ratio > 0.0:
+                    activation = base_act * confirm_ratio
+                else:
+                    activation = 0.0 if node.meta.get("require_child_confirm", True) else base_act * 0.2
+        
+        # DEBUG: Trace maturity calculation
+        # print(f"DEBUG: KING_LEG | Mat={max_maturity:.4f} | Act={activation:.4f} | Prop={proposal}")
+
+        # Store in env for arbiter
+        leg_data = {
+            "activation": activation,
+            "proposal": proposal,
+            "reason": "king_random",
+        }
+        legs = env.setdefault("krk", {}).setdefault("legs", {})
+        legs["king"] = leg_data
+        legs[nid] = leg_data
+        node.meta["activation"] = activation
+        node.meta["proposal"] = proposal
+        
+        return True, True
+    
+    return Node(nid=nid, ntype=NodeType.SCRIPT, predicate=_predicate)
+
+
+def create_krk_arbiter(nid: str) -> Node:
+    """
+    Arbiter: Selects between Rook and King leg proposals based on activation.
+    
+    Decision Rule:
+    - Highest activation wins
+    - Tie-breaker: prefer rook (more aggressive)
+    - MATURITY: Scales activation by (XP/100)^4 if enabled to ignore structural noise.
+    
+    Writes to env["krk_root"]["policy"]["suggested_move"] (using _set_suggested_move)
+    
+    PHASE B DEEP: Stem cells now weight leg activations via cumulative (XP * consistency).
+    """
+    import os
+    use_maturity = os.environ.get("RECON_USE_MATURITY_WEIGHTING", "1") == "1"
+    use_stem_wiring = os.environ.get("STEM_CELL_ARBITER_WIRING", "1") == "1"
+    log_stem_bonus = os.environ.get("LOG_STEM_BONUS", "0") == "1"
+    
+    def _predicate(node: Node, env: Dict[str, Any]):
+        graph = env.get("__graph__")
+        if not graph:
+            return True, True
+            
+        # WAIT for all children (Hub, Solver, etc.) to be CONFIRMED/TRUE
+        children = graph.children(nid)
+        all_done = True
+        for cid in children:
+            if graph.nodes[cid].state not in (NodeState.CONFIRMED, NodeState.TRUE):
+                all_done = False
+                break
+        
+        if not all_done:
+            # Stay WAITING to allow children (Hub, Solver, Actuators) to complete
+            return False, False
+
+        # Now that children are done, prioritize Goal Solver output
+        goal_policy = env.get("krk", {}).get("goal_policy", {})
+        if goal_policy.get("suggested_move"):
+            move = goal_policy.get("suggested_move")
+            _set_suggested_move(env, move)
+            node.meta["winner"] = "goal_solver"
+            node.meta["reason"] = "goal_policy"
+            node.meta["rook_activation"] = 0.0
+            return True, True
+
+        legs = env.get("krk", {}).get("legs", {})
+        rook_leg = legs.get("rook") or legs.get("krk_rook_leg") or {}
+        king_leg = legs.get("king") or legs.get("krk_king_leg") or {}
+        
+        rook_act = rook_leg.get("activation", 0.0)
+        king_act = king_leg.get("activation", 0.0)
+        
+        # ================================================================
+        # PHASE B DEEP: Stem Cell XP-Weighted Leg Boosting
+        # Query stem cells from env and weight leg activations by
+        # cumulative (XP * trial_consistency). Cells with high XP boost
+        # their preferred leg based on pattern correlation.
+        # ================================================================
+        stem_bonus_rook = 0.0
+        stem_bonus_king = 0.0
+        stem_cells_active = 0
+        
+        if use_stem_wiring:
+            stem_manager = env.get("__stem_manager__")
+            if stem_manager:
+                try:
+                    board = env.get("board")
+                    box_area = None
+                    if board:
+                        from recon_lite_chess.predicates import box_area as calc_box
+                        box_area = calc_box(board)
+                    
+                    for cell in stem_manager.cells.values():
+                        # DEBUG: Log cell state and XP to trace issue
+                        if log_stem_bonus:
+                            state_name = cell.state.name if hasattr(cell, 'state') else 'UNKNOWN'
+                            xp_val = getattr(cell, 'xp', -999)
+                            print(f"  [STEM-DBG] Cell {cell.cell_id}: state={state_name}, xp={xp_val}")
+                        
+                        # Only consider TRIAL cells with XP > 0
+                        if hasattr(cell, 'state') and cell.state.name == "TRIAL" and cell.xp > 0:
+                            consistency = getattr(cell, 'trial_consistency', 0.5)
+                            xp_weight = min(cell.xp / 10.0, 1.0)  # Normalize: XP 10+ = full weight
+                            
+                            # Determine which leg this cell prefers based on pattern
+                            # Temporal bias: decreasing box_area patterns favor rook moves
+                            # Opposition patterns likely favor king moves
+                            cell_id = cell.cell_id.lower()
+                            
+                            # Heuristic: cells with "box" or "cut" patterns favor rook
+                            # cells with "opp" or "distance" patterns favor king
+                            # This is a starting heuristic - should evolve based on XP correlation
+                            if "box" in cell_id or "cut" in cell_id or "shrink" in cell_id:
+                                stem_bonus_rook += xp_weight * consistency
+                            elif "opp" in cell_id or "dist" in cell_id or "king" in cell_id:
+                                stem_bonus_king += xp_weight * consistency
+                            else:
+                                # Default: Split evenly for exploration
+                                stem_bonus_rook += 0.5 * xp_weight * consistency
+                                stem_bonus_king += 0.5 * xp_weight * consistency
+                            
+                            stem_cells_active += 1
+                            
+                            # LOG: Pattern firings
+                            if log_stem_bonus and stem_cells_active <= 3:
+                                print(f"  [STEM] {cell.cell_id}: XP={cell.xp}, cons={consistency:.2f}, bonus_R={stem_bonus_rook:.2f}, bonus_K={stem_bonus_king:.2f}")
+                
+                except Exception as e:
+                    if log_stem_bonus:
+                        print(f"  [STEM] Error: {e}")
+        
+        # Apply stem cell bonus to leg activations (normalized)
+        if stem_cells_active > 0:
+            # Normalize by cell count and scale to 0-0.5 range for boosting
+            rook_act += (stem_bonus_rook / stem_cells_active) * 0.5
+            king_act += (stem_bonus_king / stem_cells_active) * 0.5
+            
+            if log_stem_bonus:
+                print(f"  [STEM] Applied: R+{stem_bonus_rook/stem_cells_active*0.5:.2f}, K+{stem_bonus_king/stem_cells_active*0.5:.2f} from {stem_cells_active} cells")
+        
+        # XP-Based Maturity Weighting (Power-law Scaling)
+        if use_maturity:
+            pass  # Legacy - stem cell wiring above replaces this
+            
+        # Decision with tie-breaker for rook
+        proposal = None
+        winner = "fallback"
+        reason = "no_proposal"
+        if rook_leg.get("proposal") or king_leg.get("proposal"):
+            if rook_leg.get("proposal") and king_leg.get("proposal"):
+                if rook_act > king_act:
+                    winner = "rook"
+                elif king_act > rook_act:
+                    winner = "king"
+                else:
+                    winner = "rook"
+            elif rook_leg.get("proposal"):
+                winner = "rook"
+            else:
+                winner = "king"
+        if winner == "rook" and rook_act > 0.0 and rook_leg.get("proposal"):
+            proposal = rook_leg.get("proposal")
+            reason = rook_leg.get("reason", "rook_move")
+        elif winner == "king" and king_act > 0.0 and king_leg.get("proposal"):
+            proposal = king_leg.get("proposal")
+            reason = king_leg.get("reason", "king_move")
+        else:
+            # Fallback to any legal move
+            board = env.get("board")
+            legal = list(board.legal_moves) if board else []
+            proposal = random.choice(legal).uci() if legal else None
+            winner = "fallback"
+            reason = "no_proposal"
+        
+        # DEBUG: Trace Arbiter Decision (with stem info)
+        stem_info = f" STEM={stem_cells_active}" if stem_cells_active > 0 else ""
+        print(f"DEBUG: ARBITER | R_Act={rook_act:.2f} | K_Act={king_act:.2f} | Winner={winner} | Prop={proposal}{stem_info}")
+
+        # Store final decision (using helper to write to correct location)
+        if proposal:
+            _set_suggested_move(env, proposal)
+        
+        node.meta["winner"] = winner
+        node.meta["rook_activation"] = rook_act
+        node.meta["reason"] = reason
+        node.meta["stem_cells_active"] = stem_cells_active
+        
+        return True, True
+    
+    return Node(nid=nid, ntype=NodeType.SCRIPT, predicate=_predicate)
+
+
 # ===== FACTORY FUNCTIONS =====
 
 def create_king_edge_detector(nid: str) -> KingAtEdgeDetector: return KingAtEdgeDetector(nid)
@@ -608,6 +974,9 @@ def create_mate_moves(nid: str) -> MateMoves: return MateMoves(nid)
 def create_random_legal_moves(nid: str) -> RandomLegalMoves: return RandomLegalMoves(nid)
 def create_no_progress_watch(nid: str) -> NoProgressWatch: return NoProgressWatch(nid)
 
+# Legs architecture factories (already defined above, just for export)
+# These are defined in the LEGS ARCHITECTURE section above
+
 # New confinement-aware nodes
 def create_confinement_evaluator(nid: str, target_size: int = 2) -> ConfinementEvaluator:
     return ConfinementEvaluator(nid, target_size)
@@ -622,6 +991,30 @@ def create_barrier_placement_moves(nid: str) -> BarrierPlacementMoves:
     return BarrierPlacementMoves(nid)
 
 def create_krk_root(nid: str) -> KRKCheckmateRoot: return KRKCheckmateRoot(nid)
+
+
+def create_white_to_play(nid: str) -> Node:
+    def _predicate(node: Node, env: Dict[str, Any]):
+        board = env.get("board")
+        if not board:
+            node.meta["activation"] = 0.0
+            return True, True
+        node.meta["activation"] = 1.0 if board.turn == chess.WHITE else 0.0
+        return True, True
+
+    return Node(nid=nid, ntype=NodeType.TERMINAL, predicate=_predicate)
+
+
+def create_black_to_play(nid: str) -> Node:
+    def _predicate(node: Node, env: Dict[str, Any]):
+        board = env.get("board")
+        if not board:
+            node.meta["activation"] = 0.0
+            return True, True
+        node.meta["activation"] = 1.0 if board.turn == chess.BLACK else 0.0
+        return True, True
+
+    return Node(nid=nid, ntype=NodeType.TERMINAL, predicate=_predicate)
 
 
 # ===== WIRING HELPER =====
@@ -652,3 +1045,38 @@ def wire_default_krk(g, root_id: str, ids: Dict[str, str]) -> None:
     g.add_edge(ids["phase1"], ids["phase2"], LinkType.POR)
     g.add_edge(ids["phase2"], ids["phase3"], LinkType.POR)
     g.add_edge(ids["phase3"], ids["phase4"], LinkType.POR)
+
+
+
+print("DEBUG: KRK_NODES MODULE LOADED")
+
+def create_krk_execute(nid: str) -> Node:
+    print(f"DEBUG: create_krk_execute CALLED for {nid}")
+    """
+    Execution Node:
+    - Acts as a synchronization barrier.
+    - Keeps itself (and thus SUB children) ACTIVE until all children are CONFIRMED.
+    - Ensures Arbiter/Legs have time to run.
+    """
+    def _predicate(node: Node, env: Dict[str, Any]):
+        graph = env.get("__graph__")
+        if not graph:
+            return True, True
+            
+        children = graph.children(nid)
+        # Check if all children are CONFIRMED
+        all_confirmed = True
+        for cid in children:
+            if graph.nodes[cid].state != NodeState.CONFIRMED:
+                all_confirmed = False
+                break
+        
+        if all_confirmed:
+            print("DEBUG: KRK_EXECUTE finished (all children confirmed)")
+            return True, True
+        
+        # Still waiting for children
+        # print("DEBUG: KRK_EXECUTE waiting...")
+        return False, False
+
+    return Node(nid=nid, ntype=NodeType.SCRIPT, predicate=_predicate)

@@ -1,0 +1,49 @@
+{
+  "version": "0.1",
+  "config": {
+    "eta_consolidate": 0.01,
+    "min_episodes": 10,
+    "outcome_weight": 0.5,
+    "max_base_delta": 0.5,
+    "w_min": 0.1,
+    "w_max": 3.0
+  },
+  "w_base": {
+    "endgame_gate->kpk_root:SUB": 1.0,
+    "kpk_root->kpk_detect:SUB": 1.073823,
+    "kpk_root->kpk_execute:SUB": 1.073823,
+    "kpk_root->kpk_finish:SUB": 1.073823,
+    "kpk_root->kpk_wait:SUB": 1.073823,
+    "kpk_detect->kpk_execute:POR": 1.095944,
+    "kpk_execute->kpk_finish:POR": 1.095944,
+    "kpk_finish->kpk_wait:POR": 1.095944,
+    "kpk_detect->kpk_material_check:SUB": 1.095944,
+    "kpk_detect->kpk_push_window:SUB": 1.095944,
+    "kpk_execute->kpk_move_selector:SUB": 1.095944,
+    "kpk_execute->kpk_opposition_probe:SUB": 1.095944,
+    "kpk_finish->kpk_promotion_probe:SUB": 1.095944,
+    "kpk_wait->kpk_wait_for_change:SUB": 1.073823
+  },
+  "w_init": {
+    "endgame_gate->kpk_root:SUB": 1.0,
+    "kpk_root->kpk_detect:SUB": 1.0,
+    "kpk_root->kpk_execute:SUB": 1.0,
+    "kpk_root->kpk_finish:SUB": 1.0,
+    "kpk_root->kpk_wait:SUB": 1.0,
+    "kpk_detect->kpk_execute:POR": 1.0,
+    "kpk_execute->kpk_finish:POR": 1.0,
+    "kpk_finish->kpk_wait:POR": 1.0,
+    "kpk_detect->kpk_material_check:SUB": 1.0,
+    "kpk_detect->kpk_push_window:SUB": 1.0,
+    "kpk_execute->kpk_move_selector:SUB": 1.0,
+    "kpk_execute->kpk_opposition_probe:SUB": 1.0,
+    "kpk_finish->kpk_promotion_probe:SUB": 1.0,
+    "kpk_wait->kpk_wait_for_change:SUB": 1.0
+  },
+  "consolidation_meta": {
+    "total_episodes": 50,
+    "episodes_since_apply": 0,
+    "last_apply_time": "2026-01-14T13:01:06.469073",
+    "edges_tracked": 14
+  }
+}

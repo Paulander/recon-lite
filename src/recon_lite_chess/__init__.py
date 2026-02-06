@@ -47,6 +47,7 @@ from . import strategy
 from . import actuators_blend
 from . import sensors
 from . import scripts
+from . import goal_actuators
 
 __all__ = [
     # Terminal evaluators
@@ -81,5 +82,5 @@ __all__ = [
     "wire_default_krk",
 
     # Submodules
-    "predicates", "actuators", "strategy", "actuators_blend", "sensors", "scripts",
+    "predicates", "actuators", "strategy", "actuators_blend", "sensors", "scripts", "goal_actuators",
 ]

@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Baseline Architecture - Standalone Viewer</title>
+    <meta charset="utf-8">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+
+        #container {
+            display: flex;
+            height: 100vh;
+        }
+
+        #graph {
+            flex: 1;
+            position: relative;
+        }
+
+        #sidebar {
+            width: 320px;
+            background: #2a2a2a;
+            padding: 20px;
+            overflow-y: auto;
+            border-left: 1px solid #444;
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #4CAF50;
+        }
+
+        .stat {
+            margin: 10px 0;
+            padding: 10px;
+            background: #333;
+            border-radius: 4px;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 12px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .node {
+            cursor: pointer;
+            stroke: #fff;
+            stroke-width: 2px;
+        }
+
+        .node.sensor {
+            fill: #2196F3;
+        }
+
+        .node.sensor.mature {
+            fill: #4CAF50;
+        }
+
+        .node.actuator {
+            fill: #FF9800;
+        }
+
+        .link {
+            stroke: #666;
+            stroke-opacity: 0.6;
+            stroke-width: 1.5px;
+            marker-end: url(#arrowhead);
+        }
+
+        .node-label {
+            fill: #e0e0e0;
+            font-size: 11px;
+            font-weight: bold;
+            pointer-events: none;
+            text-anchor: middle;
+        }
+
+        .node-sublabel {
+            fill: #aaa;
+            font-size: 9px;
+            pointer-events: none;
+            text-anchor: middle;
+        }
+
+        #info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #333;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        #file-input-container {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #333;
+            border-radius: 4px;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        #load-button {
+            width: 100%;
+            padding: 12px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        #load-button:hover {
+            background: #45a049;
+        }
+
+        #status {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #888;
+        }
+
+        #placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            font-size: 18px;
+            color: #666;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container">
+        <div id="graph">
+            <div id="placeholder">
+                👈 Load a topology JSON file to visualize
+            </div>
+        </div>
+        <div id="sidebar">
+            <h2>Baseline Architecture</h2>
+
+            <div id="file-input-container">
+                <input type="file" id="file-input" accept=".json">
+                <button id="load-button">📁 Load Topology JSON</button>
+                <div id="status">No file loaded</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-label">Total Sensors</div>
+                <div class="stat-value" id="total-sensors">-</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Mature Sensors</div>
+                <div class="stat-value" id="mature-sensors">-</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Actuators</div>
+                <div class="stat-value" id="total-actuators">-</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Goal Memories</div>
+                <div class="stat-value" id="goal-memories">-</div>
+            </div>
+            <div id="info">
+                <strong>Legend:</strong><br>
+                🔵 Candidate Sensor<br>
+                🟢 Mature Sensor<br>
+                🟠 Actuator<br>
+                <br>
+                <strong>Edges:</strong> Sensor → Actuator dependencies<br>
+                <br>
+                <strong>File location:</strong><br>
+                <code style="font-size: 10px;">snapshots/baseline_evolution/baseline/cycle_0050.json</code>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // File input handling
+        const fileInput = document.getElementById('file-input');
+        const loadButton = document.getElementById('load-button');
+        const statusDiv = document.getElementById('status');
+
+        loadButton.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                statusDiv.textContent = `Loading ${file.name}...`;
+                const reader = new FileReader();
+
+                reader.onload = (e) => {
+                    try {
+                        const topologyData = JSON.parse(e.target.result);
+                        statusDiv.textContent = `✓ Loaded ${file.name}`;
+                        initVisualization(topologyData);
+                    } catch (error) {
+                        statusDiv.textContent = `✗ Error: ${error.message}`;
+                        alert('Error parsing JSON: ' + error.message);
+                    }
+                };
+
+                reader.onerror = () => {
+                    statusDiv.textContent = '✗ Error reading file';
+                };
+
+                reader.readAsText(file);
+            }
+        });
+
+        function initVisualization(topologyData) {
+            // Clear placeholder
+            document.getElementById('placeholder').style.display = 'none';
+
+            // Update stats
+            document.getElementById('total-sensors').textContent = topologyData.meta.total_sensors;
+            document.getElementById('mature-sensors').textContent = topologyData.meta.mature_sensors;
+            document.getElementById('total-actuators').textContent = topologyData.meta.total_actuators;
+            document.getElementById('goal-memories').textContent = topologyData.meta.goal_memories;
+
+            // Clear any existing SVG
+            d3.select("#graph svg").remove();
+
+            // Setup hierarchical layout
+            const width = window.innerWidth - 320;
+            const height = window.innerHeight;
+            const padding = 80;
+
+            const svg = d3.select("#graph")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height);
+
+            // Add arrowhead marker
+            svg.append("defs").append("marker")
+                .attr("id", "arrowhead")
+                .attr("viewBox", "0 -5 10 10")
+                .attr("refX", 20)
+                .attr("refY", 0)
+                .attr("markerWidth", 6)
+                .attr("markerHeight", 6)
+                .attr("orient", "auto")
+                .append("path")
+                .attr("d", "M0,-5L10,0L0,5")
+                .attr("fill", "#666");
+
+            // Separate sensors and actuators
+            const sensors = Object.values(topologyData.nodes).filter(n => n.group === "sensor");
+            const actuators = Object.values(topologyData.nodes).filter(n => n.group === "actuator");
+
+            // Position sensors at bottom in a grid
+            const sensorSpacing = Math.min(100, (width - 2 * padding) / Math.ceil(Math.sqrt(sensors.length)));
+            const sensorsPerRow = Math.floor((width - 2 * padding) / sensorSpacing);
+
+            sensors.forEach((s, i) => {
+                const row = Math.floor(i / sensorsPerRow);
+                const col = i % sensorsPerRow;
+                s.x = padding + col * sensorSpacing + sensorSpacing / 2;
+                s.y = height - padding - row * 80 - 40;
+                s.fx = s.x; // Fix position
+                s.fy = s.y;
+            });
+
+            // Position actuators at top in a row
+            const actuatorSpacing = Math.min(150, (width - 2 * padding) / actuators.length);
+            actuators.forEach((a, i) => {
+                a.x = padding + i * actuatorSpacing + actuatorSpacing / 2;
+                a.y = padding + 40;
+                a.fx = a.x; // Fix position
+                a.fy = a.y;
+            });
+
+            const nodes = [...sensors, ...actuators];
+            const links = topologyData.edges.map(e => ({
+                source: e.source,
+                target: e.target
+            }));
+
+            // Draw links
+            const link = svg.append("g")
+                .selectAll("line")
+                .data(links)
+                .join("line")
+                .attr("class", "link")
+                .attr("x1", d => nodes.find(n => n.id === d.source).x)
+                .attr("y1", d => nodes.find(n => n.id === d.source).y)
+                .attr("x2", d => nodes.find(n => n.id === d.target).x)
+                .attr("y2", d => nodes.find(n => n.id === d.target).y);
+
+            // Draw diamond shapes for terminals
+            const nodeGroup = svg.append("g")
+                .selectAll("g")
+                .data(nodes)
+                .join("g")
+                .attr("transform", d => `translate(${d.x},${d.y})`);
+
+            // Add diamond shapes
+            nodeGroup.append("path")
+                .attr("class", d => {
+                    if (d.group === "sensor") {
+                        return d.meta.is_mature ? "node sensor mature" : "node sensor";
+                    }
+                    return "node actuator";
+                })
+                .attr("d", d => {
+                    const size = d.group === "actuator" ? 14 : 10;
+                    return `M 0,-${size} L ${size},0 L 0,${size} L -${size},0 Z`;
+                });
+
+            // Add main labels
+            nodeGroup.append("text")
+                .attr("class", "node-label")
+                .attr("dy", -18)
+                .text(d => {
+                    if (d.group === "sensor") {
+                        return `S${d.meta.sensor_id}`;
+                    }
+                    return `A${d.meta.actuator_id}`;
+                });
+
+            // Add sublabels
+            nodeGroup.append("text")
+                .attr("class", "node-sublabel")
+                .attr("dy", 25)
+                .text(d => {
+                    if (d.group === "sensor") {
+                        return `${d.meta.readout_type} (${d.meta.xp.toFixed(2)})`;
+                    }
+                    return `${d.meta.sensor_count} sensors`;
+                });
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hector Hierarchy Explorer</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --panel: rgba(15, 15, 25, 0.95);
+            --border: rgba(100, 100, 255, 0.2);
+            --text: #e0e0e0;
+            --accent: #6366f1;
+            --sensor: #22d3ee;
+            --actuator: #f472b6;
+            --stem: #fb923c;
+            --trial: #a855f7;
+            --sub: #4f46e5;
+            --por: #a855f7;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+        }
+
+        #viz {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            max-width: 300px;
+        }
+
+        .node circle {
+            cursor: pointer;
+            stroke-width: 2px;
+        }
+
+        .node text {
+            font-size: 10px;
+            fill: #aaa;
+            pointer-events: none;
+        }
+
+        .link {
+            fill: none;
+            stroke-opacity: 0.6;
+            stroke-width: 1.5px;
+        }
+
+        .link.sub {
+            stroke: var(--sub);
+        }
+
+        .link.por {
+            stroke: var(--por);
+            stroke-dasharray: 4, 2;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid var(--accent);
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+            display: none;
+        }
+
+        button {
+            padding: 8px 14px;
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid var(--accent);
+            color: #a5b4fc;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: rgba(99, 102, 241, 0.4);
+        }
+
+        h1 {
+            font-size: 14px;
+            margin: 0 0 10px 0;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .file-input-wrapper {
+            margin-bottom: 15px;
+        }
+
+        #file-info {
+            font-size: 11px;
+            color: #888;
+            margin-top: 5px;
+            word-break: break-all;
+        }
+
+        .filters {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
+        }
+
+        .filters h1 {
+            font-size: 11px;
+            color: #888;
+        }
+
+        .filters .legend-item {
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .filters input {
+            cursor: pointer;
+        }
+
+        .legend {
+            margin-top: 15px;
+            font-size: 11px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 4px 0;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .line {
+            width: 12px;
+            height: 2px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="controls">
+        <h1>Hector Hierarchy</h1>
+        <div class="file-input-wrapper">
+            <input type="file" id="file-input" accept=".json">
+            <div id="file-info">Load a topology snapshot (.json)</div>
+        </div>
+
+        <button id="reset-view">Reset Zoom</button>
+        <button id="expand-all">Expand All</button>
+        <button id="collapse-all">Collapse All</button>
+
+        <div class="filters">
+            <h1>Filters</h1>
+            <div class="legend-item"><input type="checkbox" id="filter-backbone" checked> Backbone</div>
+            <div class="legend-item"><input type="checkbox" id="filter-mature" checked> Mature / Solidified</div>
+            <div class="legend-item"><input type="checkbox" id="filter-trial" checked> Trial Nodes</div>
+            <div class="legend-item"><input type="checkbox" id="filter-sensors" checked> Other Sensors</div>
+        </div>
+
+        <div class="legend">
+            <h1>Legend</h1>
+            <div class="legend-item">
+                <div class="dot" style="background:var(--accent)"></div> Backbone/Script
+            </div>
+            <div class="legend-item">
+                <div class="dot" style="background:var(--sensor)"></div> Sensor
+            </div>
+            <div class="legend-item">
+                <div class="dot" style="background:var(--actuator)"></div> Actuator
+            </div>
+            <div class="legend-item">
+                <div class="dot" style="background:var(--stem)"></div> Mature Stem
+            </div>
+            <div class="legend-item">
+                <div class="dot" style="background:var(--trial)"></div> Trial / Fresh
+            </div>
+            <div class="legend-item">
+                <div class="line" style="background:var(--sub)"></div> SUB (Structure)
+            </div>
+            <div class="legend-item">
+                <div class="line" style="background:var(--por); border-top: 1px dashed var(--por); height: 0;"></div>
+                POR (Sequence)
+            </div>
+        </div>
+    </div>
+
+    <div id="viz"></div>
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        let root;
+        let svg, g;
+        let tree = d3.tree().nodeSize([200, 100]); // [Horizontal spacing, Vertical spacing]
+        let i = 0;
+
+        const colors = {
+            backbone: '#6366f1',
+            sensor: '#22d3ee',
+            actuator: '#f472b6',
+            stem: '#fb923c',
+            trial: '#a855f7'
+        };
+
+        function init() {
+            svg = d3.select("#viz").append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .call(d3.zoom().on("zoom", (e) => g.attr("transform", e.transform)))
+                .append("g");
+
+            g = svg.append("g")
+                .attr("transform", `translate(${width / 2}, 100)`);
+        }
+
+        init();
+
+        document.getElementById('file-input').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const data = JSON.parse(event.target.result);
+                processTopology(data);
+                document.getElementById('file-info').textContent = file.name;
+            };
+            reader.readAsText(file);
+        });
+
+        function processTopology(data) {
+            const nodes = data.nodes || {};
+            const edges = data.edges || {};
+
+            // Build hierarchy from SUB edges
+            const parentMap = {};
+            const childrenMap = {};
+            const porMap = {}; // src -> [dst]
+
+            // Find explicit edges
+            Object.values(edges).forEach(e => {
+                const type = (e.type || e.ltype || "").toUpperCase();
+                if (type === 'SUB') {
+                    if (!childrenMap[e.src]) childrenMap[e.src] = [];
+                    childrenMap[e.src].push(e.dst);
+                    parentMap[e.dst] = e.src;
+                } else if (type === 'POR') {
+                    if (!porMap[e.src]) porMap[e.src] = [];
+                    porMap[e.src].push(e.dst);
+                }
+            });
+
+            // Find implicit edges (cluster_members, strategy_ids, pack_members)
+            Object.entries(nodes).forEach(([nid, n]) => {
+                if (n.meta) {
+                    const childLists = [
+                        n.meta.cluster_members,
+                        n.meta.strategy_ids,
+                        n.meta.pack_members
+                    ];
+
+                    childLists.forEach(list => {
+                        if (list && Array.isArray(list)) {
+                            list.forEach(cid => {
+                                if (!childrenMap[nid]) childrenMap[nid] = [];
+                                if (!childrenMap[nid].includes(cid)) {
+                                    childrenMap[nid].push(cid);
+                                    parentMap[cid] = nid;
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+
+            // Identify absolute roots
+            const allNodeIds = Object.keys(nodes);
+            const absoluteRoots = allNodeIds.filter(id => !parentMap[id]);
+
+            // Create a virtual root if multiple absolute roots exist
+            const virtualRoot = {
+                id: "ROOT",
+                name: "Hector Root",
+                type: "SCRIPT",
+                children: absoluteRoots.map(id => buildTree(id, nodes, childrenMap, porMap))
+            };
+
+            root = d3.hierarchy(virtualRoot);
+            root.x0 = width / 2;
+            root.y0 = 0;
+
+            // Default collapse deep nodes
+            root.descendants().forEach(d => {
+                if (d.depth >= 3) {
+                    if (d.children) {
+                        d._children = d.children;
+                        d.children = null;
+                    }
+                }
+            });
+
+            update(root);
+        }
+
+        function buildTree(id, nodes, childrenMap, porMap) {
+            const node = nodes[id] || { id: id };
+            const children = childrenMap[id] || [];
+
+            // Sort children by POR if available
+            children.sort((a, b) => {
+                if (porMap[a] && porMap[a].includes(b)) return -1;
+                if (porMap[b] && porMap[b].includes(a)) return 1;
+                return 0;
+            });
+
+            return {
+                id: id,
+                data: node,
+                children: children.map(cid => buildTree(cid, nodes, childrenMap, porMap))
+            };
+        }
+
+        function update(source) {
+            const nodesData = tree(root);
+            let nodes = nodesData.descendants();
+            let links = nodesData.links();
+
+            // Apply Filters
+            const showBackbone = document.getElementById('filter-backbone').checked;
+            const showMature = document.getElementById('filter-mature').checked;
+            const showTrial = document.getElementById('filter-trial').checked;
+            const showSensors = document.getElementById('filter-sensors').checked;
+
+            nodes = nodes.filter(d => {
+                if (d.data.id === "ROOT") return true;
+                const data = d.data.data || {};
+                const id = (data.id || "").toLowerCase();
+                const group = (data.group || "").toLowerCase();
+                const tier = (data.meta && data.meta.tier || "").toLowerCase();
+
+                if (tier === 'trial' || id.includes('trial')) return showTrial;
+                if (tier === 'mature' || group === 'solidified' || group === 'mature') return showMature;
+                if (data.type === 'TERMINAL') return showSensors;
+                return showBackbone; // Backbone/Script
+            });
+
+            // Filter links to only show those where both source and target are visible
+            const visibleIds = new Set(nodes.map(d => d.id));
+            links = links.filter(l => visibleIds.has(l.source.id) && visibleIds.has(l.target.id));
+
+            // Normalize for fixed-depth + WIDE BRANCH WRAPPING
+            const ROW_MAX = 8;
+            const X_SPACING = 150;
+            const Y_SPACING = 150;
+
+            nodes.forEach(d => {
+                // Determine vertical position based on depth + wrapping row
+                // Find index among siblings
+                if (d.parent) {
+                    const siblings = d.parent.children || [];
+                    const visibleSiblings = siblings.filter(s => visibleIds.has(s.id));
+                    const idx = visibleSiblings.indexOf(d);
+                    if (idx >= 0) {
+                        const row = Math.floor(idx / ROW_MAX);
+                        const col = idx % ROW_MAX;
+                        const rowCount = Math.min(visibleSiblings.length - row * ROW_MAX, ROW_MAX);
+
+                        // Override X from tree layout with local wrap grid
+                        // Center row relative to parent's X
+                        d.x = d.parent.x + (col - (rowCount - 1) / 2) * X_SPACING;
+                        d.y = d.parent.y + Y_SPACING + row * 80; // Add extra Y for each row
+                    }
+                } else {
+                    d.y = 50; // Root Y
+                    d.x = width / 2;
+                }
+            });
+
+            // Nodes
+            const node = g.selectAll('g.node')
+                .data(nodes, d => d.id || (d.id = ++i));
+
+            const nodeEnter = node.enter().append('g')
+                .attr('class', 'node')
+                .attr("transform", d => `translate(${source.x0},${source.y0})`)
+                .on('click', (event, d) => {
+                    if (d.children) {
+                        d._children = d.children;
+                        d.children = null;
+                    } else {
+                        d.children = d._children;
+                        d._children = null;
+                    }
+                    update(d);
+                })
+                .on('mouseover', showTooltip)
+                .on('mouseout', hideTooltip);
+
+            nodeEnter.append('circle')
+                .attr('r', 10)
+                .attr('fill', d => getNodeColor(d.data.data))
+                .attr('stroke', d => d._children ? '#fff' : 'none');
+
+            nodeEnter.append('text')
+                .attr('dy', '.35em')
+                .attr('x', d => d.children || d._children ? -13 : 13)
+                .attr('text-anchor', d => d.children || d._children ? 'end' : 'start')
+                .text(d => d.data.id.length > 20 ? d.data.id.substring(0, 20) + '...' : d.data.id);
+
+            const nodeUpdate = nodeEnter.merge(node);
+
+            nodeUpdate.transition().duration(500)
+                .attr("transform", d => `translate(${d.x},${d.y})`);
+
+            nodeUpdate.select('circle')
+                .attr('fill', d => getNodeColor(d.data.data))
+                .attr('stroke', d => d._children ? '#fff' : 'none');
+
+            node.exit().transition().duration(500)
+                .attr("transform", d => `translate(${source.x},${source.y})`)
+                .style('opacity', 0)
+                .remove();
+
+            // Links
+            const link = g.selectAll('path.link')
+                .data(links, d => d.target.id);
+
+            const linkEnter = link.enter().insert('path', "g")
+                .attr("class", "link sub")
+                .attr('d', d => {
+                    const o = { x: source.x0, y: source.y0 };
+                    return diagonal(o, o);
+                });
+
+            const linkUpdate = linkEnter.merge(link);
+
+            linkUpdate.transition().duration(500)
+                .attr('d', d => diagonal(d.source, d.target));
+
+            link.exit().transition().duration(500)
+                .attr('d', d => {
+                    const o = { x: source.x, y: source.y };
+                    return diagonal(o, o);
+                })
+                .remove();
+
+            nodes.forEach(d => {
+                d.x0 = d.x;
+                d.y0 = d.y;
+            });
+        }
+
+        // Add event listeners for filters
+        ['filter-backbone', 'filter-mature', 'filter-trial', 'filter-sensors'].forEach(id => {
+            document.getElementById(id).addEventListener('change', () => update(root));
+        });
+
+        function diagonal(s, t) {
+            return `M ${s.x} ${s.y}
+                    C ${s.x} ${(s.y + t.y) / 2},
+                      ${t.x} ${(s.y + t.y) / 2},
+                      ${t.x} ${t.y}`;
+        }
+
+        function getNodeColor(data) {
+            if (!data) return colors.backbone;
+            const id = (data.id || "").toLowerCase();
+            const group = (data.group || "").toLowerCase();
+            const tier = (data.meta && data.meta.tier || "").toLowerCase();
+
+            if (tier === 'trial' || id.includes('trial')) return colors.trial;
+            if (tier === 'mature' || group === 'solidified' || group === 'mature') return colors.stem;
+            if (data.type === 'TERMINAL') {
+                if (id.includes('execute')) return colors.actuator;
+                return colors.sensor;
+            }
+            return colors.backbone;
+        }
+
+        function showTooltip(event, d) {
+            const tooltip = document.getElementById('tooltip');
+            const data = (d.data && d.data.data) ? d.data.data : {};
+            const meta = data.meta || {};
+
+            let content = `<div style="color:var(--accent); font-weight:bold; margin-bottom:4px;">${d.data.id}</div>`;
+            content += `<strong>Type:</strong> ${data.type || 'SCRIPT'}<br>`;
+            content += `<strong>Group:</strong> ${data.group || 'N/A'}<br>`;
+
+            if (meta.tier) content += `<strong>Tier:</strong> <span style="color:var(--trial)">${meta.tier.toUpperCase()}</span><br>`;
+            if (meta.xp !== undefined) {
+                const xpColor = meta.xp > 80 ? '#4ade80' : (meta.xp < 30 ? '#ef4444' : '#fb923c');
+                content += `<strong>XP:</strong> <span style="font-size:14px; color:${xpColor}">${meta.xp}</span> / 100<br>`;
+            }
+            if (meta.consistency !== undefined) content += `<strong>Consistency:</strong> ${(meta.consistency * 100).toFixed(1)}%<br>`;
+            if (meta.promoted_tick !== undefined) content += `<strong>Born at Tick:</strong> ${meta.promoted_tick}<br>`;
+            if (meta.promotion_reason) content += `<strong>Reason:</strong> <i style="color:#aaa">${meta.promotion_reason}</i><br>`;
+
+            tooltip.innerHTML = content;
+            tooltip.style.display = 'block';
+            tooltip.style.left = (event.pageX + 15) + 'px';
+            tooltip.style.top = (event.pageY + 15) + 'px';
+        }
+
+        function hideTooltip() {
+            document.getElementById('tooltip').style.display = 'none';
+        }
+
+        document.getElementById('reset-view').addEventListener('click', () => {
+            // Zoom reset logic
+            g.transition().duration(750).attr("transform", `translate(${width / 2}, 100) scale(1)`);
+        });
+
+        document.getElementById('expand-all').addEventListener('click', () => {
+            expand(root);
+            update(root);
+        });
+
+        document.getElementById('collapse-all').addEventListener('click', () => {
+            if (root.children) {
+                root.children.forEach(collapse);
+            }
+            update(root);
+        });
+
+        function expand(d) {
+            if (d._children) {
+                d.children = d._children;
+                d._children = null;
+            }
+            if (d.children) d.children.forEach(expand);
+        }
+
+        function collapse(d) {
+            if (d.children) {
+                d._children = d.children;
+                d.children = null;
+            }
+            if (d._children) d._children.forEach(collapse);
+        }
+
+    </script>
+</body>
+
+</html>

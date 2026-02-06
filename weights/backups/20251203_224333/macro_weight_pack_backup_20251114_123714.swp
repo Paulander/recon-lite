@@ -1,0 +1,25 @@
+{
+  "version": "0.1",
+  "por_edges": {
+    "PlanHub->FeatureHub": 0.9,
+    "FeatureHub->PlanHub": 0.85,
+    "PlanHub->MoveSynth": 0.95,
+    "FeatureHub->MoveSynth": 1.05,
+    "GoalVector->MoveSynth": 0.8,
+    "LightEval->MoveSynth": 0.9,
+    "LearningSupervisor->PlanHub": 1.0,
+    "LearningSupervisor->MoveSynth": 0.4
+  },
+  "por_policies": {
+    "PlanHub": {"policy": "weighted", "theta": 0.75},
+    "FeatureHub": {"policy": "or"},
+    "MoveSynth": {"policy": "weighted", "theta": 0.6},
+    "PlanEndgame": {"policy": "or"}
+  },
+  "confirm_policies": {
+    "PlanHub": {"policy": "k_of_n", "k": 1},
+    "PlanEndgame": {"policy": "or"},
+    "MoveSynth": {"policy": "or"}
+  },
+  "notes": "Default scaffolding for macro-level edge weights and node policies. Updated by the learning supervisor pipeline."
+}

@@ -8,6 +8,38 @@ __pycache__/
 # logs / artifacts
 demos/sequence_log.json
 demos/outputs/
+logs/
+
+# Weights - keep latest and promoted, ignore discoveries (raw data)
+weights/discoveries/
+weights/backups/
+
+# Reports - ignore timestamped training runs, keep summaries
+reports/overnight/
+reports/curriculum/
+reports/nightly/
+reports/blocks_smoke/
 
 #useless windows files
-*.Zone.Identifier
+*.Zone.Identifierdata/puzzles/lichess_puzzles.csv.bz2
+data/puzzles/lichess_puzzles.csv.bz2
+.cursor/
+game.json
+
+# Training run artifacts
+backup_*
+weights/versions/
+weights/runs/
+weights/demo_backups/
+reports/bridge*
+*.POLLUTED.json
+
+# =============================================================================
+# EVOLUTION TRAINING DATA (large, should be backed up externally)
+# TODO: Set up data backup pipeline (AWS S3, Google Drive, etc.)
+# See: reports/project_summary_for_ai.md for backup requirements
+# =============================================================================
+traces/
+snapshots/
+reports/evolution/
+signatures/

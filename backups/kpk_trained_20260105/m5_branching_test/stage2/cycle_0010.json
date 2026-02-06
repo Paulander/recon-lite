@@ -1,0 +1,627 @@
+{
+  "nodes": [
+    {
+      "id": "kpk_root",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {}
+    },
+    {
+      "id": "kpk_detect",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {}
+    },
+    {
+      "id": "kpk_execute",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {}
+    },
+    {
+      "id": "kpk_finish",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {}
+    },
+    {
+      "id": "kpk_wait",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {}
+    },
+    {
+      "id": "kpk_material_check",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.scripts.kpk:create_kpk_material_detector",
+      "meta": {}
+    },
+    {
+      "id": "kpk_push_window",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.scripts.kpk:create_kpk_push_window",
+      "meta": {}
+    },
+    {
+      "id": "kpk_opposition_probe",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.scripts.kpk:create_kpk_opposition_probe",
+      "meta": {}
+    },
+    {
+      "id": "kpk_promotion_probe",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.scripts.kpk:create_kpk_promotion_probe",
+      "meta": {}
+    },
+    {
+      "id": "kpk_move_selector",
+      "type": "TERMINAL",
+      "group": "actuator",
+      "factory": "recon_lite_chess.scripts.kpk:create_kpk_move_selector",
+      "meta": {}
+    },
+    {
+      "id": "kpk_wait_for_change",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess:create_wait_for_board_change",
+      "meta": {}
+    },
+    {
+      "id": "TRIAL_stem_0000_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0000",
+        "xp": 20,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 49,
+        "consistency": 0.0
+      }
+    },
+    {
+      "id": "TRIAL_stem_0001_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0001",
+        "xp": 20,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 41,
+        "consistency": 0.0
+      }
+    },
+    {
+      "id": "TRIAL_stem_0002_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0002",
+        "xp": 21,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 53,
+        "consistency": 0.0
+      }
+    },
+    {
+      "id": "TRIAL_stem_0003_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0003",
+        "xp": 21,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 41,
+        "consistency": 0.0
+      }
+    },
+    {
+      "id": "TRIAL_stem_0004_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0004",
+        "xp": 22,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 37,
+        "consistency": 0.0
+      }
+    },
+    {
+      "id": "TRIAL_stem_0005_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0005",
+        "xp": 23,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 77,
+        "consistency": 0.0
+      }
+    },
+    {
+      "id": "TRIAL_stem_0006_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0006",
+        "xp": 23,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 61,
+        "consistency": 0.0
+      }
+    },
+    {
+      "id": "TRIAL_stem_0007_2",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0007",
+        "xp": 24,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 94,
+        "consistency": 0.0
+      }
+    },
+    {
+      "id": "TRIAL_stem_0008_2",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0008",
+        "xp": 24,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 93,
+        "consistency": 0.0
+      }
+    },
+    {
+      "id": "TRIAL_stem_0009_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0009",
+        "xp": 25,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 141,
+        "consistency": 0.0
+      }
+    },
+    {
+      "id": "TRIAL_stem_0010_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0010",
+        "xp": 25,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 135,
+        "consistency": 0.0
+      }
+    },
+    {
+      "id": "TRIAL_stem_0011_2",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0011",
+        "xp": 26,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 149,
+        "consistency": 0.0
+      }
+    },
+    {
+      "id": "TRIAL_stem_0012_2",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0012",
+        "xp": 26,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 125,
+        "consistency": 0.0
+      }
+    },
+    {
+      "id": "TRIAL_stem_0013_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0013",
+        "xp": 27,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 104,
+        "consistency": 0.0
+      }
+    },
+    {
+      "id": "TRIAL_stem_0014_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0014",
+        "xp": 27,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 68,
+        "consistency": 0.0
+      }
+    },
+    {
+      "id": "TRIAL_stem_0015_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0015",
+        "xp": 28,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 120,
+        "consistency": 0.0
+      }
+    },
+    {
+      "id": "TRIAL_stem_0016_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0016",
+        "xp": 28,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 64,
+        "consistency": 0.0
+      }
+    },
+    {
+      "id": "TRIAL_stem_0017_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0017",
+        "xp": 29,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 113,
+        "consistency": 0.0
+      }
+    },
+    {
+      "id": "TRIAL_stem_0018_1",
+      "type": "TERMINAL",
+      "group": "trial",
+      "factory": "recon_lite.learning.m5_structure:create_pattern_sensor",
+      "meta": {
+        "cell_id": "stem_0018",
+        "xp": 29,
+        "xp_successes": 0,
+        "xp_failures": 0,
+        "tier": "trial",
+        "samples": 108,
+        "consistency": 0.0
+      }
+    }
+  ],
+  "edges": [
+    {
+      "src": "kpk_root",
+      "dst": "kpk_detect",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_root",
+      "dst": "kpk_execute",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_root",
+      "dst": "kpk_finish",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_root",
+      "dst": "kpk_wait",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "kpk_material_check",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "kpk_push_window",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_execute",
+      "dst": "kpk_move_selector",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_execute",
+      "dst": "kpk_opposition_probe",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_finish",
+      "dst": "kpk_promotion_probe",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_wait",
+      "dst": "kpk_wait_for_change",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "kpk_execute",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_execute",
+      "dst": "kpk_finish",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_finish",
+      "dst": "kpk_wait",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0000_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0001_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0002_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0003_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0004_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0005_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0006_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0007_2",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0008_2",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0009_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0010_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0011_2",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0012_2",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0013_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0014_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0015_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0016_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0017_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "kpk_detect",
+      "dst": "TRIAL_stem_0018_1",
+      "type": "SUB",
+      "weight": 0.5,
+      "consolidate": true,
+      "confirmation_count": 0
+    }
+  ],
+  "timestamp": "2026-01-05T14:19:35.769701",
+  "cycle": 10,
+  "last_modified": "2026-01-05T14:21:31.919359"
+}

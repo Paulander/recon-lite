@@ -1,0 +1,15 @@
+{
+  "total_games": 20,
+  "wins": 1,
+  "losses": 0,
+  "draws": 19,
+  "checkmates": 1,
+  "stalemates": 2,
+  "total_moves": 3649,
+  "total_reward": -2178.15,
+  "discoveries": 8,
+  "win_rate": 0.05,
+  "avg_moves": 182.45,
+  "avg_reward": -108.9075,
+  "games_played": 20
+}

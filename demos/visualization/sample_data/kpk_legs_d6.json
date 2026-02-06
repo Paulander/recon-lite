@@ -1,0 +1,461 @@
+{
+  "version": "kpk_legs_v1",
+  "architecture": "legs",
+  "initial_fen": "7k/2K5/3P4/8/8/8/8/8 w - - 0 1",
+  "result": "promotion",
+  "total_moves": 3,
+  "topology": {
+    "nodes": [
+      {
+        "id": "kpk_material_check",
+        "type": "terminal",
+        "layer": "unknown",
+        "subgraph": "main"
+      },
+      {
+        "id": "kpk_push_window",
+        "type": "terminal",
+        "layer": "unknown",
+        "subgraph": "main"
+      },
+      {
+        "id": "kpk_opposition_probe",
+        "type": "terminal",
+        "layer": "unknown",
+        "subgraph": "main"
+      },
+      {
+        "id": "kpk_promotion_probe",
+        "type": "terminal",
+        "layer": "unknown",
+        "subgraph": "main"
+      },
+      {
+        "id": "kpk_wait_for_change",
+        "type": "terminal",
+        "layer": "unknown",
+        "subgraph": "main"
+      },
+      {
+        "id": "kpk_pawn_leg",
+        "type": "script",
+        "layer": "unknown",
+        "subgraph": "main"
+      },
+      {
+        "id": "kpk_king_leg",
+        "type": "script",
+        "layer": "unknown",
+        "subgraph": "main"
+      },
+      {
+        "id": "kpk_arbiter",
+        "type": "script",
+        "layer": "unknown",
+        "subgraph": "main"
+      },
+      {
+        "id": "kpk_root",
+        "type": "script",
+        "layer": "unknown",
+        "subgraph": "main"
+      },
+      {
+        "id": "kpk_detect",
+        "type": "script",
+        "layer": "unknown",
+        "subgraph": "main"
+      },
+      {
+        "id": "kpk_execute",
+        "type": "script",
+        "layer": "unknown",
+        "subgraph": "main"
+      },
+      {
+        "id": "kpk_finish",
+        "type": "script",
+        "layer": "unknown",
+        "subgraph": "main"
+      },
+      {
+        "id": "kpk_wait",
+        "type": "script",
+        "layer": "unknown",
+        "subgraph": "main"
+      }
+    ],
+    "edges": [
+      {
+        "src": "kpk_root",
+        "dst": "kpk_detect",
+        "type": "sub",
+        "weight": 1.0,
+        "trainable": false
+      },
+      {
+        "src": "kpk_root",
+        "dst": "kpk_execute",
+        "type": "sub",
+        "weight": 1.0,
+        "trainable": false
+      },
+      {
+        "src": "kpk_root",
+        "dst": "kpk_finish",
+        "type": "sub",
+        "weight": 1.0,
+        "trainable": false
+      },
+      {
+        "src": "kpk_root",
+        "dst": "kpk_wait",
+        "type": "sub",
+        "weight": 1.0,
+        "trainable": false
+      },
+      {
+        "src": "kpk_detect",
+        "dst": "kpk_material_check",
+        "type": "sub",
+        "weight": 1.0,
+        "trainable": false
+      },
+      {
+        "src": "kpk_detect",
+        "dst": "kpk_push_window",
+        "type": "sub",
+        "weight": 1.0,
+        "trainable": false
+      },
+      {
+        "src": "kpk_execute",
+        "dst": "kpk_pawn_leg",
+        "type": "sub",
+        "weight": 1.0,
+        "trainable": false
+      },
+      {
+        "src": "kpk_execute",
+        "dst": "kpk_king_leg",
+        "type": "sub",
+        "weight": 1.0,
+        "trainable": false
+      },
+      {
+        "src": "kpk_execute",
+        "dst": "kpk_arbiter",
+        "type": "sub",
+        "weight": 1.0,
+        "trainable": false
+      },
+      {
+        "src": "kpk_execute",
+        "dst": "kpk_opposition_probe",
+        "type": "sub",
+        "weight": 1.0,
+        "trainable": false
+      },
+      {
+        "src": "kpk_finish",
+        "dst": "kpk_promotion_probe",
+        "type": "sub",
+        "weight": 1.0,
+        "trainable": false
+      },
+      {
+        "src": "kpk_wait",
+        "dst": "kpk_wait_for_change",
+        "type": "sub",
+        "weight": 1.0,
+        "trainable": false
+      },
+      {
+        "src": "kpk_detect",
+        "dst": "kpk_execute",
+        "type": "por",
+        "weight": 1.0,
+        "trainable": false
+      },
+      {
+        "src": "kpk_execute",
+        "dst": "kpk_finish",
+        "type": "por",
+        "weight": 1.0,
+        "trainable": false
+      },
+      {
+        "src": "kpk_finish",
+        "dst": "kpk_wait",
+        "type": "por",
+        "weight": 1.0,
+        "trainable": false
+      },
+      {
+        "src": "kpk_pawn_leg",
+        "dst": "kpk_king_leg",
+        "type": "por",
+        "weight": 1.0,
+        "trainable": false
+      },
+      {
+        "src": "kpk_pawn_leg",
+        "dst": "kpk_arbiter",
+        "type": "por",
+        "weight": 1.0,
+        "trainable": false
+      },
+      {
+        "src": "kpk_king_leg",
+        "dst": "kpk_arbiter",
+        "type": "por",
+        "weight": 1.0,
+        "trainable": false
+      }
+    ]
+  },
+  "positions": {
+    "kpk_root": {
+      "x": 400.0,
+      "y": 60
+    },
+    "kpk_detect": {
+      "x": 220.0,
+      "y": 140
+    },
+    "kpk_execute": {
+      "x": 340.0,
+      "y": 140
+    },
+    "kpk_finish": {
+      "x": 460.0,
+      "y": 140
+    },
+    "kpk_wait": {
+      "x": 580.0,
+      "y": 140
+    },
+    "kpk_arbiter": {
+      "x": -20.0,
+      "y": 220
+    },
+    "kpk_king_leg": {
+      "x": 100.0,
+      "y": 220
+    },
+    "kpk_material_check": {
+      "x": 220.0,
+      "y": 220
+    },
+    "kpk_opposition_probe": {
+      "x": 340.0,
+      "y": 220
+    },
+    "kpk_pawn_leg": {
+      "x": 460.0,
+      "y": 220
+    },
+    "kpk_promotion_probe": {
+      "x": 580.0,
+      "y": 220
+    },
+    "kpk_push_window": {
+      "x": 700.0,
+      "y": 220
+    },
+    "kpk_wait_for_change": {
+      "x": 820.0,
+      "y": 220
+    }
+  },
+  "frames": [
+    {
+      "tick": 0,
+      "label": "Start",
+      "board_fen": "7k/2K5/3P4/8/8/8/8/8 w - - 0 1",
+      "move_uci": null,
+      "turn": "white",
+      "node_states": {
+        "kpk_material_check": "INACTIVE",
+        "kpk_push_window": "INACTIVE",
+        "kpk_opposition_probe": "INACTIVE",
+        "kpk_promotion_probe": "INACTIVE",
+        "kpk_wait_for_change": "INACTIVE",
+        "kpk_pawn_leg": "INACTIVE",
+        "kpk_king_leg": "INACTIVE",
+        "kpk_arbiter": "INACTIVE",
+        "kpk_root": "INACTIVE",
+        "kpk_detect": "INACTIVE",
+        "kpk_execute": "INACTIVE",
+        "kpk_finish": "INACTIVE",
+        "kpk_wait": "INACTIVE"
+      },
+      "node_activations": {
+        "kpk_material_check": 0.0,
+        "kpk_push_window": 0.0,
+        "kpk_opposition_probe": 0.0,
+        "kpk_promotion_probe": 0.0,
+        "kpk_wait_for_change": 0.0,
+        "kpk_pawn_leg": 0.0,
+        "kpk_king_leg": 0.0,
+        "kpk_arbiter": 0.0,
+        "kpk_root": 0.0,
+        "kpk_detect": 0.0,
+        "kpk_execute": 0.0,
+        "kpk_finish": 0.0,
+        "kpk_wait": 0.0
+      },
+      "legs": {},
+      "policy": {}
+    },
+    {
+      "tick": 1,
+      "label": "d6d7",
+      "board_fen": "7k/2KP4/8/8/8/8/8/8 b - - 0 1",
+      "move_uci": "d6d7",
+      "turn": "black",
+      "node_states": {
+        "kpk_material_check": "INACTIVE",
+        "kpk_push_window": "INACTIVE",
+        "kpk_opposition_probe": "INACTIVE",
+        "kpk_promotion_probe": "INACTIVE",
+        "kpk_wait_for_change": "INACTIVE",
+        "kpk_pawn_leg": "INACTIVE",
+        "kpk_king_leg": "INACTIVE",
+        "kpk_arbiter": "INACTIVE",
+        "kpk_root": "INACTIVE",
+        "kpk_detect": "INACTIVE",
+        "kpk_execute": "INACTIVE",
+        "kpk_finish": "INACTIVE",
+        "kpk_wait": "INACTIVE"
+      },
+      "node_activations": {
+        "kpk_material_check": 0.0,
+        "kpk_push_window": 0.0,
+        "kpk_opposition_probe": 0.0,
+        "kpk_promotion_probe": 0.0,
+        "kpk_wait_for_change": 0.0,
+        "kpk_pawn_leg": 1.4,
+        "kpk_king_leg": 0.45,
+        "kpk_arbiter": 0.0,
+        "kpk_root": 0.011,
+        "kpk_detect": 0.0,
+        "kpk_execute": 0.159,
+        "kpk_finish": 0.0,
+        "kpk_wait": 0.0
+      },
+      "legs": {
+        "pawn": {
+          "activation": 1.4000000000000001,
+          "proposal": "d6d7",
+          "reason": "pawn_push",
+          "legal": true,
+          "safe": true
+        },
+        "king": {
+          "activation": 0.44999999999999996,
+          "proposal": "c7d8",
+          "reason": "king_support",
+          "pawn_blocked": false
+        }
+      },
+      "policy": {
+        "suggested_move": "d6d7"
+      }
+    },
+    {
+      "tick": 2,
+      "label": "h8h7",
+      "board_fen": "8/2KP3k/8/8/8/8/8/8 w - - 1 2",
+      "move_uci": "h8h7",
+      "turn": "white",
+      "node_states": {
+        "kpk_material_check": "INACTIVE",
+        "kpk_push_window": "INACTIVE",
+        "kpk_opposition_probe": "INACTIVE",
+        "kpk_promotion_probe": "INACTIVE",
+        "kpk_wait_for_change": "INACTIVE",
+        "kpk_pawn_leg": "INACTIVE",
+        "kpk_king_leg": "INACTIVE",
+        "kpk_arbiter": "INACTIVE",
+        "kpk_root": "INACTIVE",
+        "kpk_detect": "INACTIVE",
+        "kpk_execute": "INACTIVE",
+        "kpk_finish": "INACTIVE",
+        "kpk_wait": "INACTIVE"
+      },
+      "node_activations": {
+        "kpk_material_check": 0.0,
+        "kpk_push_window": 0.0,
+        "kpk_opposition_probe": 0.0,
+        "kpk_promotion_probe": 0.0,
+        "kpk_wait_for_change": 0.0,
+        "kpk_pawn_leg": 1.4,
+        "kpk_king_leg": 0.45,
+        "kpk_arbiter": 0.0,
+        "kpk_root": 0.011,
+        "kpk_detect": 0.0,
+        "kpk_execute": 0.159,
+        "kpk_finish": 0.0,
+        "kpk_wait": 0.0
+      },
+      "legs": {},
+      "policy": {}
+    },
+    {
+      "tick": 3,
+      "label": "d7d8q",
+      "board_fen": "3Q4/2K4k/8/8/8/8/8/8 b - - 0 2",
+      "move_uci": "d7d8q",
+      "turn": "black",
+      "node_states": {
+        "kpk_material_check": "INACTIVE",
+        "kpk_push_window": "INACTIVE",
+        "kpk_opposition_probe": "INACTIVE",
+        "kpk_promotion_probe": "INACTIVE",
+        "kpk_wait_for_change": "INACTIVE",
+        "kpk_pawn_leg": "INACTIVE",
+        "kpk_king_leg": "INACTIVE",
+        "kpk_arbiter": "INACTIVE",
+        "kpk_root": "INACTIVE",
+        "kpk_detect": "INACTIVE",
+        "kpk_execute": "INACTIVE",
+        "kpk_finish": "INACTIVE",
+        "kpk_wait": "INACTIVE"
+      },
+      "node_activations": {
+        "kpk_material_check": 0.0,
+        "kpk_push_window": 0.0,
+        "kpk_opposition_probe": 0.0,
+        "kpk_promotion_probe": 0.0,
+        "kpk_wait_for_change": 0.0,
+        "kpk_pawn_leg": 1.0,
+        "kpk_king_leg": 0.65,
+        "kpk_arbiter": 0.0,
+        "kpk_root": 0.043,
+        "kpk_detect": 0.0,
+        "kpk_execute": 0.296,
+        "kpk_finish": 0.0,
+        "kpk_wait": 0.0
+      },
+      "legs": {
+        "pawn": {
+          "activation": 1.0,
+          "proposal": "d7d8q",
+          "reason": "promotion",
+          "legal": true,
+          "safe": false
+        },
+        "king": {
+          "activation": 0.6499999999999999,
+          "proposal": "c7d8",
+          "reason": "king_support",
+          "pawn_blocked": false
+        }
+      },
+      "policy": {
+        "suggested_move": "d7d8q"
+      }
+    }
+  ]
+}

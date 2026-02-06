@@ -1,0 +1,21 @@
+total 80
+drwxr-xr-x  2 paulander paulander 4096 Dec  5 10:47 .
+drwxr-xr-x 11 paulander paulander 4096 Dec  5 10:58 ..
+-rw-r--r--  1 paulander paulander 1783 Dec  5 10:47 attraction_consol.json
+-rw-r--r--  1 paulander paulander 1681 Dec  5 10:47 backRankMate_consol.json
+-rw-r--r--  1 paulander paulander 1579 Dec  5 10:47 deflection_consol.json
+-rw-r--r--  1 paulander paulander 1687 Dec  5 10:47 discoveredAttack_consol.json
+-rw-r--r--  1 paulander paulander 1787 Dec  5 10:47 doubleCheck_consol.json
+-rw-r--r--  1 paulander paulander 1579 Dec  5 10:47 exposedKing_consol.json
+-rw-r--r--  1 paulander paulander 1676 Dec  5 10:47 fork_consol.json
+-rw-r--r--  1 paulander paulander 1672 Dec  5 10:35 fork_test.json
+-rw-r--r--  1 paulander paulander 1681 Dec  5 10:47 hangingPiece_consol.json
+-rw-r--r--  1 paulander paulander 1579 Dec  5 10:47 interference_consol.json
+-rw-r--r--  1 paulander paulander 1553 Dec  5 00:01 mixed_consol.json
+-rw-r--r--  1 paulander paulander 1670 Dec  5 10:47 pin_consol.json
+-rw-r--r--  1 paulander paulander 1781 Dec  5 10:47 quietMove_consol.json
+-rw-r--r--  1 paulander paulander 1779 Dec  5 10:47 sacrifice_consol.json
+-rw-r--r--  1 paulander paulander 1680 Dec  5 10:47 skewer_consol.json
+-rw-r--r--  1 paulander paulander 1795 Dec  5 10:47 smotheredMate_consol.json
+-rw-r--r--  1 paulander paulander 1791 Dec  5 10:47 trappedPiece_consol.json
+-rw-r--r--  1 paulander paulander 1579 Dec  5 10:47 zugzwang_consol.json

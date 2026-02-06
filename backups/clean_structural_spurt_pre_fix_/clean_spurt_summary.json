@@ -1,0 +1,52 @@
+{
+  "stages": [
+    {
+      "stage": 0,
+      "name": "Pawn_One_Step",
+      "win_rate": 1.0,
+      "cycles": 15
+    },
+    {
+      "stage": 1,
+      "name": "Guardian_E",
+      "win_rate": 1.0,
+      "cycles": 15
+    },
+    {
+      "stage": 2,
+      "name": "Guardian_SW",
+      "win_rate": 1.0,
+      "cycles": 15
+    },
+    {
+      "stage": 3,
+      "name": "Escort_5",
+      "win_rate": 1.0,
+      "cycles": 15
+    },
+    {
+      "stage": 4,
+      "name": "Escort_7",
+      "win_rate": 1.0,
+      "cycles": 15
+    },
+    {
+      "stage": 5,
+      "name": "Opposition_Lite",
+      "win_rate": 0.8,
+      "cycles": 15
+    },
+    {
+      "stage": 6,
+      "name": "Opposition_Full",
+      "win_rate": 0.96,
+      "cycles": 15
+    }
+  ],
+  "settings": {
+    "forced_hoist_low_threshold": 0.1,
+    "forced_hoist_high_threshold": 0.95,
+    "success_bypass": true,
+    "speculative_hoisting": true
+  }
+}

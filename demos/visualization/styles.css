@@ -260,6 +260,41 @@
             transform: scale(1.1);
         }
 
+        .network-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 11px;
+            align-items: flex-end;
+        }
+
+        .legend-row {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .legend-label {
+            font-weight: 600;
+            color: #475569;
+            margin-right: 4px;
+        }
+
+        .edge-sub,
+        .edge-por,
+        .edge-ret,
+        .edge-sur {
+            padding-left: 8px;
+            border-left: 10px solid #94a3b8;
+            color: #475569;
+        }
+
+        .edge-por { border-left-color: #1e88e5; }
+        .edge-ret { border-left-color: #8e24aa; }
+        .edge-sur { border-left-color: #90a4ae; }
+
         /* Node states – keep in sync with NetworkVisualization.stateColors */
         .state-inactive   { background: #cfd8dc; color: #2f3a44; }
         .state-requested  { background: #64b5f6; color: #0f3666; }

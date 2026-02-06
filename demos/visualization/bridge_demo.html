@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReCoN Bridge Visualization</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-dark: #0f172a;
+      --bg-panel: #1e293b;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --accent: #818cf8;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --board-light: #f0d9b5;
+      --board-dark: #b58863;
+    }
+
+    body {
+      background: linear-gradient(135deg, var(--bg-dark) 0%, #1e1b4b 100%);
+      color: var(--text-primary);
+      min-height: 100vh;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 12px 24px;
+      background: rgba(15, 23, 42, 0.95);
+      border-bottom: 1px solid rgba(99, 102, 241, 0.3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      background: linear-gradient(90deg, #818cf8, #22d3ee);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .file-select {
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #475569;
+      background: var(--bg-panel);
+      color: var(--text-primary);
+      font-size: 0.85rem;
+    }
+
+    .file-upload {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 0.75rem;
+    }
+
+    .file-upload input[type="file"] {
+      display: none;
+    }
+
+    .file-upload label {
+      background: #2563eb;
+      color: #fff;
+      border-radius: 6px;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .file-upload label:hover {
+      background: #1d4ed8;
+    }
+
+    .file-name {
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: #94a3b8;
+    }
+
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .badge-trained {
+      background: var(--success);
+      color: #000;
+    }
+
+    .badge-untrained {
+      background: var(--warning);
+      color: #000;
+    }
+
+    .badge-kpk {
+      background: #10b981;
+    }
+
+    .badge-kqk {
+      background: #8b5cf6;
+    }
+
+    .badge-krk {
+      background: #3b82f6;
+    }
+
+    .badge-none {
+      background: #64748b;
+    }
+
+    .toggle-group {
+      display: flex;
+      gap: 16px;
+      font-size: 0.85rem;
+    }
+
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .toggle input {
+      display: none;
+    }
+
+    .toggle-switch {
+      width: 36px;
+      height: 20px;
+      background: #475569;
+      border-radius: 10px;
+      position: relative;
+      transition: background 0.2s;
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      transition: left 0.2s;
+    }
+
+    .toggle input:checked+.toggle-switch {
+      background: var(--accent);
+    }
+
+    .toggle input:checked+.toggle-switch::after {
+      left: 18px;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 16px;
+      padding: 16px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .chess-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    #chess-board {
+      width: 400px;
+      height: 400px;
+      background: var(--bg-panel);
+      border-radius: 8px;
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      grid-template-rows: repeat(8, 1fr);
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      border: 4px solid #8b4513;
+    }
+
+    .square {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      position: relative;
+    }
+
+    .square.light {
+      background: var(--board-light);
+    }
+
+    .square.dark {
+      background: var(--board-dark);
+    }
+
+    .piece {
+      font-size: 42px;
+      line-height: 1;
+    }
+
+    .piece.white {
+      color: #fff;
+      text-shadow: 1px 1px 2px #000, -1px -1px 1px #000, 1px -1px 1px #000, -1px 1px 1px #000;
+    }
+
+    .piece.black {
+      color: #222;
+      text-shadow: 1px 1px 0 #888, -1px -1px 0 #888;
+    }
+
+    .binding-tag {
+      position: absolute;
+      bottom: 1px;
+      right: 1px;
+      font-size: 7px;
+      background: rgba(99, 102, 241, 0.9);
+      color: #fff;
+      padding: 1px 3px;
+      border-radius: 2px;
+      font-weight: 600;
+    }
+
+    .info-panel {
+      background: var(--bg-panel);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .info-panel h3 {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .info-value {
+      font-family: 'Cascadia Code', monospace;
+      font-size: 1.1rem;
+    }
+
+    .fen-display {
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+      word-break: break-all;
+      margin-top: 4px;
+    }
+
+    .network-panel {
+      background: var(--bg-panel);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #network-canvas {
+      flex: 1;
+      width: 100%;
+    }
+
+    .legend {
+      padding: 8px 16px;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-size: 0.75rem;
+      border-top: 1px solid rgba(148, 163, 184, 0.1);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .legend-diamond {
+      width: 8px;
+      height: 8px;
+      transform: rotate(45deg);
+    }
+
+    .controls {
+      padding: 12px 16px;
+      background: rgba(15, 23, 42, 0.8);
+      border-top: 1px solid rgba(148, 163, 184, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .controls button {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    #play-btn {
+      background: linear-gradient(135deg, var(--success), #16a34a);
+      color: white;
+      min-width: 90px;
+    }
+
+    #play-btn:hover {
+      transform: scale(1.05);
+    }
+
+    #frame-slider {
+      flex: 1;
+      accent-color: var(--accent);
+      height: 6px;
+    }
+
+    #frame-label {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      min-width: 150px;
+      text-align: right;
+    }
+
+    .gate-display {
+      margin-top: 8px;
+      padding: 8px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 6px;
+    }
+
+    .gate-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .gate-name {
+      width: 40px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+    }
+
+    .gate-fill {
+      flex: 1;
+      height: 8px;
+      background: #334155;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .gate-fill-inner {
+      height: 100%;
+      background: var(--accent);
+      transition: width 0.3s;
+    }
+
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      #chess-board {
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>🎯 ReCoN Bridge Visualization</h1>
+    <div class="header-controls">
+      <select id="file-select" class="file-select">
+        <option value="sample_data/bridge_trained.json">Trained Network</option>
+        <option value="sample_data/bridge_untrained.json">Untrained Network</option>
+      </select>
+      <div class="file-upload">
+        <input type="file" id="file-input" accept=".json">
+        <label for="file-input">Load JSON</label>
+        <span id="file-name" class="file-name">No file</span>
+      </div>
+      <span id="trained-badge" class="status-badge badge-trained">TRAINED</span>
+      <span id="lock-badge" class="status-badge badge-none">No Lock</span>
+    </div>
+    <div class="toggle-group">
+      <label class="toggle">
+        <input type="checkbox" id="show-labels" checked>
+        <span class="toggle-switch"></span>
+        Labels
+      </label>
+      <label class="toggle">
+        <input type="checkbox" id="show-edges" checked>
+        <span class="toggle-switch"></span>
+        Edges
+      </label>
+      <label class="toggle">
+        <input type="checkbox" id="show-inactive">
+        <span class="toggle-switch"></span>
+        Inactive
+      </label>
+      <label class="toggle">
+        <input type="checkbox" id="show-bindings" checked>
+        <span class="toggle-switch"></span>
+        Bindings
+      </label>
+    </div>
+  </header>
+
+  <main>
+    <div class="chess-panel">
+      <div id="chess-board"></div>
+      <div class="info-panel">
+        <h3>Move</h3>
+        <div id="move-display" class="info-value">—</div>
+        <div id="fen-display" class="fen-display">Starting position</div>
+
+        <div class="gate-display">
+          <h3>Gate Activations</h3>
+          <div class="gate-bar">
+            <span class="gate-name">KPK</span>
+            <div class="gate-fill">
+              <div id="gate-kpk" class="gate-fill-inner" style="width:0%"></div>
+            </div>
+          </div>
+          <div class="gate-bar">
+            <span class="gate-name">KQK</span>
+            <div class="gate-fill">
+              <div id="gate-kqk" class="gate-fill-inner" style="width:0%"></div>
+            </div>
+          </div>
+          <div class="gate-bar">
+            <span class="gate-name">KRK</span>
+            <div class="gate-fill">
+              <div id="gate-krk" class="gate-fill-inner" style="width:0%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="network-panel">
+      <canvas id="network-canvas"></canvas>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-dot" style="background:#22c55e"></span> Confirmed</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span> Requested</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#8b5cf6"></span> Active Subgraph</div>
+        <div class="legend-item"><span class="legend-diamond" style="background:#64748b"></span> Terminal</div>
+      </div>
+      <div class="controls">
+        <button id="play-btn">▶ Play</button>
+        <button id="step-back-btn" style="background:#475569;color:#fff" title="Step backward">◀</button>
+        <button id="step-btn" style="background:#475569;color:#fff" title="Step forward">▶</button>
+        <button id="reset-view-btn" style="background:#475569;color:#fff" title="Reset pan/zoom">⟲ View</button>
+        <input type="range" id="frame-slider" min="0" max="0" value="0">
+        <span id="frame-label">Frame 0 / 0</span>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const PIECES = {
+      'K': { ch: '♔', color: 'white' }, 'Q': { ch: '♕', color: 'white' },
+      'R': { ch: '♖', color: 'white' }, 'B': { ch: '♗', color: 'white' },
+      'N': { ch: '♘', color: 'white' }, 'P': { ch: '♙', color: 'white' },
+      'k': { ch: '♚', color: 'black' }, 'q': { ch: '♛', color: 'black' },
+      'r': { ch: '♜', color: 'black' }, 'b': { ch: '♝', color: 'black' },
+      'n': { ch: '♞', color: 'black' }, 'p': { ch: '♟', color: 'black' }
+    };
+
+    const STATE_COLORS = {
+      CONFIRMED: '#22c55e', TRUE: '#22c55e',
+      REQUESTED: '#f59e0b', WAITING: '#eab308',
+      ACTIVE: '#818cf8', INACTIVE: '#475569', FAILED: '#ef4444',
+    };
+
+    const boardEl = document.getElementById('chess-board');
+    const canvasEl = document.getElementById('network-canvas');
+    const ctx = canvasEl.getContext('2d');
+    const sliderEl = document.getElementById('frame-slider');
+    const labelEl = document.getElementById('frame-label');
+    const playBtn = document.getElementById('play-btn');
+    const stepBtn = document.getElementById('step-btn');
+    const moveDisplay = document.getElementById('move-display');
+    const fenDisplay = document.getElementById('fen-display');
+    const lockBadge = document.getElementById('lock-badge');
+    const trainedBadge = document.getElementById('trained-badge');
+    const fileSelect = document.getElementById('file-select');
+    const fileInput = document.getElementById('file-input');
+    const fileName = document.getElementById('file-name');
+    const showLabels = document.getElementById('show-labels');
+    const showEdges = document.getElementById('show-edges');
+    const showInactive = document.getElementById('show-inactive');
+    const showBindings = document.getElementById('show-bindings');
+
+    let demoData = null;
+    let currentFrame = 0;
+    let playInterval = null;
+
+    // Pan and zoom state
+    let panX = 0, panY = 0;
+    let zoom = 1.0;
+    let isPanning = false;
+    let lastMouseX = 0, lastMouseY = 0;
+
+    // Pan: left-click and drag
+    canvasEl.addEventListener('mousedown', (e) => {
+      if (e.button === 0) {
+        isPanning = true;
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+        canvasEl.style.cursor = 'grabbing';
+      }
+    });
+
+    canvasEl.addEventListener('mousemove', (e) => {
+      if (isPanning) {
+        panX += e.clientX - lastMouseX;
+        panY += e.clientY - lastMouseY;
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+        renderNetwork(demoData.frames[currentFrame]);
+      }
+    });
+
+    canvasEl.addEventListener('mouseup', () => {
+      isPanning = false;
+      canvasEl.style.cursor = 'grab';
+    });
+
+    canvasEl.addEventListener('mouseleave', () => {
+      isPanning = false;
+      canvasEl.style.cursor = 'grab';
+    });
+
+    // Zoom: scroll wheel
+    canvasEl.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+      const newZoom = Math.max(0.2, Math.min(5.0, zoom * zoomFactor));
+
+      // Zoom toward mouse position
+      const rect = canvasEl.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      panX = mouseX - (mouseX - panX) * (newZoom / zoom);
+      panY = mouseY - (mouseY - panY) * (newZoom / zoom);
+      zoom = newZoom;
+
+      renderNetwork(demoData?.frames?.[currentFrame]);
+    });
+
+    // Set initial cursor
+    canvasEl.style.cursor = 'grab';
+
+    // Reset view button
+    document.getElementById('reset-view-btn').addEventListener('click', () => {
+      panX = 0;
+      panY = 0;
+      zoom = 1.0;
+      if (demoData && demoData.frames) {
+        renderNetwork(demoData.frames[currentFrame]);
+      }
+    });
+
+    function getBindings(frame) {
+      // Use sensor bindings from exporter if available
+      if (frame.bindings && Object.keys(frame.bindings).length > 0) {
+        return frame.bindings;
+      }
+      // Fallback to move-based binding
+      const bindings = {};
+      const lock = frame.subgraph_lock;
+      if (!lock || !frame.move_uci || frame.move_uci.length < 4) return bindings;
+      const to = frame.move_uci.substring(2, 4);
+      bindings[to] = lock.replace('_root', '').toUpperCase();
+      return bindings;
+    }
+
+    function renderBoard(fen, frame) {
+      boardEl.innerHTML = '';
+      const [placement] = fen.split(' ');
+      const rows = placement.split('/');
+      const bindings = showBindings.checked ? getBindings(frame) : {};
+      const files = 'abcdefgh';
+
+      for (let rank = 0; rank < 8; rank++) {
+        let file = 0;
+        for (const char of rows[rank]) {
+          if (/\d/.test(char)) {
+            for (let i = 0; i < parseInt(char); i++) {
+              const sq = document.createElement('div');
+              sq.className = `square ${(rank + file) % 2 === 0 ? 'light' : 'dark'}`;
+              const sqName = files[file] + (8 - rank);
+              if (bindings[sqName]) {
+                const tag = document.createElement('span');
+                tag.className = 'binding-tag';
+                tag.textContent = bindings[sqName];
+                sq.appendChild(tag);
+              }
+              boardEl.appendChild(sq);
+              file++;
+            }
+          } else {
+            const sq = document.createElement('div');
+            sq.className = `square ${(rank + file) % 2 === 0 ? 'light' : 'dark'}`;
+            const pieceInfo = PIECES[char];
+            if (pieceInfo) {
+              const piece = document.createElement('span');
+              piece.className = `piece ${pieceInfo.color}`;
+              piece.textContent = pieceInfo.ch;
+              sq.appendChild(piece);
+            }
+            const sqName = files[file] + (8 - rank);
+            if (bindings[sqName]) {
+              const tag = document.createElement('span');
+              tag.className = 'binding-tag';
+              tag.textContent = bindings[sqName];
+              sq.appendChild(tag);
+            }
+            boardEl.appendChild(sq);
+            file++;
+          }
+        }
+      }
+    }
+
+    // Proper tree layout: children centered under parents
+    function computeTreeLayout(topology, canvasWidth, canvasHeight) {
+      const { nodes, edges } = topology;
+      const positions = {};
+
+      // Build adjacency from SUB edges
+      const children = {};
+      const parents = {};
+      for (const edge of edges) {
+        if (edge.type === 'sub') {
+          if (!children[edge.src]) children[edge.src] = [];
+          children[edge.src].push(edge.dst);
+          parents[edge.dst] = edge.src;
+        }
+      }
+
+      // Find roots
+      const allIds = new Set(nodes.map(n => n.id));
+      const roots = nodes.filter(n => !parents[n.id]).map(n => n.id);
+
+      // Build node type lookup
+      const nodeType = {};
+      for (const n of nodes) nodeType[n.id] = n.type;
+
+      // Check if a node only has terminal children (simple sensor branch)
+      const hasOnlyTerminalChildren = (nid) => {
+        const kids = children[nid] || [];
+        if (kids.length === 0) return false;
+        return kids.every(k => nodeType[k] === 'terminal');
+      };
+
+      // Compute subtree widths (for centering)
+      const subtreeWidth = {};
+      const nodeWidthNormal = 70;   // Tighter horizontal spacing
+      const nodeWidthCompact = 50;  // Slightly more spacing for terminals
+
+      function calcWidth(nid) {
+        if (subtreeWidth[nid] !== undefined) return subtreeWidth[nid];
+        const kids = children[nid] || [];
+        if (kids.length === 0) {
+          // Terminal nodes get compact width
+          subtreeWidth[nid] = nodeType[nid] === 'terminal' ? nodeWidthCompact : nodeWidthNormal;
+        } else if (hasOnlyTerminalChildren(nid)) {
+          // Nodes with only terminal children get smaller width
+          subtreeWidth[nid] = nodeWidthCompact * Math.max(1, kids.length);
+        } else {
+          let total = 0;
+          for (const k of kids) total += calcWidth(k);
+          // Reduce width slightly to pull children toward center
+          subtreeWidth[nid] = Math.max(nodeWidthNormal, total * 0.85);
+        }
+        return subtreeWidth[nid];
+      }
+
+      for (const r of roots) calcWidth(r);
+      for (const n of nodes) {
+        if (subtreeWidth[n.id] === undefined) subtreeWidth[n.id] = nodeWidthCompact;
+      }
+
+      // Assign positions recursively
+      // More Y spacing for scripts = children converge toward center
+      const ySpacingByDepth = (depth, isTerminalChild, parentId) => {
+        if (isTerminalChild) return 45;   // Terminals close to parent
+        if (parentId === 'endgame_gate') return 130;  // Gate -> subgraph roots: longer drop
+        if (depth < 1) return 120;        // GameRoot -> strategies: big gap
+        if (depth < 2) return 110;        // Strategies -> next level
+        if (depth < 3) return 90;         // Other gate-level
+        return 70;                        // Deeper scripts
+      };
+
+      function layout(nid, x, y, depth = 0) {
+        positions[nid] = { x, y };
+        const kids = children[nid] || [];
+        if (kids.length === 0) return;
+
+        // Check if this is a subgraph root (kpk_root, kqk_root, krk_root)
+        const isSubgraphRoot = nid.endsWith('_root') && nid !== 'GameRoot';
+
+        if (isSubgraphRoot) {
+          // Two-row layout: terminals in first row(s), scripts below
+          const terminals = kids.filter(k => nodeType[k] === 'terminal');
+          const scripts = kids.filter(k => nodeType[k] !== 'terminal');
+
+          // Layout terminals - use multiple rows if many terminals
+          const maxTerminalsPerRow = 8;
+          const terminalSpacing = 40;  // Tighter spacing for terminals
+          const numTerminalRows = Math.ceil(terminals.length / maxTerminalsPerRow);
+
+          for (let row = 0; row < numTerminalRows; row++) {
+            const rowStart = row * maxTerminalsPerRow;
+            const rowEnd = Math.min(rowStart + maxTerminalsPerRow, terminals.length);
+            const rowTerminals = terminals.slice(rowStart, rowEnd);
+            const rowWidth = rowTerminals.length * terminalSpacing;
+            let curX = x - rowWidth / 2;
+            const terminalY = y + 45 + (row * 35);  // Each row 35px apart
+
+            for (let i = 0; i < rowTerminals.length; i++) {
+              const k = rowTerminals[i];
+              positions[k] = { x: curX + terminalSpacing / 2, y: terminalY, terminalIndex: rowStart + i };
+              curX += terminalSpacing;
+            }
+          }
+
+          const terminalRowsHeight = numTerminalRows * 35;
+
+          // Layout scripts below terminal rows (centered under parent)
+          if (scripts.length > 0) {
+            let scriptTotalWidth = 0;
+            for (const k of scripts) scriptTotalWidth += subtreeWidth[k];
+            let curX = x - scriptTotalWidth / 2;
+            const scriptY = y + 45 + terminalRowsHeight + 20;  // Below terminal rows
+            for (const k of scripts) {
+              const w = subtreeWidth[k];
+              layout(k, curX + w / 2, scriptY, depth + 1);
+              curX += w;
+            }
+          }
+        } else if (nid === 'GameRoot') {
+          // Special layout for GameRoot: strategies spread out, terminals centered below
+          const terminals = kids.filter(k => nodeType[k] === 'terminal');
+          const strategies = kids.filter(k => nodeType[k] !== 'terminal');
+
+          // Layout strategies (WinStrategy, DrawStrategy, SurviveStrategy)
+          let strategyTotalWidth = 0;
+          for (const k of strategies) strategyTotalWidth += subtreeWidth[k];
+          let curX = x - strategyTotalWidth / 2;
+          const strategyY = y + ySpacingByDepth(depth, false, nid);
+          for (const k of strategies) {
+            const w = subtreeWidth[k];
+            layout(k, curX + w / 2, strategyY, depth + 1);
+            curX += w;
+          }
+
+          // Layout terminals centered directly below GameRoot (in the triangle space)
+          const terminalSpacing = 45;
+          const terminalsTotalWidth = terminals.length * terminalSpacing;
+          curX = x - terminalsTotalWidth / 2;
+          const terminalY = y + 55;  // Below GameRoot but above strategies' children
+          for (let i = 0; i < terminals.length; i++) {
+            const k = terminals[i];
+            positions[k] = { x: curX + terminalSpacing / 2, y: terminalY, terminalIndex: i };
+            curX += terminalSpacing;
+          }
+        } else {
+          // Normal layout for other nodes
+          let totalWidth = 0;
+          for (const k of kids) totalWidth += subtreeWidth[k];
+
+          // Extra X spread for endgame_gate's children (subgraph roots)
+          const xMultiplier = (nid === 'endgame_gate') ? 1.5 : 1.0;
+
+          let curX = x - (totalWidth * xMultiplier) / 2;
+          for (const k of kids) {
+            const w = subtreeWidth[k] * xMultiplier;
+            const isTerminal = nodeType[k] === 'terminal';
+            const nextY = y + ySpacingByDepth(depth, isTerminal, nid);
+            layout(k, curX + w / 2, nextY, depth + 1);
+            curX += w;
+          }
+        }
+      }
+
+      // Layout from roots
+      let totalRootWidth = 0;
+      for (const r of roots) totalRootWidth += subtreeWidth[r];
+
+      let curX = canvasWidth / 2 - totalRootWidth / 2;
+      for (const r of roots) {
+        const w = subtreeWidth[r];
+        layout(r, curX + w / 2, 40);
+        curX += w;
+      }
+
+      // Handle orphans
+      let orphanY = 40;
+      for (const n of nodes) {
+        if (!positions[n.id]) {
+          positions[n.id] = { x: 50, y: orphanY };
+          orphanY += 30;
+        }
+      }
+
+      return positions;
+    }
+
+    // Draw diamond for terminal
+    function drawDiamond(ctx, x, y, size) {
+      ctx.beginPath();
+      ctx.moveTo(x, y - size);
+      ctx.lineTo(x + size, y);
+      ctx.lineTo(x, y + size);
+      ctx.lineTo(x - size, y);
+      ctx.closePath();
+    }
+
+    function renderNetwork(frame) {
+      if (!demoData || !demoData.topology) return;
+
+      const parent = canvasEl.parentElement;
+      canvasEl.width = parent.clientWidth;
+      canvasEl.height = parent.clientHeight - 100;
+
+      ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+
+      // Apply pan and zoom transform
+      ctx.save();
+      ctx.translate(panX, panY);
+      ctx.scale(zoom, zoom);
+
+      const { nodes, edges } = demoData.topology;
+      const positions = computeTreeLayout(demoData.topology, canvasEl.width, canvasEl.height);
+
+      const nodeStates = frame.node_states || {};
+      const activations = frame.node_activations || {};
+      const lock = frame.subgraph_lock;
+
+      // Draw edges
+      if (showEdges.checked) {
+        for (const edge of edges) {
+          const srcPos = positions[edge.src];
+          const dstPos = positions[edge.dst];
+          if (!srcPos || !dstPos) continue;
+
+          const srcAct = activations[edge.src] || 0;
+          const dstAct = activations[edge.dst] || 0;
+          const isActive = srcAct > 0.3 || dstAct > 0.3;
+
+          if (!showInactive.checked && !isActive) continue;
+
+          ctx.beginPath();
+          ctx.moveTo(srcPos.x, srcPos.y);
+          ctx.lineTo(dstPos.x, dstPos.y);
+          ctx.strokeStyle = edge.trainable ? '#818cf8' : (isActive ? '#22c55e' : '#334155');
+          ctx.lineWidth = isActive ? 2 : 1;
+          ctx.globalAlpha = isActive ? 0.8 : 0.25;
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
+      }
+
+      // Draw nodes
+      for (const node of nodes) {
+        const pos = positions[node.id];
+        if (!pos) continue;
+
+        const state = nodeStates[node.id] || 'INACTIVE';
+        const activation = activations[node.id] || 0;
+
+        if (!showInactive.checked && activation < 0.1) continue;
+
+        const isLocked = lock && (node.id === lock || node.id.startsWith(lock.replace('_root', '_')));
+
+        let color = STATE_COLORS[state] || STATE_COLORS.INACTIVE;
+        if (isLocked && state === 'INACTIVE') color = '#8b5cf6';
+
+        const size = 10 + activation * 5;
+        const isTerminal = node.type === 'terminal';
+
+        // Opacity based on continuous activation
+        const opacity = Math.max(0.3, activation);
+
+        // Glow for high activation
+        if (activation > 0.5) {
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, size + 5, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(34, 197, 94, ${activation * 0.3})`;
+          ctx.fill();
+        }
+
+        ctx.globalAlpha = opacity;
+
+        // Draw shape
+        if (isTerminal) {
+          drawDiamond(ctx, pos.x, pos.y, size);
+          ctx.fillStyle = color;
+          ctx.fill();
+          ctx.strokeStyle = '#0f172a';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        } else {
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, size, 0, Math.PI * 2);
+          ctx.fillStyle = color;
+          ctx.fill();
+          ctx.strokeStyle = '#0f172a';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+
+        // Label
+        if (showLabels.checked && size > 8) {
+          ctx.fillStyle = '#94a3b8';  // Lighter color for labels
+          ctx.textAlign = 'center';
+
+          if (isTerminal) {
+            // Terminal nodes: full label below the node, alternating y-offset
+            ctx.font = '10px Segoe UI';
+            ctx.textBaseline = 'top';
+            const label = node.id.replace('_root', '').replace(/_/g, ' ');
+            // Alternate y-offset based on terminal index (stored in position) to avoid label overlap
+            const termIdx = pos.terminalIndex !== undefined ? pos.terminalIndex :
+              Array.from(demoData.topology.nodes).findIndex(n => n.id === node.id);
+            const yOffset = (termIdx % 2 === 0) ? 4 : 18;
+            ctx.fillText(label, pos.x, pos.y + size + yOffset);
+          } else {
+            // Script nodes: truncated label inside
+            ctx.font = '9px Segoe UI';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#fff';
+            const label = node.id.replace('_root', '').replace(/_/g, ' ').substring(0, 10);
+            ctx.fillText(label, pos.x, pos.y);
+          }
+        }
+
+        ctx.globalAlpha = 1;  // Reset opacity
+      }
+
+      // Restore transform
+      ctx.restore();
+    }
+
+    function updateDisplay() {
+      if (!demoData || !demoData.frames) return;
+      const frame = demoData.frames[currentFrame];
+      if (!frame) return;
+
+      renderBoard(frame.board_fen, frame);
+      renderNetwork(frame);
+
+      moveDisplay.textContent = frame.move_uci || '—';
+      fenDisplay.textContent = frame.board_fen;
+
+      const lock = frame.subgraph_lock;
+      if (lock) {
+        lockBadge.textContent = `🔒 ${lock.replace('_root', '').toUpperCase()}`;
+        lockBadge.className = `status-badge badge-${lock.replace('_root', '')}`;
+      } else {
+        lockBadge.textContent = 'No Lock';
+        lockBadge.className = 'status-badge badge-none';
+      }
+
+      const gates = frame.gate_activations || {};
+      document.getElementById('gate-kpk').style.width = `${(gates.kpk || 0) * 100}%`;
+      document.getElementById('gate-kqk').style.width = `${(gates.kqk || 0) * 100}%`;
+      document.getElementById('gate-krk').style.width = `${(gates.krk || 0) * 100}%`;
+
+      sliderEl.value = currentFrame;
+      labelEl.textContent = `Frame ${currentFrame + 1} / ${demoData.frames.length}`;
+    }
+
+    function loadDemoData(data) {
+      demoData = data;
+      sliderEl.max = demoData.frames.length - 1;
+      currentFrame = 0;
+      trainedBadge.textContent = demoData.trained ? 'TRAINED' : 'UNTRAINED';
+      trainedBadge.className = `status-badge ${demoData.trained ? 'badge-trained' : 'badge-untrained'}`;
+      updateDisplay();
+    }
+
+    async function loadDemo(path) {
+      try {
+        const res = await fetch(path);
+        const data = await res.json();
+        loadDemoData(data);
+        fileName.textContent = path.split('/').pop();
+      } catch (err) {
+        console.error('Load failed:', err);
+        alert(`Failed to load ${path}`);
+      }
+    }
+
+    function togglePlay() {
+      if (playInterval) {
+        clearInterval(playInterval);
+        playInterval = null;
+        playBtn.textContent = '▶ Play';
+      } else {
+        playInterval = setInterval(() => {
+          currentFrame = (currentFrame + 1) % demoData.frames.length;
+          updateDisplay();
+        }, 600);
+        playBtn.textContent = '⏸ Pause';
+      }
+    }
+
+    playBtn.addEventListener('click', togglePlay);
+    document.getElementById('step-back-btn').addEventListener('click', () => {
+      if (playInterval) togglePlay();
+      currentFrame = Math.max(currentFrame - 1, 0);
+      updateDisplay();
+    });
+    stepBtn.addEventListener('click', () => {
+      if (playInterval) togglePlay();
+      currentFrame = Math.min(currentFrame + 1, demoData.frames.length - 1);
+      updateDisplay();
+    });
+    sliderEl.addEventListener('input', (e) => {
+      currentFrame = parseInt(e.target.value);
+      updateDisplay();
+      if (playInterval) togglePlay();
+    });
+    fileSelect.addEventListener('change', (e) => {
+      if (playInterval) togglePlay();
+      loadDemo(e.target.value);
+    });
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (playInterval) togglePlay();
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = JSON.parse(reader.result);
+          loadDemoData(data);
+          fileName.textContent = file.name;
+          fileSelect.value = '';
+        } catch (err) {
+          console.error('Invalid JSON file:', err);
+          alert('Invalid JSON file.');
+        }
+      };
+      reader.readAsText(file);
+    });
+    showLabels.addEventListener('change', updateDisplay);
+    showEdges.addEventListener('change', updateDisplay);
+    showInactive.addEventListener('change', updateDisplay);
+    showBindings.addEventListener('change', updateDisplay);
+    window.addEventListener('resize', () => demoData && updateDisplay());
+
+    loadDemo('sample_data/bridge_trained.json');
+  </script>
+</body>
+
+</html>

@@ -11,6 +11,7 @@ Runs a single ReCoN engine instance across the whole game.
 
 import argparse
 from collections import deque
+import gc
 import chess
 import chess.engine
 import sys
@@ -44,7 +45,7 @@ from recon_lite_chess import (
     create_confinement_moves, create_barrier_placement_moves
 )
 from recon_lite_chess.krk_nodes import wire_default_krk
-from recon_lite_chess.strategy import (
+from recon_lite_chess.krk_strategy import (
     compute_phase_logits,
     ensure_phase_states,
     neutral_outcome_mode,
@@ -93,6 +94,10 @@ from recon_lite.plasticity.modulation import (
 from recon_lite.plasticity.consolidate import (
     ConsolidationConfig,
     ConsolidationEngine,
+)
+from recon_lite.nodes.stem_cell import (
+    StemCellManager,
+    StemCellConfig,
 )
 from recon_lite_chess.eval.heuristic import (
     eval_position,
@@ -299,15 +304,15 @@ def _update_binding_table(table: BindingTable, board: chess.Board) -> dict:
 
     with table.begin_tick("krk/core/kings") as session:
         if our_king is not None:
-            session.reserve(BindingInstance("our_king", {_square_token(our_king)}))
+            session.reserve(BindingInstance("our_king", {_square_token(our_king)}, node_id="our_king"))
         if enemy_king is not None:
-            session.reserve(BindingInstance("enemy_king", {_square_token(enemy_king)}))
+            session.reserve(BindingInstance("enemy_king", {_square_token(enemy_king)}, node_id="enemy_king"))
 
     with table.begin_tick("krk/p1/drive") as session:
         if rook_sq is not None:
-            session.reserve(BindingInstance("rook_anchor", {_square_token(rook_sq)}))
+            session.reserve(BindingInstance("rook_anchor", {_square_token(rook_sq)}, node_id="rook_anchor"))
         if enemy_king is not None:
-            session.reserve(BindingInstance("target_enemy", {_square_token(enemy_king)}))
+            session.reserve(BindingInstance("target_enemy", {_square_token(enemy_king)}, node_id="target_enemy"))
 
     with table.begin_tick("krk/p2/shrink") as session:
         if enemy_king is not None:
@@ -315,12 +320,12 @@ def _update_binding_table(table: BindingTable, board: chess.Board) -> dict:
                 fence = enemy_nearest_edge_info(board, enemy_king)
                 line_tokens = _line_tokens(fence["axis"], fence["target_line"])
                 if line_tokens:
-                    session.reserve(BindingInstance("target_fence", set(line_tokens)))
+                    session.reserve(BindingInstance("target_fence", set(line_tokens), node_id="target_fence"))
             except Exception:
                 pass
             corner_tokens = _box_corner_tokens(enemy_king)
             if corner_tokens:
-                session.reserve(BindingInstance("box_corners", set(corner_tokens)))
+                session.reserve(BindingInstance("box_corners", set(corner_tokens), node_id="box_corners"))
 
     return table.snapshot()
 
@@ -532,7 +537,9 @@ def _decision_cycle(engine: ReConEngine,
                     modulation_config: Optional[ModulationConfig] = None,
                     last_eval: Optional[float] = None,
                     sf_engine: Optional["chess.engine.SimpleEngine"] = None,
-                    eval_mode: str = "heuristic") -> tuple[dict | None, list[dict], int, Optional[float]]:
+                    eval_mode: str = "heuristic",
+                    # M8 stem cell parameter
+                    stem_cell_manager: Optional[StemCellManager] = None) -> tuple[dict | None, list[dict], int, Optional[float]]:
     env["board"] = board
     env["chosen_move"] = None
     proposals: list[dict] = []
@@ -625,6 +632,11 @@ def _decision_cycle(engine: ReConEngine,
                 env["m3_modulators"] = modulators.to_dict()
                 if deltas:
                     env["m3_weight_deltas"] = deltas
+                
+                # M8: Feed stem cells with significant rewards
+                if stem_cell_manager is not None and reward_tick is not None:
+                    if abs(reward_tick) > 0.2:  # Only feed significant rewards
+                        stem_cell_manager.tick(board, reward_tick, ticks)
 
             current_eval = new_eval
 
@@ -904,7 +916,9 @@ def play_persistent_game(initial_fen: str | None = None,
                          bandit_priors_path: Optional[Path] = None,
                          consolidation_eta: float = DEFAULT_CONSOLIDATE_ETA,
                          consolidation_min_episodes: int = DEFAULT_CONSOLIDATE_MIN_EPISODES,
-                         consolidation_engine: Optional[ConsolidationEngine] = None) -> dict:
+                         consolidation_engine: Optional[ConsolidationEngine] = None,
+                         # M8 stem cell parameters
+                         stem_cell_manager: Optional[StemCellManager] = None) -> dict:
     if split_logs:
         viz_logger = RunLogger()
         debug_logger = RunLogger()
@@ -1163,6 +1177,8 @@ def play_persistent_game(initial_fen: str | None = None,
                 last_eval=last_eval,
                 sf_engine=sf_engine,
                 eval_mode=eval_mode,
+                # M8 stem cell
+                stem_cell_manager=stem_cell_manager,
             )
             move_record = selected
             move_uci = move_record["move"] if move_record else None
@@ -1433,7 +1449,8 @@ def preview_decision(board: chess.Board,
     return {"decision": decision, "proposals": proposals, "ticks": ticks}
 
 
-def run_batch(n_games: int = 10, max_plies: int = 200, **play_kwargs) -> dict:
+def run_batch(n_games: int = 10, max_plies: int = 200, trace_db: Optional["TraceDB"] = None, pack_paths: Optional[list] = None, stem_cell_enabled: bool = False, **play_kwargs) -> dict:
+    """Run N games in batch mode with memory management."""
     stats = {
         "games": [],
         "mates": 0,
@@ -1442,17 +1459,55 @@ def run_batch(n_games: int = 10, max_plies: int = 200, **play_kwargs) -> dict:
         "total_mate_plies": 0,
         "avg_mate_length": None,
     }
+    
+    # M8: Create shared stem cell manager if enabled
+    stem_manager = None
+    if stem_cell_enabled:
+        stem_manager = StemCellManager(
+            max_cells=20,
+            spawn_rate=0.05,  # Conservative spawn rate
+            config=StemCellConfig(
+                min_samples=50,
+                reward_threshold=0.2,
+                specialization_threshold=0.6,
+            ),
+        )
+    
     for i in range(n_games):
-        res = play_persistent_game(initial_fen=None, max_plies=max_plies, **play_kwargs)
+        res = play_persistent_game(
+            initial_fen=None, 
+            max_plies=max_plies, 
+            trace_db=trace_db,
+            trace_episode_id=f"krk-batch-{i}",
+            pack_paths=pack_paths,
+            stem_cell_manager=stem_manager,
+            **play_kwargs
+        )
         stats["games"].append(res)
         if res.get("checkmate"):
             stats["mates"] += 1
             stats["total_mate_plies"] += res.get("plies", 0)
+        if res.get("stalemate"):
+            stats["stalls"] += 1
         if res.get("rook_lost"):
             stats["rook_losses"] += 1
-        # No explicit stall flag in persistent; watchdog fallback is logged only
+        
+        # Memory management: clean up between games
+        gc.collect()
+        
     if stats["mates"]:
         stats["avg_mate_length"] = stats["total_mate_plies"]/stats["mates"]
+    
+    # M8: Report stem cell stats
+    if stem_manager:
+        stem_stats = {
+            "total_cells": len(stem_manager.cells),
+            "candidates": len(stem_manager.get_specialization_candidates()),
+            "total_samples": sum(len(c.samples) for c in stem_manager.cells.values()),
+        }
+        stats["stem_cells"] = stem_stats
+        print(f"Stem cells: {stem_stats}")
+    
     print(stats)
     return stats
 
@@ -1496,6 +1551,8 @@ def main():
     parser.add_argument("--bandit-priors", type=Path, default=None, help="Path to load/save bandit priors")
     parser.add_argument("--consolidate-eta", type=float, default=DEFAULT_CONSOLIDATE_ETA, help="Consolidation learning rate")
     parser.add_argument("--consolidate-min-episodes", type=int, default=DEFAULT_CONSOLIDATE_MIN_EPISODES, help="Minimum episodes before consolidation")
+    # M8 stem cell arguments
+    parser.add_argument("--stem-cells", action="store_true", help="Enable M8 stem cell pattern discovery")
     # Single graph; demo uses the shared KRK network
     args = parser.parse_args()
 
@@ -1515,6 +1572,9 @@ def main():
                 except Exception:
                     pass
 
+        # Create trace_db for batch mode
+        trace_db = TraceDB(args.trace_out) if args.trace_out else None
+        
         run_batch(
             args.batch,
             max_plies=args.max_plies,
@@ -1549,7 +1609,16 @@ def main():
             consolidation_eta=args.consolidate_eta,
             consolidation_min_episodes=args.consolidate_min_episodes,
             consolidation_engine=consol_engine,
+            # Trace DB for JSONL output
+            trace_db=trace_db,
+            pack_paths=args.pack if hasattr(args, 'pack') else [],
+            # M8 stem cells
+            stem_cell_enabled=args.stem_cells,
         )
+
+        # Flush trace DB after batch
+        if trace_db:
+            trace_db.flush()
 
         # M4: Save final consolidation state after batch
         if consol_engine and args.consolidate_pack:

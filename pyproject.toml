@@ -6,6 +6,9 @@ readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
     "python-chess>=1.999",
+    "numpy>=1.20.0",
+    "torch>=2.0.0",
+    "pytest>=8.4.2",
 ]
 
 [build-system]

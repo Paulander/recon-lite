@@ -1,0 +1,222 @@
+STAGE 0: Mate_In_1
+Target Win Rate: 0.98
+    Win Rate: 95.0% (38W/2L/0S/0D)
+    Cells: 0E/10C/0T, total_samples=400
+    Final Win Rate: 100.0%
+STAGE 1: Edge_Trapped_Tempo
+Target Win Rate: 0.95
+    Win Rate: 67.5% (27W/13L/0S/0D)
+    Cells: 0E/10C/0T, total_samples=800
+    Win Rate: 75.0% (30W/10L/0S/0D)
+    Cells: 0E/7C/3T, total_samples=1200
+    Win Rate: 72.5% (29W/11L/0S/0D)
+    Cells: 0E/4C/6T, total_samples=1480
+    Win Rate: 75.0% (30W/10L/0S/0D)
+    Cells: 0E/1C/9T, total_samples=1640
+    Win Rate: 77.5% (31W/9L/0S/0D)
+    Cells: 0E/0C/10T, total_samples=1680
+    Final Win Rate: 73.8%
+STAGE 2: Mate_In_2
+Target Win Rate: 0.95
+    Win Rate: 25.0% (10W/30L/0S/0D)
+    Cells: 0E/0C/10T, total_samples=1680
+    Win Rate: 15.0% (6W/34L/0S/0D)
+    Cells: 0E/0C/10T, total_samples=1680
+    Win Rate: 12.5% (5W/35L/0S/0D)
+    Cells: 0E/0C/10T, total_samples=1680
+    Win Rate: 17.5% (7W/33L/0S/0D)
+    Cells: 0E/3C/10T, total_samples=1848
+    Win Rate: 15.0% (6W/34L/0S/0D)
+    Cells: 0E/3C/10T, total_samples=2025
+    Final Win Rate: 17.0%
+STAGE 3: Edge_Fence_Knight
+Target Win Rate: 0.95
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/13T, total_samples=2211
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/13T, total_samples=2211
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/13T, total_samples=2211
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/16T, total_samples=2415
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/16T, total_samples=2415
+    Final Win Rate: 0.0%
+STAGE 4: Edge_Fence_Approach
+Target Win Rate: 0.9
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/16T, total_samples=2415
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/16T, total_samples=2415
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/16T, total_samples=2415
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/3C/16T, total_samples=2604
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/3C/16T, total_samples=2796
+    Final Win Rate: 0.0%
+STAGE 5: Edge_Fence_Deep
+Target Win Rate: 0.85
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/3C/16T, total_samples=2916
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/3C/16T, total_samples=3036
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/3C/16T, total_samples=3156
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/6C/16T, total_samples=3396
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/6C/16T, total_samples=3636
+    Final Win Rate: 0.0%
+STAGE 6: Opposition_Approach
+Target Win Rate: 0.65
+    Win Rate: 35.0% (14W/26L/0S/0D)
+    Cells: 0E/6C/16T, total_samples=4032
+    Win Rate: 32.5% (13W/27L/0S/0D)
+    Cells: 0E/6C/16T, total_samples=4434
+    Win Rate: 25.0% (10W/30L/0S/0D)
+    Cells: 0E/6C/16T, total_samples=4764
+    Win Rate: 40.0% (16W/24L/0S/0D)
+    Cells: 0E/6C/16T, total_samples=4956
+    Win Rate: 30.0% (12W/28L/0S/0D)
+    Cells: 0E/6C/16T, total_samples=5160
+    Final Win Rate: 32.5%
+STAGE 7: Tempo_Wait
+Target Win Rate: 0.6
+    Win Rate: 37.5% (15W/25L/0S/0D)
+    Cells: 0E/6C/16T, total_samples=5415
+    Win Rate: 32.5% (13W/27L/0S/0D)
+    Cells: 0E/6C/16T, total_samples=5415
+    Win Rate: 32.5% (13W/27L/0S/0D)
+    Cells: 0E/6C/16T, total_samples=5415
+    Win Rate: 30.0% (12W/28L/0S/0D)
+    Cells: 0E/6C/16T, total_samples=5415
+    Win Rate: 40.0% (16W/24L/0S/0D)
+    Cells: 0E/6C/16T, total_samples=5415
+    Final Win Rate: 34.5%
+STAGE 8: Fence_Established
+Target Win Rate: 0.6
+    Win Rate: 55.0% (22W/18L/0S/0D)
+    Cells: 0E/6C/16T, total_samples=5415
+    Final Win Rate: 60.0%
+STAGE 9: Box_Small
+Target Win Rate: 0.6
+    Win Rate: 35.0% (14W/26L/0S/0D)
+    Cells: 0E/6C/16T, total_samples=5415
+    Win Rate: 45.0% (18W/22L/0S/0D)
+    Cells: 0E/6C/16T, total_samples=5415
+    Win Rate: 47.5% (19W/21L/0S/0D)
+    Cells: 0E/6C/16T, total_samples=5415
+    Win Rate: 27.5% (11W/29L/0S/0D)
+    Cells: 0E/6C/16T, total_samples=5415
+    Win Rate: 32.5% (13W/27L/0S/0D)
+    Cells: 0E/6C/16T, total_samples=5415
+    Final Win Rate: 37.6%
+STAGE 10: Box_Medium
+Target Win Rate: 0.55
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/6C/16T, total_samples=5415
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/6C/16T, total_samples=5415
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/6C/16T, total_samples=5415
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/6C/16T, total_samples=5415
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/6C/16T, total_samples=5415
+    Final Win Rate: 0.0%
+STAGE 11: Anchored_Cut
+Target Win Rate: 0.9
+    Win Rate: 15.0% (6W/34L/0S/0D)
+    Cells: 0E/3C/19T, total_samples=5415
+    Win Rate: 27.5% (11W/29L/0S/0D)
+    Cells: 0E/0C/22T, total_samples=5415
+    Win Rate: 15.0% (6W/34L/0S/0D)
+    Cells: 0E/0C/22T, total_samples=5415
+    Win Rate: 22.5% (9W/31L/0S/0D)
+    Cells: 0E/0C/22T, total_samples=5415
+    Win Rate: 17.5% (7W/33L/0S/0D)
+    Cells: 0E/0C/22T, total_samples=5415
+    Final Win Rate: 19.5%
+STAGE 12: Edge_Cut_Hold
+Target Win Rate: 0.8
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/22T, total_samples=5415
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/22T, total_samples=5415
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/22T, total_samples=5415
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/22T, total_samples=5415
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/22T, total_samples=5415
+    Final Win Rate: 0.0%
+STAGE 13: King_Close_1
+Target Win Rate: 0.9
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/22T, total_samples=5415
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/22T, total_samples=5415
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/22T, total_samples=5415
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/22T, total_samples=5415
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/22T, total_samples=5415
+    Final Win Rate: 0.0%
+STAGE 14: King_Close_2
+Target Win Rate: 0.85
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/22T, total_samples=5415
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/22T, total_samples=5415
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/22T, total_samples=5415
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/22T, total_samples=5415
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/22T, total_samples=5415
+    Final Win Rate: 0.0%
+STAGE 15: King_Far_Cut_Held
+Target Win Rate: 0.65
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/22T, total_samples=5415
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/22T, total_samples=5415
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/22T, total_samples=5415
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/22T, total_samples=5415
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/22T, total_samples=5415
+    Final Win Rate: 0.0%
+STAGE 16: Full_KRK
+Target Win Rate: 0.5
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/22T, total_samples=5415
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/22T, total_samples=5415
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/22T, total_samples=5415
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/22T, total_samples=5415
+    Win Rate: 0.0% (0W/40L/0S/0D)
+    Cells: 0E/0C/22T, total_samples=5415
+    Final Win Rate: 0.0%
+    Win Rate: 100.0%
+    Win Rate: 73.8%
+    Win Rate: 17.0%
+    Win Rate: 0.0%
+    Win Rate: 0.0%
+    Win Rate: 0.0%
+    Win Rate: 32.5%
+    Win Rate: 34.5%
+    Win Rate: 60.0%
+    Win Rate: 37.6%
+    Win Rate: 0.0%
+    Win Rate: 19.5%
+    Win Rate: 0.0%
+    Win Rate: 0.0%
+    Win Rate: 0.0%
+    Win Rate: 0.0%
+    Win Rate: 0.0%

@@ -1,0 +1,454 @@
+==============================================
+🎯 Daytime Tactics Training
+==============================================
+[11:02:05] Configuration:
+[11:02:05]   Stockfish depth: 6
+[11:02:05]   Positions per tactic: 500
+[11:02:05]   Quick mode: false
+[11:02:05]   Tactics to train: fork pin skewer hangingPiece backRankMate discoveredAttack attraction deflection doubleCheck smotheredMate trappedPiece quietMove sacrifice exposedKing interference zugzwang
+[11:02:05]   Log file: /home/paulander/git/recon-lite/logs/daytime_tactics_20251205_110205.log
+
+[11:02:05] 📝 Training: fork
+Loaded consolidation state from /home/paulander/git/recon-lite/weights/tactics/fork_consol.json
+
+=== Tactical Evaluation ===
+Files to evaluate: 1
+Training mode: ENABLED
+
+--- lichess_fork.fen (fork) ---
+Processed 50/500 positions...Processed 100/500 positions...Processed 150/500 positions...Processed 200/500 positions...Processed 250/500 positions...Processed 300/500 positions...Processed 350/500 positions...Processed 400/500 positions...Processed 450/500 positions...Processed 500/500 positions...
+Detection rate: 81.0%
+Accuracy: 9.2%
+Applying training rewards...
+Applied consolidation to 2 edges
+Saved consolidation state to /home/paulander/git/recon-lite/weights/tactics/fork_consol.json
+  Total episodes accumulated: 1550
+  Edges tracked: 14
+
+=== Summary ===
+Total positions: 500
+Detection rate: 81.0%
+Accuracy: 9.2%
+
+By tactic:
+  fork: 46/500 correct (9.2%), 405/500 detected (81.0%)
+
+TACTICS_EVAL_RESULT: total=500 detected=405 correct=46 accuracy=0.092
+[11:02:06]    ✓ 500 positions, 405 detected, 46 correct (0.092%)
+[11:02:06] 📝 Training: pin
+Loaded consolidation state from /home/paulander/git/recon-lite/weights/tactics/pin_consol.json
+
+=== Tactical Evaluation ===
+Files to evaluate: 1
+Training mode: ENABLED
+
+--- lichess_pin.fen (pin) ---
+Processed 50/500 positions...Processed 100/500 positions...Processed 150/500 positions...Processed 200/500 positions...Processed 250/500 positions...Processed 300/500 positions...Processed 350/500 positions...Processed 400/500 positions...Processed 450/500 positions...Processed 500/500 positions...
+Detection rate: 12.4%
+Accuracy: 2.2%
+Applying training rewards...
+Applied consolidation to 2 edges
+Saved consolidation state to /home/paulander/git/recon-lite/weights/tactics/pin_consol.json
+  Total episodes accumulated: 1500
+  Edges tracked: 14
+
+=== Summary ===
+Total positions: 500
+Detection rate: 12.4%
+Accuracy: 2.2%
+
+By tactic:
+  pin: 11/500 correct (2.2%), 62/500 detected (12.4%)
+
+TACTICS_EVAL_RESULT: total=500 detected=62 correct=11 accuracy=0.022
+[11:02:06]    ✓ 500 positions, 62 detected, 11 correct (0.022%)
+[11:02:06] 📝 Training: skewer
+Loaded consolidation state from /home/paulander/git/recon-lite/weights/tactics/skewer_consol.json
+
+=== Tactical Evaluation ===
+Files to evaluate: 1
+Training mode: ENABLED
+
+--- lichess_skewer.fen (skewer) ---
+Processed 50/500 positions...Processed 100/500 positions...Processed 150/500 positions...Processed 200/500 positions...Processed 250/500 positions...Processed 300/500 positions...Processed 350/500 positions...Processed 400/500 positions...Processed 450/500 positions...Processed 500/500 positions...
+Detection rate: 24.8%
+Accuracy: 4.8%
+Applying training rewards...
+Applied consolidation to 2 edges
+Saved consolidation state to /home/paulander/git/recon-lite/weights/tactics/skewer_consol.json
+  Total episodes accumulated: 1500
+  Edges tracked: 14
+
+=== Summary ===
+Total positions: 500
+Detection rate: 24.8%
+Accuracy: 4.8%
+
+By tactic:
+  skewer: 24/500 correct (4.8%), 124/500 detected (24.8%)
+
+TACTICS_EVAL_RESULT: total=500 detected=124 correct=24 accuracy=0.048
+[11:02:06]    ✓ 500 positions, 124 detected, 24 correct (0.048%)
+[11:02:06] 📝 Training: hangingPiece
+Loaded consolidation state from /home/paulander/git/recon-lite/weights/tactics/hangingPiece_consol.json
+
+=== Tactical Evaluation ===
+Files to evaluate: 1
+Training mode: ENABLED
+
+--- lichess_hangingPiece.fen (hangingPiece) ---
+Processed 50/500 positions...Processed 100/500 positions...Processed 150/500 positions...Processed 200/500 positions...Processed 250/500 positions...Processed 300/500 positions...Processed 350/500 positions...Processed 400/500 positions...Processed 450/500 positions...Processed 500/500 positions...
+Detection rate: 27.0%
+Accuracy: 9.4%
+Applying training rewards...
+Applied consolidation to 2 edges
+Saved consolidation state to /home/paulander/git/recon-lite/weights/tactics/hangingPiece_consol.json
+  Total episodes accumulated: 1000
+  Edges tracked: 14
+
+=== Summary ===
+Total positions: 500
+Detection rate: 27.0%
+Accuracy: 9.4%
+
+By tactic:
+  hangingPiece: 47/500 correct (9.4%), 135/500 detected (27.0%)
+
+TACTICS_EVAL_RESULT: total=500 detected=135 correct=47 accuracy=0.094
+[11:02:07]    ✓ 500 positions, 135 detected, 47 correct (0.094%)
+[11:02:07] 📝 Training: backRankMate
+Loaded consolidation state from /home/paulander/git/recon-lite/weights/tactics/backRankMate_consol.json
+
+=== Tactical Evaluation ===
+Files to evaluate: 1
+Training mode: ENABLED
+
+--- lichess_backRankMate.fen (backRankMate) ---
+Processed 50/500 positions...Processed 100/500 positions...Processed 150/500 positions...Processed 200/500 positions...Processed 250/500 positions...Processed 300/500 positions...Processed 350/500 positions...Processed 400/500 positions...Processed 450/500 positions...Processed 500/500 positions...
+Detection rate: 0.0%
+Accuracy: 0.0%
+Applying training rewards...
+Applied consolidation to 2 edges
+Saved consolidation state to /home/paulander/git/recon-lite/weights/tactics/backRankMate_consol.json
+  Total episodes accumulated: 1000
+  Edges tracked: 14
+
+=== Summary ===
+Total positions: 500
+Detection rate: 0.0%
+Accuracy: 0.0%
+
+By tactic:
+  backRankMate: 0/500 correct (0.0%), 0/500 detected (0.0%)
+
+TACTICS_EVAL_RESULT: total=500 detected=0 correct=0 accuracy=0.000
+[11:02:07]    ✓ 500 positions, 0 detected, 0 correct (0.000%)
+[11:02:07] 📝 Training: discoveredAttack
+Loaded consolidation state from /home/paulander/git/recon-lite/weights/tactics/discoveredAttack_consol.json
+
+=== Tactical Evaluation ===
+Files to evaluate: 1
+Training mode: ENABLED
+
+--- lichess_discoveredAttack.fen (discoveredAttack) ---
+Processed 50/500 positions...Processed 100/500 positions...Processed 150/500 positions...Processed 200/500 positions...Processed 250/500 positions...Processed 300/500 positions...Processed 350/500 positions...Processed 400/500 positions...Processed 450/500 positions...Processed 500/500 positions...
+Detection rate: 35.8%
+Accuracy: 11.0%
+Applying training rewards...
+Applied consolidation to 2 edges
+Saved consolidation state to /home/paulander/git/recon-lite/weights/tactics/discoveredAttack_consol.json
+  Total episodes accumulated: 1000
+  Edges tracked: 14
+
+=== Summary ===
+Total positions: 500
+Detection rate: 35.8%
+Accuracy: 11.0%
+
+By tactic:
+  discoveredAttack: 55/500 correct (11.0%), 179/500 detected (35.8%)
+
+TACTICS_EVAL_RESULT: total=500 detected=179 correct=55 accuracy=0.110
+[11:02:07]    ✓ 500 positions, 179 detected, 55 correct (0.110%)
+[11:02:07] 📝 Training: attraction
+Loaded consolidation state from /home/paulander/git/recon-lite/weights/tactics/attraction_consol.json
+
+=== Tactical Evaluation ===
+Files to evaluate: 1
+Training mode: ENABLED
+
+--- lichess_attraction.fen (attraction) ---
+Processed 50/500 positions...Processed 100/500 positions...Processed 150/500 positions...Processed 200/500 positions...Processed 250/500 positions...Processed 300/500 positions...Processed 350/500 positions...Processed 400/500 positions...Processed 450/500 positions...Processed 500/500 positions...
+Detection rate: 79.2%
+Accuracy: 9.0%
+Applying training rewards...
+Applied consolidation to 2 edges
+Saved consolidation state to /home/paulander/git/recon-lite/weights/tactics/attraction_consol.json
+  Total episodes accumulated: 1000
+  Edges tracked: 15
+
+=== Summary ===
+Total positions: 500
+Detection rate: 79.2%
+Accuracy: 9.0%
+
+By tactic:
+  attraction: 45/500 correct (9.0%), 396/500 detected (79.2%)
+
+TACTICS_EVAL_RESULT: total=500 detected=396 correct=45 accuracy=0.090
+[11:02:08]    ✓ 500 positions, 396 detected, 45 correct (0.090%)
+[11:02:08] 📝 Training: deflection
+Loaded consolidation state from /home/paulander/git/recon-lite/weights/tactics/deflection_consol.json
+
+=== Tactical Evaluation ===
+Files to evaluate: 1
+Training mode: ENABLED
+
+--- lichess_deflection.fen (deflection) ---
+Processed 50/500 positions...Processed 100/500 positions...Processed 150/500 positions...Processed 200/500 positions...Processed 250/500 positions...Processed 300/500 positions...Processed 350/500 positions...Processed 400/500 positions...Processed 450/500 positions...Processed 500/500 positions...
+Detection rate: 81.0%
+Accuracy: 2.6%
+Applying training rewards...
+Applied consolidation to 0 edges
+Saved consolidation state to /home/paulander/git/recon-lite/weights/tactics/deflection_consol.json
+  Total episodes accumulated: 1000
+  Edges tracked: 13
+
+=== Summary ===
+Total positions: 500
+Detection rate: 81.0%
+Accuracy: 2.6%
+
+By tactic:
+  deflection: 13/500 correct (2.6%), 405/500 detected (81.0%)
+
+TACTICS_EVAL_RESULT: total=500 detected=405 correct=13 accuracy=0.026
+[11:02:09]    ✓ 500 positions, 405 detected, 13 correct (0.026%)
+[11:02:09] 📝 Training: doubleCheck
+Loaded consolidation state from /home/paulander/git/recon-lite/weights/tactics/doubleCheck_consol.json
+
+=== Tactical Evaluation ===
+Files to evaluate: 1
+Training mode: ENABLED
+
+--- lichess_doubleCheck.fen (doubleCheck) ---
+Processed 50/500 positions...Processed 100/500 positions...Processed 150/500 positions...Processed 200/500 positions...Processed 250/500 positions...Processed 300/500 positions...Processed 350/500 positions...Processed 400/500 positions...Processed 450/500 positions...Processed 500/500 positions...
+Detection rate: 0.0%
+Accuracy: 0.0%
+Applying training rewards...
+Applied consolidation to 2 edges
+Saved consolidation state to /home/paulander/git/recon-lite/weights/tactics/doubleCheck_consol.json
+  Total episodes accumulated: 1000
+  Edges tracked: 15
+
+=== Summary ===
+Total positions: 500
+Detection rate: 0.0%
+Accuracy: 0.0%
+
+By tactic:
+  doubleCheck: 0/500 correct (0.0%), 0/500 detected (0.0%)
+
+TACTICS_EVAL_RESULT: total=500 detected=0 correct=0 accuracy=0.000
+[11:02:09]    ✓ 500 positions, 0 detected, 0 correct (0.000%)
+[11:02:09] 📝 Training: smotheredMate
+Loaded consolidation state from /home/paulander/git/recon-lite/weights/tactics/smotheredMate_consol.json
+
+=== Tactical Evaluation ===
+Files to evaluate: 1
+Training mode: ENABLED
+
+--- lichess_smotheredMate.fen (smotheredMate) ---
+Processed 50/500 positions...Processed 100/500 positions...Processed 150/500 positions...Processed 200/500 positions...Processed 250/500 positions...Processed 300/500 positions...Processed 350/500 positions...Processed 400/500 positions...Processed 450/500 positions...Processed 500/500 positions...
+Detection rate: 0.0%
+Accuracy: 0.0%
+Applying training rewards...
+Applied consolidation to 2 edges
+Saved consolidation state to /home/paulander/git/recon-lite/weights/tactics/smotheredMate_consol.json
+  Total episodes accumulated: 1000
+  Edges tracked: 15
+
+=== Summary ===
+Total positions: 500
+Detection rate: 0.0%
+Accuracy: 0.0%
+
+By tactic:
+  smotheredMate: 0/500 correct (0.0%), 0/500 detected (0.0%)
+
+TACTICS_EVAL_RESULT: total=500 detected=0 correct=0 accuracy=0.000
+[11:02:09]    ✓ 500 positions, 0 detected, 0 correct (0.000%)
+[11:02:09] 📝 Training: trappedPiece
+Loaded consolidation state from /home/paulander/git/recon-lite/weights/tactics/trappedPiece_consol.json
+
+=== Tactical Evaluation ===
+Files to evaluate: 1
+Training mode: ENABLED
+
+--- lichess_trappedPiece.fen (trappedPiece) ---
+Processed 50/500 positions...Processed 100/500 positions...Processed 150/500 positions...Processed 200/500 positions...Processed 250/500 positions...Processed 300/500 positions...Processed 350/500 positions...Processed 400/500 positions...Processed 450/500 positions...Processed 500/500 positions...
+Detection rate: 20.0%
+Accuracy: 2.2%
+Applying training rewards...
+Applied consolidation to 2 edges
+Saved consolidation state to /home/paulander/git/recon-lite/weights/tactics/trappedPiece_consol.json
+  Total episodes accumulated: 1000
+  Edges tracked: 15
+
+=== Summary ===
+Total positions: 500
+Detection rate: 20.0%
+Accuracy: 2.2%
+
+By tactic:
+  trappedPiece: 11/500 correct (2.2%), 100/500 detected (20.0%)
+
+TACTICS_EVAL_RESULT: total=500 detected=100 correct=11 accuracy=0.022
+[11:02:10]    ✓ 500 positions, 100 detected, 11 correct (0.022%)
+[11:02:10] 📝 Training: quietMove
+Loaded consolidation state from /home/paulander/git/recon-lite/weights/tactics/quietMove_consol.json
+
+=== Tactical Evaluation ===
+Files to evaluate: 1
+Training mode: ENABLED
+
+--- lichess_quietMove.fen (quietMove) ---
+Processed 50/500 positions...Processed 100/500 positions...Processed 150/500 positions...Processed 200/500 positions...Processed 250/500 positions...Processed 300/500 positions...Processed 350/500 positions...Processed 400/500 positions...Processed 450/500 positions...Processed 500/500 positions...
+Detection rate: 92.6%
+Accuracy: 32.2%
+Applying training rewards...
+Applied consolidation to 2 edges
+Saved consolidation state to /home/paulander/git/recon-lite/weights/tactics/quietMove_consol.json
+  Total episodes accumulated: 1000
+  Edges tracked: 15
+
+=== Summary ===
+Total positions: 500
+Detection rate: 92.6%
+Accuracy: 32.2%
+
+By tactic:
+  quietMove: 161/500 correct (32.2%), 463/500 detected (92.6%)
+
+TACTICS_EVAL_RESULT: total=500 detected=463 correct=161 accuracy=0.322
+[11:02:10]    ✓ 500 positions, 463 detected, 161 correct (0.322%)
+[11:02:10] 📝 Training: sacrifice
+Loaded consolidation state from /home/paulander/git/recon-lite/weights/tactics/sacrifice_consol.json
+
+=== Tactical Evaluation ===
+Files to evaluate: 1
+Training mode: ENABLED
+
+--- lichess_sacrifice.fen (sacrifice) ---
+Processed 50/500 positions...Processed 100/500 positions...Processed 150/500 positions...Processed 200/500 positions...Processed 250/500 positions...Processed 300/500 positions...Processed 350/500 positions...Processed 400/500 positions...Processed 450/500 positions...Processed 500/500 positions...
+Detection rate: 89.8%
+Accuracy: 2.6%
+Applying training rewards...
+Applied consolidation to 2 edges
+Saved consolidation state to /home/paulander/git/recon-lite/weights/tactics/sacrifice_consol.json
+  Total episodes accumulated: 1000
+  Edges tracked: 15
+
+=== Summary ===
+Total positions: 500
+Detection rate: 89.8%
+Accuracy: 2.6%
+
+By tactic:
+  sacrifice: 13/500 correct (2.6%), 449/500 detected (89.8%)
+
+TACTICS_EVAL_RESULT: total=500 detected=449 correct=13 accuracy=0.026
+[11:02:11]    ✓ 500 positions, 449 detected, 13 correct (0.026%)
+[11:02:11] 📝 Training: exposedKing
+Loaded consolidation state from /home/paulander/git/recon-lite/weights/tactics/exposedKing_consol.json
+
+=== Tactical Evaluation ===
+Files to evaluate: 1
+Training mode: ENABLED
+
+--- lichess_exposedKing.fen (exposedKing) ---
+Processed 50/500 positions...Processed 100/500 positions...Processed 150/500 positions...Processed 200/500 positions...Processed 250/500 positions...Processed 300/500 positions...Processed 350/500 positions...Processed 400/500 positions...Processed 450/500 positions...Processed 500/500 positions...
+Detection rate: 30.0%
+Accuracy: 9.6%
+Applying training rewards...
+Applied consolidation to 0 edges
+Saved consolidation state to /home/paulander/git/recon-lite/weights/tactics/exposedKing_consol.json
+  Total episodes accumulated: 1000
+  Edges tracked: 13
+
+=== Summary ===
+Total positions: 500
+Detection rate: 30.0%
+Accuracy: 9.6%
+
+By tactic:
+  exposedKing: 48/500 correct (9.6%), 150/500 detected (30.0%)
+
+TACTICS_EVAL_RESULT: total=500 detected=150 correct=48 accuracy=0.096
+[11:02:11]    ✓ 500 positions, 150 detected, 48 correct (0.096%)
+[11:02:11] 📝 Training: interference
+Loaded consolidation state from /home/paulander/git/recon-lite/weights/tactics/interference_consol.json
+
+=== Tactical Evaluation ===
+Files to evaluate: 1
+Training mode: ENABLED
+
+--- lichess_interference.fen (interference) ---
+Processed 50/500 positions...Processed 100/500 positions...Processed 150/500 positions...Processed 200/500 positions...Processed 250/500 positions...Processed 300/500 positions...Processed 350/500 positions...Processed 400/500 positions...Processed 450/500 positions...Processed 500/500 positions...
+Detection rate: 97.4%
+Accuracy: 43.8%
+Applying training rewards...
+Applied consolidation to 0 edges
+Saved consolidation state to /home/paulander/git/recon-lite/weights/tactics/interference_consol.json
+  Total episodes accumulated: 1000
+  Edges tracked: 13
+
+=== Summary ===
+Total positions: 500
+Detection rate: 97.4%
+Accuracy: 43.8%
+
+By tactic:
+  interference: 219/500 correct (43.8%), 487/500 detected (97.4%)
+
+TACTICS_EVAL_RESULT: total=500 detected=487 correct=219 accuracy=0.438
+[11:02:11]    ✓ 500 positions, 487 detected, 219 correct (0.438%)
+[11:02:11] 📝 Training: zugzwang
+Loaded consolidation state from /home/paulander/git/recon-lite/weights/tactics/zugzwang_consol.json
+
+=== Tactical Evaluation ===
+Files to evaluate: 1
+Training mode: ENABLED
+
+--- lichess_zugzwang.fen (zugzwang) ---
+Processed 50/500 positions...Processed 100/500 positions...Processed 150/500 positions...Processed 200/500 positions...Processed 250/500 positions...Processed 300/500 positions...Processed 350/500 positions...Processed 400/500 positions...Processed 450/500 positions...Processed 500/500 positions...
+Detection rate: 86.0%
+Accuracy: 26.8%
+Applying training rewards...
+Applied consolidation to 0 edges
+Saved consolidation state to /home/paulander/git/recon-lite/weights/tactics/zugzwang_consol.json
+  Total episodes accumulated: 1000
+  Edges tracked: 13
+
+=== Summary ===
+Total positions: 500
+Detection rate: 86.0%
+Accuracy: 26.8%
+
+By tactic:
+  zugzwang: 134/500 correct (26.8%), 430/500 detected (86.0%)
+
+TACTICS_EVAL_RESULT: total=500 detected=430 correct=134 accuracy=0.268
+[11:02:12]    ✓ 500 positions, 430 detected, 134 correct (0.268%)
+
+==============================================
+[11:02:12] ✅ Training Complete
+==============================================
+[11:02:12]   Tactics trained: 16
+[11:02:12]   Total positions: 8000
+[11:02:12]   Total detected: 3785
+[11:02:12]   Total correct: 827
+[11:02:12]   Overall accuracy: 10.3%
+[11:02:12] 
+[11:02:12] Weights saved to: /home/paulander/git/recon-lite/weights/latest/tactics/
+[11:02:12] Full log: /home/paulander/git/recon-lite/logs/daytime_tactics_20251205_110205.log

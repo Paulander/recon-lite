@@ -27,7 +27,7 @@ from .predicates import (
     dist_to_edge,
     has_opposition_after,
 )
-from .strategy import SCRIPT_BY_PHASE
+from .krk_strategy import SCRIPT_BY_PHASE
 
 
 PHASE_CHOOSERS = {

@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReCoN Full Game Visualization (M6)</title>
+    <style>
+        :root {
+            --bg-dark: #1a1a2e;
+            --bg-card: #16213e;
+            --accent: #e94560;
+            --accent-secondary: #0f3460;
+            --text: #eaeaea;
+            --text-muted: #8892b0;
+            --success: #4ade80;
+            --warning: #fbbf24;
+            --danger: #f87171;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: 350px 1fr 300px;
+            grid-template-rows: auto 1fr;
+            gap: 16px;
+            padding: 16px;
+            height: 100vh;
+        }
+        
+        header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            background: var(--bg-card);
+            border-radius: 8px;
+        }
+        
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
+        
+        .controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        button {
+            background: var(--accent-secondary);
+            color: var(--text);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            background: var(--accent);
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .card {
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 16px;
+            overflow: auto;
+        }
+        
+        .card h2 {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--accent-secondary);
+        }
+        
+        /* Chessboard Panel */
+        .chessboard-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        #chessboard {
+            display: grid;
+            grid-template-columns: repeat(8, 40px);
+            grid-template-rows: repeat(8, 40px);
+            border: 2px solid var(--accent-secondary);
+            border-radius: 4px;
+            margin: 0 auto;
+        }
+        
+        .square {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+        
+        .light {
+            background: #f0d9b5;
+        }
+        
+        .dark {
+            background: #b58863;
+        }
+        
+        .move-info {
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        
+        .move-info .ply {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--accent);
+        }
+        
+        /* Navigation */
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .navigation button {
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+        }
+        
+        /* Goal Hierarchy Panel */
+        .hierarchy-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .goal-layer {
+            padding: 12px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .goal-layer h3 {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        
+        .goal-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 10px;
+            margin: 4px 0;
+            border-radius: 4px;
+            background: var(--bg-dark);
+        }
+        
+        .goal-item.active {
+            background: var(--accent-secondary);
+            border-left: 3px solid var(--accent);
+        }
+        
+        .goal-item .name {
+            font-size: 0.85rem;
+        }
+        
+        .goal-item .activation {
+            font-size: 0.8rem;
+            color: var(--accent);
+        }
+        
+        /* Phase Panel */
+        .phase-bar {
+            height: 24px;
+            display: flex;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        
+        .phase-segment {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            color: var(--bg-dark);
+            font-weight: bold;
+            transition: width 0.3s ease;
+        }
+        
+        .phase-segment.opening {
+            background: #4ade80;
+        }
+        
+        .phase-segment.middlegame {
+            background: #fbbf24;
+        }
+        
+        .phase-segment.endgame {
+            background: #f87171;
+        }
+        
+        /* Plans Panel */
+        .plan-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .plan-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            border-radius: 4px;
+            background: var(--bg-dark);
+        }
+        
+        .plan-bar {
+            flex: 1;
+            height: 6px;
+            background: var(--accent-secondary);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .plan-bar-fill {
+            height: 100%;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+        
+        .plan-name {
+            font-size: 0.75rem;
+            min-width: 100px;
+        }
+        
+        .plan-value {
+            font-size: 0.75rem;
+            color: var(--accent);
+            min-width: 40px;
+            text-align: right;
+        }
+        
+        /* Material Panel */
+        .material-display {
+            display: flex;
+            justify-content: space-around;
+            padding: 8px;
+        }
+        
+        .material-side {
+            text-align: center;
+        }
+        
+        .material-side .label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+        
+        .material-side .value {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        
+        /* Move History */
+        .move-history {
+            font-size: 0.8rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .move-history span {
+            display: inline-block;
+            padding: 2px 6px;
+            margin: 2px;
+            border-radius: 3px;
+            background: var(--bg-dark);
+        }
+        
+        .move-history span.current {
+            background: var(--accent);
+            color: var(--bg-dark);
+        }
+        
+        /* Frame Info */
+        .frame-info {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        
+        .frame-info dt {
+            font-weight: bold;
+            color: var(--text);
+        }
+        
+        .frame-info dd {
+            margin-left: 12px;
+            margin-bottom: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧠 ReCoN Full Game (M6)</h1>
+            <div class="controls">
+                <button id="loadBtn">📁 Load JSON</button>
+                <input type="file" id="fileInput" accept=".json">
+                <span id="frameCounter">Frame: 0/0</span>
+            </div>
+        </header>
+        
+        <!-- Left Panel: Chessboard -->
+        <div class="card chessboard-panel">
+            <h2>Board State</h2>
+            <div id="chessboard"></div>
+            <div class="move-info">
+                <div class="ply">Ply <span id="plyNumber">0</span></div>
+                <div id="lastMove">-</div>
+            </div>
+            <div class="navigation">
+                <button id="firstBtn">⏮</button>
+                <button id="prevBtn">◀</button>
+                <button id="playBtn">▶</button>
+                <button id="nextBtn">▶</button>
+                <button id="lastBtn">⏭</button>
+            </div>
+            <h2>Move History</h2>
+            <div class="move-history" id="moveHistory"></div>
+        </div>
+        
+        <!-- Center Panel: Hierarchy -->
+        <div class="card hierarchy-panel">
+            <h2>Goal Hierarchy</h2>
+            
+            <!-- Ultimate Goal -->
+            <div class="goal-layer">
+                <h3>Ultimate Goal</h3>
+                <div id="ultimateGoal" class="goal-item active">
+                    <span class="name">WIN</span>
+                    <span class="activation">100%</span>
+                </div>
+            </div>
+            
+            <!-- Phase Weights -->
+            <div class="goal-layer">
+                <h3>Game Phase</h3>
+                <div class="phase-bar">
+                    <div class="phase-segment opening" id="openingBar" style="width: 80%">Opening</div>
+                    <div class="phase-segment middlegame" id="middlegameBar" style="width: 15%">Middle</div>
+                    <div class="phase-segment endgame" id="endgameBar" style="width: 5%">End</div>
+                </div>
+            </div>
+            
+            <!-- Strategic Plans -->
+            <div class="goal-layer">
+                <h3>Strategic Plans (Active)</h3>
+                <div class="plan-list" id="strategicPlans">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+            
+            <!-- Material -->
+            <div class="goal-layer">
+                <h3>Material Balance</h3>
+                <div class="material-display">
+                    <div class="material-side">
+                        <div class="label">White</div>
+                        <div class="value" id="whiteMaterial">39</div>
+                    </div>
+                    <div class="material-side">
+                        <div class="label">Balance</div>
+                        <div class="value" id="materialBalance">+0</div>
+                    </div>
+                    <div class="material-side">
+                        <div class="label">Black</div>
+                        <div class="value" id="blackMaterial">39</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Panel: Details -->
+        <div class="card">
+            <h2>Frame Details</h2>
+            <dl class="frame-info" id="frameDetails">
+                <dt>FEN</dt>
+                <dd id="fenDisplay">-</dd>
+                <dt>Tick</dt>
+                <dd id="tickDisplay">-</dd>
+                <dt>Move</dt>
+                <dd id="moveDisplay">-</dd>
+            </dl>
+            
+            <h2 style="margin-top: 16px;">Active Plans</h2>
+            <div id="activePlansList"></div>
+        </div>
+    </div>
+    
+    <script>
+        // State
+        let frames = [];
+        let currentFrame = 0;
+        let playing = false;
+        let playInterval = null;
+        
+        // Piece symbols
+        const PIECE_SYMBOLS = {
+            'K': '♔', 'Q': '♕', 'R': '♖', 'B': '♗', 'N': '♘', 'P': '♙',
+            'k': '♚', 'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞', 'p': '♟'
+        };
+        
+        // Initialize board
+        function initBoard() {
+            const board = document.getElementById('chessboard');
+            board.innerHTML = '';
+            for (let rank = 7; rank >= 0; rank--) {
+                for (let file = 0; file < 8; file++) {
+                    const square = document.createElement('div');
+                    square.className = `square ${(rank + file) % 2 === 0 ? 'dark' : 'light'}`;
+                    square.dataset.square = String.fromCharCode(97 + file) + (rank + 1);
+                    board.appendChild(square);
+                }
+            }
+        }
+        
+        // Parse FEN and render board
+        function renderBoard(fen) {
+            if (!fen) return;
+            const [position] = fen.split(' ');
+            const squares = document.querySelectorAll('.square');
+            let idx = 0;
+            
+            // Clear all squares
+            squares.forEach(sq => sq.textContent = '');
+            
+            for (const char of position) {
+                if (char === '/') continue;
+                if (!isNaN(char)) {
+                    idx += parseInt(char);
+                } else {
+                    if (idx < 64 && PIECE_SYMBOLS[char]) {
+                        squares[idx].textContent = PIECE_SYMBOLS[char];
+                    }
+                    idx++;
+                }
+            }
+        }
+        
+        // Update display for current frame
+        function updateDisplay() {
+            if (frames.length === 0) return;
+            
+            const frame = frames[currentFrame];
+            const env = frame.env || {};
+            
+            // Update board
+            renderBoard(env.fen || frame.fen);
+            
+            // Update counters
+            document.getElementById('frameCounter').textContent = `Frame: ${currentFrame + 1}/${frames.length}`;
+            document.getElementById('plyNumber').textContent = env.ply || frame.ply || currentFrame;
+            document.getElementById('lastMove').textContent = frame.move || env.move || '-';
+            
+            // Update frame details
+            document.getElementById('fenDisplay').textContent = env.fen || frame.fen || '-';
+            document.getElementById('tickDisplay').textContent = frame.tick || '-';
+            document.getElementById('moveDisplay').textContent = frame.move || '-';
+            
+            // Update phase bars
+            const phase = env.phase || {};
+            const openingPct = (phase.opening || 0.8) * 100;
+            const middlegamePct = (phase.middlegame || 0.15) * 100;
+            const endgamePct = (phase.endgame || 0.05) * 100;
+            
+            document.getElementById('openingBar').style.width = `${openingPct}%`;
+            document.getElementById('middlegameBar').style.width = `${middlegamePct}%`;
+            document.getElementById('endgameBar').style.width = `${endgamePct}%`;
+            
+            // Update ultimate goal
+            const ultimate = env.ultimate_goal || {};
+            const goalEl = document.getElementById('ultimateGoal');
+            goalEl.querySelector('.name').textContent = ultimate.goal || 'WIN';
+            goalEl.querySelector('.activation').textContent = `${((ultimate.confidence || 1) * 100).toFixed(0)}%`;
+            
+            // Update strategic plans
+            const plansEl = document.getElementById('strategicPlans');
+            const activePlans = env.active_plans || [];
+            plansEl.innerHTML = activePlans.slice(0, 5).map(([name, activation]) => `
+                <div class="plan-item">
+                    <span class="plan-name">${name}</span>
+                    <div class="plan-bar">
+                        <div class="plan-bar-fill" style="width: ${activation * 50}%"></div>
+                    </div>
+                    <span class="plan-value">${activation.toFixed(2)}</span>
+                </div>
+            `).join('') || '<div style="color: var(--text-muted)">No active plans</div>';
+            
+            // Update material
+            const material = env.material || {};
+            document.getElementById('whiteMaterial').textContent = material.white_total || '-';
+            document.getElementById('blackMaterial').textContent = material.black_total || '-';
+            const balance = (material.balance || 0);
+            document.getElementById('materialBalance').textContent = balance >= 0 ? `+${balance}` : balance;
+            
+            // Update move history
+            updateMoveHistory();
+        }
+        
+        // Update move history display
+        function updateMoveHistory() {
+            const historyEl = document.getElementById('moveHistory');
+            let html = '';
+            for (let i = 0; i < frames.length; i++) {
+                const frame = frames[i];
+                const move = frame.move || (frame.env && frame.env.move);
+                if (move) {
+                    const isCurrent = i === currentFrame;
+                    html += `<span class="${isCurrent ? 'current' : ''}">${move}</span>`;
+                }
+            }
+            historyEl.innerHTML = html || '<span style="color: var(--text-muted)">No moves yet</span>';
+        }
+        
+        // Navigation
+        function goFirst() { currentFrame = 0; updateDisplay(); }
+        function goPrev() { if (currentFrame > 0) { currentFrame--; updateDisplay(); } }
+        function goNext() { if (currentFrame < frames.length - 1) { currentFrame++; updateDisplay(); } }
+        function goLast() { currentFrame = frames.length - 1; updateDisplay(); }
+        
+        function togglePlay() {
+            playing = !playing;
+            document.getElementById('playBtn').textContent = playing ? '⏸' : '▶';
+            if (playing) {
+                playInterval = setInterval(() => {
+                    if (currentFrame < frames.length - 1) {
+                        currentFrame++;
+                        updateDisplay();
+                    } else {
+                        togglePlay();
+                    }
+                }, 500);
+            } else {
+                clearInterval(playInterval);
+            }
+        }
+        
+        // File loading
+        function loadFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    frames = Array.isArray(data) ? data : (data.frames || data.events || [data]);
+                    currentFrame = 0;
+                    updateDisplay();
+                } catch (err) {
+                    alert('Error parsing JSON: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        // Event listeners
+        document.getElementById('loadBtn').addEventListener('click', () => {
+            document.getElementById('fileInput').click();
+        });
+        
+        document.getElementById('fileInput').addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                loadFile(e.target.files[0]);
+            }
+        });
+        
+        document.getElementById('firstBtn').addEventListener('click', goFirst);
+        document.getElementById('prevBtn').addEventListener('click', goPrev);
+        document.getElementById('playBtn').addEventListener('click', togglePlay);
+        document.getElementById('nextBtn').addEventListener('click', goNext);
+        document.getElementById('lastBtn').addEventListener('click', goLast);
+        
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'ArrowLeft': goPrev(); break;
+                case 'ArrowRight': goNext(); break;
+                case 'Home': goFirst(); break;
+                case 'End': goLast(); break;
+                case ' ': togglePlay(); e.preventDefault(); break;
+            }
+        });
+        
+        // Initialize
+        initBoard();
+    </script>
+</body>
+</html>
+

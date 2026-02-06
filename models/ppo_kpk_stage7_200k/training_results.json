@@ -1,0 +1,10 @@
+{
+  "model": "PPO (MlpPolicy)",
+  "stage": 7,
+  "timesteps": 200000,
+  "training_time_seconds": 194.3966245651245,
+  "mean_reward": -0.2820000000298023,
+  "std_reward": 0.7006254348759489,
+  "estimated_win_rate": 0.35899999998509885,
+  "eval_episodes": 100
+}

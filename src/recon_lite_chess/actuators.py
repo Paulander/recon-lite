@@ -75,9 +75,16 @@ def _can_force_mate(board: chess.Board,
 
 
 def _find_forced_mate_move(board: chess.Board,
-                           max_depth: int = 24,
+                           max_depth: int = 2,  # CAPPED: was 24 - deep search is ideological violation
                            *,
                            forbid_opposition: bool = True) -> Optional[chess.Move]:
+    """
+    Find a forced mate move using shallow search.
+    
+    # STEM CELL GATED - Depth capped at 2 (Phase B: XP-weighted stem cells
+    # now influence move scoring via run_krk_curriculum.py fallback heuristic)
+    # Shallow search remains as safety net; stem cells provide pattern-based bias.
+    """
     us_color = board.turn
     legal_moves = list(board.legal_moves)
     if not legal_moves:
@@ -100,7 +107,9 @@ def _find_forced_mate_move(board: chess.Board,
     if not filtered:
         return None
 
-    for depth in range(2, max_depth + 1, 2):
+    # CAPPED: Only check depth 2 (single ply + response)
+    # Deep search (depth 4+) caused 450x slowdown on Mate_In_2 positions
+    for depth in range(2, min(max_depth + 1, 3), 2):  # Only depth=2
         for move in filtered:
             board.push(move)
             if _can_force_mate(board, depth - 1, us_color):
@@ -687,7 +696,8 @@ def choose_move_phase3(board: chess.Board, env: Optional[Dict[str, Any]] = None)
     if mate:
         return mate
 
-    forced = _find_forced_mate_move(board, max_depth=24, forbid_opposition=True)
+    # STEM CELL GATED - depth capped at 2 (stem cells now influence scoring)
+    forced = _find_forced_mate_move(board, max_depth=2, forbid_opposition=True)
     if forced:
         return forced.uci()
 
@@ -759,7 +769,8 @@ def choose_move_phase4(board: chess.Board, env: Optional[Dict[str, Any]] = None)
     if mate:
         return mate
 
-    forced = _find_forced_mate_move(board, max_depth=24, forbid_opposition=False)
+    # STEM CELL GATED - depth capped at 2 (stem cells now influence scoring)
+    forced = _find_forced_mate_move(board, max_depth=2, forbid_opposition=False)
     if forced:
         return forced.uci()
 

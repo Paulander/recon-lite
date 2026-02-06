@@ -8,6 +8,9 @@ class ChessBoard {
         this.lastEnv = null; // Cache the last env that had position info
         this.bindingColors = {};
         this.bindingPalette = ['#0ea5e9', '#f97316', '#22c55e', '#a855f7', '#ef4444', '#14b8a6'];
+        this.showBindings = true;
+        this.bindingLimit = 4;
+        this.bindingFilter = [];
     }
 
     init() {
@@ -81,7 +84,7 @@ class ChessBoard {
 
         let boardHtml = '';
         const board = this.chess.board();
-        const bindingMap = this.computeBindingMap(renderEnv.binding);
+        const bindingMap = this.showBindings ? this.computeBindingMap(renderEnv.binding) : {};
 
         for (let row = 0; row < 8; row++) {
             for (let col = 0; col < 8; col++) {
@@ -106,9 +109,10 @@ class ChessBoard {
                 if (bindings && bindings.length) {
                     boardHtml += '<div class="binding-overlay">';
                     bindings.slice(0, 3).forEach((info) => {
-                        const abbrev = info.feature ? info.feature.split(/[\s_]+/)[0] : '•';
-                        const label = abbrev.length > 4 ? abbrev.slice(0, 4) : abbrev;
-                        const title = `${info.namespace}: ${info.feature}`;
+                        const rawLabel = info.terminalId || info.feature || info.namespace || '•';
+                        const compact = rawLabel.replace(/[^a-zA-Z0-9_]/g, '');
+                        const label = compact.length > 6 ? compact.slice(0, 6) : compact;
+                        const title = `${info.namespace} | ${info.terminalId || info.feature || 'binding'}`;
                         boardHtml += `<span class="binding-chip" style="background:${info.color}" title="${title}">${label}</span>`;
                     });
                     boardHtml += '</div>';
@@ -121,6 +125,32 @@ class ChessBoard {
         boardElement.innerHTML = boardHtml;
     }
 
+    setBindingsEnabled(enabled) {
+        this.showBindings = Boolean(enabled);
+        if (this.lastEnv) {
+            this.render(this.lastEnv);
+        }
+    }
+
+    setBindingLimit(limit) {
+        if (Number.isNaN(limit)) return;
+        this.bindingLimit = Number(limit);
+        if (this.lastEnv) {
+            this.render(this.lastEnv);
+        }
+    }
+
+    setBindingFilter(filterText) {
+        const tokens = String(filterText || '')
+            .split(',')
+            .map((t) => t.trim())
+            .filter((t) => t.length > 0);
+        this.bindingFilter = tokens;
+        if (this.lastEnv) {
+            this.render(this.lastEnv);
+        }
+    }
+
     colorForNamespace(namespace) {
         if (!namespace) return '#64748b';
         if (!this.bindingColors[namespace]) {
@@ -131,17 +161,54 @@ class ChessBoard {
         return this.bindingColors[namespace];
     }
 
+    colorForKey(key) {
+        if (!key) return '#64748b';
+        if (!this.bindingColors[key]) {
+            const palette = this.bindingPalette;
+            const index = Object.keys(this.bindingColors).length % palette.length;
+            this.bindingColors[key] = palette[index];
+        }
+        return this.bindingColors[key];
+    }
+
     computeBindingMap(bindingPayload) {
         const mapping = {};
         if (!bindingPayload || typeof bindingPayload !== 'object') {
             return mapping;
         }
+        const bindingInstances = [];
         Object.entries(bindingPayload).forEach(([namespace, instances]) => {
             if (!Array.isArray(instances)) return;
             instances.forEach((instance) => {
                 if (!instance || !Array.isArray(instance.items)) return;
                 const feature = instance.feature || instance.id || namespace;
-                const color = this.colorForNamespace(namespace);
+                const terminalId = instance.id || instance.terminal_id || instance.node || feature;
+                bindingInstances.push({
+                    namespace,
+                    instance,
+                    feature,
+                    terminalId,
+                    size: instance.items.length || 0,
+                });
+            });
+        });
+
+        let filtered = bindingInstances;
+        if (this.bindingFilter && this.bindingFilter.length) {
+            const filterSet = new Set(this.bindingFilter);
+            filtered = filtered.filter((entry) => filterSet.has(entry.terminalId));
+        }
+
+        if (this.bindingLimit && this.bindingLimit > 0) {
+            filtered = filtered
+                .slice()
+                .sort((a, b) => b.size - a.size)
+                .slice(0, this.bindingLimit);
+        }
+
+        filtered.forEach(({ namespace, instance, feature, terminalId }) => {
+                const colorKey = `${namespace}:${terminalId}`;
+                const color = this.colorForKey(colorKey);
                 instance.items.forEach((item) => {
                     if (typeof item !== 'string') return;
                     const [kind, value] = item.split(':');
@@ -150,10 +217,9 @@ class ChessBoard {
                     if (!mapping[square]) {
                         mapping[square] = [];
                     }
-                    mapping[square].push({ namespace, feature, color });
+                    mapping[square].push({ namespace, feature, color, terminalId });
                 });
             });
-        });
         return mapping;
     }
 

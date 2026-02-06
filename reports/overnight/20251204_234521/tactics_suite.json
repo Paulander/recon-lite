@@ -1,0 +1,122 @@
+{
+  "stats": {
+    "total": 13,
+    "detected": 0,
+    "correct": 0,
+    "detection_rate": 0.0,
+    "accuracy": 0.0,
+    "by_tactic": {
+      "mixed": {
+        "total": 13,
+        "detected": 0,
+        "correct": 0
+      }
+    }
+  },
+  "results": [
+    {
+      "fen": "r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 0 1",
+      "expected": "Qxf7+",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "mixed"
+    },
+    {
+      "fen": "r1bqk2r/pppp1ppp/2n2n2/4p3/1bB1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 1",
+      "expected": "Bxf7+",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "mixed"
+    },
+    {
+      "fen": "4k3/8/8/8/3n4/8/4R3/4K3 b - - 0 1",
+      "expected": "Nf3+",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "mixed"
+    },
+    {
+      "fen": "r1bqkb1r/pppp1ppp/2n2n2/4p1B1/4P3/5N2/PPPP1PPP/RN1QKB1R b KQkq - 0 1",
+      "expected": "d6",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "mixed"
+    },
+    {
+      "fen": "4k3/4r3/8/8/8/8/4R3/4K3 w - - 0 1",
+      "expected": "Re8+",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "mixed"
+    },
+    {
+      "fen": "4k3/8/8/3n4/8/8/3Q4/4K3 w - - 0 1",
+      "expected": "Qxd5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "mixed"
+    },
+    {
+      "fen": "r1bqkbnr/pppp1ppp/2n5/4p3/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 1",
+      "expected": "dxe5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "mixed"
+    },
+    {
+      "fen": "6k1/5ppp/8/8/8/8/8/R6K w - - 0 1",
+      "expected": "Ra8#",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "mixed"
+    },
+    {
+      "fen": "3r4/8/8/8/8/8/5PPP/7K b - - 0 1",
+      "expected": "Rd1#",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "mixed"
+    },
+    {
+      "fen": "4k3/8/8/8/3Q4/8/8/4K3 w - - 0 1",
+      "expected": "Qd7+",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "mixed"
+    },
+    {
+      "fen": "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 1",
+      "expected": "Ng5",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "mixed"
+    },
+    {
+      "fen": "4k3/4b3/8/8/8/8/4R3/4K3 w - - 0 1",
+      "expected": "Re8#",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "mixed"
+    },
+    {
+      "fen": "4k3/4r3/8/8/4B3/8/8/4K3 w - - 0 1",
+      "expected": "Bxh7",
+      "detected": false,
+      "correct": false,
+      "proposed": [],
+      "tactic": "mixed"
+    }
+  ]
+}

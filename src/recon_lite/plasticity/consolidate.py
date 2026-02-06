@@ -46,8 +46,8 @@ class ConsolidationConfig:
     min_episodes: int = 10
     outcome_weight: float = 0.5
     max_base_delta: float = 0.5
-    w_min: float = 0.1
-    w_max: float = 3.0
+    w_min: float = 0.01    # Widened from 0.1 to prevent saturation
+    w_max: float = 10.0     # Widened from 3.0 to prevent saturation
     enabled: bool = True
 
 
@@ -107,7 +107,9 @@ class ConsolidationEngine:
         """
         whitelist_set = set(edge_whitelist) if edge_whitelist else None
 
-        for e in graph.edges:
+        # Handle both list and dict formats for graph.edges
+        edge_iter = graph.edges.values() if isinstance(graph.edges, dict) else graph.edges
+        for e in edge_iter:
             # Only track POR and SUB edges by default
             if e.ltype not in (LinkType.POR, LinkType.SUB):
                 continue

@@ -1,0 +1,13 @@
+{
+  "wins": 0,
+  "losses": 0,
+  "draws": 0,
+  "stall": 50,
+  "illegal": 0,
+  "max_plies": 0,
+  "games": 50,
+  "ticks": 10616,
+  "expected_win_total": 50,
+  "expected_win_success": 0,
+  "blocks": []
+}

@@ -1,0 +1,760 @@
+{
+  "version": "2.0",
+  "network": "krk_legs",
+  "description": "KRK (King+Rook vs King) checkmate network with phase-based architecture",
+  "created": "2026-01-05T16:05:26.224911",
+  "nodes": [
+    {
+      "id": "king_at_edge",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.krk_nodes:create_king_edge_detector",
+      "meta": {}
+    },
+    {
+      "id": "king_confined",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.krk_nodes:create_confinement_evaluator",
+      "meta": {}
+    },
+    {
+      "id": "barrier_ready",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.krk_nodes:create_barrier_ready_evaluator",
+      "meta": {}
+    },
+    {
+      "id": "box_can_shrink",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.krk_nodes:create_box_shrink_evaluator",
+      "meta": {}
+    },
+    {
+      "id": "can_take_opposition",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.krk_nodes:create_opposition_evaluator",
+      "meta": {}
+    },
+    {
+      "id": "can_deliver_mate",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.krk_nodes:create_mate_deliver_evaluator",
+      "meta": {}
+    },
+    {
+      "id": "is_stalemate",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.krk_nodes:create_stalemate_detector",
+      "meta": {}
+    },
+    {
+      "id": "cut_established",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.krk_nodes:create_cut_established_detector",
+      "meta": {}
+    },
+    {
+      "id": "phase0_establish_cut",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": "recon_lite_chess.krk_nodes:create_phase0_establish_cut",
+      "meta": {}
+    },
+    {
+      "id": "phase1_drive_to_edge",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": "recon_lite_chess.krk_nodes:create_phase1_drive_to_edge",
+      "meta": {}
+    },
+    {
+      "id": "phase2_shrink_box",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": "recon_lite_chess.krk_nodes:create_phase2_shrink_box",
+      "meta": {}
+    },
+    {
+      "id": "phase3_take_opposition",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": "recon_lite_chess.krk_nodes:create_phase3_take_opposition",
+      "meta": {}
+    },
+    {
+      "id": "phase4_deliver_mate",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": "recon_lite_chess.krk_nodes:create_phase4_deliver_mate",
+      "meta": {}
+    },
+    {
+      "id": "krk_root",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": "recon_lite_chess.krk_nodes:create_krk_root",
+      "meta": {}
+    },
+    {
+      "id": "choose_phase0",
+      "type": "TERMINAL",
+      "group": "actuator",
+      "factory": "recon_lite_chess.krk_nodes:create_phase0_choose_moves",
+      "meta": {}
+    },
+    {
+      "id": "king_drive_moves",
+      "type": "TERMINAL",
+      "group": "actuator",
+      "factory": "recon_lite_chess.krk_nodes:create_king_drive_moves",
+      "meta": {}
+    },
+    {
+      "id": "confinement_moves",
+      "type": "TERMINAL",
+      "group": "actuator",
+      "factory": "recon_lite_chess.krk_nodes:create_confinement_moves",
+      "meta": {}
+    },
+    {
+      "id": "barrier_placement_moves",
+      "type": "TERMINAL",
+      "group": "actuator",
+      "factory": "recon_lite_chess.krk_nodes:create_barrier_placement_moves",
+      "meta": {}
+    },
+    {
+      "id": "box_shrink_moves",
+      "type": "TERMINAL",
+      "group": "actuator",
+      "factory": "recon_lite_chess.krk_nodes:create_box_shrink_moves",
+      "meta": {}
+    },
+    {
+      "id": "opposition_moves",
+      "type": "TERMINAL",
+      "group": "actuator",
+      "factory": "recon_lite_chess.krk_nodes:create_opposition_moves",
+      "meta": {}
+    },
+    {
+      "id": "mate_moves",
+      "type": "TERMINAL",
+      "group": "actuator",
+      "factory": "recon_lite_chess.krk_nodes:create_mate_moves",
+      "meta": {}
+    },
+    {
+      "id": "random_legal_moves",
+      "type": "TERMINAL",
+      "group": "actuator",
+      "factory": "recon_lite_chess.krk_nodes:create_random_legal_moves",
+      "meta": {}
+    },
+    {
+      "id": "no_progress_watch",
+      "type": "TERMINAL",
+      "group": "actuator",
+      "factory": "recon_lite_chess.krk_nodes:create_no_progress_watch",
+      "meta": {}
+    },
+    {
+      "id": "p0_check",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {}
+    },
+    {
+      "id": "p0_move",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {}
+    },
+    {
+      "id": "p0_wait",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {}
+    },
+    {
+      "id": "p1_check",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {
+        "alt": true
+      }
+    },
+    {
+      "id": "p1_move",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {}
+    },
+    {
+      "id": "p1_wait",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {}
+    },
+    {
+      "id": "p2_check",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {
+        "alt": true
+      }
+    },
+    {
+      "id": "p2_move",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {}
+    },
+    {
+      "id": "p2_wait",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {}
+    },
+    {
+      "id": "p3_check",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {
+        "alt": true
+      }
+    },
+    {
+      "id": "p3_move",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {}
+    },
+    {
+      "id": "p3_wait",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {}
+    },
+    {
+      "id": "p4_check",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {
+        "alt": true
+      }
+    },
+    {
+      "id": "p4_move",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {}
+    },
+    {
+      "id": "p4_wait",
+      "type": "SCRIPT",
+      "group": "backbone",
+      "factory": null,
+      "meta": {}
+    },
+    {
+      "id": "wait_after_p0",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.krk_nodes:create_wait_for_board_change",
+      "meta": {}
+    },
+    {
+      "id": "wait_after_p1",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.krk_nodes:create_wait_for_board_change",
+      "meta": {}
+    },
+    {
+      "id": "wait_after_p2",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.krk_nodes:create_wait_for_board_change",
+      "meta": {}
+    },
+    {
+      "id": "wait_after_p3",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.krk_nodes:create_wait_for_board_change",
+      "meta": {}
+    },
+    {
+      "id": "wait_after_p4",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.krk_nodes:create_wait_for_board_change",
+      "meta": {}
+    },
+    {
+      "id": "rook_lost",
+      "type": "TERMINAL",
+      "group": "sensor",
+      "factory": "recon_lite_chess.krk_nodes:create_rook_lost_detector",
+      "meta": {}
+    }
+  ],
+  "edges": [
+    {
+      "src": "krk_root",
+      "dst": "phase0_establish_cut",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_root",
+      "dst": "phase1_drive_to_edge",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_root",
+      "dst": "phase2_shrink_box",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_root",
+      "dst": "phase3_take_opposition",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_root",
+      "dst": "phase4_deliver_mate",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_root",
+      "dst": "no_progress_watch",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_root",
+      "dst": "is_stalemate",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "krk_root",
+      "dst": "rook_lost",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "phase0_establish_cut",
+      "dst": "p0_check",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "phase0_establish_cut",
+      "dst": "p0_move",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "phase0_establish_cut",
+      "dst": "p0_wait",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "p0_check",
+      "dst": "p0_move",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "p0_move",
+      "dst": "p0_wait",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "p0_check",
+      "dst": "cut_established",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "p0_move",
+      "dst": "choose_phase0",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "p0_wait",
+      "dst": "wait_after_p0",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "phase0_establish_cut",
+      "dst": "phase1_drive_to_edge",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "phase1_drive_to_edge",
+      "dst": "phase2_shrink_box",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "phase2_shrink_box",
+      "dst": "phase3_take_opposition",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "phase3_take_opposition",
+      "dst": "phase4_deliver_mate",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "phase1_drive_to_edge",
+      "dst": "p1_check",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "phase1_drive_to_edge",
+      "dst": "p1_move",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "phase1_drive_to_edge",
+      "dst": "p1_wait",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "p1_check",
+      "dst": "p1_move",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "p1_move",
+      "dst": "p1_wait",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "p1_check",
+      "dst": "king_at_edge",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "p1_move",
+      "dst": "king_drive_moves",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "p1_move",
+      "dst": "confinement_moves",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "p1_move",
+      "dst": "barrier_placement_moves",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "p1_wait",
+      "dst": "wait_after_p1",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "phase2_shrink_box",
+      "dst": "p2_check",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "phase2_shrink_box",
+      "dst": "p2_move",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "phase2_shrink_box",
+      "dst": "p2_wait",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "p2_check",
+      "dst": "p2_move",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "p2_move",
+      "dst": "p2_wait",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "p2_check",
+      "dst": "box_can_shrink",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "p2_move",
+      "dst": "box_shrink_moves",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "p2_wait",
+      "dst": "wait_after_p2",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "phase3_take_opposition",
+      "dst": "p3_check",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "phase3_take_opposition",
+      "dst": "p3_move",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "phase3_take_opposition",
+      "dst": "p3_wait",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "p3_check",
+      "dst": "p3_move",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "p3_move",
+      "dst": "p3_wait",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "p3_check",
+      "dst": "can_take_opposition",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "p3_move",
+      "dst": "opposition_moves",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "p3_wait",
+      "dst": "wait_after_p3",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "phase4_deliver_mate",
+      "dst": "p4_check",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "phase4_deliver_mate",
+      "dst": "p4_move",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "phase4_deliver_mate",
+      "dst": "p4_wait",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "p4_check",
+      "dst": "p4_move",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "p4_move",
+      "dst": "p4_wait",
+      "type": "POR",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "p4_check",
+      "dst": "can_deliver_mate",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "p4_move",
+      "dst": "mate_moves",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    },
+    {
+      "src": "p4_wait",
+      "dst": "wait_after_p4",
+      "type": "SUB",
+      "weight": 1.0,
+      "consolidate": true,
+      "confirmation_count": 0
+    }
+  ],
+  "last_modified": "2026-01-19T09:46:25.602967",
+  "evolution_history": []
+}
