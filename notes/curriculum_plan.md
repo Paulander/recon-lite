@@ -140,9 +140,12 @@ Only hoist upward if they prove transferable across legs/stages.
   - Conclusion: Stage‑1 remains under target; 30-sample result was optimistic/noisy.
   - Stage‑0 regression (50 samples): `100%`.
 - New Stage‑1 improvement pass (implemented):
-  - `goal_eps` default lowered to `0.08` and `max_goals` default raised to `200` (trainer + learner + runtime fallback).
+  - `goal_eps` default lowered to `0.08` and `max_goals` default raised to `200` (trainer + learner + runtime fallback — all three synchronized, including `_promote_goal_from_outputs` fallback).
   - Added `--stage1-reward-scale` to amplify Stage‑1 dense reward during updates without changing labels.
   - Added Stage‑1 evaluator diagnostics: `--min-d0` and quartile distance-bucket reporting.
+- **Resolved issues:**
+  - Training metric mismatch (raw L2 → XP‑weighted normalized L2): done.
+  - `_promote_goal_from_outputs` fallback was stale at 0.15 → fixed to 0.08.
 
 ---
 
