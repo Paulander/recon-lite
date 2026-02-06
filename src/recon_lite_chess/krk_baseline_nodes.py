@@ -591,7 +591,7 @@ def _promote_goal_from_outputs(blackboard: Dict[str, Any]) -> None:
     values = {sid: float(val) for sid, val in sensor_outputs.items()}
 
     # Merge with existing goals if close
-    goal_eps = float(goal_bank.get("goal_eps", 0.15))
+    goal_eps = float(goal_bank.get("goal_eps", 0.08))
     normalize = bool(blackboard.get("goal_normalize", True))
     min_overlap = float(blackboard.get("goal_min_overlap", 8))
     dist, idx = _goal_distance_from_values(values, goal_bank, normalize=normalize, min_overlap=min_overlap)
