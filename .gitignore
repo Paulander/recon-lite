@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.Python
+
+# Packaging and build output
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Test and coverage output
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# Environments and tools
+.venv/
+venv/
+env/
+.mypy_cache/
+.ruff_cache/
+.tox/
+
+# uv and local interpreter pins
+.python-version
+
+# Example traces and local data
+traces/
+*.jsonl
+
+# Editors and OS metadata
+.idea/
+.vscode/
+*.swp
+.DS_Store

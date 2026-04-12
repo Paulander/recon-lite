@@ -1,0 +1,43 @@
+[project]
+name = "recon-lite"
+version = "0.1.0"
+description = "Dependency-light Request-Confirmation Network core"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+authors = [
+    { name = "ReCoN Lite contributors" },
+]
+keywords = ["agent", "planning", "graph", "interpretable-ai", "recon"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/banquo/recon-lite"
+Repository = "https://github.com/banquo/recon-lite"
+Issues = "https://github.com/banquo/recon-lite/issues"
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.4.2",
+]
+
+[build-system]
+requires = ["setuptools>=77.0.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["recon_lite*"]
+
+[tool.setuptools.package-data]
+"recon_lite.examples" = ["README.md"]
