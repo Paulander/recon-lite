@@ -75,11 +75,18 @@ assert graph.nodes["sensor"].state == NodeState.CONFIRMED
 - `NodeType.TERMINAL` nodes call predicates that connect the graph to a world,
   tool, model, or sensor.
 - `LinkType.SUB` expresses hierarchy: a parent requests a child.
-- `LinkType.POR` expresses temporal order: a successor waits for a predecessor
-  to confirm.
+- `LinkType.POR` expresses temporal order: a successor waits for a predecessor  to confirm.
+- `LinkType.SUR` child confirms upward to parent.
+- `LinkType.RET` RET successor returns/blocks predecessor.
 - `ReConEngine.step(env)` advances the network one discrete tick.
 - `EngineConfig(activation_mode=ActivationMode.CONTINUOUS)` enables activation
   settling between discrete ticks for diagnostics and visualization.
+
+Important notes/TODO:
+SUR implementation: Partial. It is represented and allowed by the graph, but engine confirmation is mostly implicit via child node states, not actual SUR message propagation.
+RET	successor returns/blocks predecessor	Current support: Mostly data-model only. It exists in LinkType and validation, but the engine does not really execute RET semantics.
+
+These will be adressed ASAP.
 
 ## Grid-World Example
 
