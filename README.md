@@ -145,7 +145,14 @@ uv run python -m recon_lite.examples.formal_trace --trace-json traces/formal.jso
 
 Open `examples/formal_trace_viewer.html` in a browser and load the generated
 JSON file. The viewer is a static HTML file with no build step or runtime
-dependencies.
+dependencies. If your browser blocks `file://` pages, especially from WSL, run
+it through a tiny local server:
+
+```bash
+python -m http.server 8000
+```
+
+Then open `http://localhost:8000/examples/formal_trace_viewer.html`.
 
 See `docs/architecture.md` for the package architecture and observability
 surface.

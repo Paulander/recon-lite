@@ -111,34 +111,49 @@
       stroke-width: 5;
     }
 
-    .node circle {
+    .node .shape {
       fill: #ffffff;
       stroke: var(--ink);
       stroke-width: 2;
     }
 
-    .node.REQUESTED circle,
-    .node.ACTIVE circle,
-    .node.WAITING circle {
-      fill: #edf7f2;
-      stroke: var(--active);
+    .node.REQUESTED .shape {
+      fill: #fff8d6;
+      stroke: #9a6b00;
     }
 
-    .node.TRUE circle,
-    .node.CONFIRMED circle {
-      fill: #e8f6ed;
+    .node.ACTIVE .shape {
+      fill: #d9edff;
+      stroke: #1769aa;
+      stroke-width: 3;
+    }
+
+    .node.WAITING .shape {
+      fill: #e8e1ff;
+      stroke: #5f4bb6;
+      stroke-width: 3;
+    }
+
+    .node.TRUE .shape {
+      fill: #dcf7e7;
       stroke: var(--active);
       stroke-width: 3;
     }
 
-    .node.SUPPRESSED circle {
-      fill: #fff3e0;
+    .node.CONFIRMED .shape {
+      fill: #9ee6b7;
+      stroke: var(--active);
+      stroke-width: 3;
+    }
+
+    .node.SUPPRESSED .shape {
+      fill: #ffd59a;
       stroke: var(--warn);
       stroke-width: 3;
     }
 
-    .node.FAILED circle {
-      fill: #fdecea;
+    .node.FAILED .shape {
+      fill: #ffb4ab;
       stroke: var(--bad);
       stroke-width: 3;
     }
@@ -192,12 +207,44 @@
       gap: 6px;
     }
 
+    .state-legend {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .state-legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+
     .swatch {
       width: 18px;
       height: 4px;
       display: inline-block;
       background: currentColor;
     }
+
+    .state-swatch {
+      width: 14px;
+      height: 14px;
+      display: inline-block;
+      border: 2px solid var(--ink);
+      border-radius: 3px;
+      background: #ffffff;
+    }
+
+    .state-swatch.REQUESTED { background: #fff8d6; border-color: #9a6b00; }
+    .state-swatch.ACTIVE { background: #d9edff; border-color: #1769aa; }
+    .state-swatch.WAITING { background: #e8e1ff; border-color: #5f4bb6; }
+    .state-swatch.TRUE { background: #dcf7e7; border-color: var(--active); }
+    .state-swatch.CONFIRMED { background: #9ee6b7; border-color: var(--active); }
+    .state-swatch.SUPPRESSED { background: #ffd59a; border-color: var(--warn); }
+    .state-swatch.FAILED { background: #ffb4ab; border-color: var(--bad); }
 
     @media (max-width: 760px) {
       .toolbar,
@@ -243,6 +290,17 @@
           <span style="color: var(--edge-por)"><i class="swatch"></i>POR</span>
           <span style="color: var(--edge-ret)"><i class="swatch"></i>RET</span>
         </div>
+        <h2 style="margin-top: 22px;">Node States</h2>
+        <div class="state-legend">
+          <span><i class="state-swatch"></i>INACTIVE</span>
+          <span><i class="state-swatch REQUESTED"></i>REQUESTED</span>
+          <span><i class="state-swatch ACTIVE"></i>ACTIVE</span>
+          <span><i class="state-swatch WAITING"></i>WAITING</span>
+          <span><i class="state-swatch TRUE"></i>TRUE</span>
+          <span><i class="state-swatch CONFIRMED"></i>CONFIRMED</span>
+          <span><i class="state-swatch SUPPRESSED"></i>SUPPRESSED</span>
+          <span><i class="state-swatch FAILED"></i>FAILED</span>
+        </div>
       </aside>
     </section>
   </main>
@@ -259,8 +317,16 @@
     fileInput.addEventListener("change", async (event) => {
       const file = event.target.files[0];
       if (!file) return;
-      trace = JSON.parse(await file.text());
-      positions = layoutNodes(Object.keys(trace.graph.nodes));
+      const rawTrace = JSON.parse(await file.text());
+      trace = normalizeTrace(rawTrace);
+      if (!trace) {
+        slider.disabled = true;
+        tickLabel.textContent = "0 / 0";
+        messagesEl.innerHTML = "<p>Unsupported trace JSON. Load a formal trace with a top-level frames array, or a grid-world trace with steps[].ticks[].</p>";
+        svg.innerHTML = '<text x="480" y="260" text-anchor="middle">Unsupported trace JSON.</text>';
+        return;
+      }
+      positions = layoutNodes(trace.graph);
       slider.max = String(Math.max(0, trace.frames.length - 1));
       slider.value = "0";
       slider.disabled = trace.frames.length === 0;
@@ -269,18 +335,65 @@
 
     slider.addEventListener("input", () => renderFrame(Number(slider.value)));
 
-    function layoutNodes(nodeIds) {
-      const order = nodeIds.slice().sort((a, b) => a.localeCompare(b));
-      const roots = order.filter((id) => !id.endsWith("_done") && id !== "root");
-      const terminals = order.filter((id) => id.endsWith("_done"));
-      const result = nodeIds.includes("root") ? { root: { x: 480, y: 80 } } : {};
-      roots.forEach((id, index) => {
-        result[id] = { x: 210 + index * 180, y: 230 };
+    function normalizeTrace(rawTrace) {
+      if (rawTrace && rawTrace.graph && Array.isArray(rawTrace.frames)) {
+        return rawTrace;
+      }
+      if (rawTrace && rawTrace.graph && Array.isArray(rawTrace.steps)) {
+        const frames = rawTrace.steps.flatMap((step) => {
+          return (step.ticks || []).map((tick) => ({
+            tick: tick.tick,
+            states_after: tick.nodes || {},
+            activations: tick.activations || {},
+            messages: tick.messages || []
+          }));
+        });
+        return { graph: rawTrace.graph, frames };
+      }
+      return null;
+    }
+
+    function layoutNodes(graph) {
+      const nodeIds = Object.keys(graph.nodes).sort((a, b) => a.localeCompare(b));
+      const edges = Object.values(graph.edges || {});
+      const subChildren = {};
+      const subParent = {};
+      edges.filter((edge) => edge.type === "SUB").forEach((edge) => {
+        if (!subChildren[edge.src]) subChildren[edge.src] = [];
+        subChildren[edge.src].push(edge.dst);
+        if (!subParent[edge.dst]) subParent[edge.dst] = edge.src;
       });
-      terminals.forEach((id) => {
-        const parent = id.replace("_done", "");
-        const parentPos = result[parent] || { x: 160, y: 230 };
-        result[id] = { x: parentPos.x, y: 390 };
+
+      const roots = nodeIds
+        .filter((id) => !subParent[id])
+        .sort((a, b) => (a === "root" ? -1 : b === "root" ? 1 : a.localeCompare(b)));
+      const layers = {};
+      const seen = new Set();
+      const place = (id, depth) => {
+        if (seen.has(id)) return;
+        seen.add(id);
+        if (!layers[depth]) layers[depth] = [];
+        layers[depth].push(id);
+        (subChildren[id] || [])
+          .slice()
+          .sort((a, b) => a.localeCompare(b))
+          .forEach((child) => place(child, depth + 1));
+      };
+
+      roots.forEach((id) => place(id, 0));
+      nodeIds.filter((id) => !seen.has(id)).forEach((id) => place(id, 0));
+
+      const result = {};
+      Object.keys(layers).forEach((depthKey) => {
+        const depth = Number(depthKey);
+        const layer = layers[depth];
+        const gap = 960 / (layer.length + 1);
+        layer.forEach((id, index) => {
+          result[id] = {
+            x: Math.round(gap * (index + 1)),
+            y: 80 + depth * 150
+          };
+        });
       });
       return result;
     }
@@ -313,9 +426,18 @@
         const dx = dst.x - src.x;
         const dy = dst.y - src.y;
         const length = Math.max(1, Math.hypot(dx, dy));
-        const start = { x: src.x + dx * 34 / length, y: src.y + dy * 34 / length };
-        const end = { x: dst.x - dx * 38 / length, y: dst.y - dy * 38 / length };
-        return `<line class="edge ${edge.type} ${activeEdges.has(key) ? "active" : ""}" x1="${start.x}" y1="${start.y}" x2="${end.x}" y2="${end.y}"></line>`;
+        const start = { x: src.x + dx * 42 / length, y: src.y + dy * 42 / length };
+        const end = { x: dst.x - dx * 46 / length, y: dst.y - dy * 46 / length };
+        const curve = edge.type === "POR" || edge.type === "RET" ? 40 : edge.type === "SUR" ? 18 : 0;
+        const normal = { x: -dy / length, y: dx / length };
+        const control = {
+          x: (start.x + end.x) / 2 + normal.x * curve,
+          y: (start.y + end.y) / 2 + normal.y * curve
+        };
+        const path = curve
+          ? `M ${start.x} ${start.y} Q ${control.x} ${control.y} ${end.x} ${end.y}`
+          : `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
+        return `<path class="edge ${edge.type} ${activeEdges.has(key) ? "active" : ""}" d="${path}"></path>`;
       }).join("");
     }
 
@@ -323,9 +445,13 @@
       return Object.keys(nodes).sort((a, b) => a.localeCompare(b)).map((id) => {
         const pos = positions[id] || { x: 80, y: 80 };
         const state = states[id] || "INACTIVE";
+        const nodeType = nodes[id].type || "SCRIPT";
+        const shape = nodeType === "TERMINAL"
+          ? `<polygon class="shape" points="${pos.x},${pos.y - 40} ${pos.x + 40},${pos.y} ${pos.x},${pos.y + 40} ${pos.x - 40},${pos.y}"></polygon>`
+          : `<circle class="shape" cx="${pos.x}" cy="${pos.y}" r="38"></circle>`;
         return `
           <g class="node ${state}">
-            <circle cx="${pos.x}" cy="${pos.y}" r="38"></circle>
+            ${shape}
             <text x="${pos.x}" y="${pos.y - 6}">${escapeHtml(id)}</text>
             <text class="state-label" x="${pos.x}" y="${pos.y + 17}">${escapeHtml(state)}</text>
           </g>
