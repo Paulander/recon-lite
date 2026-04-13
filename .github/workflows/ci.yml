@@ -41,8 +41,10 @@ jobs:
       - name: Run grid-world smoke tests
         run: |
           uv run --python ${{ matrix.python-version }} python -m recon_lite.examples.gridworld --mode discrete --steps 3
-          uv run --python ${{ matrix.python-version }} python -m recon_lite.examples.gridworld --mode continuous --steps 3 --microticks 2 --trace-json traces/gridworld.json
+          uv run --python ${{ matrix.python-version }} python -m recon_lite.examples.gridworld --steps 3 --trace-json traces/gridworld.json
           test -s traces/gridworld.json
+          uv run --python ${{ matrix.python-version }} python -m recon_lite.examples.gridworld --engine pragmatic --mode continuous --steps 3 --microticks 2 --trace-json traces/gridworld-pragmatic.json
+          test -s traces/gridworld-pragmatic.json
 
       - name: Run formal trace smoke test
         run: |

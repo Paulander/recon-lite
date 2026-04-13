@@ -8,4 +8,6 @@
 - Added a grid-world example with optional trace JSON export.
 - Added `FormalReConEngine` for explicit symbolic SUB/SUR/POR/RET message passing.
 - Added a formal trace generator and static HTML trace viewer.
+- Made the grid-world example use the formal executor by default, with
+  `--engine pragmatic` available for the legacy high-level executor.
 - Added standalone package metadata, MIT license, and GitHub CI configuration.

@@ -24,7 +24,17 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Union
 
-from recon_lite import ActivationMode, EngineConfig, Graph, LinkType, Node, NodeState, NodeType, ReConEngine
+from recon_lite import (
+    ActivationMode,
+    EngineConfig,
+    FormalReConEngine,
+    Graph,
+    LinkType,
+    Node,
+    NodeState,
+    NodeType,
+    ReConEngine,
+)
 from recon_lite.binding.manager import BindingInstance, BindingTable
 
 
@@ -93,6 +103,24 @@ def build_graph() -> Graph:
     return graph
 
 
+def build_formal_graph() -> Graph:
+    """Build the same grid-world graph with explicit article-style edge pairs."""
+    graph = Graph()
+
+    graph.add_node(Node("root", NodeType.SCRIPT))
+    graph.add_node(Node("sense", NodeType.SCRIPT))
+    graph.add_node(Node("act", NodeType.SCRIPT))
+    graph.add_node(Node("goal_sensor", NodeType.TERMINAL, predicate=_sense_goal))
+    graph.add_node(Node("move_agent", NodeType.TERMINAL, predicate=_move_agent))
+
+    graph.add_hierarchy_pair("root", "sense")
+    graph.add_hierarchy_pair("root", "act")
+    graph.add_hierarchy_pair("sense", "goal_sensor")
+    graph.add_hierarchy_pair("act", "move_agent")
+    graph.add_sequence_pair("sense", "act")
+    return graph
+
+
 def _sense_goal(node: Node, env: dict) -> tuple[bool, bool]:
     """Observe the grid and reserve bindings for the agent and goal cells."""
     grid: GridState = env["grid"]
@@ -128,6 +156,7 @@ def run_simulation(
     seed: int = 0,
     steps: int = 10,
     microticks: int = 0,
+    engine_kind: str = "formal",
     explain: bool = False,
     trace_json: Optional[TracePath] = None,
 ) -> List[str]:
@@ -135,16 +164,24 @@ def run_simulation(
     random.seed(seed)
     grid = GridState()
     bindings = BindingTable()
-    graph = build_graph()
+    engine_kind = _parse_engine_kind(engine_kind)
+    graph = build_formal_graph() if engine_kind == "formal" else build_graph()
     config = EngineConfig(
         activation_mode=mode,
         microtick_steps=microticks,
         record_activation_history=mode == ActivationMode.CONTINUOUS,
     )
-    engine = ReConEngine(graph, config=config)
-    graph.nodes["root"].state = NodeState.REQUESTED
+    engine = FormalReConEngine(graph) if engine_kind == "formal" else ReConEngine(graph, config=config)
+    _request_root(engine_kind, engine, graph)
     lines: List[str] = []
-    trace = _new_trace(mode=mode, seed=seed, steps=steps, microticks=microticks, graph=graph)
+    trace = _new_trace(
+        mode=mode,
+        engine_kind=engine_kind,
+        seed=seed,
+        steps=steps,
+        microticks=microticks,
+        graph=graph,
+    )
 
     for step_idx in range(max(0, steps)):
         signature_before = grid.signature()
@@ -157,20 +194,20 @@ def run_simulation(
         # Each visible grid move is an outer step. Inside it the ReCoN engine may
         # need several ticks to request children, run predicates, and confirm
         # scripts. Resetting node states makes each outer step a fresh request.
-        engine.reset_states()
-        graph.nodes["root"].state = NodeState.REQUESTED
+        _reset_engine(engine_kind, engine, graph)
         env = {"grid": grid, "bindings": bindings}
         tick_frames: List[Dict[str, Any]] = []
 
         for _ in range(20):
-            now_requested = engine.step(env)
-            tick_frames.append(_tick_frame(engine, env, now_requested))
-            if graph.nodes["move_agent"].state == NodeState.CONFIRMED:
+            frame = _step_engine(engine_kind, engine, env)
+            tick_frames.append(_tick_frame(engine_kind, engine, env, frame))
+            if _outer_step_complete(engine_kind, graph):
                 break
 
         summary = _format_summary_line(
             step_idx=step_idx,
             mode=mode,
+            engine_kind=engine_kind,
             grid=grid,
             bindings=bindings,
             tick_frames=tick_frames,
@@ -204,6 +241,7 @@ def run_simulation(
 def _new_trace(
     *,
     mode: ActivationMode,
+    engine_kind: str,
     seed: int,
     steps: int,
     microticks: int,
@@ -213,6 +251,7 @@ def _new_trace(
         "schema_version": 1,
         "example": "gridworld",
         "metadata": {
+            "engine": engine_kind,
             "mode": mode.value,
             "seed": seed,
             "steps_requested": steps,
@@ -223,7 +262,19 @@ def _new_trace(
     }
 
 
-def _tick_frame(engine: ReConEngine, env: Dict[str, Any], now_requested: Dict[str, bool]) -> Dict[str, Any]:
+def _tick_frame(engine_kind: str, engine: Any, env: Dict[str, Any], raw_frame: Any) -> Dict[str, Any]:
+    if engine_kind == "formal":
+        return {
+            "tick": engine.tick,
+            "new_requests": [],
+            "nodes": _node_states(engine.g),
+            "activations": _activation_values(engine.g),
+            "bindings": env["bindings"].snapshot(),
+            "messages": raw_frame["messages"],
+            "formal_states_before": raw_frame["states_before"],
+        }
+
+    now_requested = raw_frame
     frame: Dict[str, Any] = {
         "tick": engine.tick,
         "new_requests": sorted(nid for nid, requested in now_requested.items() if requested),
@@ -250,6 +301,7 @@ def _format_summary_line(
     *,
     step_idx: int,
     mode: ActivationMode,
+    engine_kind: str,
     grid: GridState,
     bindings: BindingTable,
     tick_frames: List[Dict[str, Any]],
@@ -261,7 +313,7 @@ def _format_summary_line(
     ) if tick_frames else []
     confirmed_text = ",".join(confirmed) if confirmed else "-"
     return (
-        f"step={step_idx + 1} mode={mode.value} agent={grid.agent} goal={grid.goal} "
+        f"step={step_idx + 1} engine={engine_kind} mode={mode.value} agent={grid.agent} goal={grid.goal} "
         f"engine_ticks={len(tick_frames)} confirmed={confirmed_text} bindings={len(bindings.snapshot())}"
     )
 
@@ -304,8 +356,48 @@ def _parse_mode(value: str) -> ActivationMode:
     return ActivationMode(value)
 
 
+def _parse_engine_kind(value: str) -> str:
+    if value not in ("pragmatic", "formal"):
+        raise ValueError(f"Unknown engine kind: {value}")
+    return value
+
+
+def _request_root(engine_kind: str, engine: Any, graph: Graph) -> None:
+    if engine_kind == "formal":
+        engine.request("root")
+    else:
+        graph.nodes["root"].state = NodeState.REQUESTED
+
+
+def _reset_engine(engine_kind: str, engine: Any, graph: Graph) -> None:
+    if engine_kind == "formal":
+        for node in graph.nodes.values():
+            node.state = NodeState.INACTIVE
+            node.tick_entered = -1
+        engine.trace.clear()
+        engine.tick = 0
+        engine.clear_request("root")
+        engine.request("root")
+    else:
+        engine.reset_states()
+        graph.nodes["root"].state = NodeState.REQUESTED
+
+
+def _step_engine(engine_kind: str, engine: Any, env: Dict[str, Any]) -> Any:
+    if engine_kind == "formal":
+        return engine.step(env)
+    return engine.step(env)
+
+
+def _outer_step_complete(engine_kind: str, graph: Graph) -> bool:
+    if engine_kind == "formal":
+        return graph.nodes["root"].state in (NodeState.CONFIRMED, NodeState.FAILED)
+    return graph.nodes["move_agent"].state == NodeState.CONFIRMED
+
+
 def main(argv: Optional[Iterable[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Run the ReCoN Lite grid-world example.")
+    parser.add_argument("--engine", choices=["formal", "pragmatic"], default="formal")
     parser.add_argument("--mode", choices=[mode.value for mode in ActivationMode], default=ActivationMode.DISCRETE.value)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--steps", type=int, default=10)
@@ -319,6 +411,7 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
         seed=args.seed,
         steps=args.steps,
         microticks=args.microticks,
+        engine_kind=args.engine,
         explain=args.explain,
         trace_json=args.trace_json,
     ):

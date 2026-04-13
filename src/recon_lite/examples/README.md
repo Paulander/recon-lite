@@ -1,14 +1,14 @@
 # Grid-World Example
 
-This example is the smallest pragmatic ReCoN loop in the standalone package. A
-toy agent starts at `(0, 0)` in a 5x5 grid and moves toward a goal at `(4, 4)`.
+This example is the smallest formal ReCoN loop in the standalone package. A toy
+agent starts at `(0, 0)` in a 5x5 grid and moves toward a goal at `(4, 4)`.
 
 The path planner is intentionally simple. The useful part is the traceable
 network loop around it.
 
-This example uses `ReConEngine`, not `FormalReConEngine`. Use
-`python -m recon_lite.examples.formal_trace` when you want an explicit
-article-style `SUB`/`SUR`/`POR`/`RET` message trace.
+This example uses `FormalReConEngine` by default, with paired `SUB`/`SUR` and
+`POR`/`RET` links. Use `--engine pragmatic` to compare it with the smaller
+high-level `ReConEngine`.
 
 ## Network
 
@@ -42,7 +42,8 @@ Each outer grid step:
 1. invalidates stale bindings if the grid-state signature changed
 2. resets node states for a fresh request
 3. requests `root`
-4. advances the engine until `move_agent` confirms
+4. advances the engine until `root` confirms in formal mode, or until
+   `move_agent` confirms in pragmatic mode
 5. prints the visible world state
 
 The engine may need several internal ticks inside one visible step because
@@ -53,10 +54,9 @@ as separate state transitions.
 
 Discrete mode runs the request/confirmation state machine.
 
-Continuous mode uses the same graph and the same visible agent behavior, but it
-also performs activation microticks between discrete engine ticks. The example
-records these activation values in the trace so a visualizer can show how the
-network settles while the discrete logic runs.
+The formal engine records explicit edge messages and node states. Continuous
+activation microticks currently belong to the pragmatic executor; run with
+`--engine pragmatic --mode continuous` when you want that activation overlay.
 
 ## Bindings
 
@@ -81,22 +81,28 @@ uv run python -m recon_lite.examples.gridworld --mode discrete --steps 3
 Explanatory output:
 
 ```bash
-uv run python -m recon_lite.examples.gridworld --mode continuous --steps 3 --microticks 2 --explain
+uv run python -m recon_lite.examples.gridworld --steps 3 --explain
 ```
 
 Trace export:
 
 ```bash
-uv run python -m recon_lite.examples.gridworld --mode continuous --steps 3 --microticks 2 --trace-json traces/gridworld.json
+uv run python -m recon_lite.examples.gridworld --steps 3 --trace-json traces/gridworld.json
+```
+
+Pragmatic continuous activation overlay:
+
+```bash
+uv run python -m recon_lite.examples.gridworld --engine pragmatic --mode continuous --steps 3 --microticks 2 --trace-json traces/gridworld-pragmatic.json
 ```
 
 The trace is a single JSON document with:
 
-- `metadata`: mode, seed, requested steps, microticks
+- `metadata`: engine, mode, seed, requested steps, microticks
 - `graph`: nodes and edges
 - `steps`: visible grid steps, including world state before and after acting
 - `ticks`: per-engine-tick node states, new requests, activations, bindings,
-  and optional activation history
+  formal messages, and optional activation history
 
 This format is deliberately visualizer-neutral. A later UI can render the graph,
 timeline, activation curves, and binding table without needing to understand

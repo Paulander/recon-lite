@@ -48,7 +48,7 @@ uv add --editable /path/to/recon-lite
 ## Quickstart
 
 ```python
-from recon_lite import Graph, LinkType, Node, NodeState, NodeType, ReConEngine
+from recon_lite import FormalReConEngine, Graph, Node, NodeState, NodeType
 
 
 def terminal(_node, _env):
@@ -58,15 +58,16 @@ def terminal(_node, _env):
 graph = Graph()
 graph.add_node(Node("root", NodeType.SCRIPT))
 graph.add_node(Node("sensor", NodeType.TERMINAL, predicate=terminal))
-graph.add_edge("root", "sensor", LinkType.SUB)
+graph.add_hierarchy_pair("root", "sensor")
 
-engine = ReConEngine(graph)
-graph.nodes["root"].state = NodeState.REQUESTED
+engine = FormalReConEngine(graph)
+engine.request("root")
 
-for _ in range(4):
+for _ in range(8):
     engine.step({})
 
 assert graph.nodes["sensor"].state == NodeState.CONFIRMED
+assert graph.nodes["root"].state == NodeState.CONFIRMED
 ```
 
 ## Core Concepts
@@ -108,8 +109,9 @@ implementation described later in the ReCoN paper.
 
 ## Grid-World Example
 
-The grid-world example uses `ReConEngine`, not `FormalReConEngine`, because it
-is meant to teach the smallest practical agent loop first.
+The grid-world example uses `FormalReConEngine` by default because this package
+is meant to teach ReCoN before application-specific shortcuts. Pass
+`--engine pragmatic` to compare with the smaller high-level executor.
 
 Run the simple agent:
 
@@ -120,18 +122,25 @@ uv run python -m recon_lite.examples.gridworld --mode discrete --steps 3
 Ask for the explanatory output:
 
 ```bash
-uv run python -m recon_lite.examples.gridworld --mode continuous --steps 3 --microticks 2 --explain
+uv run python -m recon_lite.examples.gridworld --steps 3 --explain
 ```
 
 Export a trace for visualization:
 
 ```bash
-uv run python -m recon_lite.examples.gridworld --mode continuous --steps 3 --microticks 2 --trace-json traces/gridworld.json
+uv run python -m recon_lite.examples.gridworld --steps 3 --trace-json traces/gridworld.json
+```
+
+Compare with the pragmatic continuous activation overlay:
+
+```bash
+uv run python -m recon_lite.examples.gridworld --engine pragmatic --mode continuous --steps 3 --microticks 2 --trace-json traces/gridworld-pragmatic.json
 ```
 
 The trace JSON contains run metadata, graph structure, visible world steps,
-per-tick node states, activation values, binding snapshots, and continuous
-activation history when microticks are enabled.
+per-tick node states, activation values, binding snapshots, and formal edge
+messages when using the default formal engine. Continuous activation history is
+included when using `--engine pragmatic --mode continuous`.
 
 See `src/recon_lite/examples/README.md` for the walkthrough.
 
