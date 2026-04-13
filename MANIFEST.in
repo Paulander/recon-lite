@@ -4,3 +4,4 @@ include README.md
 include uv.lock
 recursive-include docs *.md
 recursive-include src/recon_lite/examples *.md
+recursive-include examples *.html

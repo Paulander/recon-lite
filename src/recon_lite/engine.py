@@ -103,7 +103,11 @@ class SubgraphLock:
 
 class ReConEngine:
     """
-    Minimal, discrete-time executor:
+    Pragmatic high-level discrete-time executor.
+
+    Use FormalReConEngine for explicit article-style SUB/SUR/POR/RET message
+    passing. This engine preserves the smaller legacy execution model:
+
     - Parent REQUESTS children via SUB if not inhibited by POR predecessors.
     - POR gating: a node is requestable only if all its POR predecessors are TRUE/CONFIRMED.
     - Parent becomes TRUE when the last node of each POR chain under it is CONFIRMED.

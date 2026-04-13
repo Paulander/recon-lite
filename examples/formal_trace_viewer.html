@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ReCoN Formal Trace Viewer</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1d1f21;
+      --muted: #5a6268;
+      --line: #c9ced3;
+      --panel: #f7f9fa;
+      --active: #1f7a5a;
+      --warn: #a45d00;
+      --bad: #b3261e;
+      --edge-sub: #1f7a5a;
+      --edge-sur: #6a5d00;
+      --edge-por: #8b2f23;
+      --edge-ret: #3b6f8f;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #ffffff;
+      line-height: 1.45;
+    }
+
+    main {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 28px 18px 40px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 2rem;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0 0 16px;
+      color: var(--muted);
+    }
+
+    .toolbar,
+    .details {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: var(--panel);
+    }
+
+    .toolbar {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: minmax(220px, 1fr) minmax(240px, 2fr);
+      align-items: end;
+      margin: 18px 0;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      font-weight: 650;
+    }
+
+    input[type="file"],
+    input[type="range"] {
+      width: 100%;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+      gap: 16px;
+    }
+
+    .stage {
+      min-height: 520px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      min-height: 520px;
+      background: #ffffff;
+    }
+
+    .edge {
+      fill: none;
+      stroke-width: 2.2;
+      marker-end: url(#arrow);
+    }
+
+    .edge.SUB { stroke: var(--edge-sub); }
+    .edge.SUR { stroke: var(--edge-sur); }
+    .edge.POR { stroke: var(--edge-por); }
+    .edge.RET { stroke: var(--edge-ret); }
+
+    .edge.active {
+      stroke-width: 5;
+    }
+
+    .node circle {
+      fill: #ffffff;
+      stroke: var(--ink);
+      stroke-width: 2;
+    }
+
+    .node.REQUESTED circle,
+    .node.ACTIVE circle,
+    .node.WAITING circle {
+      fill: #edf7f2;
+      stroke: var(--active);
+    }
+
+    .node.TRUE circle,
+    .node.CONFIRMED circle {
+      fill: #e8f6ed;
+      stroke: var(--active);
+      stroke-width: 3;
+    }
+
+    .node.SUPPRESSED circle {
+      fill: #fff3e0;
+      stroke: var(--warn);
+      stroke-width: 3;
+    }
+
+    .node.FAILED circle {
+      fill: #fdecea;
+      stroke: var(--bad);
+      stroke-width: 3;
+    }
+
+    .node text {
+      text-anchor: middle;
+      dominant-baseline: middle;
+      font-size: 14px;
+      font-weight: 650;
+      fill: var(--ink);
+      letter-spacing: 0;
+    }
+
+    .state-label {
+      font-size: 11px;
+      font-weight: 500;
+      fill: var(--muted);
+    }
+
+    .details {
+      min-height: 520px;
+      overflow: auto;
+    }
+
+    .details h2 {
+      margin: 0 0 10px;
+      font-size: 1.2rem;
+      letter-spacing: 0;
+    }
+
+    .message {
+      border-bottom: 1px solid var(--line);
+      padding: 8px 0;
+      font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+      font-size: 0.92rem;
+      overflow-wrap: anywhere;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .swatch {
+      width: 18px;
+      height: 4px;
+      display: inline-block;
+      background: currentColor;
+    }
+
+    @media (max-width: 760px) {
+      .toolbar,
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>ReCoN Formal Trace Viewer</h1>
+    <p>Load a JSON trace from <code>python -m recon_lite.examples.formal_trace --trace-json formal.json</code>.</p>
+
+    <section class="toolbar">
+      <label>
+        Trace JSON
+        <input id="file" type="file" accept="application/json,.json">
+      </label>
+      <label>
+        Tick <span id="tickLabel">0 / 0</span>
+        <input id="slider" type="range" min="0" max="0" value="0" disabled>
+      </label>
+    </section>
+
+    <section class="layout">
+      <div class="stage">
+        <svg id="graph" viewBox="0 0 960 520" role="img" aria-label="ReCoN graph trace">
+          <defs>
+            <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3.5" orient="auto">
+              <path d="M0,0 L7,3.5 L0,7 Z" fill="#1d1f21"></path>
+            </marker>
+          </defs>
+          <text x="480" y="260" text-anchor="middle">Load a trace JSON file.</text>
+        </svg>
+      </div>
+      <aside class="details">
+        <h2>Messages</h2>
+        <div id="messages">No trace loaded.</div>
+        <div class="legend">
+          <span style="color: var(--edge-sub)"><i class="swatch"></i>SUB</span>
+          <span style="color: var(--edge-sur)"><i class="swatch"></i>SUR</span>
+          <span style="color: var(--edge-por)"><i class="swatch"></i>POR</span>
+          <span style="color: var(--edge-ret)"><i class="swatch"></i>RET</span>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const fileInput = document.getElementById("file");
+    const slider = document.getElementById("slider");
+    const tickLabel = document.getElementById("tickLabel");
+    const svg = document.getElementById("graph");
+    const messagesEl = document.getElementById("messages");
+    let trace = null;
+    let positions = {};
+
+    fileInput.addEventListener("change", async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      trace = JSON.parse(await file.text());
+      positions = layoutNodes(Object.keys(trace.graph.nodes));
+      slider.max = String(Math.max(0, trace.frames.length - 1));
+      slider.value = "0";
+      slider.disabled = trace.frames.length === 0;
+      renderFrame(0);
+    });
+
+    slider.addEventListener("input", () => renderFrame(Number(slider.value)));
+
+    function layoutNodes(nodeIds) {
+      const order = nodeIds.slice().sort((a, b) => a.localeCompare(b));
+      const roots = order.filter((id) => !id.endsWith("_done") && id !== "root");
+      const terminals = order.filter((id) => id.endsWith("_done"));
+      const result = nodeIds.includes("root") ? { root: { x: 480, y: 80 } } : {};
+      roots.forEach((id, index) => {
+        result[id] = { x: 210 + index * 180, y: 230 };
+      });
+      terminals.forEach((id) => {
+        const parent = id.replace("_done", "");
+        const parentPos = result[parent] || { x: 160, y: 230 };
+        result[id] = { x: parentPos.x, y: 390 };
+      });
+      return result;
+    }
+
+    function renderFrame(index) {
+      if (!trace || !trace.frames.length) return;
+      const frame = trace.frames[index];
+      tickLabel.textContent = `${frame.tick} / ${trace.frames[trace.frames.length - 1].tick}`;
+      const activeEdges = new Set(frame.messages.map((m) => `${m.src}->${m.dst}:${m.link_type}`));
+      svg.innerHTML = `
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3.5" orient="auto">
+            <path d="M0,0 L7,3.5 L0,7 Z" fill="#1d1f21"></path>
+          </marker>
+        </defs>
+        ${renderEdges(trace.graph.edges, activeEdges)}
+        ${renderNodes(trace.graph.nodes, frame.states_after)}
+      `;
+      messagesEl.innerHTML = frame.messages.length
+        ? frame.messages.map(renderMessage).join("")
+        : "<p>No edge messages emitted on this tick.</p>";
+    }
+
+    function renderEdges(edges, activeEdges) {
+      return Object.values(edges).map((edge) => {
+        const src = positions[edge.src];
+        const dst = positions[edge.dst];
+        if (!src || !dst) return "";
+        const key = `${edge.src}->${edge.dst}:${edge.type}`;
+        const dx = dst.x - src.x;
+        const dy = dst.y - src.y;
+        const length = Math.max(1, Math.hypot(dx, dy));
+        const start = { x: src.x + dx * 34 / length, y: src.y + dy * 34 / length };
+        const end = { x: dst.x - dx * 38 / length, y: dst.y - dy * 38 / length };
+        return `<line class="edge ${edge.type} ${activeEdges.has(key) ? "active" : ""}" x1="${start.x}" y1="${start.y}" x2="${end.x}" y2="${end.y}"></line>`;
+      }).join("");
+    }
+
+    function renderNodes(nodes, states) {
+      return Object.keys(nodes).sort((a, b) => a.localeCompare(b)).map((id) => {
+        const pos = positions[id] || { x: 80, y: 80 };
+        const state = states[id] || "INACTIVE";
+        return `
+          <g class="node ${state}">
+            <circle cx="${pos.x}" cy="${pos.y}" r="38"></circle>
+            <text x="${pos.x}" y="${pos.y - 6}">${escapeHtml(id)}</text>
+            <text class="state-label" x="${pos.x}" y="${pos.y + 17}">${escapeHtml(state)}</text>
+          </g>
+        `;
+      }).join("");
+    }
+
+    function renderMessage(message) {
+      return `<div class="message">${escapeHtml(message.src)} -> ${escapeHtml(message.dst)} ${escapeHtml(message.link_type)} ${escapeHtml(message.message)}</div>`;
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+  </script>
+</body>
+</html>

@@ -1,10 +1,14 @@
 # Grid-World Example
 
-This example is the smallest ReCoN loop in the standalone package. A toy agent
-starts at `(0, 0)` in a 5x5 grid and moves toward a goal at `(4, 4)`.
+This example is the smallest pragmatic ReCoN loop in the standalone package. A
+toy agent starts at `(0, 0)` in a 5x5 grid and moves toward a goal at `(4, 4)`.
 
 The path planner is intentionally simple. The useful part is the traceable
 network loop around it.
+
+This example uses `ReConEngine`, not `FormalReConEngine`. Use
+`python -m recon_lite.examples.formal_trace` when you want an explicit
+article-style `SUB`/`SUR`/`POR`/`RET` message trace.
 
 ## Network
 

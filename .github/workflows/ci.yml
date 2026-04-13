@@ -36,13 +36,18 @@ jobs:
         run: uv run --python ${{ matrix.python-version }} python -c "import recon_lite; print(recon_lite.__file__)"
 
       - name: Import public API
-        run: uv run --python ${{ matrix.python-version }} python -c "from recon_lite import ReConEngine, Graph"
+        run: uv run --python ${{ matrix.python-version }} python -c "from recon_lite import FormalReConEngine, ReConEngine, Graph"
 
       - name: Run grid-world smoke tests
         run: |
           uv run --python ${{ matrix.python-version }} python -m recon_lite.examples.gridworld --mode discrete --steps 3
           uv run --python ${{ matrix.python-version }} python -m recon_lite.examples.gridworld --mode continuous --steps 3 --microticks 2 --trace-json traces/gridworld.json
           test -s traces/gridworld.json
+
+      - name: Run formal trace smoke test
+        run: |
+          uv run --python ${{ matrix.python-version }} python -m recon_lite.examples.formal_trace --trace-json traces/formal.json
+          test -s traces/formal.json
 
       - name: Build package
         run: uv build

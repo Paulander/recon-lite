@@ -7,7 +7,10 @@ from domain projects.
 
 - `Graph`, `Node`, `Edge`, `NodeType`, `NodeState`, and `LinkType` define the
   graph model.
-- `ReConEngine` executes one discrete network tick at a time.
+- `ReConEngine` executes pragmatic high-level network ticks for examples and
+  applications.
+- `FormalReConEngine` executes explicit symbolic SUB/SUR/POR/RET message
+  passing.
 - `EngineConfig` and `ActivationMode` configure discrete or continuous
   activation behavior.
 - `BindingTable` and `BindingInstance` track explicit feature-to-object
@@ -22,6 +25,22 @@ from domain projects.
 `SUB` edges request work down the hierarchy. `SUR` is the corresponding
 confirmation direction. `POR` edges encode temporal prerequisites, and `RET`
 is the corresponding return direction.
+
+`ReConEngine` is the pragmatic executor. It uses the graph structure for
+request propagation and predecessor gating, and it observes child node states to
+confirm scripts. This keeps the learning path small and preserves compatibility
+with earlier examples.
+
+`FormalReConEngine` is the article-style executor. It expects paired `SUB`/`SUR`
+hierarchy links and paired `POR`/`RET` sequence links. Every tick emits explicit
+messages from the tick-start node states, groups them by target, and applies all
+state updates simultaneously. This covers the Bach/Herger message-passing
+definition with symbolic states and messages.
+
+The compact neural/activation equations discussed later in the ReCoN paper are
+future work. The current continuous activation microticks are useful for traces,
+diagnostics, and visual intuition, but they are not claimed to be a full
+implementation of that compact neural formulation.
 
 Terminal predicates are the boundary between the graph and an environment. They
 may read sensors, call tools, update node metadata, or mutate a simulated world.

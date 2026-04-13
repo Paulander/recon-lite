@@ -1,9 +1,10 @@
 # ReCoN Lite
 
 ReCoN Lite is a dependency-light Request-Confirmation Network core for building
-interpretable agent control loops. It provides graph primitives, a discrete
-executor, optional continuous activation settling, lightweight tracing, and a
-small grid-world example that can export visualization-ready JSON.
+interpretable agent control loops. It provides graph primitives, a pragmatic
+discrete executor, an explicit formal message-passing executor, optional
+continuous activation settling, lightweight tracing, and small examples that
+can export visualization-ready JSON.
 
 The package is intentionally domain-free. Projects can add their own sensors,
 actuators, world models, and visualizers without bringing those dependencies
@@ -75,20 +76,40 @@ assert graph.nodes["sensor"].state == NodeState.CONFIRMED
 - `NodeType.TERMINAL` nodes call predicates that connect the graph to a world,
   tool, model, or sensor.
 - `LinkType.SUB` expresses hierarchy: a parent requests a child.
-- `LinkType.POR` expresses temporal order: a successor waits for a predecessor  to confirm.
-- `LinkType.SUR` child confirms upward to parent.
-- `LinkType.RET` RET successor returns/blocks predecessor.
-- `ReConEngine.step(env)` advances the network one discrete tick.
+- `LinkType.SUR` is the reverse hierarchy channel: child-to-parent wait,
+  confirm, or fail.
+- `LinkType.POR` expresses temporal order: a predecessor inhibits a successor
+  request until the predecessor is true enough for the successor to start.
+- `LinkType.RET` is the reverse sequence channel: a successor inhibits a
+  predecessor confirmation so only the final sequence element confirms upward.
+- `Graph.add_hierarchy_pair(parent, child)` creates the paired `SUB`/`SUR`
+  links expected by the formal executor.
+- `Graph.add_sequence_pair(predecessor, successor)` creates the paired
+  `POR`/`RET` links expected by the formal executor.
 - `EngineConfig(activation_mode=ActivationMode.CONTINUOUS)` enables activation
   settling between discrete ticks for diagnostics and visualization.
 
-Important notes/TODO:
-SUR implementation: Partial. It is represented and allowed by the graph, but engine confirmation is mostly implicit via child node states, not actual SUR message propagation.
-RET	successor returns/blocks predecessor	Current support: Mostly data-model only. It exists in LinkType and validation, but the engine does not really execute RET semantics.
+## Executor Modes
 
-These will be adressed ASAP.
+`ReConEngine` is the pragmatic legacy/high-level executor. It keeps a small API
+for examples and existing projects, uses `POR` for predecessor gating, and can
+run optional continuous activation microticks. Its confirmation logic is state
+based rather than a literal edge-message interpreter.
+
+`FormalReConEngine` is the article-style symbolic executor. It explicitly emits
+`request`, `wait`, `confirm`, `fail`, `inhibit_request`, and
+`inhibit_confirm` messages over `SUB`, `SUR`, `POR`, and `RET` links. Each tick
+uses a two-phase update: emit messages from all node states, group incoming
+messages by target, then compute all next states simultaneously.
+
+The current continuous activation/microtick implementation is useful for
+diagnostics and visualization, but it is not yet the compact neural
+implementation described later in the ReCoN paper.
 
 ## Grid-World Example
+
+The grid-world example uses `ReConEngine`, not `FormalReConEngine`, because it
+is meant to teach the smallest practical agent loop first.
 
 Run the simple agent:
 
@@ -113,6 +134,18 @@ per-tick node states, activation values, binding snapshots, and continuous
 activation history when microticks are enabled.
 
 See `src/recon_lite/examples/README.md` for the walkthrough.
+
+## Formal Trace Example
+
+Generate an article-style symbolic message trace:
+
+```bash
+uv run python -m recon_lite.examples.formal_trace --trace-json traces/formal.json
+```
+
+Open `examples/formal_trace_viewer.html` in a browser and load the generated
+JSON file. The viewer is a static HTML file with no build step or runtime
+dependencies.
 
 See `docs/architecture.md` for the package architecture and observability
 surface.

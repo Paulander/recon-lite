@@ -126,6 +126,16 @@ class Graph:
                     raise ValueError(f"Script node {dst} already has a parent {self.parent[dst]}")
                 self.parent[dst] = src
 
+    def add_hierarchy_pair(self, parent: str, child: str) -> None:
+        """Add the article-style hierarchy pair: parent SUB child, child SUR parent."""
+        self.add_edge(parent, child, LinkType.SUB)
+        self.add_edge(child, parent, LinkType.SUR)
+
+    def add_sequence_pair(self, predecessor: str, successor: str) -> None:
+        """Add the article-style sequence pair: predecessor POR successor, successor RET predecessor."""
+        self.add_edge(predecessor, successor, LinkType.POR)
+        self.add_edge(successor, predecessor, LinkType.RET)
+
     def children(self, nid: str) -> List[str]:
         return list(self.out.get((nid, LinkType.SUB), []))
 
@@ -191,6 +201,37 @@ class Graph:
                     raise ValueError(
                         f"Article violation: script node '{nid}' has no SUB children."
                     )
+
+    def validate_formal_pairs(self) -> None:
+        """
+        Validate paired links expected by the formal message-passing executor.
+
+        Raw ``add_edge`` stays available for lower-level or experimental graph
+        construction. ``FormalReConEngine`` calls this stricter validation so
+        explicit SUB/SUR and POR/RET messages always have their reverse channel.
+        """
+        self.validate_article_compliance()
+        edge_set = {(e.src, e.dst, e.ltype) for e in self.edges}
+        for e in self.edges:
+            if e.ltype == LinkType.SUB:
+                reverse = (e.dst, e.src, LinkType.SUR)
+                expected = "SUR"
+            elif e.ltype == LinkType.SUR:
+                reverse = (e.dst, e.src, LinkType.SUB)
+                expected = "SUB"
+            elif e.ltype == LinkType.POR:
+                reverse = (e.dst, e.src, LinkType.RET)
+                expected = "RET"
+            else:
+                reverse = (e.dst, e.src, LinkType.POR)
+                expected = "POR"
+
+            if reverse not in edge_set:
+                raise ValueError(
+                    f"Formal ReCoN pair violation: {e.ltype.name} edge "
+                    f"{e.src}->{e.dst} requires reverse {expected} edge "
+                    f"{e.dst}->{e.src}."
+                )
 
     # --- Helper utilities for policy configuration ---
     def set_por_policy(self, nid: str, *, policy: str, k: Optional[int] = None, theta: Optional[float] = None) -> None:
